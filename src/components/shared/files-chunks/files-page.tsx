@@ -1,0 +1,334 @@
+"use client"
+
+import { useMemo, useState } from "react"
+import { useTranslations } from "next-intl"
+import { DataTable } from "@/components/shared/data-table-chunks/data-table"
+import {
+  uploadFileApi,
+  deleteFileApi,
+  renameFileApi,
+  toggleStarFileApi,
+  getFileDownloadUrlApi,
+  fetchFilesSummaryApi,
+  updateFileApi,
+} from "@/lib/api/files-api"
+import { FileItem, FileType, FileVisibility } from "@/types/files"
+import { useFilesTable } from "@/hooks/files/use-files-table"
+import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
+import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
+import { toast } from "@/lib/utils/toast"
+import { FileUploadDialog } from "@/components/ui/upload-file"
+import { Upload } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { getFilesColumns } from "./files-columns"
+import { FilesSummaryCards } from "./files-summary-cards"
+import { FileDialog } from "./file-dialog"
+import NProgress from "nprogress"
+type PendingAction = { type: "delete"; file: FileItem } | null
+
+type FileDialogMode =
+  "rename" | "move" | "details" | "visibility" | "share" | "preview" | null
+
+export default function FilesPage() {
+  const t = useTranslations()
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
+    {}
+  )
+
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogMode, setDialogMode] = useState<FileDialogMode>(null)
+  const [selectedFile, setSelectedFile] = useState<FileItem | null>(null)
+
+  const {
+    items: files,
+    pageCount,
+    totalItems,
+    isLoading,
+    isFetching,
+    search,
+    setSearch,
+    pagination,
+    setPagination,
+    columnFilters,
+    setColumnFilters,
+    sorting,
+    setSorting,
+    refresh,
+  } = useFilesTable()
+
+  const { data: summaryData, refetch: refetchSummary } = useQuery({
+    queryKey: ["files-summary"],
+    queryFn: fetchFilesSummaryApi,
+    staleTime: 60 * 1000,
+  })
+
+  const { remove, isDeleting } = useEntityMutations({
+    queryKey: "files",
+    createFn: () => Promise.resolve({}),
+    updateFn: () => Promise.resolve({}),
+    deleteFn: deleteFileApi,
+    entityLabel: "File",
+  })
+
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
+
+  const handleUpload = async (files: File[], projectId?: string) => {
+    setIsUploading(true)
+    setUploadProgress({})
+
+    for (const file of files) {
+      const formData = new FormData()
+      formData.append("file", file)
+      if (projectId) {
+        formData.append("projectId", projectId)
+      }
+
+      try {
+        for (let progress = 0; progress <= 100; progress += 10) {
+          setUploadProgress((prev) => ({
+            ...prev,
+            [file.name]: progress,
+          }))
+          await new Promise((resolve) => setTimeout(resolve, 100))
+        }
+
+        await uploadFileApi(formData)
+        toast.success(`${file.name} ${t("uploadedSuccessfully")}`)
+      } catch (error) {
+        setUploadProgress((prev) => ({
+          ...prev,
+          [`${file.name}_error`]: 1,
+        }))
+        toast.error(`${file.name} ${t("uploadFailed")}`)
+      }
+    }
+
+    setIsUploading(false)
+    setUploadProgress({})
+    setUploadOpen(false)
+    refresh()
+    refetchSummary()
+  }
+
+  const handleDownload = async (file: FileItem) => {
+    try {
+      const { cloudinaryUrl: url, name: filename } = file
+      if (!url) return
+
+      const response = await fetch(url)
+      if (!response.ok) throw new Error("Failed to fetch file")
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+
+      const link = document.createElement("a")
+      link.addEventListener("click", (e) => e.stopPropagation())
+      link.href = blobUrl
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+
+      // Release the blob from memory now that the download has been triggered
+      window.URL.revokeObjectURL(blobUrl)
+
+      // Safety net in case nextjs-toploader still picked up the click
+      NProgress.done()
+
+      toast.success(t("downloadStarted"))
+    } catch (error) {
+      console.error("Download error:", error)
+      toast.error(t("downloadFailed"))
+    }
+  }
+
+  const openDialog = (mode: FileDialogMode, file: FileItem) => {
+    setSelectedFile(file)
+    setDialogMode(mode)
+    setDialogOpen(true)
+  }
+
+  const handleDialogConfirm = async (file: FileItem, data: any) => {
+    try {
+      if (dialogMode === "rename") {
+        await renameFileApi(file.id, data.name)
+        toast.success(t("fileRenamed"))
+      } else if (dialogMode === "visibility") {
+        await updateFileApi(file.id, { visibility: data.visibility })
+        toast.success(t("visibilityChanged"))
+      } else if (dialogMode === "share") {
+        toast.success(t("shareLinkCopied"))
+      } else if (dialogMode === "preview") {
+        await handleDownload(file)
+      }
+
+      refresh()
+      refetchSummary()
+      setDialogOpen(false)
+      setSelectedFile(null)
+    } catch (error) {
+      toast.error(t("actionFailed"))
+    }
+  }
+
+  const handleStar = async (file: FileItem) => {
+    try {
+      await toggleStarFileApi(file.id)
+      toast.success(file.starred ? t("unstarred") : t("starred"))
+      refresh()
+      refetchSummary()
+    } catch (error) {
+      toast.error(t("starFailed"))
+    }
+  }
+
+  const handleConfirm = async () => {
+    if (!pendingAction) return
+
+    if (pendingAction.type === "delete") {
+      remove(pendingAction.file.id, {
+        onSuccess: () => {
+          setPendingAction(null)
+          refetchSummary()
+        },
+      })
+    }
+  }
+
+  const columns = useMemo(
+    () =>
+      getFilesColumns(
+        {
+          onPreview: (file) => openDialog("preview", file),
+          onDownload: handleDownload,
+          onStar: handleStar,
+          onRename: (file) => openDialog("rename", file),
+          onDelete: (file) => setPendingAction({ type: "delete", file }),
+          onShare: (file) => openDialog("share", file),
+          onDetails: (file) => openDialog("details", file),
+          onChangeVisibility: (file) => openDialog("visibility", file),
+          onCopy: async (file) => {
+            try {
+              await navigator.clipboard.writeText(file.name)
+              toast.success(t("copied"))
+            } catch (error) {
+              toast.error(t("copyFailed"))
+            }
+          },
+        },
+        t
+      ),
+    [t]
+  )
+
+  const confirmConfig = useMemo(() => {
+    if (!pendingAction) return null
+    const name = pendingAction.file.name
+
+    return {
+      title: t("deleteFile"),
+      description: t("deleteFileConfirmation", { name }),
+      confirmLabel: t("delete"),
+      destructive: true,
+      isLoading: isDeleting,
+    }
+  }, [pendingAction, isDeleting, t])
+
+  return (
+    <>
+      <FilesSummaryCards
+        files={files}
+        summary={summaryData}
+        isLoading={isLoading}
+      />
+
+      <DataTable
+        manual
+        title={t("files")}
+        isLoading={isLoading}
+        isFetching={isFetching}
+        columns={columns}
+        data={files}
+        rowCount={totalItems}
+        pageCount={pageCount}
+        pagination={pagination}
+        onPaginationChange={setPagination}
+        columnFilters={columnFilters}
+        onColumnFiltersChange={setColumnFilters}
+        sorting={sorting}
+        onSortingChange={setSorting}
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={t("searchFiles")}
+        actions={[
+          {
+            label: t("upload"),
+            icon: Upload,
+            onClick: () => setUploadOpen(true),
+            variant: "primary",
+            iconOnly: true,
+          },
+        ]}
+        filters={[
+          {
+            columnId: "type",
+            title: t("type"),
+            options: [
+              { label: t("documents"), value: FileType.DOCUMENT },
+              { label: t("images"), value: FileType.IMAGE },
+              { label: t("videos"), value: FileType.VIDEO },
+              { label: t("archives"), value: FileType.ARCHIVE },
+              { label: t("others"), value: FileType.OTHER },
+            ],
+          },
+          {
+            columnId: "visibility",
+            title: t("visibility"),
+            options: [
+              { label: t("private"), value: FileVisibility.PRIVATE },
+              { label: t("team"), value: FileVisibility.TEAM },
+              { label: t("public"), value: FileVisibility.PUBLIC },
+            ],
+          },
+        ]}
+      />
+
+      <FileUploadDialog
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        onUpload={handleUpload}
+        isUploading={isUploading}
+        uploadProgress={uploadProgress}
+        projects={[
+          { id: "p1", name: t("websiteRedesign") },
+          { id: "p2", name: t("mobileAppDevelopment") },
+          { id: "p3", name: t("dashboardAnalytics") },
+          { id: "p4", name: t("marketingCampaign") },
+        ]}
+      />
+
+      <FileDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        file={selectedFile}
+        mode={dialogMode || "details"}
+        onDownload={handleDownload}
+        onConfirm={handleDialogConfirm}
+      />
+
+      {confirmConfig && (
+        <ConfirmAlertDialog
+          open={!!pendingAction}
+          onOpenChange={(open) => !open && setPendingAction(null)}
+          title={confirmConfig.title}
+          description={confirmConfig.description}
+          confirmLabel={confirmConfig.confirmLabel}
+          destructive={confirmConfig.destructive}
+          isLoading={confirmConfig.isLoading}
+          onConfirm={handleConfirm}
+        />
+      )}
+    </>
+  )
+}

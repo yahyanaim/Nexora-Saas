@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="./styles.css" />
+
+    <link rel="icon" type="image/png" href="./app-logo.png" />
+    <link rel="shortcut icon" href="./app-logo.png" type="image/png" />
+
+    <link rel="apple-touch-icon" href="./app-logo.png" />
+
+    <title>Volix SaaS Starter · Documentation</title>
+    <meta name="description" content="Official documentation for Volix" />
+  </head>
+
+  <body>
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="brand">
+          <img src="./app-logo.png" alt="v" class="brand-mark" />
+          <span>Volix</span>SaaS
+        </div>
+        <nav class="header-nav">
+          <a href="#intro">Introduction</a>
+          <a href="#requirements">Requirements</a>
+          <a href="#setup">Setup</a>
+          <a href="#env">Environment</a>
+          <a href="#troubleshoot">Troubleshooting</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <main class="main">
+      <!-- ===== INTRO ===== -->
+      <section id="intro" class="hero">
+        <span class="badge">Production-Ready SaaS</span>
+        <h1>SaaS Starter · Complete Setup Guide</h1>
+        <p>
+          This documentation provides a comprehensive step-by-step guide to set
+          up and run the <strong>Volix</strong> project on your local machine.
+          Please read it thoroughly before starting, and refer back whenever
+          needed.
+        </p>
+        <div class="note">
+          <strong>Before you begin:</strong> Make sure you have
+          <strong>Node.js</strong> (version 20 or later) and
+          <strong>MongoDB</strong>
+          (local or Atlas) installed on your system.
+        </div>
+      </section>
+
+      <!-- ===== REQUIREMENTS ===== -->
+      <section id="requirements">
+        <h2>Requirements</h2>
+        <p>
+          To run the project successfully, the following tools must be installed
+          on your machine:
+        </p>
+
+        <ul>
+          <li>
+            <strong>Node.js</strong> — Version 20 or newer
+            <br />
+            <small style="color: var(--muted-foreground)"
+              >Download from
+              <a href="https://nodejs.org/" target="_blank"
+                >nodejs.org</a
+              ></small
+            >
+          </li>
+          <li><strong>npm</strong> — Comes automatically with Node.js</li>
+          <li>
+            <strong>MongoDB</strong> — Local server or free MongoDB Atlas
+            account
+            <br />
+            <small style="color: var(--muted-foreground)"
+              ><a href="https://www.mongodb.com/atlas" target="_blank"
+                >Get a free account →</a
+              ></small
+            >
+          </li>
+        </ul>
+
+        <div class="note success">
+          <strong>Note:</strong> If using MongoDB Atlas, make sure to add your
+          machine's IP address to the Network Access whitelist in your Atlas
+          dashboard.
+        </div>
+      </section>
+
+      <!-- ===== SETUP ===== -->
+      <section id="setup">
+        <h2>Setup Instructions</h2>
+        <p>
+          Follow these steps in order to run the project for the first time.
+        </p>
+
+        <h3>Step 1: Extract the Files</h3>
+        <p>
+          Extract the ZIP archive you received after purchase, and open the
+          extracted folder in your code editor or terminal.
+        </p>
+
+        <h3>Step 2: Install Dependencies</h3>
+        <p>
+          Run the following command in your terminal inside the project folder:
+        </p>
+        <pre><code>npm install</code></pre>
+        <p>
+          This command reads the <code>package.json</code> file and installs all
+          required libraries.
+        </p>
+
+        <h3>Step 3: Set Up Environment (One-Time Only)</h3>
+        <p>
+          Run the command below to automatically create the
+          <code>.env</code> file and set up the database with an Admin account:
+        </p>
+        <pre><code>npm run seed</code></pre>
+        <p>This command will:</p>
+        <ul>
+          <li>
+            Create a <code>.env</code> file with default values if it doesn't
+            exist
+          </li>
+          <li>Add any missing variables if the file already exists</li>
+          <li>Create an Admin account in the database</li>
+        </ul>
+        <div class="note success">
+          <strong>Important:</strong> This command only needs to be run
+          <strong>once</strong> during initial setup. After that, you only need
+          <code>npm run dev</code> to start the application.
+        </div>
+
+        <h3>Step 4: Customize the Environment File</h3>
+        <p>
+          Open the <code>.env</code> file and replace the default values with
+          your actual credentials (database URI, Cloudinary keys, email
+          settings, etc.).
+        </p>
+        <div class="note danger">
+          <strong>Security Warning:</strong> Never share your
+          <code>.env</code>
+          file with anyone, and never commit it to any public repository.
+        </div>
+
+        <h3>Step 5: Run the Project</h3>
+        <p>Start the development server using:</p>
+        <pre><code>npm run dev</code></pre>
+        <p>
+          Once the terminal shows that the server is running, open your browser
+          and go to:
+          <br />
+          <strong style="color: var(--primary)">http://localhost:3000</strong>
+        </p>
+
+        <h3>Step 6: First Login</h3>
+        <p>
+          The Seed script has automatically created an Admin account with the
+          following credentials:
+        </p>
+        <ul>
+          <li><strong>Email:</strong> <code>admin@volix.saas.com</code></li>
+          <li><strong>Username:</strong> <code>volixadmin</code></li>
+          <li><strong>Password:</strong> <code>Aa123456</code></li>
+        </ul>
+        <div class="note danger">
+          <strong>Very Important:</strong> After your first login, change the
+          password immediately from within the dashboard. These are
+          <strong>placeholder values</strong> only for testing — never use them
+          in a production environment.
+        </div>
+      </section>
+
+      <!-- ===== ENV VARIABLES ===== -->
+      <section id="env">
+        <h2>Environment Variables Explained</h2>
+        <p>
+          The <code>.env</code> file contains all the sensitive keys and
+          settings required by the application. Here's a detailed breakdown of
+          each variable and where to get the actual values:
+        </p>
+
+        <h3>Database</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Description</th>
+                <th>Where to Get It</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>MONGODB_URI</code></td>
+                <td>MongoDB connection string</td>
+                <td>
+                  <strong>Local:</strong>
+                  <code>mongodb://localhost:27017/volix-saas</code>
+                  <br />
+                  <strong>Cloud:</strong> From MongoDB Atlas dashboard →
+                  "Connect" button
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Authentication (JWT)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Description</th>
+                <th>Where to Get It</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>JWT_SECRET</code></td>
+                <td>Secret key for signing authentication tokens</td>
+                <td>
+                  Generate a strong key using:
+                  <br />
+                  <code
+                    style="
+                      font-size: 12px;
+                      display: inline-block;
+                      margin-top: 4px;
+                    "
+                    >node -e
+                    "console.log(require('crypto').randomBytes(32).toString('hex'))"</code
+                  >
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>File Upload (Cloudinary)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Description</th>
+                <th>Where to Get It</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>CLOUDINARY_CLOUD_NAME</code></td>
+                <td>Your Cloudinary account name</td>
+                <td rowspan="3">
+                  From
+                  <a href="https://cloudinary.com/" target="_blank"
+                    >Cloudinary</a
+                  >
+                  Dashboard
+                </td>
+              </tr>
+              <tr>
+                <td><code>CLOUDINARY_API_KEY</code></td>
+                <td>API key for Cloudinary</td>
+              </tr>
+              <tr>
+                <td><code>CLOUDINARY_API_SECRET</code></td>
+                <td>API secret (keep this very secure)</td>
+              </tr>
+              <tr>
+                <td><code>CLOUDINARY_UPLOAD_PRESET</code></td>
+                <td>Upload preset for file uploads (optional)</td>
+                <td>Cloudinary → Settings → Upload Presets</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note danger">
+          <strong>Warning:</strong> Never expose
+          <code>CLOUDINARY_API_SECRET</code>
+          in any frontend code.
+        </div>
+
+        <h3>Email (SMTP)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Description</th>
+                <th>Where to Get It</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>SMTP_HOST</code></td>
+                <td>SMTP server hostname</td>
+                <td>
+                  From your email service provider (e.g.,
+                  <code>smtp.gmail.com</code>)
+                </td>
+              </tr>
+              <tr>
+                <td><code>SMTP_PORT</code></td>
+                <td>SMTP server port</td>
+                <td>587 (TLS) or 465 (SSL)</td>
+              </tr>
+              <tr>
+                <td><code>SMTP_USER</code></td>
+                <td>SMTP username (email address)</td>
+                <td>Your sender email address</td>
+              </tr>
+              <tr>
+                <td><code>SMTP_PASS</code></td>
+                <td>SMTP password or App Password</td>
+                <td>
+                  For Gmail: Generate from Security Settings → App Password
+                  <br />
+                  <small style="color: var(--muted-foreground)"
+                    >(Not your regular account password)</small
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td><code>EMAIL_FROM</code></td>
+                <td>Sender email address shown in outgoing emails</td>
+                <td>e.g., <code>no-reply@yourdomain.com</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Default Admin Credentials</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Description</th>
+                <th>Default Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>SEED_ADMIN_EMAIL</code></td>
+                <td>Admin email address</td>
+                <td><code>admin@volix.saas.com</code></td>
+              </tr>
+              <tr>
+                <td><code>SEED_ADMIN_USERNAME</code></td>
+                <td>Admin username</td>
+                <td><code>volixadmin</code></td>
+              </tr>
+              <tr>
+                <td><code>SEED_ADMIN_PASSWORD</code></td>
+                <td>Admin password</td>
+                <td><code>Aa123456</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="note danger">
+          <strong>Critical:</strong> Change these values in <code>.env</code>
+          <strong>before</strong> any production deployment, and change the
+          password from within the application after first login.
+        </div>
+      </section>
+
+      <!-- ===== TROUBLESHOOTING ===== -->
+      <section id="troubleshoot">
+        <h2>Troubleshooting</h2>
+        <p>
+          Here are solutions to the most common issues you might encounter
+          during setup:
+        </p>
+
+        <h3>1. Error: MONGODB_URI is not set</h3>
+        <p>
+          <strong>Cause:</strong> The <code>.env</code> file is missing or
+          doesn't contain the <code>MONGODB_URI</code> variable.
+          <br />
+          <strong>Solution:</strong> Run <code>npm run seed</code> to
+          auto-generate the file, or add the variable manually.
+        </p>
+
+        <h3>2. Garbled characters in terminal (Windows)</h3>
+        <p>
+          <strong>Cause:</strong> Character encoding issue.
+          <br />
+          <strong>Solution:</strong> Run this command in PowerShell:
+        </p>
+        <pre><code>chcp 65001</code></pre>
+
+        <h3>3. File uploads failing</h3>
+        <p>
+          <strong>Cause:</strong> Cloudinary keys are incorrect or missing.
+          <br />
+          <strong>Solution:</strong> Verify all four Cloudinary variables in
+          <code>.env</code>:
+        </p>
+        <ul>
+          <li><code>CLOUDINARY_CLOUD_NAME</code></li>
+          <li><code>CLOUDINARY_API_KEY</code></li>
+          <li><code>CLOUDINARY_API_SECRET</code></li>
+          <li><code>CLOUDINARY_UPLOAD_PRESET</code></li>
+        </ul>
+
+        <h3>4. Database connection error</h3>
+        <p>
+          <strong>Cause:</strong> MongoDB is not running locally, or the URI is
+          incorrect.
+          <br />
+          <strong>Solution:</strong>
+        </p>
+        <ul>
+          <li>Ensure MongoDB is running on your machine.</li>
+          <li>
+            If using MongoDB Atlas, add your IP address to the Network Access
+            whitelist.
+          </li>
+          <li>Verify the URI string in <code>.env</code>.</li>
+        </ul>
+
+        <div class="note success">
+          <strong>Pro Tip:</strong> If you encounter an issue not listed here,
+          double-check that you've followed all steps in the correct order and
+          that you're using the required versions mentioned in the Requirements
+          section.
+        </div>
+      </section>
+
+      <!-- ===== SUMMARY ===== -->
+      <section>
+        <h2>Quick Summary</h2>
+        <div
+          class="note"
+          style="
+            border-left-color: var(--success);
+            background: rgba(16, 185, 129, 0.06);
+          "
+        >
+          <strong>First time setup:</strong>
+          <br />
+          <code>npm install</code> → <code>npm run seed</code> →
+          <code>npm run dev</code> <br /><br />
+          <strong>Subsequent runs:</strong>
+          <br />
+          <code>npm run dev</code> (just this!)
+        </div>
+        <p style="margin-top: 16px">
+          Once the project is running, everything is ready to go. Enjoy using
+          <strong>Volix</strong>!
+        </p>
+      </section>
+
+      <!-- ===== FOOTER ===== -->
+      <footer class="footer">
+        Volix · Complete Documentation © 2026 — All Rights Reserved
+      </footer>
+    </main>
+  </body>
+</html>
