@@ -1,4 +1,4 @@
-# Volix SaaS Starter
+# SaaS Starter
 
 A modern SaaS starter built with **Next.js, TypeScript, MongoDB, Tailwind CSS, and shadcn/ui**.
 
