@@ -78,7 +78,7 @@ function ChartTooltipLabelFormatter() {
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value) => {
+                  labelFormatter={(value: any) => {
                     return new Date(value).toLocaleDateString("en-US", {
                       day: "numeric",
                       month: "long",
