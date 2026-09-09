@@ -73,7 +73,7 @@ npm run seed
 ## Project Structure
 
 ```text
-volix-saas/
+saas/
 ├── documentation/
 ├── dashboard/
 ```
