@@ -86,4 +86,4 @@ Use strong secrets and production credentials when deploying your application.
 
 ---
 
-**Volix SaaS Starter — Build faster. Launch smarter.**
+**SaaS Starter — Build faster. Launch smarter.**
