@@ -2,8 +2,8 @@
 
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { ChevronsUpDown, Loader2, Gem, X, SearchIcon } from "lucide-react"
+import { useMemo, useState } from "react"
+import { ChevronsUpDown, Loader2, Gem, X, SearchIcon } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -38,7 +38,6 @@ export function SelectPlan({
 }: SelectPlanProps) {
   const t = useTranslations()
   const [open, setOpen] = useState(false)
-  const [selectedName, setSelectedName] = useState<string>("")
 
   const {
     data: plans,
@@ -50,36 +49,25 @@ export function SelectPlan({
 
   const placeholderText = placeholder || t("selectPlan")
 
-  // Sync selected name with the current plans list
-  useEffect(() => {
-    if (!plans?.length || !value) return
-    const plan = plans.find((p: PlanOption) => p.id === value)
-    if (plan) {
-      setSelectedName(plan.name)
-    }
-  }, [plans, value])
-
   // Filter out excluded plan
   const filteredPlans = useMemo(() => {
     if (!plans) return []
     return excludePlanId
-      ? plans.filter((plan: PlanOption) => plan.id !== excludePlanId)
+      ? plans.filter((p: PlanOption) => p.id !== excludePlanId)
       : plans
   }, [plans, excludePlanId])
 
+  // Current selected plan object
   const selectedPlan = useMemo(() => {
-    if (!value || !plans) return null
-    return plans.find((p: PlanOption) => p.id === value) || null
-  }, [value, plans])
+    return plans?.find((p: PlanOption) => p.id === value)
+  }, [plans, value])
 
-  const selectPlan = (planId: string, planName: string) => {
-    setSelectedName(planName)
+  const selectPlan = (planId: string) => {
     onChange(planId)
     setOpen(false)
   }
 
   const clearSelection = () => {
-    setSelectedName("")
     onChange("")
   }
 
@@ -89,6 +77,7 @@ export function SelectPlan({
         <div
           role="combobox"
           aria-expanded={open}
+          aria-controls="plan-listbox"
           tabIndex={disabled ? -1 : 0}
           aria-disabled={disabled}
           onKeyDown={(e) => {
@@ -209,11 +198,11 @@ export function SelectPlan({
                     role="option"
                     aria-selected={checked}
                     tabIndex={0}
-                    onClick={() => selectPlan(plan.id, plan.name)}
+                    onClick={() => selectPlan(plan.id)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault()
-                        selectPlan(plan.id, plan.name)
+                        selectPlan(plan.id)
                       }
                     }}
                     className={cn(

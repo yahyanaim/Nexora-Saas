@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils"
 import { BrowserName } from "@/lib/utils/parse-user-agent"
-import { Globe, Monitor, Smartphone, Tablet } from "lucide-react"
+import { Globe, Monitor, Smartphone, Tablet } from "@/components/ui/carbon/icons"
 import { useTranslations } from "next-intl"
 
 const BROWSER_ICON_PATHS: Record<BrowserName, string> = {

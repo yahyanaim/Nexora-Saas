@@ -5,6 +5,11 @@ import * as RechartsPrimitive from "recharts"
 import type { TooltipValueType } from "recharts"
 
 import { cn } from "@/lib/utils"
+import {
+  sanitizeHtml,
+  isValidCssColor,
+  sanitizeCssIdentifier,
+} from "@/lib/utils/sanitize"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const
@@ -82,33 +87,50 @@ function ChartContainer({
 }
 
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
+  const safeId = sanitizeCssIdentifier(id)
   const colorConfig = Object.entries(config).filter(
     ([, config]) => config.theme ?? config.color
   )
 
-  if (!colorConfig.length) {
+  if (!colorConfig.length || !safeId) {
     return null
   }
+
+  const rawCss = Object.entries(THEMES)
+    .map(([theme, prefix]) => {
+      const declarations = colorConfig
+        .map(([key, itemConfig]) => {
+          const color =
+            itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ??
+            itemConfig.color
+          const safeKey = sanitizeCssIdentifier(key)
+          if (!safeKey || !color || !isValidCssColor(color)) {
+            return null
+          }
+          return `  --color-${safeKey}: ${color};`
+        })
+        .filter(Boolean)
+        .join("\n")
+
+      if (!declarations) return null
+      return `${prefix} [data-chart=${safeId}] {\n${declarations}\n}`
+    })
+    .filter(Boolean)
+    .join("\n")
+
+  if (!rawCss) {
+    return null
+  }
+
+  const sanitizedCss = sanitizeHtml(rawCss, {
+    allowedTags: [],
+    allowedAttr: [],
+  })
 
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
-    const color =
-      itemConfig.theme?.[theme as keyof typeof itemConfig.theme] ??
-      itemConfig.color
-    return color ? `  --color-${key}: ${color};` : null
-  })
-  .join("\n")}
-}
-`
-          )
-          .join("\n"),
+        __html: sanitizedCss,
       }}
     />
   )

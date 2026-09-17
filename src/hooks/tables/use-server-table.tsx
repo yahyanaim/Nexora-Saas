@@ -18,7 +18,10 @@ import {
 
 export type FilterFieldConfig = Record<string, FilterOperator>
 
-interface UseServerTableOptions<T, E extends Record<string, any> = {}> {
+interface UseServerTableOptions<
+  T,
+  E extends Record<string, unknown> = Record<string, unknown>
+> {
   queryKey: string
   queryFn: (params: ServerTableParams & E) => Promise<ApiPaginatedResponse<T>>
   initialPageSize?: number
@@ -51,7 +54,10 @@ export function buildApiFilters(
     })
 }
 
-export function useServerTable<T, E extends Record<string, any> = {}>({
+export function useServerTable<
+  T,
+  E extends Record<string, unknown> = Record<string, unknown>
+>({
   queryKey,
   queryFn,
   initialPageSize = 20,
@@ -61,15 +67,15 @@ export function useServerTable<T, E extends Record<string, any> = {}>({
 }: UseServerTableOptions<T, E>) {
   const queryClient = useQueryClient()
 
-  const [search, setSearch] = useState("")
-  const debouncedSearch = useDebounce(search, 400)
-
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: initialPageSize,
   })
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
+  const [search, setSearch] = useState<string>("")
+
+  const debouncedSearch = useDebounce(search, 400)
 
   const apiFilters = useMemo(
     () => buildApiFilters(columnFilters, filterOperators),
@@ -86,11 +92,13 @@ export function useServerTable<T, E extends Record<string, any> = {}>({
       return
     }
     if (resetPageOnExtraParamsChange) {
-      setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+      queueMicrotask(() => {
+        setPagination((prev) => ({ ...prev, pageIndex: 0 }))
+      })
     }
-  }, [extraParamsKey])
+  }, [extraParamsKey, resetPageOnExtraParamsChange])
 
-  const finalQuery: any = [queryKey]
+  const finalQuery: unknown[] = [queryKey]
 
   if (pagination.pageIndex !== undefined && pagination.pageIndex !== null) {
     finalQuery.push(pagination.pageIndex.toString())

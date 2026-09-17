@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { DataTable } from "../data-table-chunks/data-table"
 import { getStaffsColumns } from "./staffs-columns"
 import { StaffForm, UserFormHandle } from "./staff-form"
+import { UserFormValues } from "@/hooks/users/user-form-schema"
 import {
   createUserApi,
   updateUserApi,
@@ -17,7 +18,8 @@ import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { useTranslations } from "next-intl"
-import { Plus } from "lucide-react"
+import { Plus } from "@/components/ui/carbon/icons"
+import { StaffsSummaryCards } from "./staffs-summary-cards"
 
 type PendingAction =
   | { type: "delete"; user: User }
@@ -83,11 +85,11 @@ export default function StaffsPage() {
     setFormOpen(true)
   }
 
-  function handleFormValid(values: any) {
+  function handleFormValid(values: UserFormValues) {
     if (formMode === "create") {
-      create(values, { onSuccess: () => setFormOpen(false) })
+      create(values as unknown as { name: string; email: string; role?: string } & Partial<User>, { onSuccess: () => setFormOpen(false) })
     } else if (editingUser) {
-      update(editingUser.id, values)
+      update(editingUser.id, values as unknown as Partial<User>)
       setFormOpen(false)
     }
   }
@@ -130,7 +132,7 @@ export default function StaffsPage() {
         },
         t
       ),
-    [router]
+    [router, t]
   )
 
   // Dialog copy per action type, kept in one place
@@ -167,7 +169,12 @@ export default function StaffsPage() {
   }, [pendingAction, isDeleting, isBanLoading, t])
 
   return (
-    <>
+    <div className="p-4 md:p-6 space-y-6">
+      <StaffsSummaryCards
+        users={users}
+        totalCount={totalItems}
+        isLoading={isLoading}
+      />
       <DataTable
         manual
         title={t("staffs")}
@@ -241,6 +248,6 @@ export default function StaffsPage() {
           onConfirm={handleConfirm}
         />
       )}
-    </>
+    </div>
   )
 }

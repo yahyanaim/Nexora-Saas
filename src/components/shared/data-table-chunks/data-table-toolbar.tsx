@@ -1,13 +1,20 @@
 "use client"
 
 import { Table } from "@tanstack/react-table"
-import { Plus, Search, X } from "lucide-react"
+import { Plus, Search, X, Download, FileSpreadsheet, FileCode } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DataTableFiltersPopover } from "./data-table-filters-popover"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { exportToCsv, exportToJson } from "@/lib/utils/export-data"
 import { cn } from "@/lib/utils"
 import { useGetDirection } from "@/hooks/use-get-direction"
-import { LucideIcon } from "lucide-react"
+import { LucideIcon } from "@/components/ui/carbon/icons"
 import { useTranslations } from "next-intl"
 
 export interface FacetedFilterConfig {
@@ -40,6 +47,12 @@ interface DataTableToolbarProps<TData> {
   actions?: ToolbarAction[]
   searchValue?: string
   onSearchChange?: (value: string) => void
+  /** Base filename for CSV and JSON exports */
+  exportFilename?: string
+  /** Custom data supplier for export; defaults to filtered table rows */
+  getExportData?: () => Record<string, unknown>[]
+  /** Whether export dropdown is enabled (defaults to true) */
+  enableExport?: boolean
 }
 
 export function DataTableToolbar<TData>({
@@ -53,10 +66,12 @@ export function DataTableToolbar<TData>({
   actions = [],
   searchValue,
   onSearchChange,
+  exportFilename,
+  getExportData,
+  enableExport = true,
 }: DataTableToolbarProps<TData>) {
   const t = useTranslations()
   const { dir } = useGetDirection()
-  const isFiltered = table.getState().columnFilters.length > 0
   const selectedCount = table.getFilteredSelectedRowModel().rows.length
 
   const isControlledSearch = onSearchChange !== undefined
@@ -90,7 +105,7 @@ export function DataTableToolbar<TData>({
   }
 
   // Get button variant styles
-  const getButtonVariant = (variant?: string) => {
+  const getButtonVariant = (variant?: string): "primary" | "destructive" | "outline" | "ghost" | "default" => {
     switch (variant) {
       case "primary":
         return "primary"
@@ -117,38 +132,83 @@ export function DataTableToolbar<TData>({
   }
 
   return (
-    <div className="relative z-10 flex w-full items-center justify-between gap-3 p-2">
-      {/* <div className={cn(dir === "rtl" ? "pr-3" : "pl-3")}> */}
-      <div className={cn(dir === "rtl" ? "md:pr-2" : "md:pl-2")}>
-        <h1 className="text-lg font-semibold tracking-tight whitespace-nowrap capitalize">
+    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-border/50 bg-card">
+      <div className={cn(dir === "rtl" ? "md:pr-1" : "md:pl-1")}>
+        <h3 className="text-base font-semibold tracking-tight text-foreground whitespace-nowrap capitalize">
           {title}
-        </h1>
+        </h3>
       </div>
-      {(searchColumnId || isControlledSearch) && (
-        <div className="flex grow items-center gap-2 md:gap-3">
-          <div className="relative flex-1 rounded-full bg-background">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground md:left-4 md:size-5" />
+
+      <div className="flex flex-wrap items-center gap-2.5 ml-auto">
+        {(searchColumnId || isControlledSearch) && (
+          <div className="relative w-full sm:w-60 md:w-72">
+            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder}
               value={currentSearchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="h-10 rounded-full border-0 bg-transparent pr-8 pl-10 text-xs shadow-none placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring md:h-12 md:pr-9 md:pl-12 md:text-sm dark:bg-transparent"
+              className="h-9 w-full rounded-lg border border-border/60 bg-background/60 pr-8 pl-9 text-xs placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary md:text-sm"
             />
             {currentSearchValue && (
               <button
                 type="button"
                 onClick={() => handleSearchChange("")}
-                className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground hover:text-foreground md:right-4"
+                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                <X className="size-4 md:size-5" />
+                <X className="size-3.5" />
               </button>
             )}
           </div>
-        </div>
-      )}
+        )}
 
-      <div className="flex items-center gap-2">
         <DataTableFiltersPopover table={table} filters={filters} />
+
+        {enableExport && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-3 text-xs rounded-lg gap-1.5 border-border/60 hover:bg-muted/60"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Export</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align={dir === "rtl" ? "start" : "end"} className="w-44">
+              <DropdownMenuItem
+                className="text-xs cursor-pointer gap-2"
+                onClick={() => {
+                  const data = getExportData
+                    ? getExportData()
+                    : table.getFilteredRowModel().rows.map((r) => r.original as Record<string, unknown>)
+                  exportToCsv(
+                    data,
+                    exportFilename || `${title.toLowerCase().replace(/\s+/g, "-")}-export`
+                  )
+                }}
+              >
+                <FileSpreadsheet className="size-3.5 text-emerald-600" />
+                <span>Export CSV (.csv)</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-xs cursor-pointer gap-2"
+                onClick={() => {
+                  const data = getExportData
+                    ? getExportData()
+                    : table.getFilteredRowModel().rows.map((r) => r.original as Record<string, unknown>)
+                  exportToJson(
+                    data,
+                    exportFilename || `${title.toLowerCase().replace(/\s+/g, "-")}-export`
+                  )
+                }}
+              >
+                <FileCode className="size-3.5 text-blue-600" />
+                <span>Export JSON (.json)</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         {/* Actions */}
         {toolbarActions.map((action, index) => {
@@ -158,19 +218,19 @@ export function DataTableToolbar<TData>({
           return (
             <Button
               key={`action-${index}`}
-              size={action.iconOnly ? "icon" : "default"}
-              variant={variant as any}
+              size={action.iconOnly ? "icon" : "sm"}
+              variant={variant}
               className={cn(
                 action.iconOnly
-                  ? "h-10 w-10 rounded-full md:h-12 md:w-12"
-                  : "gap-2",
+                  ? "h-9 w-9 rounded-lg"
+                  : "h-9 px-3 text-xs rounded-lg gap-1.5",
                 action.className
               )}
               onClick={action.onClick}
               disabled={action.disabled}
             >
               {Icon && (
-                <Icon className={action.iconOnly ? "size-5" : "h-4 w-4"} />
+                <Icon className={action.iconOnly ? "size-4" : "h-3.5 w-3.5"} />
               )}
               {!action.iconOnly && action.label}
             </Button>

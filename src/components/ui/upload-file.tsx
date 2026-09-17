@@ -32,7 +32,7 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 
 const NO_PROJECT_VALUE = "none"

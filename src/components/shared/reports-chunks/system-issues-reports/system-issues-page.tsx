@@ -3,7 +3,7 @@ import { useMemo, useState } from "react"
 import { Tabs } from "@/components/ui/tabs"
 import { getSystemIssuesColumns } from "./system-issues-columns"
 import { IssueStatus, SystemIssue } from "@/types/reports"
-import { Shield, AlertCircle, Loader2, CheckCircle } from "lucide-react"
+import { Shield, AlertCircle, Loader2, CheckCircle } from "@/components/ui/carbon/icons"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useSystemIssuesTable } from "@/hooks/reports/use-system-issues-table"
@@ -162,7 +162,7 @@ export default function SystemIssuesPage() {
   }, [pendingAction, statusMutation.isPending, t])
 
   return (
-    <>
+    <div className="p-4 md:p-6 space-y-6">
       <DataTable
         manual
         title={t("systemIssues")}
@@ -281,6 +281,6 @@ export default function SystemIssuesPage() {
           onConfirm={handleConfirm}
         />
       )}
-    </>
+    </div>
   )
 }

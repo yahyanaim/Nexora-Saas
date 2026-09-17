@@ -14,7 +14,7 @@ import {
   Music,
   Diamond,
   Zap,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 
 // Colors palette with Lucide icons
 export const PROFILE_COLORS = [
@@ -32,7 +32,7 @@ export const PROFILE_COLORS = [
   { color: "#222F3E", name: "Dark", icon: Zap },
 ]
 
-export type ProfileColor = (typeof PROFILE_COLORS)[0]
+export type ProfileColor = (typeof PROFILE_COLORS)[number]
 
 interface UseProfileColorsOptions {
   defaultColor?: string
@@ -41,7 +41,7 @@ interface UseProfileColorsOptions {
 
 export function useProfileColors(options: UseProfileColorsOptions = {}) {
   const {
-    defaultColor = PROFILE_COLORS[0].color,
+    defaultColor = PROFILE_COLORS[0]!.color,
     storageKey = "profile-color",
   } = options
 
@@ -68,7 +68,7 @@ export function useProfileColors(options: UseProfileColorsOptions = {}) {
 
   // Get full color object
   const getColorObject = useCallback((color: string): ProfileColor => {
-    return PROFILE_COLORS.find((c) => c.color === color) || PROFILE_COLORS[0]
+    return PROFILE_COLORS.find((c) => c.color === color) || PROFILE_COLORS[0]!
   }, [])
 
   const currentColor = getColorObject(selectedColor)

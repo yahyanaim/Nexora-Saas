@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -78,8 +79,8 @@ function ChartTooltipLabelFormatter() {
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value: any) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                  labelFormatter={(value) => {
+                    return new Date(String(value)).toLocaleDateString("en-US", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
@@ -93,6 +94,11 @@ function ChartTooltipLabelFormatter() {
           </BarChart>
         </ChartContainer>
       </CardContent>
+      <CardFooter className="flex-col items-start gap-1 border-t px-6 py-4 text-xs text-muted-foreground leading-relaxed">
+        <p>
+          <span className="font-semibold text-foreground">Segmented Activity Tooltip:</span> Groups composite operational tasks into stacked daily distributions with precise date-formatted tooltips. Evaluates workload concurrency and micro-activity patterns across consecutive business days.
+        </p>
+      </CardFooter>
     </Card>
   )
 }

@@ -10,12 +10,11 @@ import {
 } from "@/components/ui/popover"
 import {
   Ban,
-  Trash2,
   CheckCircle2,
   Pencil,
   ShieldCheck,
   ShieldQuestion,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { DataTableColumnHeader } from "../data-table-chunks/data-table-column-header"
 import {
   DataTableRowActions,

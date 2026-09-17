@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Column, Table } from "@tanstack/react-table"
-import { BrushCleaning, Check, ListFilter, X } from "lucide-react"
+import { Table, Column } from "@tanstack/react-table"
+import { BrushCleaning, Check, ListFilter } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 import {
   Popover,
@@ -70,13 +70,13 @@ export function DataTableFiltersPopover<TData>({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="default"
+          variant="outline"
           size="icon"
-          className="h-10 w-10 shrink-0 overflow-visible rounded-full border-none md:h-12 md:w-12"
+          className="h-9 w-9 shrink-0 overflow-visible rounded-lg border-border/60 bg-background/60 hover:bg-muted/80"
         >
           <ListFilter className="size-4" />
           {activeCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium text-primary-foreground tabular-nums">
+            <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-medium text-primary-foreground tabular-nums">
               {activeCount}
             </span>
           )}
@@ -98,7 +98,7 @@ export function DataTableFiltersPopover<TData>({
           )}
         </div>
         <div className="max-h-80 space-y-2 overflow-y-auto p-2 pt-0">
-          {filters.map((filter, index) => {
+          {filters.map((filter) => {
             const column = table.getColumn(filter.columnId)
             const selected = new Set(
               (column?.getFilterValue() as string[]) ?? []

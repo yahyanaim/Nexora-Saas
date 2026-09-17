@@ -30,7 +30,7 @@ import {
   Music,
   Video,
   AlertCircle,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { VISIBILITY_COLORS, VISIBILITY_ICONS } from "./files-columns"
 
 interface FileDialogProps {
@@ -38,7 +38,7 @@ interface FileDialogProps {
   onOpenChange: (open: boolean) => void
   file: FileItem | null
   mode: "rename" | "move" | "details" | "visibility" | "share" | "preview"
-  onConfirm?: (file: FileItem, data: any) => void
+  onConfirm?: (file: FileItem, data: unknown) => void
   onDownload?: (file: FileItem) => void
 }
 
@@ -352,8 +352,8 @@ export function FileDialog({
             <Label>{t("visibility")}</Label>
             <Select
               value={selectedVisibility}
-              onValueChange={(value: FileVisibility) =>
-                setSelectedVisibility(value)
+              onValueChange={(value) =>
+                setSelectedVisibility(value as FileVisibility)
               }
             >
               <SelectTrigger className="w-full py-6">

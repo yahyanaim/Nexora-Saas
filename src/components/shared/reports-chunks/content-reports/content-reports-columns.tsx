@@ -13,7 +13,7 @@ import {
   Receipt,
   Shield,
   Building,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { DataTableColumnHeader } from "../../data-table-chunks/data-table-column-header"
 import {
   DataTableRowActions,

@@ -2,7 +2,7 @@
 
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { DataTable } from "@/components/shared/data-table-chunks/data-table"
 import {
   createTransactionApi,
@@ -14,6 +14,7 @@ import {
   Transaction,
   TransactionStatus,
   TransactionMethod,
+  CreateTransactionPayload,
 } from "@/types/transactions"
 import { useTransactionsTable } from "@/hooks/transactions/use-transactions-table"
 import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
@@ -21,10 +22,11 @@ import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { useTranslations } from "next-intl"
 import { TransactionForm, TransactionFormHandle } from "./transaction-form"
+import { TransactionFormValues } from "@/hooks/transactions/transaction-form-schema"
 import { getTransactionsColumns } from "./transactions-columns"
 import { TransactionsSummaryCards } from "./transactions-summary-cards"
 import { toast } from "@/lib/utils/toast"
-import { Plus } from "lucide-react"
+import { Plus } from "@/components/ui/carbon/icons"
 
 type PendingAction =
   | { type: "delete"; transaction: Transaction }
@@ -69,7 +71,6 @@ export default function TransactionsPage() {
     })
 
   const [pendingAction, setPendingAction] = useState<PendingAction>(null)
-  const [isRefunding, setIsRefunding] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
 
   function openCreateForm() {
@@ -84,11 +85,16 @@ export default function TransactionsPage() {
     setFormOpen(true)
   }
 
-  function handleFormValid(values: any) {
+  function handleFormValid(values: TransactionFormValues) {
+    const payload: CreateTransactionPayload = {
+      ...values,
+      userId: values.user,
+      amount: Number(values.amount) || 0,
+    }
     if (formMode === "create") {
-      create(values, { onSuccess: () => setFormOpen(false) })
+      create(payload, { onSuccess: () => setFormOpen(false) })
     } else if (editingTransaction) {
-      update(editingTransaction.id, values)
+      update(editingTransaction.id, payload)
       setFormOpen(false)
     }
   }
@@ -135,25 +141,26 @@ export default function TransactionsPage() {
           toast.success(t("transactionRetryInitiated"))
           break
       }
-    } catch (error: any) {
-      toast.error(error.message || t("actionFailed"))
+    } catch (error: unknown) {
+      const err = error as { message?: string }
+      toast.error(err.message || t("actionFailed"))
     } finally {
       setIsProcessing(false)
     }
   }
 
   // Mark as paid handler
-  const handleMarkAsPaid = (transaction: Transaction) => {
+  const handleMarkAsPaid = useCallback((transaction: Transaction) => {
     setPendingAction({ type: "markAsPaid", transaction })
-  }
+  }, [])
 
   // Retry handler
-  const handleRetry = (transaction: Transaction) => {
+  const handleRetry = useCallback((transaction: Transaction) => {
     setPendingAction({ type: "retry", transaction })
-  }
+  }, [])
 
   // Download receipt handler
-  const handleDownloadReceipt = (transaction: Transaction) => {
+  const handleDownloadReceipt = useCallback((transaction: Transaction) => {
     // Generate a simple receipt (you can make this more sophisticated)
     const receipt = {
       id: transaction.transactionId,
@@ -176,10 +183,10 @@ export default function TransactionsPage() {
     URL.revokeObjectURL(url)
 
     toast.success(t("receiptDownloaded"))
-  }
+  }, [t])
 
   // Print handler
-  const handlePrint = (transaction: Transaction) => {
+  const handlePrint = useCallback((transaction: Transaction) => {
     const printWindow = window.open("", "_blank")
     if (printWindow) {
       printWindow.document.write(`
@@ -200,7 +207,7 @@ export default function TransactionsPage() {
       printWindow.document.close()
       printWindow.print()
     }
-  }
+  }, [t])
 
   const columns = useMemo(
     () =>
@@ -221,7 +228,7 @@ export default function TransactionsPage() {
         },
         t
       ),
-    [t]
+    [t, handleMarkAsPaid, handleRetry, handleDownloadReceipt, handlePrint]
   )
 
   const confirmConfig = useMemo(() => {
@@ -243,7 +250,7 @@ export default function TransactionsPage() {
           description: t("refundTransactionConfirmation", { name }),
           confirmLabel: t("refund"),
           destructive: false,
-          isLoading: isRefunding || isProcessing,
+          isLoading: isProcessing,
         }
       case "cancel":
         return {
@@ -270,7 +277,7 @@ export default function TransactionsPage() {
           isLoading: isProcessing,
         }
     }
-  }, [pendingAction, isDeleting, isRefunding, isProcessing, t])
+  }, [pendingAction, isDeleting, isProcessing, t])
 
   const getDefaultValues = (transaction: Transaction | null) => {
     if (!transaction) return undefined
@@ -287,56 +294,58 @@ export default function TransactionsPage() {
 
   return (
     <>
-      <TransactionsSummaryCards transactions={transactions} />
-      <DataTable
-        manual
-        title={t("transactions")}
-        isLoading={isLoading}
-        isFetching={isFetching}
-        columns={columns}
-        data={transactions}
-        rowCount={totalItems}
-        pageCount={pageCount}
-        pagination={pagination}
-        onPaginationChange={setPagination}
-        columnFilters={columnFilters}
-        onColumnFiltersChange={setColumnFilters}
-        sorting={sorting}
-        onSortingChange={setSorting}
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder={t("searchTransactions")}
-        actions={[
-          {
-            label: t("create"),
-            onClick: () => openCreateForm(),
-            iconOnly: true,
-            icon: Plus,
-            variant: "primary",
-          },
-        ]}
-        filters={[
-          {
-            columnId: "status",
-            title: t("status"),
-            options: [
-              { label: t("paid"), value: TransactionStatus.PAID },
-              { label: t("pending"), value: TransactionStatus.PENDING },
-              { label: t("failed"), value: TransactionStatus.FAILED },
-              { label: t("refunded"), value: TransactionStatus.REFUNDED },
-              { label: t("canceled"), value: TransactionStatus.CANCELED },
-            ],
-          },
-          {
-            columnId: "method",
-            title: t("method"),
-            options: Object.values(TransactionMethod).map((method) => ({
-              label: t(method.toLowerCase()),
-              value: method,
-            })),
-          },
-        ]}
-      />
+      <div className="p-4 md:p-6 space-y-6">
+        <TransactionsSummaryCards transactions={transactions} />
+        <DataTable
+          manual
+          title={t("transactions")}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          columns={columns}
+          data={transactions}
+          rowCount={totalItems}
+          pageCount={pageCount}
+          pagination={pagination}
+          onPaginationChange={setPagination}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={setColumnFilters}
+          sorting={sorting}
+          onSortingChange={setSorting}
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder={t("searchTransactions")}
+          actions={[
+            {
+              label: t("create"),
+              onClick: () => openCreateForm(),
+              iconOnly: true,
+              icon: Plus,
+              variant: "primary",
+            },
+          ]}
+          filters={[
+            {
+              columnId: "status",
+              title: t("status"),
+              options: [
+                { label: t("paid"), value: TransactionStatus.PAID },
+                { label: t("pending"), value: TransactionStatus.PENDING },
+                { label: t("failed"), value: TransactionStatus.FAILED },
+                { label: t("refunded"), value: TransactionStatus.REFUNDED },
+                { label: t("canceled"), value: TransactionStatus.CANCELED },
+              ],
+            },
+            {
+              columnId: "method",
+              title: t("method"),
+              options: Object.values(TransactionMethod).map((method) => ({
+                label: t(method.toLowerCase()),
+                value: method,
+              })),
+            },
+          ]}
+        />
+      </div>
 
       <DataTableEntityFormSheet
         open={formOpen}

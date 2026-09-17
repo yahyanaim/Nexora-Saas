@@ -12,6 +12,6 @@ export const transactionFormSchema = z.object({
 
 export type TransactionFormValues = z.infer<typeof transactionFormSchema>
 
-export function getTransactionFormSchema(mode: "create" | "edit") {
+export function getTransactionFormSchema(_mode: "create" | "edit") {
   return transactionFormSchema
 }

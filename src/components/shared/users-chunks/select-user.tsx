@@ -2,10 +2,9 @@
 
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { ChevronsUpDown, Loader2, SearchIcon, Users, X } from "lucide-react"
+import { useMemo, useState } from "react"
+import { ChevronsUpDown, Loader2, SearchIcon, Users, X } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
@@ -14,14 +13,6 @@ import {
 import { useTranslations } from "next-intl"
 import { useUsersOptions } from "@/hooks/users/use-users-options"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
-
-interface User {
-  id: string
-  name: string
-  email: string
-  avatar?: string
-  profileColor?: string
-}
 
 interface SelectUserProps {
   value?: string
@@ -40,7 +31,6 @@ export function SelectUser({
 }: SelectUserProps) {
   const t = useTranslations()
   const [open, setOpen] = useState(false)
-  const [selectedName, setSelectedName] = useState<string>("")
 
   const {
     data: users,
@@ -51,15 +41,6 @@ export function SelectUser({
   } = useUsersOptions()
 
   const placeholderText = placeholder || t("selectUser")
-
-  // Sync selected name with the current users list
-  useEffect(() => {
-    if (!users?.length || !value) return
-    const user = users.find((u) => u.id === value)
-    if (user) {
-      setSelectedName(user.name)
-    }
-  }, [users, value])
 
   // Filter out excluded user
   const filteredUsers = useMemo(() => {
@@ -74,14 +55,12 @@ export function SelectUser({
     return users.find((u) => u.id === value) || null
   }, [value, users])
 
-  const selectUser = (userId: string, userName: string) => {
-    setSelectedName(userName)
+  const selectUser = (userId: string) => {
     onChange(userId)
     setOpen(false)
   }
 
   const clearSelection = () => {
-    setSelectedName("")
     onChange("")
   }
 
@@ -91,6 +70,7 @@ export function SelectUser({
         <div
           role="combobox"
           aria-expanded={open}
+          aria-controls="user-listbox"
           tabIndex={disabled ? -1 : 0}
           aria-disabled={disabled}
           onKeyDown={(e) => {
@@ -206,11 +186,11 @@ export function SelectUser({
                     role="option"
                     aria-selected={checked}
                     tabIndex={0}
-                    onClick={() => selectUser(user.id, user.name)}
+                    onClick={() => selectUser(user.id)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault()
-                        selectUser(user.id, user.name)
+                        selectUser(user.id)
                       }
                     }}
                     className={cn(

@@ -1,6 +1,6 @@
 "use client"
 
-import { MoreHorizontal } from "lucide-react"
+import { MoreHorizontal } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -40,7 +40,7 @@ export function DataTableRowActions<TData>({
         align={dir === "rtl" ? "start" : "end"}
         className="w-44"
       >
-        {actions.map((action, i) => (
+        {actions.map((action) => (
           <div key={action.label}>
             {action.separatorBefore && <DropdownMenuSeparator />}
             <DropdownMenuItem

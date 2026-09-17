@@ -23,7 +23,7 @@ import {
   CheckCircle,
   FileText,
   Printer,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 
 export interface TransactionsColumnActions {
   onView: (transaction: Transaction) => void
@@ -40,7 +40,7 @@ export interface TransactionsColumnActions {
 export function getTransactionsColumns(
   actions: TransactionsColumnActions,
   t: (key: string) => string
-): ColumnDef<Transaction, any>[] {
+): ColumnDef<Transaction>[] {
   const STATUS_CONFIG: Record<
     TransactionStatus,
     { label: string; className: string }

@@ -1,47 +1,53 @@
 "use client"
 
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-
 import { cn } from "@/lib/utils"
 
-const buttonVariants = cva(
-  "group/button text-md relative inline-flex shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-transparent bg-clip-padding font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-base dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+export const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98] duration-150 cursor-pointer select-none",
   {
     variants: {
       variant: {
-        red: "bg-destructive text-white hover:bg-destructive/80",
-        default: "border border-border bg-background",
-        primary: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-        secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+        default:
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
+        primary:
+          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-destructive text-white shadow-xs hover:bg-destructive/90 font-medium",
+        outline:
+          "border border-border/80 bg-background/50 hover:bg-muted/80 hover:text-foreground text-foreground/90 backdrop-blur-xs",
+        secondary:
+          "bg-secondary text-secondary-foreground border border-border/40 hover:bg-secondary/80",
+        ghost:
+          "hover:bg-muted/60 hover:text-foreground text-muted-foreground",
+        link:
+          "text-primary underline-offset-4 hover:underline",
+        tertiary:
+          "border border-border/80 bg-background/50 hover:bg-muted/80 text-foreground",
+        danger:
+          "bg-destructive text-white shadow-xs hover:bg-destructive/90 font-medium",
+        red:
+          "bg-destructive text-white shadow-xs hover:bg-destructive/90 font-medium",
         glass:
-          "border-white/20 bg-white/10 text-white backdrop-blur-xl hover:bg-white/20 active:bg-white/30 dark:border-white/10 dark:bg-black/10 dark:hover:bg-white/10 dark:active:bg-white/20",
+          "bg-card/60 backdrop-blur-md border border-white/10 hover:bg-card/80 text-foreground shadow-sm",
         "glass-primary":
-          "border-primary/30 bg-primary/20 text-primary backdrop-blur-xl hover:bg-primary/30 active:bg-primary/40",
+          "bg-primary/80 backdrop-blur-md border border-primary/30 text-white hover:bg-primary shadow-sm",
         "glass-destructive":
-          "border-destructive/30 bg-destructive/20 text-destructive backdrop-blur-xl hover:bg-destructive/30 active:bg-destructive/40",
+          "bg-destructive/80 backdrop-blur-md border border-destructive/30 text-white hover:bg-destructive shadow-sm",
       },
       size: {
-        default:
-          "h-12 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8",
-        "icon-xs":
-          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm":
-          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-9",
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-lg px-6 text-sm font-semibold",
+        icon: "size-9",
+        "icon-sm": "size-8 rounded-md",
+        "icon-xs": "size-7 rounded-sm",
+        "icon-lg": "size-10 rounded-lg",
+        xs: "h-7 rounded-sm px-2.5 text-xs",
+        xl: "h-11 rounded-lg px-8 text-base",
+        "2xl": "h-12 rounded-xl px-10 text-base",
+        md: "h-9 px-4 py-2",
       },
     },
     defaultVariants: {
@@ -52,24 +58,60 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-  extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  kind?: string
+  hasIconOnly?: boolean
+  renderIcon?: React.ComponentType<{ className?: string }>
+  iconDescription?: string
 }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      className,
+      variant,
+      kind,
+      size,
+      asChild = false,
+      hasIconOnly,
+      renderIcon: RenderIcon,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    let resolvedVariant = variant
+    if (!resolvedVariant && kind) {
+      if (kind === "primary") resolvedVariant = "primary"
+      else if (kind === "secondary") resolvedVariant = "secondary"
+      else if (kind === "tertiary") resolvedVariant = "outline"
+      else if (kind.includes("danger")) resolvedVariant = "destructive"
+      else if (kind === "ghost") resolvedVariant = "ghost"
+    }
+
+    const isIconSize = hasIconOnly || size === "icon" || size === "icon-sm" || size === "icon-xs"
+    const resolvedSize = isIconSize && (!size || size === "default") ? "icon" : size
+
+    const classes = cn(buttonVariants({ variant: resolvedVariant, size: resolvedSize, className }))
+
+    if (asChild && React.isValidElement(children)) {
+      const child = children as React.ReactElement<React.HTMLAttributes<HTMLElement>>
+      return React.cloneElement(child, {
+        ref,
+        className: cn(classes, child.props.className),
+        ...props,
+      } as React.HTMLAttributes<HTMLElement>)
+    }
+
     return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
+      <button ref={ref} className={classes} {...props}>
+        {children}
+        {RenderIcon && <RenderIcon className="size-4 shrink-0" />}
+      </button>
     )
   }
 )
-Button.displayName = "Button"
 
-export { Button, buttonVariants }
+Button.displayName = "Button"

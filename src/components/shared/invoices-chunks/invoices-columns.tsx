@@ -19,7 +19,7 @@ import {
   Printer,
   XCircle,
   Bell,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 
 export interface InvoicesColumnActions {
@@ -38,7 +38,7 @@ export interface InvoicesColumnActions {
 export function getInvoicesColumns(
   actions: InvoicesColumnActions,
   t: (key: string) => string
-): ColumnDef<Invoice, any>[] {
+): ColumnDef<Invoice>[] {
   const STATUS_CONFIG: Record<
     InvoiceStatus,
     { label: string; className: string }
@@ -115,7 +115,7 @@ export function getInvoicesColumns(
         <DataTableColumnHeader column={column} title={t("amount")} />
       ),
       cell: ({ row }) => (
-        <span className="text-sm font-medium tabular-nums">
+        <span className="font-mono text-sm font-medium tabular-nums">
           ${row.original.total.toFixed(2)}
         </span>
       ),
@@ -166,7 +166,7 @@ export function getInvoicesColumns(
       cell: ({ row }) => {
         const date = row.original.date
         return (
-          <span className="text-sm tabular-nums">
+          <span className="font-mono text-sm tabular-nums">
             {new Date(date).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",

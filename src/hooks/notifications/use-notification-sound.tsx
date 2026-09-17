@@ -16,12 +16,14 @@ export function useNotificationSound() {
       playPromise.catch(() => {
         // Fallback: Web Audio API beep (browsers block audio without interaction)
         try {
-          if (!ctxRef.current) {
-            ctxRef.current = new (
-              window.AudioContext || (window as any).webkitAudioContext
-            )()
-          }
+            const AudioCtx =
+              window.AudioContext ||
+              (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+            if (AudioCtx) {
+              ctxRef.current = new AudioCtx()
+            }
           const ctx = ctxRef.current
+          if (!ctx) return
           const osc = ctx.createOscillator()
           const gain = ctx.createGain()
           osc.connect(gain)

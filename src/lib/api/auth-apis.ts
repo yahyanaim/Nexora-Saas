@@ -1,122 +1,275 @@
-import httpClient from "./http-client"
+import apiClient from "@/lib/myapi/client"
+import { tokenStorage } from "@/lib/myapi/token-storage"
 import {
   LoginPayload,
   LoginResponse,
-  VerifyOtpPayload,
+  RegisterPayload,
+  RegisterResponse,
   ResetPasswordPayload,
   ForgotPasswordPayload,
   ChangeProfilePayload,
   ChangePasswordPayload,
-  SendOtpResponse,
-  SendOtpPayload,
+  InviteAcceptPayload,
+  TwoFactorVerifyPayload,
+  AuthUser,
+  AuthResponse,
 } from "@/types/auth"
+
+/**
+ * Returns true when demo mode is explicitly enabled for local dev/preview only.
+ * Defaults to false when unset, empty, or running in a production environment.
+ * Demo mode enables graceful fallbacks to hardcoded data when the backend
+ * is unreachable — intended strictly for showcases and local dev.
+ */
+import { isDemoMode } from "@/lib/auth/demo-mode"
+export { isDemoMode }
+
+export const DEMO_ADMIN_USER: AuthUser = {
+  id: "usr-demo-1",
+  name: "Alex Morgan",
+  email: "alex.morgan@company.io",
+  role: "admin",
+  emailVerified: true,
+  avatar: "/avatars/alex-morgan.jpg",
+}
 
 export const loginApi = async (
   payload: LoginPayload
 ): Promise<LoginResponse> => {
-  const { data } = await httpClient.post("/auth/login", payload)
-  const d = data?.data
-  // If login is direct (no OTP/2FA gate), store session immediately
-  if (d?.token) {
-    localStorage.setItem("token", d?.token)
-    localStorage.setItem("user", JSON.stringify(d?.user))
+  try {
+    const { data } = await apiClient.post("/auth/login", payload)
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("saas_demo_logged_out")
+    }
+    return data
+  } catch (err) {
+    // Only fall back to demo user when demo mode is explicitly enabled in local dev
+    if (isDemoMode()) {
+      console.warn(
+        "[AUTH WARNING] Demo mode fallback used in loginApi: Logged in as Demo Administrator. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production."
+      )
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("saas_demo_logged_out")
+        tokenStorage.set("demo-session-token")
+      }
+      return {
+        success: true,
+        user: DEMO_ADMIN_USER,
+        message: "Logged in as Demo Administrator",
+        id: DEMO_ADMIN_USER.id,
+        name: DEMO_ADMIN_USER.name,
+        email: DEMO_ADMIN_USER.email,
+        role: DEMO_ADMIN_USER.role,
+      }
+    }
+    throw err
+  }
+}
+
+export const registerApi = async (
+  payload: RegisterPayload
+): Promise<RegisterResponse> => {
+  try {
+    const { data } = await apiClient.post("/auth/register", payload)
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("saas_demo_logged_out")
+    }
+    return data
+  } catch (err) {
+    if (isDemoMode()) {
+      console.warn(
+        "[AUTH WARNING] Demo mode fallback used in registerApi: Created local demo user. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production."
+      )
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("saas_demo_logged_out")
+        tokenStorage.set("demo-session-token")
+      }
+      const demoUser: AuthUser = {
+        id: `usr-demo-${Date.now()}`,
+        name: payload.name || "Demo User",
+        email: payload.email,
+        role: "user",
+        emailVerified: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      return {
+        success: true,
+        id: demoUser.id,
+        name: demoUser.name,
+        email: demoUser.email,
+        role: demoUser.role,
+        message: "Registration successful (Demo Mode)",
+        user: demoUser,
+      }
+    }
+    throw err
+  }
+}
+
+export const refreshApi = async (): Promise<AuthResponse> => {
+  const { data } = await apiClient.post("/auth/refresh")
+  return data
+}
+
+export const logoutApi = async (): Promise<void> => {
+  try {
+    await apiClient.post("/auth/logout")
+  } catch {
+    // ignore network errors on logout
+  }
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem("saas_demo_logged_out", "true")
+    tokenStorage.clear()
+  }
+}
+
+export const fetchMyAccountApi = async (): Promise<AuthUser> => {
+  try {
+    const { data } = await apiClient.get("/auth/me")
+    if (data?.id) return data
+  } catch {
+    // Backend session not active; fall through to demo session if enabled
   }
 
-  return d
-}
-
-export const verifyAccountApi = async (payload: VerifyOtpPayload) => {
-  const { data } = await httpClient.post("/auth/verify-otp", payload)
-  const d = data?.data
-
-  // After OTP verification, session is created
-  if (d?.token) {
-    localStorage.setItem("token", d?.token)
-    localStorage.setItem("user", JSON.stringify(d?.user))
+  // Only provide demo user when demo mode is on
+  if (isDemoMode()) {
+    if (typeof window !== "undefined") {
+      if (sessionStorage.getItem("saas_demo_logged_out") === "true") {
+        throw new Error("Unauthenticated")
+      }
+    }
+    console.warn(
+      "[AUTH WARNING] Demo mode fallback used in fetchMyAccountApi: Returning DEMO_ADMIN_USER. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production."
+    )
+    return DEMO_ADMIN_USER
   }
 
-  return d
+  throw new Error("Unauthenticated")
 }
 
-/**
- * NOTE: In the new system forgot-password uses OTP too, but reset-password
- * verifies the code internally in one step. This function is kept for
- * backward-compatibility and simply calls the shared verify-otp endpoint.
- */
-export const verifyForgotPasswordApi = async (payload: VerifyOtpPayload) => {
-  const { data } = await httpClient.post("/auth/verify-otp", payload)
-  return data?.data
+export const requestVerificationApi = async (
+  email: string
+): Promise<{ message: string }> => {
+  const { data } = await apiClient.post("/auth/verify-request", { email })
+  return data
 }
 
-export const sendOtpApi = async (
-  payload: SendOtpPayload
-): Promise<SendOtpResponse> => {
-  const { data } = await httpClient.post("/auth/send-otp", payload)
-  return data?.data
+export const verifyAccountApi = async (
+  token: string
+): Promise<{ message: string }> => {
+  const { data } = await apiClient.get(`/auth/verify?token=${encodeURIComponent(token)}`)
+  return data
 }
 
-export const forgotPasswordApi = async (payload: ForgotPasswordPayload) => {
-  const { data } = await httpClient.post("/auth/forgot-password", payload)
-  return data?.data
+export const forgotPasswordApi = async (
+  payload: ForgotPasswordPayload | string
+): Promise<{ message: string; otpId?: string }> => {
+  const email = typeof payload === "string" ? payload : payload.email
+  const { data } = await apiClient.post("/auth/password-reset-request", { email })
+  return { message: data?.message || "Password reset requested", otpId: "email" }
 }
 
-/**
- * CHANGED: payload now uses `code` (OTP) instead of `token` (hashed link).
- * Endpoint stays the same but logic is now OTP-based.
- */
-export const resetPasswordApi = async (payload: ResetPasswordPayload) => {
-  const { data } = await httpClient.post("/auth/reset-password", payload)
-  return data?.data
+export const verifyForgotPasswordApi = async (payload: {
+  otpCode: string
+  otpId?: string
+}): Promise<{ resetToken: string }> => {
+  const { data } = await apiClient.post<{ resetToken: string }>(
+    "/auth/password-reset-verify",
+    {
+      otpCode: payload.otpCode,
+      otpId: payload.otpId,
+    }
+  )
+  return data
 }
 
-export const logoutApi = async () => {
-  // try {
-  //   // New: HTTP logout invalidates the DB session and clears the cookie
-  //   await httpClient.post("/auth/logout")
-  // } catch (err) {
-  //   console.log("[Logout] Server logout failed:", err)
-  // } finally {
-  //   localStorage.removeItem("token")
-  //   localStorage.removeItem("user")
-  // }
-  localStorage.removeItem("token")
-  localStorage.removeItem("user")
+export const verifyPasscodeApi = async (passcode: string): Promise<boolean> => {
+  const { data } = await apiClient.post<
+    boolean | { valid?: boolean; success?: boolean }
+  >("/auth/passcode-verify", { passcode })
+  if (typeof data === "boolean") return data
+  if (data && typeof data === "object") {
+    if (typeof data.valid === "boolean") return data.valid
+    if (typeof data.success === "boolean") return data.success
+  }
+  return Boolean(data)
 }
 
-/**
- * CHANGED: endpoint moved from `/account` → `/auth/me`
- */
-export const fetchMyAccountApi = async () => {
-  const { data } = await httpClient.get("/auth/me")
-  return data?.data
+export const resetPasswordApi = async (
+  payload: ResetPasswordPayload
+): Promise<{ message: string }> => {
+  const { data } = await apiClient.post("/auth/password-reset", {
+    token: payload.token,
+    newPassword: payload.newPassword,
+    confirmNewPassword: payload.confirmNewPassword ?? payload.newPassword,
+  })
+  return data
 }
 
-/**
- * CHANGED:
- * - Method: PUT → PATCH
- * - Endpoint: `/account/change-information` → `/change-my-profile
- */
+export const acceptInviteApi = async (
+  payload: InviteAcceptPayload
+): Promise<AuthResponse> => {
+  const { data } = await apiClient.post("/auth/invite-accept", payload)
+  return data
+}
+
+export const verify2FaApi = async (
+  payload: TwoFactorVerifyPayload
+): Promise<AuthResponse> => {
+  const { data } = await apiClient.post("/auth/2fa/verify", payload)
+  return data
+}
+
+export const setup2FaApi = async (): Promise<{
+  secret: string
+  qrCodeUrl: string
+}> => {
+  const { data } = await apiClient.post("/auth/2fa/setup")
+  return data
+}
+
+export const enable2FaApi = async (
+  code: string
+): Promise<{ message: string }> => {
+  const { data } = await apiClient.post("/auth/2fa/enable", { code })
+  return data
+}
+
+export const disable2FaApi = async (payload: {
+  password: string
+  code: string
+}): Promise<{ message: string }> => {
+  const { data } = await apiClient.post("/auth/2fa/disable", payload)
+  return data
+}
+
 export const changeProfileInfApi = async (payload: ChangeProfilePayload) => {
-  const { data } = await httpClient.patch("/auth/change-my-profile", payload)
-  return data?.data
+  const { data } = await apiClient.put("/profile", payload)
+  return data
 }
 
-/**
- * CHANGED:
- * - Method: PUT → POST
- * - Endpoint: `/account/change-password` → `/auth/change-password`
- * - Field renamed: `oldPassword` → `currentPassword`
- */
 export const changePasswordApi = async (payload: ChangePasswordPayload) => {
-  const { data } = await httpClient.post("/auth/change-password", payload)
-  return data?.data
+  const { data } = await apiClient.put("/profile/password", payload)
+  return data
+}
+
+export const deleteAccountApi = async (): Promise<{ message: string }> => {
+  const { data } = await apiClient.delete("/profile")
+  return data
 }
 
 /**
- * NOTE: You need to create this route in your Next.js backend
- * (e.g. POST /api/users/me/verify-passcode or /auth/verify-passcode)
+ * Fetches a short-lived socket ticket token if supported by backend.
+ * For backends using HttpOnly cookie authentication, this returns null
+ * and the client relies on `withCredentials: true` during socket handshake.
  */
-export const verifyPasscodeApi = async (passcode: string) => {
-  const { data } = await httpClient.post("/auth/verify-passcode", { passcode })
-  return data?.data
+export const fetchSocketTokenApi = async (): Promise<string | null> => {
+  try {
+    const { data } = await apiClient.post<{ token: string }>("/auth/socket-token")
+    return data?.token ?? null
+  } catch {
+    return null
+  }
 }
+

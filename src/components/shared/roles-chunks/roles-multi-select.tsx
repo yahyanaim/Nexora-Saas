@@ -8,7 +8,7 @@ import {
   SearchIcon,
   ShieldCheck,
   X,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -50,12 +50,14 @@ export function RolesMultiSelect({
   // Sync selected names with the current roles list
   useEffect(() => {
     if (!roles?.length) return
-    setSelectedNames((prev) => {
-      const next = { ...prev }
-      roles.forEach((role: RoleOption) => {
-        next[role?.id] = role?.name
+    queueMicrotask(() => {
+      setSelectedNames((prev) => {
+        const next = { ...prev }
+        roles.forEach((role: RoleOption) => {
+          next[role?.id] = role?.name
+        })
+        return next
       })
-      return next
     })
   }, [roles])
 
@@ -155,6 +157,7 @@ export function RolesMultiSelect({
         <div
           role="combobox"
           aria-expanded={open}
+          aria-controls="roles-listbox"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {

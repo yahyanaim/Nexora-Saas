@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -157,7 +158,9 @@ function ChartAreaInteractive() {
     <Card className="h-full pt-0">
       <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
         <div className="grid flex-1 gap-1">
-          <CardTitle>{t("areaChartInteractive")}</CardTitle>
+          <CardTitle className="text-base sm:text-lg font-semibold whitespace-nowrap">
+            {t("areaChartInteractive")}
+          </CardTitle>
           <CardDescription>
             {t("showingTotalVisitorsLast3Months")}
           </CardDescription>
@@ -233,8 +236,8 @@ function ChartAreaInteractive() {
               cursor={false}
               content={
                 <ChartTooltipContent
-                  labelFormatter={(value: any) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                  labelFormatter={(value) => {
+                    return new Date(String(value)).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                     })
@@ -261,6 +264,11 @@ function ChartAreaInteractive() {
           </AreaChart>
         </ChartContainer>
       </CardContent>
+      <CardFooter className="flex-col items-start gap-1 border-t px-6 py-4 text-xs text-muted-foreground leading-relaxed">
+        <p>
+          <span className="font-semibold text-foreground">Traffic Trends & Platform Velocity:</span> Tracks concurrent visitor throughput across desktop and mobile devices over rolling time horizons. Stacked visual layers highlight seasonal surges and device adoption shifts, enabling engineering and product teams to forecast capacity and optimize responsiveness.
+        </p>
+      </CardFooter>
     </Card>
   )
 }

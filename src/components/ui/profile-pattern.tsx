@@ -4,13 +4,10 @@ import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { cn } from "@/lib/utils"
 import {
   Heart,
-  Sun,
   Cloud,
-  Droplet,
   Leaf,
   Flame,
   Crown,
-  Moon,
   Diamond,
   Zap,
   Star,
@@ -18,12 +15,12 @@ import {
   Snowflake,
   Volleyball,
   TreePalm,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { memo, useEffect, useMemo, useRef, useState } from "react"
 
 interface Props {
   color?: string
-  Icon?: any
+  Icon?: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
   density?: "full" | "compact"
   className?: string
 }
@@ -68,7 +65,7 @@ export const ProfilePattern = memo(
       if (!el) return
 
       const observer = new IntersectionObserver(
-        ([entry]) => setIsVisible(entry.isIntersecting),
+        ([entry]) => setIsVisible(entry?.isIntersecting ?? false),
         { rootMargin: "100px" }
       )
       observer.observe(el)
@@ -139,12 +136,13 @@ export const ProfilePattern = memo(
                 willChange: isVisible ? "transform" : "auto",
                 animation: `profile-pattern-spin ${p.duration}s linear infinite`,
                 animationPlayState: isVisible ? "running" : "paused",
-                animationDirection: p.direction as any,
+                animationDirection: p.direction,
                 animationDelay: `${p.delay}s`,
-                // @ts-ignore
-                "--rx": `${p.rotateX}deg`,
-                "--ry": `${p.rotateY}deg`,
-                "--tz": `${p.depth}px`,
+                ...({
+                  "--rx": `${p.rotateX}deg`,
+                  "--ry": `${p.rotateY}deg`,
+                  "--tz": `${p.depth}px`,
+                } as React.CSSProperties),
               }}
             >
               {FinalIcon ? <FinalIcon size={p.size} strokeWidth={1.5} /> : ""}
@@ -180,3 +178,5 @@ export const ProfilePattern = memo(
     )
   }
 )
+
+ProfilePattern.displayName = "ProfilePattern"

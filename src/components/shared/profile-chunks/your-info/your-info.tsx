@@ -7,7 +7,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { PROFILE_PATTERNS } from "@/components/ui/profile-pattern"
 import { Textarea } from "@/components/ui/textarea"
-import { Check } from "lucide-react"
+import { Check } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 import {
   UseFormRegister,

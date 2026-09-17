@@ -1,19 +1,31 @@
 import * as React from "react"
-
 import { cn } from "@/lib/utils"
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
-  return (
-    <input
-      type={type}
-      data-slot="input"
-      className={cn(
-        "text-md h-12 w-full min-w-0 rounded-lg border border-input bg-card/90 px-2.5 py-1 shadow-md transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:h-13 dark:bg-input/30 dark:disabled:bg-input/80",
-        className
-      )}
-      {...props}
-    />
-  )
+export interface InputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
+  size?: "sm" | "md" | "lg" | number
+  labelText?: React.ReactNode
+  hideLabel?: boolean
+  invalid?: boolean
+  invalidText?: React.ReactNode
 }
 
-export { Input }
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  ({ className, type, size, labelText: _labelText, hideLabel: _hideLabel, invalid, invalidText: _invalidText, ...props }, ref) => {
+    return (
+      <input
+        type={type}
+        className={cn(
+          "flex h-9 w-full rounded-lg border border-border/70 bg-background/80 px-3 py-1 text-sm shadow-xs transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50",
+          size === "sm" && "h-8 text-xs",
+          size === "lg" && "h-10 text-base",
+          invalid && "border-destructive focus-visible:ring-destructive/30",
+          className
+        )}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Input.displayName = "Input"

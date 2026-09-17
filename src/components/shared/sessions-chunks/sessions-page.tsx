@@ -131,7 +131,7 @@ export default function SessionsPage() {
   }, [pendingAction, isDeleting, isStatusLoading, t])
 
   return (
-    <>
+    <div className="p-4 md:p-6 space-y-6">
       <DataTable
         manual
         title={t("sessions")}
@@ -175,6 +175,6 @@ export default function SessionsPage() {
           onConfirm={handleConfirm}
         />
       )}
-    </>
+    </div>
   )
 }

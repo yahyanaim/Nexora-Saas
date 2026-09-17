@@ -19,7 +19,7 @@ import {
   CheckCircle,
   RotateCw,
   Download,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 
 export interface ProjectsColumnActions {
@@ -36,7 +36,7 @@ export interface ProjectsColumnActions {
 export function getProjectsColumns(
   actions: ProjectsColumnActions,
   t: (key: string, values?: Record<string, string | number>) => string
-): ColumnDef<Project, any>[] {
+): ColumnDef<Project>[] {
   const STATUS_CONFIG: Record<
     ProjectStatus,
     { label: string; className: string }
@@ -171,7 +171,7 @@ export function getProjectsColumns(
               style={{ width: `${row.original.progress}%` }}
             />
           </div>
-          <span className="text-sm tabular-nums">{row.original.progress}%</span>
+          <span className="font-mono text-sm tabular-nums">{row.original.progress}%</span>
         </div>
       ),
     },

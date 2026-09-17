@@ -1,22 +1,37 @@
 "use client"
 
-import { createContext, useEffect, ReactNode, useState } from "react"
-import { useRouter, usePathname } from "next/navigation"
-import { User } from "@/types/users"
-import { useFetchMyAccount } from "@/hooks/my-profile/use-fetch-my-account"
-import { playConfetti } from "@/lib/utils/play-confetti"
+import { createContext, useEffect, useState, useCallback, useMemo } from "react"
+import { useRouter, usePathname } from "@/i18n/navigation"
+import { User, UserStatus, UserType } from "@/types/users"
+import { AuthUser, LoginPayload, LoginResponse, RegisterPayload, RegisterResponse } from "@/types/auth"
+import { fetchMyAccountApi, loginApi, logoutApi, registerApi } from "@/lib/api/auth-apis"
+import { fetchSubscriptionApi } from "@/lib/api/billing-apis"
+import { BillingPlan } from "@/types/plans"
+import { FeatureFlagKey, isFeatureEnabledForPlan } from "@/lib/feature-flags/feature-flags"
+import { isSuperUser } from "@/lib/permissions/can"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { UPGRADE_REQUIRED_EVENT, apiErrorMessage } from "@/lib/myapi/client"
+import { isDemoMode } from "@/lib/auth/demo-mode"
+import { tokenStorage } from "@/lib/myapi/token-storage"
+import { toast } from "sonner"
 
+/**
+ * Context value exposed by {@link AuthGuardProvider}.
+ * Provides reactive access to the authenticated user, session loading status,
+ * login/register/logout actions, and route gatekeeping utilities.
+ */
 export interface AuthGuardContextType {
   authedUser: User | undefined
+  user: User | undefined
   currentUserId?: string
   isAuthenticated: boolean
   isLoading: boolean
   isError: boolean
-  token: string | undefined
+  token?: string
   initializeAuth: (enableRouter?: boolean) => void
   clearAuth: () => void
-  updatedUser: (user: User) => void
-  myEmail: string
+  updatedUser: (user: Partial<User>) => void
+  myEmail?: string
   isPasscodeLocked?: boolean
   myPrivacy?: {
     email?: string
@@ -25,180 +40,178 @@ export interface AuthGuardContextType {
     forwardedMessages?: string
     invite?: string
   }
+  currentPlan?: BillingPlan
+  hasFeature: (flag: FeatureFlagKey) => boolean
+  login: (payload: LoginPayload) => Promise<LoginResponse>
+  register: (payload: RegisterPayload) => Promise<RegisterResponse>
+  logout: () => Promise<void>
+  refetchUser: () => void
 }
 
 export const AuthGuardContext = createContext<AuthGuardContextType | null>(null)
 
-const getLocalStorageItem = (key: string): string | null => {
-  if (typeof window === "undefined") return null
-  return localStorage.getItem(key)
-}
-
-const getLocalStorageJSON = (key: string): any => {
-  if (typeof window === "undefined") return null
-  const item = localStorage.getItem(key)
-  if (!item) return null
-  try {
-    return JSON.parse(item)
-  } catch {
-    return null
+/**
+ * Transforms an {@link AuthUser} payload into the full platform {@link User} entity.
+ * Prioritizes custom uploaded or AI portrait avatars, applying a deterministic fallback.
+ *
+ * @param authUser - Raw session user object returned from auth APIs
+ * @returns Fully normalized User entity or undefined
+ */
+function mapAuthUserToUser(authUser: AuthUser | null | undefined): User | undefined {
+  if (!authUser) return undefined
+  const extended = authUser as unknown as Partial<User>
+  return {
+    ...authUser,
+    role: authUser.role ?? "user",
+    avatar: authUser.avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(authUser.name || authUser.id || "user")}`,
+    userType: extended.userType ?? UserType.USER,
+    status: extended.status ?? UserStatus.ACTIVE,
   }
 }
 
-const setLocalStorageItem = (key: string, value: any): void => {
-  if (typeof window === "undefined") return
-  if (typeof value === "string") {
-    localStorage.setItem(key, value)
-  } else {
-    localStorage.setItem(key, JSON.stringify(value))
-  }
-}
-
-const removeLocalStorageItem = (key: string): void => {
-  if (typeof window === "undefined") return
-  localStorage.removeItem(key)
-}
-
-export function AuthGuardProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | undefined>(undefined)
-  const [user, setUser] = useState<User | undefined>(undefined)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false)
-  const [isInitialized, setIsInitialized] = useState<boolean>(false)
-  const [isMounted, setIsMounted] = useState<boolean>(false)
+export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
+  const queryClient = useQueryClient()
+  const [localOverrides, setLocalOverrides] = useState<Partial<User>>({})
 
+  // Session query via HTTP-only cookie
   const {
-    myAccount,
-    error: accountError,
-    isError: isAccountError,
-  } = useFetchMyAccount(isAuthenticated && !!token)
+    data: myAccount,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["myAccount"],
+    queryFn: fetchMyAccountApi,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  })
 
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
+  const baseUser = mapAuthUserToUser(myAccount)
+  const user: User | undefined = useMemo(() => {
+    return baseUser ? { ...baseUser, ...localOverrides } : undefined
+  }, [baseUser, localOverrides])
+  const isAuthenticated = !!user
 
+  // 1. Plan gate handler: 403 upgrade_required -> route to /dashboard/plans
   useEffect(() => {
-    if (!isMounted) return
+    const goPricing = () => {
+      toast.error("Your current plan does not include this feature. Upgrade to continue.")
+      router.push("/dashboard/plans")
+    }
+    window.addEventListener(UPGRADE_REQUIRED_EVENT, goPricing)
+    return () => window.removeEventListener(UPGRADE_REQUIRED_EVENT, goPricing)
+  }, [router])
+
+  // 2. Routing guards (RequireAuth / GuestOnly)
+  useEffect(() => {
+    if (isLoading) return
 
     const isAuthPage = pathname?.includes("/auth")
-    const hasToken = !!getLocalStorageItem("token")
+    const isDashboardPage = pathname?.includes("/dashboard")
 
-    if (isAuthPage && hasToken) {
+    if (isAuthenticated && isAuthPage) {
       router.replace("/dashboard/overview")
-      return
-    }
-
-    if (isInitialized) return
-
-    const getUser = getLocalStorageJSON("user")
-    const getToken = getLocalStorageItem("token")
-
-    if (getToken && getUser) {
-      setToken(getToken)
-      setUser(getUser)
-      setIsAuthenticated(true)
-    } else if (!isAuthPage) {
+    } else if (!isAuthenticated && isDashboardPage) {
       router.replace("/auth")
     }
+  }, [isAuthenticated, isLoading, pathname, router])
 
-    setIsInitialized(true)
-  }, [isMounted, pathname])
-
+  // 3. Email verification / Account Lock error handling
   useEffect(() => {
-    if (myAccount && isAuthenticated && isMounted) {
-      const updatedUserData = { ...user, ...myAccount }
-      setUser(updatedUserData)
-      setLocalStorageItem("user", updatedUserData)
+    if (!isError || !error) return
+    const data = (error as { response?: { data?: { code?: string } } })?.response?.data
+    if (data?.code === "email_unverified") {
+      toast.error("Your email is unverified. Please check your inbox to activate your account.")
+    } else if (data?.code === "account_locked") {
+      toast.error(apiErrorMessage(error, "Account is temporarily locked. Please contact support."))
     }
-  }, [myAccount, isAuthenticated, isMounted])
+  }, [isError, error])
 
-  useEffect(() => {
-    if (!isMounted || !isInitialized) return
-    if (!isAccountError || !accountError) return
-
-    const status = (accountError as any)?.response?.status
-    const code = (accountError as any)?.response?.data?.code
-
-    if (status === 401 || code === "Unauthorized") {
-      removeLocalStorageItem("token")
-      removeLocalStorageItem("user")
-      removeLocalStorageItem("passcode")
-      setToken(undefined)
-      setUser(undefined)
-      setIsAuthenticated(false)
-      router.replace("/auth")
-    }
-  }, [isAccountError, accountError, isMounted, isInitialized, router])
-
-  const initializeAuth = (enableRouter = false) => {
-    if (typeof window === "undefined") return
-
-    const getUser = getLocalStorageJSON("user") ?? undefined
-    const getToken = getLocalStorageItem("token") ?? undefined
-
-    if (getToken && getUser) {
-      setToken(getToken)
-      setUser(getUser)
-      setIsAuthenticated(true)
-
-      if (enableRouter) {
+  const initializeAuth = useCallback(
+    async (enableRouter = false) => {
+      await queryClient.invalidateQueries({ queryKey: ["myAccount"] })
+      const res = await refetch()
+      if (enableRouter && res.data) {
         router.replace("/dashboard/overview")
-        setTimeout(() => {
-          return playConfetti()
-        }, 2000)
       }
-    }
-  }
+    },
+    [queryClient, refetch, router]
+  )
 
-  const updatedUser = (user: User) => {
-    if (typeof window === "undefined") return
-    const getUser = getLocalStorageJSON("user") ?? {}
-    const newData = { ...getUser, ...user }
-    setLocalStorageItem("user", newData)
-    setUser(newData)
-  }
+  const updatedUser = useCallback((partial: Partial<User>) => {
+    setLocalOverrides((prev) => ({ ...prev, ...partial }))
+  }, [])
 
-  const clearAuth = () => {
-    if (typeof window === "undefined") return
-    removeLocalStorageItem("token")
-    removeLocalStorageItem("user")
-    removeLocalStorageItem("passcode")
-    setToken(undefined)
-    setUser(undefined)
-    setIsAuthenticated(false)
+  const clearAuth = useCallback(() => {
+    queryClient.setQueryData(["myAccount"], null)
+    setLocalOverrides({})
     router.replace("/auth")
-  }
+  }, [queryClient, router])
 
-  if (!isMounted) {
-    return null
-  }
+  const login = useCallback(
+    async (payload: LoginPayload) => {
+      const response = await loginApi(payload)
+      if (!response.mfaRequired) {
+        await initializeAuth(true)
+      }
+      return response
+    },
+    [initializeAuth]
+  )
 
-  const passcode = getLocalStorageItem("passcode")
+  const register = useCallback(
+    async (payload: RegisterPayload) => {
+      const response = await registerApi(payload)
+      await initializeAuth(true)
+      return response
+    },
+    [initializeAuth]
+  )
+
+  const { data: subscription } = useQuery({
+    queryKey: ["currentSubscription"],
+    queryFn: fetchSubscriptionApi,
+    staleTime: 5 * 60 * 1000,
+    enabled: isAuthenticated,
+    retry: false,
+  })
+
+  const currentPlan: BillingPlan = subscription?.plan || "free"
+
+  const hasFeature = useCallback(
+    (flag: FeatureFlagKey): boolean => {
+      if (isSuperUser(user)) return true
+      return isFeatureEnabledForPlan(flag, currentPlan)
+    },
+    [user, currentPlan]
+  )
+
+  const logout = useCallback(async () => {
+    await logoutApi()
+    clearAuth()
+  }, [clearAuth])
 
   const value: AuthGuardContextType = {
-    authedUser: {
-      name: user?.name as any,
-      id: user?.id as any,
-      username: user?.username,
-      userType: user?.userType as any,
-      profileColor: user?.profileColor as any,
-      avatar: user?.avatar as any,
-      status: user?.status as any,
-      is2FA: user?.is2FA as any,
-      roles: user?.roles as any,
-    },
-    myEmail: user?.email as any,
-    myPrivacy: user?.privacy as any,
-    isPasscodeLocked: (user?.isPasscodeLocked as any) || !!passcode,
+    authedUser: user,
+    user,
     currentUserId: user?.id,
+    myEmail: user?.email,
     isAuthenticated,
-    isError: false,
-    isLoading: !isInitialized,
-    token,
+    isError,
+    isLoading,
+    token: isDemoMode() ? (tokenStorage.get() ?? undefined) : undefined, // Production relies on HttpOnly cookies
+    currentPlan,
+    hasFeature,
     initializeAuth,
-    updatedUser,
     clearAuth,
+    updatedUser,
+    login,
+    register,
+    logout,
+    refetchUser: () => refetch(),
   }
 
   return (
@@ -207,3 +220,6 @@ export function AuthGuardProvider({ children }: { children: ReactNode }) {
     </AuthGuardContext.Provider>
   )
 }
+
+export const AuthProvider = AuthGuardProvider
+export default AuthGuardProvider

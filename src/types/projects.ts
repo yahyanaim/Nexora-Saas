@@ -90,7 +90,7 @@ export interface CreateProjectPayload {
   endDate?: string
 }
 
-export interface UpdateProjectPayload extends Partial<CreateProjectPayload> {}
+export type UpdateProjectPayload = Partial<CreateProjectPayload>
 
 export interface ProjectsSummary {
   total: number

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useCallback } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -40,7 +40,9 @@ import {
   CreditCard,
   BadgeCheck,
   ChartNoAxesCombined,
-} from "lucide-react"
+  Terminal,
+  History,
+} from "@/components/ui/carbon/icons"
 import { Link, usePathname } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLogout } from "@/hooks/auth/use-logout"
@@ -50,6 +52,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { ProfilePage } from "../profile-chunks/profile-page"
 import { useGetDirection } from "@/hooks/use-get-direction"
 import { AdminPermissionsPlatform } from "@/types/roles"
+import { WorkspaceSwitcher } from "./workspace-switcher"
+import { can } from "@/lib/permissions/can"
 
 export function DashboardSidebar({
   ...props
@@ -61,31 +65,12 @@ export function DashboardSidebar({
   const [logoutOpen, setLogoutOpen] = useState(false)
   const { dir } = useGetDirection()
 
-  const userPermissions = useMemo(() => {
-    if (!authedUser?.roles?.length) return new Set<string>()
-
-    return new Set(
-      authedUser.roles
-        .filter((role: any) => role.status === "active")
-        .flatMap((role: any) => role.permissions ?? [])
-    )
+  const hasPermission = useCallback((permission?: AdminPermissionsPlatform) => {
+    if (!permission) return true
+    return can(authedUser, permission)
   }, [authedUser])
 
-  const FULL_ACCESS_USER_TYPES = ["admin", "owner"]
-  const isFullAccess = FULL_ACCESS_USER_TYPES.includes(
-    authedUser?.userType || ""
-  )
-
-  const hasPermission = (permission?: AdminPermissionsPlatform) => {
-    if (!permission) return true
-    if (isFullAccess) return true
-    return (
-      userPermissions.has(AdminPermissionsPlatform.ALL) ||
-      userPermissions.has(permission)
-    )
-  }
-
-  const data = [
+  const data = useMemo(() => [
     {
       title: t("dashboard"),
       items: [
@@ -167,6 +152,12 @@ export function DashboardSidebar({
           icon: Files,
           permission: AdminPermissionsPlatform.FILES_READ,
         },
+        {
+          title: t("developer"),
+          url: "/dashboard/developer",
+          icon: Terminal,
+          permission: AdminPermissionsPlatform.PROJECTS_READ,
+        },
       ],
     },
 
@@ -204,13 +195,19 @@ export function DashboardSidebar({
           permission: AdminPermissionsPlatform.SESSIONS_READ,
         },
         {
+          title: t("auditLogs"),
+          url: "/dashboard/audit-logs",
+          icon: History,
+          permission: AdminPermissionsPlatform.SESSIONS_READ,
+        },
+        {
           title: t("logout"),
           url: "#",
           icon: LogOut,
         },
       ],
     },
-  ]
+  ], [t])
 
   const filteredData = useMemo(() => {
     return data
@@ -219,28 +216,31 @@ export function DashboardSidebar({
         items: group.items.filter((item) => hasPermission(item.permission)),
       }))
       .filter((group) => group.items.length > 0)
-  }, [userPermissions, isFullAccess])
+  }, [data, hasPermission])
 
   return (
     <Sidebar side={dir === "rtl" ? "right" : "left"} {...props}>
-      <SidebarHeader className="h-17 bg-background p-2">
+      <SidebarHeader className="h-auto bg-background p-3 flex flex-col items-stretch justify-start gap-2.5">
         <Link href={"/dashboard/overview"}>
           <div className="flex h-full items-center gap-2">
-            <Image
-              src={"/app-logo.png"}
-              alt=""
-              width={100}
-              height={100}
-              className="h-12 w-12"
-            />
-            <div className="flex flex-col">
-              <p className="font-bold">{t("appName")}</p>
-              <span className="text-sm text-muted-foreground">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-card p-1 shadow-xs overflow-hidden">
+              <Image
+                src={"/app-logo.png"}
+                alt={t("appName")}
+                width={36}
+                height={36}
+                className="size-8 object-contain rounded-lg"
+              />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <p className="font-semibold text-sm tracking-tight text-foreground truncate">{t("appName")}</p>
+              <span className="text-xs text-muted-foreground truncate">
                 {t("sassPlatform")}
               </span>
             </div>
           </div>
         </Link>
+        <WorkspaceSwitcher />
       </SidebarHeader>
       <SidebarContent className="bg-background">
         {filteredData.map((group) => (

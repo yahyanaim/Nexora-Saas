@@ -36,10 +36,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== "undefined" ? !navigator.onLine : false
   )
-  const { token } = useAuthGuard()
+  const { isAuthenticated, token } = useAuthGuard()
 
   const connect = useCallback(() => {
-    if (!token) {
+    if (!isAuthenticated) {
       setIsConnecting(false)
       return
     }
@@ -73,7 +73,21 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       setIsConnected(false)
     }
 
-    const onConnectError = () => {
+    const onConnectError = (err: Error) => {
+      const message = err?.message?.toLowerCase() || ""
+      const isAuthError =
+        message.includes("unauthorized") ||
+        message.includes("forbidden") ||
+        message.includes("jwt") ||
+        message.includes("auth")
+
+      if (isAuthError) {
+        console.warn(
+          "[Socket Auth] Handshake rejected by server:",
+          err?.message || err
+        )
+      }
+
       setIsConnected(false)
       setIsConnecting(false)
     }
@@ -96,10 +110,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       s.removeAllListeners()
       s.disconnect()
     }
-  }, [token, socket?.connected])
+  }, [isAuthenticated, token, socket?.connected, authAnnounceLogin, sendNotification])
 
   const reconnect = useCallback(() => {
-    if (!token) return
+    if (!isAuthenticated) return
 
     if (socket) {
       socket.removeAllListeners()
@@ -111,24 +125,29 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     setIsConnecting(true)
 
     setTimeout(() => connect(), 100)
-  }, [connect, token, socket])
+  }, [connect, isAuthenticated, socket])
 
   useEffect(() => {
-    if (token) {
-      const cleanup = connect()
-      return () => {
-        if (cleanup) cleanup()
+    let cleanup: (() => void) | void
+    const timeoutId = setTimeout(() => {
+      if (isAuthenticated) {
+        cleanup = connect()
+      } else {
+        if (socket) {
+          socket.removeAllListeners()
+          socket.disconnect()
+          setSocket(null)
+        }
+        setIsConnected(false)
+        setIsConnecting(false)
       }
-    } else {
-      if (socket) {
-        socket.removeAllListeners()
-        socket.disconnect()
-        setSocket(null)
-      }
-      setIsConnected(false)
-      setIsConnecting(false)
+    }, 0)
+
+    return () => {
+      clearTimeout(timeoutId)
+      if (cleanup) cleanup()
     }
-  }, [token, connect])
+  }, [isAuthenticated, connect, socket])
 
   useEffect(() => {
     const handleOffline = () => {
@@ -138,7 +157,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     const handleOnline = () => {
       setIsOffline(false)
-      if (token && !socket?.connected) {
+      if (isAuthenticated && !socket?.connected) {
         reconnect()
       }
     }
@@ -150,7 +169,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       window.removeEventListener("offline", handleOffline)
       window.removeEventListener("online", handleOnline)
     }
-  }, [token, reconnect, socket])
+  }, [isAuthenticated, reconnect, socket])
 
   const joinSpace = useCallback(
     (spaceId: string) => {

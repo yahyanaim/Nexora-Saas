@@ -6,7 +6,7 @@ import {
   MessagesSquare,
   Network,
   type LucideIcon,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { SessionStatus } from "./sessions"
 import { ActivationStatus } from "./users"
 

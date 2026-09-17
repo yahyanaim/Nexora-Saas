@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun } from "@/components/ui/carbon/icons"
 import { flushSync } from "react-dom"
 
 import { cn } from "@/lib/utils"
@@ -140,7 +140,7 @@ export const AnimatedThemeToggler = ({
 
   // Avoid hydration mismatch — next-themes is not available on the server
   useEffect(() => {
-    setMounted(true)
+    queueMicrotask(() => setMounted(true))
   }, [])
 
   const isDark = resolvedTheme === "dark"

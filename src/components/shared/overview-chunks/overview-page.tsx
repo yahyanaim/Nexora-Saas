@@ -1,47 +1,57 @@
 "use client"
 
-import { SectionCards } from "./cards/section-cards"
-import { FooterGradient } from "@/components/ui/footer-gradient"
-import ChartAreaInteractive from "./charts/area-chart"
-import ChartBarInteractive from "./charts/bar-chart"
-import ChartLineInteractive from "./charts/line-chart"
-import ChartPieInteractive from "./charts/pie-chart"
-import ChartRadarLinesOnly from "./charts/radar-chart"
-import ChartRadialLabel from "./charts/radial-chart"
-import ChartTooltipLabelFormatter from "./charts/tooltip-chart"
+import { AnalyticsFilterProvider } from "./analytics-filter-context"
+import { AnalyticsToolbar } from "./analytics-toolbar"
+import { AnalyticsKpiCards } from "./analytics-kpi-cards"
+import { TotalSalesChart } from "./total-sales-chart"
+import { SalesBreakdownCard } from "./sales-breakdown-card"
+import { ArrBridgeCard } from "./arr-bridge-card"
+import { AiComputeMeteringCard } from "./ai-compute-metering-card"
+import { TopProductsCard } from "./top-products-card"
+import {
+  SessionOverTimeCard,
+  AverageOrderValueCard,
+} from "./time-series-cards"
+import { AskVictorPill } from "./ask-victor-pill"
 
 export default function OverviewPage() {
   return (
-    <div className="relative overflow-hidden">
-      <div className="h-full w-full overflow-auto p-4 pb-20">
-        <SectionCards />
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
-          <div className="lg:col-span-8">
-            <ChartAreaInteractive />
-          </div>
-          <div className="lg:col-span-4">
-            <ChartPieInteractive />
+    <AnalyticsFilterProvider>
+      <div className="relative h-full w-full overflow-hidden">
+        <div className="h-full w-full space-y-5 overflow-auto p-4 pb-24 md:p-6 md:pb-28">
+          {/* Top Analytics Toolbar with Filters & Actions */}
+          <AnalyticsToolbar />
+
+          {/* 4 Top KPI Metric Cards with Bar Sparklines */}
+          <AnalyticsKpiCards />
+
+          {/* Middle Section: Total Sales Over Time & Breakdown */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+            <div className="lg:col-span-8">
+              <TotalSalesChart />
+            </div>
+            <div className="lg:col-span-4">
+              <SalesBreakdownCard />
+            </div>
           </div>
 
-          <div className="lg:col-span-6">
-            <ChartBarInteractive />
-          </div>
-          <div className="lg:col-span-6">
-            <ChartLineInteractive />
+          {/* Enterprise SaaS Growth & Telemetry Section */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <ArrBridgeCard />
+            <AiComputeMeteringCard />
           </div>
 
-          <div className="lg:col-span-4">
-            <ChartRadarLinesOnly />
-          </div>
-          <div className="lg:col-span-4">
-            <ChartRadialLabel />
-          </div>
-          <div className="lg:col-span-4">
-            <ChartTooltipLabelFormatter />
+          {/* Bottom Section: Top Products, Sessions & Average Order Value */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <TopProductsCard />
+            <SessionOverTimeCard />
+            <AverageOrderValueCard />
           </div>
         </div>
+
+        {/* Floating Bottom AI Assistant Pill */}
+        <AskVictorPill />
       </div>
-      <FooterGradient position="absolute" height="lg" blur={false} />
-    </div>
+    </AnalyticsFilterProvider>
   )
 }

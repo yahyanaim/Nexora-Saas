@@ -66,7 +66,15 @@ export const UserForm = forwardRef<UserFormHandle, UserFormProps>(
         is2FA: false,
         bio: defaultValues?.bio ?? "",
       })
-    }, [defaultValues?.id])
+    }, [
+      defaultValues?.id,
+      defaultValues?.name,
+      defaultValues?.username,
+      defaultValues?.email,
+      defaultValues?.status,
+      defaultValues?.bio,
+      form,
+    ])
 
     useImperativeHandle(ref, () => ({
       submit: () => form.handleSubmit(onValid)(),

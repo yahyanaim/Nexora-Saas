@@ -10,7 +10,7 @@ import {
   EyeOff,
   ArrowLeft,
   Loader2,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,7 @@ import {
 } from "@/lib/api/auth-apis"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { toast } from "@/lib/utils/toast"
+import { apiErrorMessage } from "@/lib/myapi/client"
 
 const OTP_LENGTH = 6
 
@@ -59,6 +60,7 @@ export function ChangePasswordDialog({
   const [confirmPassword, setConfirmPassword] = useState("")
   const [otpCode, setOtpCode] = useState("")
   const [otpId, setOtpId] = useState("")
+  const [resetToken, setResetToken] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -87,13 +89,14 @@ export function ChangePasswordDialog({
   const verifyMutation = useMutation({
     mutationFn: verifyForgotPasswordApi,
     onSuccess: (data) => {
-      if (data?.resetToken) localStorage.setItem("resetToken", data?.resetToken)
+      if (data?.resetToken) setResetToken(data.resetToken)
       setServerError("")
       setStep("newPassword")
     },
-    onError: () => {
-      const msg = t("somethingWentWrong")
+    onError: (err: unknown) => {
+      const msg = apiErrorMessage(err, t("somethingWentWrong"))
       setServerError(msg)
+      toast.error(msg)
     },
   })
 
@@ -113,7 +116,7 @@ export function ChangePasswordDialog({
     if (mode === "forgot" && myEmail && !otpId && step === "otp") {
       forgotMutation.mutate({ email: myEmail })
     }
-  }, [mode, myEmail])
+  }, [mode, myEmail, otpId, step, forgotMutation])
 
   const handleClose = () => {
     setMode("change")
@@ -123,6 +126,7 @@ export function ChangePasswordDialog({
     setConfirmPassword("")
     setOtpCode("")
     setOtpId("")
+    setResetToken("")
     setServerError("")
     setErrors({})
     onOpenChange(false)
@@ -173,11 +177,9 @@ export function ChangePasswordDialog({
   }
 
   const handleResetSubmit = () => {
-    const resetToken = localStorage.getItem("resetToken") || ""
-
     if (!validateReset()) return
     setServerError("")
-    resetMutation.mutate({ newPassword, resetToken })
+    resetMutation.mutate({ newPassword, token: resetToken })
   }
 
   const handleSwitchToForgot = () => {

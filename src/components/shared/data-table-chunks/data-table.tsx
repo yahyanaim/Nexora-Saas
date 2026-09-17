@@ -6,6 +6,7 @@ import {
   ColumnFiltersState,
   OnChangeFn,
   PaginationState,
+  RowData,
   SortingState,
   VisibilityState,
   flexRender,
@@ -30,13 +31,14 @@ import {
   FacetedFilterConfig,
   ToolbarAction,
 } from "./data-table-toolbar"
-import { Plus } from "lucide-react"
+import { Plus } from "@/components/ui/carbon/icons"
 import { DataTablePagination } from "./data-table-pagination"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 
 declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData, TValue> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
     className?: string
   }
 }
@@ -72,6 +74,12 @@ interface DataTableProps<TData, TValue> {
   renderAfterJsxToolbar?: () => React.ReactNode
   renderBeforeJsxToolbar?: () => React.ReactNode
   defaultColumnVisibility?: VisibilityState
+  /** Custom export filename */
+  exportFilename?: string
+  /** Custom export data accessor */
+  getExportData?: () => Record<string, unknown>[]
+  /** Whether export is enabled (defaults to true) */
+  enableExport?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -84,7 +92,7 @@ export function DataTable<TData, TValue>({
   className,
   emptyMessage = "No results.",
   isLoading,
-  isFetching,
+  isFetching: _isFetching,
   title,
   onAddClick,
   actions = [],
@@ -102,6 +110,9 @@ export function DataTable<TData, TValue>({
   renderAfterJsxToolbar,
   renderBeforeJsxToolbar,
   defaultColumnVisibility,
+  exportFilename,
+  getExportData,
+  enableExport = true,
 }: DataTableProps<TData, TValue>) {
   const t = useTranslations()
   const [rowSelection, setRowSelection] = React.useState({})
@@ -179,11 +190,11 @@ export function DataTable<TData, TValue>({
   return (
     <div
       className={cn(
-        "relative flex h-full w-full flex-col overflow-hidden",
+        "relative flex w-full flex-col",
         className
       )}
     >
-      <div className="flex h-full w-full flex-col bg-card ring-1 ring-foreground/10">
+      <div className="flex w-full flex-col rounded-xl border border-border/60 bg-card shadow-xs overflow-hidden">
         {renderBeforeJsxToolbar && renderBeforeJsxToolbar()}
         <DataTableToolbar
           table={table}
@@ -195,9 +206,12 @@ export function DataTable<TData, TValue>({
           bulkActions={bulkActions}
           searchValue={manual ? searchValue : undefined}
           onSearchChange={manual ? onSearchChange : undefined}
+          exportFilename={exportFilename}
+          getExportData={getExportData}
+          enableExport={enableExport}
         />
         {renderAfterJsxToolbar && renderAfterJsxToolbar()}
-        <div className="grow overflow-auto p-3 pt-2">
+        <div className="w-full overflow-auto">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (

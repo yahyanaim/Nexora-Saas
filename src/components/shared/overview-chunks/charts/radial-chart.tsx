@@ -1,6 +1,6 @@
 "use client"
 
-import { TrendingUp } from "lucide-react"
+import { TrendingUp } from "@/components/ui/carbon/icons"
 import { LabelList, RadialBar, RadialBarChart } from "recharts"
 
 import {
@@ -92,14 +92,14 @@ function ChartRadialLabel() {
           </RadialBarChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
-        <div className="flex items-center gap-2 leading-none font-medium">
+      <CardFooter className="flex-col items-start gap-2 border-t px-6 py-4 text-xs text-muted-foreground leading-relaxed">
+        <div className="flex items-center gap-2 leading-none font-medium text-foreground">
           {t("trendingUpByPercent", { percent: "5.2%" })}{" "}
-          <TrendingUp className="h-4 w-4" />
+          <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
         </div>
-        <div className="leading-none text-muted-foreground">
-          {t("showingTotalVisitorsLast6Months")}
-        </div>
+        <p>
+          <span className="font-semibold text-foreground">Client Environment Penetration:</span> Renders proportionate client browser share across Chrome, Safari, Firefox, Edge, and other user agents. Guides QA testing matrices and web engine rendering optimizations.
+        </p>
       </CardFooter>
     </Card>
   )

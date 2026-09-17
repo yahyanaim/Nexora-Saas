@@ -9,7 +9,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+import { Loader2 } from "@/components/ui/carbon/icons"
 import { useTranslations } from "next-intl"
 
 interface EntityFormSheetProps {
@@ -55,7 +55,7 @@ export function DataTableEntityFormSheet({
 
         <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
 
-        <SheetFooter className="flex-row border-t">
+        <SheetFooter className="flex-row border-t px-6 py-4 gap-3">
           <Button
             variant="destructive"
             className="flex-1"

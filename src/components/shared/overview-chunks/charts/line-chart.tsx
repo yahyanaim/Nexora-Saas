@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -205,8 +206,8 @@ function ChartLineInteractive() {
                 <ChartTooltipContent
                   className="w-[150px]"
                   nameKey="views"
-                  labelFormatter={(value: any) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                  labelFormatter={(value) => {
+                    return new Date(String(value)).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
@@ -225,6 +226,11 @@ function ChartLineInteractive() {
           </LineChart>
         </ChartContainer>
       </CardContent>
+      <CardFooter className="flex-col items-start gap-1 border-t px-6 py-4 text-xs text-muted-foreground leading-relaxed">
+        <p>
+          <span className="font-semibold text-foreground">Continuous Engagement Curves:</span> Visualizes uninterrupted multi-week momentum trajectories across device segments. Monotone spline curves highlight sharp fluctuations, weekend dips, and growth inflection points for product release monitoring.
+        </p>
+      </CardFooter>
     </Card>
   )
 }

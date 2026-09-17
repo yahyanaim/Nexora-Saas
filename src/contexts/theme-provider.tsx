@@ -101,15 +101,20 @@ export function ThemeProvider({
 function ThemeProviderCore({ children }: { children: React.ReactNode }) {
   const nextTheme = useNextTheme()
 
-  const [wallpaper, setWallpaperState] = React.useState<WallpaperName>("rose")
+  const [wallpaper, setWallpaperState] = React.useState<WallpaperName>("substantial")
   const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
-    setMounted(true)
-    const saved = localStorage.getItem("wallpaper") as WallpaperName | null
-    if (saved && WALLPAPER_NAMES.includes(saved)) {
-      setWallpaperState(saved)
-    }
+    queueMicrotask(() => {
+      setMounted(true)
+      const saved = localStorage.getItem("wallpaper") as WallpaperName | null
+      if (saved === "rose") {
+        setWallpaperState("substantial")
+        localStorage.setItem("wallpaper", "substantial")
+      } else if (saved && WALLPAPER_NAMES.includes(saved)) {
+        setWallpaperState(saved)
+      }
+    })
   }, [])
 
   React.useEffect(() => {
@@ -125,11 +130,12 @@ function ThemeProviderCore({ children }: { children: React.ReactNode }) {
     localStorage.setItem("wallpaper", name)
   }, [])
 
+  const { resolvedTheme, setTheme } = nextTheme
   const toggleTheme = React.useCallback(() => {
-    const nextMode = nextTheme.resolvedTheme === "dark" ? "light" : "dark"
+    const nextMode = resolvedTheme === "dark" ? "light" : "dark"
 
-    nextTheme.setTheme(nextMode)
-  }, [nextTheme.resolvedTheme, nextTheme.setTheme])
+    setTheme(nextMode)
+  }, [resolvedTheme, setTheme])
 
   const value = React.useMemo<ThemeContextValue>(
     () => ({

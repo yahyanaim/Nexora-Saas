@@ -1,44 +1,74 @@
-import moment from "moment"
-require("moment/locale/ar")
+import {
+  format,
+  formatDistanceToNow,
+  differenceInHours,
+  differenceInDays,
+  differenceInMinutes,
+  differenceInSeconds,
+  differenceInWeeks,
+  isSameYear,
+  isValid,
+  type Locale,
+} from "date-fns"
+import { ar, enUS, fr, es } from "date-fns/locale"
+
+function getDateLocale(locale: string = "en"): Locale {
+  if (locale.startsWith("ar")) return ar
+  if (locale.startsWith("fr")) return fr
+  if (locale.startsWith("es")) return es
+  return enUS
+}
+
+export const formatDate = (
+  dateInput?: string | Date,
+  locale: string = "en"
+): string => {
+  if (!dateInput) return ""
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+  if (!isValid(date)) return ""
+  return format(date, "MMM d, yyyy • h:mm a", { locale: getDateLocale(locale) })
+}
 
 export const formatDateFacebook = (
   dateInput?: string | Date,
   locale: string = "ar"
 ): string => {
-  if (!dateInput) return locale.startsWith("ar") ? "غير معروف" : "Unknown"
+  const isAr = locale.startsWith("ar")
+  if (!dateInput) return isAr ? "غير معروف" : "Unknown"
 
-  const date = moment(dateInput).locale(locale)
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+  if (!isValid(date)) return isAr ? "غير معروف" : "Unknown"
 
-  if (!date.isValid()) return locale.startsWith("ar") ? "غير معروف" : "Unknown"
-
-  const now = moment()
-  const diffInHours = now.diff(date, "hours")
-  const diffInDays = now.diff(date, "days")
+  const now = new Date()
+  const diffInHours = differenceInHours(now, date)
+  const diffInDays = differenceInDays(now, date)
 
   if (diffInHours < 24) {
-    return date.fromNow()
+    return formatDistanceToNow(date, {
+      addSuffix: true,
+      locale: getDateLocale(locale),
+    })
   }
 
   if (diffInDays === 1) {
-    if (locale.startsWith("ar")) {
-      return `أمس الساعة ${date.format("h:mm A")}`
+    if (isAr) {
+      return `أمس الساعة ${format(date, "h:mm a", { locale: ar })}`
         .replace("AM", "ص")
         .replace("PM", "م")
     }
-    return `Yesterday at ${date.format("h:mm A")}`
+    return `Yesterday at ${format(date, "h:mm a", { locale: enUS })}`
   }
 
-  if (now.year() === date.year()) {
-    if (locale.startsWith("ar")) {
-      return date
-        .format("D MMMM [الساعة] h:mm A")
+  if (isSameYear(now, date)) {
+    if (isAr) {
+      return format(date, "d MMMM 'الساعة' h:mm a", { locale: ar })
         .replace("AM", "ص")
         .replace("PM", "م")
     }
-    return date.format("D MMMM [at] h:mm A")
+    return format(date, "d MMMM 'at' h:mm a", { locale: getDateLocale(locale) })
   }
 
-  return date.format("D MMMM YYYY")
+  return format(date, "d MMMM yyyy", { locale: getDateLocale(locale) })
 }
 
 export function formatDateWhatsapp(
@@ -47,8 +77,8 @@ export function formatDateWhatsapp(
 ): string {
   if (!dateString) return ""
 
-  const date = new Date(dateString)
-  if (isNaN(date.getTime())) return ""
+  const date = typeof dateString === "string" ? new Date(dateString) : dateString
+  if (!isValid(date)) return ""
 
   const now = new Date()
 
@@ -96,16 +126,15 @@ export const formatDateInstagram = (
 ): string => {
   if (!dateInput) return ""
 
-  const date = moment(dateInput).locale(locale)
+  const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+  if (!isValid(date)) return ""
 
-  if (!date.isValid()) return ""
-
-  const now = moment()
-  const diffInSeconds = now.diff(date, "seconds")
-  const diffInMinutes = now.diff(date, "minutes")
-  const diffInHours = now.diff(date, "hours")
-  const diffInDays = now.diff(date, "days")
-  const diffInWeeks = now.diff(date, "weeks")
+  const now = new Date()
+  const diffInSeconds = differenceInSeconds(now, date)
+  const diffInMinutes = differenceInMinutes(now, date)
+  const diffInHours = differenceInHours(now, date)
+  const diffInDays = differenceInDays(now, date)
+  const diffInWeeks = differenceInWeeks(now, date)
 
   const isAr = locale.startsWith("ar")
 
@@ -129,9 +158,9 @@ export const formatDateInstagram = (
     return `${diffInWeeks}${isAr ? " أ" : "w"}`
   }
 
-  if (now.year() === date.year()) {
-    return date.format("MMM D")
+  if (isSameYear(now, date)) {
+    return format(date, "MMM d", { locale: getDateLocale(locale) })
   }
 
-  return date.format("MMM D, YYYY")
+  return format(date, "MMM d, yyyy", { locale: getDateLocale(locale) })
 }

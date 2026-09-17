@@ -1,8 +1,6 @@
 "use client"
 
 import { Invoice } from "@/types/invoices"
-import { Button } from "@/components/ui/button"
-import { Download, Send } from "lucide-react"
 import { useTranslations, useLocale } from "next-intl"
 
 interface InvoicePreviewProps {
@@ -90,7 +88,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             {invoice.items.length > 0 ? (
               invoice.items.map((item, index) => (
                 <tr
-                  key={(item as any).id ?? (item as any)._id ?? index}
+                  key={item.id ?? (item as { _id?: string })._id ?? index}
                   className="border-b last:border-0"
                 >
                   <td className="px-4 py-2 text-sm">{item.description}</td>

@@ -1,6 +1,6 @@
 "use client"
 
-import { Mail } from "lucide-react"
+import { Mail } from "@/components/ui/carbon/icons"
 import {
   Dialog,
   DialogContent,

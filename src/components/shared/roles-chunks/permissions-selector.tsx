@@ -10,13 +10,12 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck } from "@/components/ui/carbon/icons"
 import {
   PERMISSION_GROUPS,
   AdminPermissionsPlatform,
   RESOURCE_ICONS,
 } from "@/types/roles"
-import { useTranslations } from "next-intl"
 
 export function PermissionsSelector({
   value,
@@ -25,7 +24,6 @@ export function PermissionsSelector({
   value: AdminPermissionsPlatform[]
   onChange: (permissions: AdminPermissionsPlatform[]) => void
 }) {
-  const t = useTranslations()
   const [openGroups, setOpenGroups] = useState<string[]>(() =>
     PERMISSION_GROUPS.filter((group) =>
       group.permissions.some((p) => value.includes(p.value))

@@ -50,9 +50,9 @@ export async function uploadFile(
     `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
     formData,
     {
-      onUploadProgress: (progressEvent: any) => {
-        if (options.onProgress) {
-          const progress = (progressEvent.loaded / progressEvent.total) * 100
+      onUploadProgress: (progressEvent: { loaded?: number; total?: number }) => {
+        if (options.onProgress && progressEvent.total) {
+          const progress = (progressEvent.loaded! / progressEvent.total) * 100
           options.onProgress(progress)
         }
       },
@@ -75,7 +75,7 @@ export const extractKeyFromUrl = (url: string): string => {
     const uploadIndex = parts.indexOf("upload")
     if (uploadIndex === -1) return ""
 
-    let publicIdParts = parts.slice(uploadIndex + 1)
+    const publicIdParts = parts.slice(uploadIndex + 1)
 
     if (publicIdParts[0]?.match(/^v\d+$/)) {
       publicIdParts.shift()

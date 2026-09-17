@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { DataTable } from "@/components/shared/data-table-chunks/data-table"
 import {
   createProjectApi,
@@ -8,14 +8,14 @@ import {
   deleteProjectApi,
   archiveProjectApi,
 } from "@/lib/api/projects-api"
-import { Project, ProjectStatus } from "@/types/projects"
+import { Project, ProjectStatus, CreateProjectPayload, UpdateProjectPayload } from "@/types/projects"
 import { useProjectsTable } from "@/hooks/projects/use-projects-table"
 import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
-import { Plus } from "lucide-react"
+import { Plus } from "@/components/ui/carbon/icons"
 import { ProjectForm, ProjectFormHandle } from "./project-form"
 import { getProjectsColumns } from "./projects-columns"
 import { ProjectsSummaryCards } from "./projects-summary-cards"
@@ -55,7 +55,7 @@ export default function ProjectsPage() {
     refresh,
   } = useProjectsTable()
 
-  const { create, isCreating, update, isUpdating, remove, isDeleting } =
+  const { create, update, remove, isCreating, isUpdating, isDeleting } =
     useEntityMutations({
       queryKey: "projects",
       createFn: createProjectApi,
@@ -79,28 +79,28 @@ export default function ProjectsPage() {
     setFormOpen(true)
   }
 
-  function handleFormValid(values: any) {
+  function handleFormValid(values: CreateProjectPayload | UpdateProjectPayload) {
     if (formMode === "create") {
-      create(values, { onSuccess: () => setFormOpen(false) })
+      create(values as CreateProjectPayload, { onSuccess: () => setFormOpen(false) })
     } else if (editingProject) {
       update(editingProject.id, values)
       setFormOpen(false)
     }
   }
 
-  async function handleArchive(project: Project) {
+  const handleArchive = useCallback(async (project: Project) => {
     setPendingAction({ type: "archive", project })
-  }
+  }, [])
 
-  const handleComplete = (project: Project) => {
+  const handleComplete = useCallback((project: Project) => {
     setPendingAction({ type: "complete", project })
-  }
+  }, [])
 
-  const handleActivate = (project: Project) => {
+  const handleActivate = useCallback((project: Project) => {
     setPendingAction({ type: "activate", project })
-  }
+  }, [])
 
-  const handleDuplicate = (project: Project) => {
+  const handleDuplicate = useCallback((project: Project) => {
     const newProject = {
       name: `${project.name} (${t("copy")})`,
       description: project.description,
@@ -110,15 +110,15 @@ export default function ProjectsPage() {
       startDate: new Date().toISOString().split("T")[0],
       endDate: project.endDate,
     }
-    create(newProject, {
+    create(newProject as CreateProjectPayload, {
       onSuccess: () => {
         toast.success(t("projectDuplicated"))
         refresh()
       },
     })
-  }
+  }, [create, refresh, t])
 
-  const handleExport = (project: Project) => {
+  const handleExport = useCallback((project: Project) => {
     const data = JSON.stringify(project, null, 2)
     const blob = new Blob([data], { type: "application/json" })
     const url = URL.createObjectURL(blob)
@@ -128,7 +128,7 @@ export default function ProjectsPage() {
     a.click()
     URL.revokeObjectURL(url)
     toast.success(t("projectExported"))
-  }
+  }, [t])
 
   async function handleConfirm() {
     if (!pendingAction) return
@@ -164,8 +164,9 @@ export default function ProjectsPage() {
           toast.success(t("projectActivated"))
           break
       }
-    } catch (error: any) {
-      toast.error(error.message || t("actionFailed"))
+    } catch (error: unknown) {
+      const err = error as { message?: string }
+      toast.error(err?.message || t("actionFailed"))
     } finally {
       setIsProcessing(false)
     }
@@ -205,7 +206,7 @@ export default function ProjectsPage() {
         },
         t
       ),
-    [t]
+    [t, handleArchive, handleComplete, handleActivate, handleDuplicate, handleExport]
   )
 
   const confirmConfig = useMemo(() => {
@@ -252,48 +253,50 @@ export default function ProjectsPage() {
 
   return (
     <>
-      <ProjectsSummaryCards />
+      <div className="p-4 md:p-6 space-y-6">
+        <ProjectsSummaryCards />
 
-      <DataTable
-        manual
-        title={t("projects")}
-        isLoading={isLoading}
-        isFetching={isFetching}
-        columns={columns}
-        data={projects}
-        rowCount={totalItems}
-        pageCount={pageCount}
-        pagination={pagination}
-        onPaginationChange={setPagination}
-        columnFilters={columnFilters}
-        onColumnFiltersChange={setColumnFilters}
-        sorting={sorting}
-        onSortingChange={setSorting}
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder={t("searchProjects")}
-        actions={[
-          {
-            label: t("create"),
-            onClick: openCreateForm,
-            iconOnly: true,
-            icon: Plus,
-            variant: "primary",
-          },
-        ]}
-        filters={[
-          {
-            columnId: "status",
-            title: t("status"),
-            options: [
-              { label: t("active"), value: ProjectStatus.ACTIVE },
-              { label: t("archived"), value: ProjectStatus.ARCHIVED },
-              { label: t("completed"), value: ProjectStatus.COMPLETED },
-              { label: t("onHold"), value: ProjectStatus.ON_HOLD },
-            ],
-          },
-        ]}
-      />
+        <DataTable
+          manual
+          title={t("projects")}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          columns={columns}
+          data={projects}
+          rowCount={totalItems}
+          pageCount={pageCount}
+          pagination={pagination}
+          onPaginationChange={setPagination}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={setColumnFilters}
+          sorting={sorting}
+          onSortingChange={setSorting}
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder={t("searchProjects")}
+          actions={[
+            {
+              label: t("create"),
+              onClick: openCreateForm,
+              iconOnly: true,
+              icon: Plus,
+              variant: "primary",
+            },
+          ]}
+          filters={[
+            {
+              columnId: "status",
+              title: t("status"),
+              options: [
+                { label: t("active"), value: ProjectStatus.ACTIVE },
+                { label: t("archived"), value: ProjectStatus.ARCHIVED },
+                { label: t("completed"), value: ProjectStatus.COMPLETED },
+                { label: t("onHold"), value: ProjectStatus.ON_HOLD },
+              ],
+            },
+          ]}
+        />
+      </div>
 
       <DataTableEntityFormSheet
         open={formOpen}

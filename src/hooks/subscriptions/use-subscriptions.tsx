@@ -27,9 +27,10 @@ export function useSubscriptions() {
       toast.success("Subscription created successfully")
       invalidateSubscriptions()
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } }
       toast.error(
-        error?.response?.data?.message || "Failed to create subscription"
+        err?.response?.data?.message || "Failed to create subscription"
       )
     },
   })
@@ -46,9 +47,10 @@ export function useSubscriptions() {
       toast.success("Subscription updated successfully")
       invalidateSubscriptions()
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } }
       toast.error(
-        error?.response?.data?.message || "Failed to update subscription"
+        err?.response?.data?.message || "Failed to update subscription"
       )
     },
   })
@@ -59,9 +61,10 @@ export function useSubscriptions() {
       toast.success("Subscription deleted successfully")
       invalidateSubscriptions()
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } }
       toast.error(
-        error?.response?.data?.message || "Failed to delete subscription"
+        err?.response?.data?.message || "Failed to delete subscription"
       )
     },
   })
@@ -72,9 +75,10 @@ export function useSubscriptions() {
       toast.success("Subscription canceled successfully")
       invalidateSubscriptions()
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } }
       toast.error(
-        error?.response?.data?.message || "Failed to cancel subscription"
+        err?.response?.data?.message || "Failed to cancel subscription"
       )
     },
   })

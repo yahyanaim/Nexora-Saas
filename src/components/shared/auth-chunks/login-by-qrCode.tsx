@@ -9,7 +9,7 @@ import {
   Shield,
   QrCode,
   Rocket,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import QRCode from "qrcode"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -275,7 +275,7 @@ export const LoginByQrCode = ({ setAuthSections }: Props) => {
                 t("pointCameraAtQrCode"),
                 t("confirmLoginOnDevice"),
               ].map((text, index) => {
-                const Icon = stepIcons[index]
+                const Icon = stepIcons[index] ?? Smartphone
                 return (
                   <Card
                     key={index}

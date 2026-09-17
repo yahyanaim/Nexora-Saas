@@ -1,7 +1,7 @@
 "use client"
 
 import { Column } from "@tanstack/react-table"
-import { Check, PlusCircle } from "lucide-react"
+import { Check, PlusCircle } from "@/components/ui/carbon/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {

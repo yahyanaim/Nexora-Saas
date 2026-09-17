@@ -13,6 +13,6 @@ export const projectFormSchema = z.object({
 
 export type ProjectFormValues = z.infer<typeof projectFormSchema>
 
-export function getProjectFormSchema(mode: "create" | "edit") {
+export function getProjectFormSchema(_mode: "create" | "edit") {
   return projectFormSchema
 }

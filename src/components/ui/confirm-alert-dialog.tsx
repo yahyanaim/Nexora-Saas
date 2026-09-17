@@ -1,25 +1,26 @@
 "use client"
 
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { Renew } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
-import { useTranslations } from "next-intl"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
-interface ConfirmAlertDialogProps {
+export interface ConfirmAlertDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
   description: string
   confirmLabel?: string
+  cancelLabel?: string
+  destructive?: boolean
   isLoading?: boolean
   onConfirm: () => void
-  destructive?: boolean
 }
 
 export function ConfirmAlertDialog({
@@ -27,42 +28,39 @@ export function ConfirmAlertDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel,
-  isLoading,
+  confirmLabel = "Confirm",
+  cancelLabel = "Cancel",
+  destructive = false,
+  isLoading = false,
   onConfirm,
-  destructive = true,
 }: ConfirmAlertDialogProps) {
-  const t = useTranslations()
-
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className={destructive ? "text-destructive" : ""}>
+            {title}
+          </DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
           <Button
-            variant={"destructive"}
-            disabled={isLoading}
-            className="flex-1"
+            variant="outline"
             onClick={() => onOpenChange(false)}
+            disabled={isLoading}
           >
-            {t("cancel")}
+            {cancelLabel}
           </Button>
           <Button
-            variant={destructive ? "red" : "primary"}
+            variant={destructive ? "destructive" : "primary"}
+            onClick={onConfirm}
             disabled={isLoading}
-            className="flex-1"
-            onClick={(e) => {
-              e.preventDefault()
-              onConfirm()
-            }}
           >
-            {isLoading ? t("pleaseWait") : (confirmLabel ?? t("confirm"))}
+            {isLoading && <Renew className="mr-2 size-4 animate-spin" />}
+            {confirmLabel}
           </Button>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

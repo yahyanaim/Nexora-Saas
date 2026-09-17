@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useTranslations } from "next-intl"
 import { DataTable } from "@/components/shared/data-table-chunks/data-table"
 import {
@@ -8,7 +8,6 @@ import {
   deleteFileApi,
   renameFileApi,
   toggleStarFileApi,
-  getFileDownloadUrlApi,
   fetchFilesSummaryApi,
   updateFileApi,
 } from "@/lib/api/files-api"
@@ -18,12 +17,12 @@ import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { toast } from "@/lib/utils/toast"
 import { FileUploadDialog } from "@/components/ui/upload-file"
-import { Upload } from "lucide-react"
+import { Upload } from "@/components/ui/carbon/icons"
 import { useQuery } from "@tanstack/react-query"
 import { getFilesColumns } from "./files-columns"
 import { FilesSummaryCards } from "./files-summary-cards"
 import { FileDialog } from "./file-dialog"
-import NProgress from "nprogress"
+
 type PendingAction = { type: "delete"; file: FileItem } | null
 
 type FileDialogMode =
@@ -96,7 +95,7 @@ export default function FilesPage() {
 
         await uploadFileApi(formData)
         toast.success(`${file.name} ${t("uploadedSuccessfully")}`)
-      } catch (error) {
+      } catch (_error) {
         setUploadProgress((prev) => ({
           ...prev,
           [`${file.name}_error`]: 1,
@@ -112,7 +111,7 @@ export default function FilesPage() {
     refetchSummary()
   }
 
-  const handleDownload = async (file: FileItem) => {
+  const handleDownload = useCallback(async (file: FileItem) => {
     try {
       const { cloudinaryUrl: url, name: filename } = file
       if (!url) return
@@ -133,15 +132,12 @@ export default function FilesPage() {
       // Release the blob from memory now that the download has been triggered
       window.URL.revokeObjectURL(blobUrl)
 
-      // Safety net in case nextjs-toploader still picked up the click
-      NProgress.done()
-
       toast.success(t("downloadStarted"))
     } catch (error) {
       console.error("Download error:", error)
       toast.error(t("downloadFailed"))
     }
-  }
+  }, [t])
 
   const openDialog = (mode: FileDialogMode, file: FileItem) => {
     setSelectedFile(file)
@@ -149,13 +145,14 @@ export default function FilesPage() {
     setDialogOpen(true)
   }
 
-  const handleDialogConfirm = async (file: FileItem, data: any) => {
+  const handleDialogConfirm = async (file: FileItem, data?: unknown) => {
+    const d = (data || {}) as Record<string, unknown>
     try {
       if (dialogMode === "rename") {
-        await renameFileApi(file.id, data.name)
+        await renameFileApi(file.id, d.name as string)
         toast.success(t("fileRenamed"))
       } else if (dialogMode === "visibility") {
-        await updateFileApi(file.id, { visibility: data.visibility })
+        await updateFileApi(file.id, { visibility: d.visibility as FileVisibility })
         toast.success(t("visibilityChanged"))
       } else if (dialogMode === "share") {
         toast.success(t("shareLinkCopied"))
@@ -167,21 +164,21 @@ export default function FilesPage() {
       refetchSummary()
       setDialogOpen(false)
       setSelectedFile(null)
-    } catch (error) {
+    } catch (_error) {
       toast.error(t("actionFailed"))
     }
   }
 
-  const handleStar = async (file: FileItem) => {
+  const handleStar = useCallback(async (file: FileItem) => {
     try {
       await toggleStarFileApi(file.id)
       toast.success(file.starred ? t("unstarred") : t("starred"))
       refresh()
       refetchSummary()
-    } catch (error) {
+    } catch (_error) {
       toast.error(t("starFailed"))
     }
-  }
+  }, [t, refresh, refetchSummary])
 
   const handleConfirm = async () => {
     if (!pendingAction) return
@@ -212,14 +209,14 @@ export default function FilesPage() {
             try {
               await navigator.clipboard.writeText(file.name)
               toast.success(t("copied"))
-            } catch (error) {
+            } catch (_error) {
               toast.error(t("copyFailed"))
             }
           },
         },
         t
       ),
-    [t]
+    [t, handleDownload, handleStar]
   )
 
   const confirmConfig = useMemo(() => {
@@ -236,7 +233,7 @@ export default function FilesPage() {
   }, [pendingAction, isDeleting, t])
 
   return (
-    <>
+    <div className="p-4 md:p-6 space-y-6">
       <FilesSummaryCards
         files={files}
         summary={summaryData}
@@ -329,6 +326,6 @@ export default function FilesPage() {
           onConfirm={handleConfirm}
         />
       )}
-    </>
+    </div>
   )
 }

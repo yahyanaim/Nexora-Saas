@@ -6,8 +6,9 @@ import { Toaster } from "@/components/ui/sonner"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { AuthGuardProvider } from "./auth-provider"
+import { ErrorBoundary } from "@/components/shared/error-boundary"
 
-const ProviderContexts = ({ children }: any) => {
+const ProviderContexts = ({ children }: { children: React.ReactNode }) => {
   const [queryClient] = useState(() => new QueryClient())
 
   return (
@@ -15,12 +16,16 @@ const ProviderContexts = ({ children }: any) => {
       <ThemeProvider>
         <TooltipProvider>
           <AuthGuardProvider>
-            {children}
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
             <Toaster position="top-center" />
           </AuthGuardProvider>
         </TooltipProvider>
       </ThemeProvider>
-      <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
+      {process.env.NEXT_PUBLIC_SHOW_DEVTOOLS === "true" && (
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
+      )}
     </QueryClientProvider>
   )
 }

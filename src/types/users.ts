@@ -1,6 +1,8 @@
 import { FilterItem, PaginatedResponse } from "@/types/tables"
 import { AdminPermissionsPlatform } from "./roles"
 
+export type UserRole = "admin" | "user"
+
 export enum UserStatus {
   ACTIVE = "active",
   INACTIVE = "inactive",
@@ -8,29 +10,43 @@ export enum UserStatus {
   BANNED = "banned",
   DELETED = "deleted",
 }
+
 export enum ActivationStatus {
   ACTIVE = "active",
   INACTIVE = "inactive",
 }
+
 export enum UserType {
   ADMIN = "admin",
   STAFF = "staff",
   USER = "user",
 }
+
+export type TeamRole = "owner" | "admin" | "member" | "viewer"
+
 export interface RoleSummary {
   id: string
   name: string
   permissions: AdminPermissionsPlatform[]
 }
+
 export interface User {
   id: string
   name: string
-  username?: string
-  profileColor: string
-  avatar?: string
   email?: string
+  role: UserRole
   userType: UserType
+  teamRole?: TeamRole
   status: UserStatus
+  isActive?: boolean
+  isVerified?: boolean
+  emailVerified?: boolean
+  orgId?: string
+  createdAt?: string
+  updatedAt?: string
+  username?: string
+  profileColor?: string
+  avatar?: string
   roles?: RoleSummary[]
   permissions?: AdminPermissionsPlatform[]
   lastSeen?: string

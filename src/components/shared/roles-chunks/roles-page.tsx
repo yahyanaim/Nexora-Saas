@@ -10,14 +10,14 @@ import {
   deleteRoleApi,
   toggleRoleStatusApi,
 } from "@/lib/api/roles-apis"
-import { Role } from "@/types/roles"
+import { Role, CreateRolePayload, UpdateRolePayload } from "@/types/roles"
 import { useFetchRolesTable } from "@/hooks/roles/use-fetch-roles-table"
 import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { DataTableEntityFormDialog } from "../data-table-chunks/data-table-entity-form-dialog"
 import { useTranslations } from "next-intl"
 import { ActivationStatus } from "@/types/users"
-import { Plus } from "lucide-react"
+import { Plus } from "@/components/ui/carbon/icons"
 
 type PendingAction =
   | { type: "delete"; role: Role }
@@ -74,9 +74,9 @@ export default function RolesPage() {
     setFormOpen(true)
   }
 
-  function handleFormValid(values: any) {
+  function handleFormValid(values: CreateRolePayload | UpdateRolePayload) {
     if (formMode === "create") {
-      create(values, { onSuccess: () => setFormOpen(false) })
+      create(values as CreateRolePayload, { onSuccess: () => setFormOpen(false) })
     } else if (editingRole) {
       update(editingRole.id, values)
       setFormOpen(false)
@@ -159,7 +159,7 @@ export default function RolesPage() {
   }, [pendingAction, isDeleting, isStatusLoading, t])
 
   return (
-    <>
+    <div className="p-4 md:p-6 space-y-6">
       <DataTable
         manual
         title={t("roles")}
@@ -231,6 +231,6 @@ export default function RolesPage() {
           onConfirm={handleConfirm}
         />
       )}
-    </>
+    </div>
   )
 }

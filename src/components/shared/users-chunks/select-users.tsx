@@ -8,9 +8,8 @@ import {
   X,
   Check,
   SearchIcon,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
   Popover,
@@ -164,6 +163,7 @@ export function SelectUsers({
         <div
           role="combobox"
           aria-expanded={open}
+          aria-controls="users-listbox"
           tabIndex={disabled ? -1 : 0}
           aria-disabled={disabled}
           onKeyDown={(e) => {

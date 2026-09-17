@@ -6,6 +6,7 @@ import { DashboardHeader } from "./header-chunks/dashboard-header"
 import { LockScreen } from "./lock-screen"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
+import { ErrorBoundary } from "./error-boundary"
 interface Props {
   children: React.ReactNode
 }
@@ -17,13 +18,15 @@ export const DashboardLayout = ({ children }: Props) => {
   if (isPasscodeLocked && !isUnlocked) return <LockScreen />
 
   return (
-    <SidebarProvider className="flex h-dvh w-full overflow-hidden">
+    <SidebarProvider className="flex h-dvh w-full overflow-hidden bg-background">
       <DashboardSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden p-4">
-        <div className="flex flex-1 flex-col overflow-hidden rounded-md bg-background ring ring-foreground/10">
-          <DashboardHeader />
-          {children}
-        </div>
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+        <DashboardHeader />
+        <main className="flex-1 overflow-auto">
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
+        </main>
       </div>
     </SidebarProvider>
   )

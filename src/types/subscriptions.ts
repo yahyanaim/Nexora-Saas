@@ -1,9 +1,24 @@
+import { BillingPlan } from "./plans"
+
 export enum SubscriptionStatus {
   ACTIVE = "active",
   INACTIVE = "inactive",
   CANCELED = "canceled",
   EXPIRED = "expired",
   PAST_DUE = "past-due",
+}
+
+export interface SubscriptionInfo {
+  orgId: string
+  plan: BillingPlan
+  status: string
+  provider: string
+  currentPeriodEnd: string | null
+  /** Whether requirePlan gates currently pass (incl. dunning grace). */
+  access: boolean
+  /** Dunning grace expiry (ISO) or null — show "update payment method" while set. */
+  graceUntil: string | null
+  hasPaymentMethod: boolean
 }
 
 export interface SubscriptionUser {
@@ -59,7 +74,7 @@ export interface CreateSubscriptionPayload {
   plan?: string
 }
 
-export interface UpdateSubscriptionPayload extends Partial<CreateSubscriptionPayload> {}
+export type UpdateSubscriptionPayload = Partial<CreateSubscriptionPayload>
 
 export interface SubscriptionFilters {
   status?: SubscriptionStatus[]

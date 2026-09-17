@@ -10,7 +10,7 @@ import {
 import { PREVIEW_GRADIENTS, WALLPAPER_NAMES } from "@/contexts/theme-provider"
 import { useTheme } from "@/hooks/use-theme"
 import { cn } from "@/lib/utils"
-import { Check, Palette } from "lucide-react"
+import { Check, Palette } from "@/components/ui/carbon/icons"
 import { useTranslations } from "next-intl"
 
 export const ChangeTheme = () => {
@@ -68,7 +68,7 @@ export const ChangeTheme = () => {
         </div>
         <DialogFooter>
           <DialogClose
-            className="flex-1 rounded-md bg-destructive/20 p-3 text-destructive"
+            className="flex-1 rounded-md bg-destructive text-white hover:bg-destructive/90 p-2.5 text-xs font-semibold shadow-xs transition-colors"
             type="button"
           >
             {t("close")}

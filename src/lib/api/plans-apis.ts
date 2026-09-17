@@ -1,60 +1,82 @@
-import httpClient from "./http-client"
-import type { ApiPaginatedResponse, ServerTableParams } from "@/types/tables"
-import type { Plan, CreatePlanPayload, UpdatePlanPayload } from "@/types/plans"
+export * from "./billing-apis"
+import { billingApi } from "./billing-apis"
+import { Plan, CreatePlanPayload, UpdatePlanPayload } from "@/types/plans"
+import { ApiPaginatedResponse } from "@/types/tables"
 
-export const fetchPlansApi = async (
-  params: ServerTableParams
-): Promise<ApiPaginatedResponse<Plan>> => {
-  const { data } = await httpClient.get("/plans", {
-    params: {
-      page: params.page,
-      pageSize: params.pageSize,
-      search: params.search,
-      sort:
-        params.sortBy && params.sortOrder
-          ? JSON.stringify({
-              [params.sortBy]: params.sortOrder === "desc" ? -1 : 1,
-            })
-          : undefined,
-      filter: params.filter ? JSON.stringify(params.filter) : undefined,
-    },
-  })
+const STATIC_PLANS: Plan[] = [
+  {
+    id: "free",
+    name: "Free",
+    price: "$0",
+    period: "month",
+    description: "Essential tools for personal projects.",
+    featured: false,
+    features: ["1 Workspace", "Up to 3 members", "Community support"],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: "$29",
+    period: "month",
+    description: "Advanced features and power tools for scaling businesses.",
+    featured: true,
+    features: ["Unlimited workspaces", "Up to 25 members", "Priority support", "Full API access"],
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    price: "$99",
+    period: "month",
+    description: "Maximum security, scalability, and dedicated SLA.",
+    featured: false,
+    features: ["Unlimited seats", "Dedicated manager", "99.99% SLA", "SSO"],
+  },
+]
 
+export const fetchPlansApi = async (_params?: unknown): Promise<ApiPaginatedResponse<Plan>> => {
   return {
-    success: data.success ?? true,
-    data: data.data || [],
+    success: true,
+    data: STATIC_PLANS,
     pagination: {
-      page: data.pagination?.page || 0,
-      pageSize: data.pagination?.pageSize || 0,
-      totalItems: data.pagination?.totalItems || data.pagination?.total || 0,
-      totalPages: data.pagination?.totalPages || 0,
-      hasNextPage: data.pagination?.hasNextPage || false,
-      hasPrevPage: data.pagination?.hasPrevPage || false,
+      page: 0,
+      pageSize: 10,
+      totalItems: STATIC_PLANS.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false,
     },
   }
 }
 
-export const getPlanApi = async (planId: string): Promise<Plan> => {
-  const { data } = await httpClient.get(`/plans/${planId}`)
-  return data.data
+export const createPlanApi = async (payload: CreatePlanPayload): Promise<Plan> => {
+  return {
+    id: `custom-${Date.now()}`,
+    name: payload.name,
+    price: payload.price,
+    period: payload.period ?? "month",
+    description: payload.description,
+    featured: payload.featured ?? false,
+    features: payload.features,
+    ssoEnabled: payload.ssoEnabled,
+    auditLogsEnabled: payload.auditLogsEnabled,
+  }
 }
 
-export const createPlanApi = async (
-  payload: CreatePlanPayload
-): Promise<Plan> => {
-  const { data } = await httpClient.post("/plans", payload)
-  return data.data
+export const updatePlanApi = async (id: string, payload: UpdatePlanPayload): Promise<Plan> => {
+  const existing = STATIC_PLANS.find((p) => p.id === id) || STATIC_PLANS[0]!
+  return {
+    ...existing,
+    ...(payload.name !== undefined ? { name: payload.name } : {}),
+    ...(payload.price !== undefined ? { price: payload.price } : {}),
+    ...(payload.description !== undefined ? { description: payload.description } : {}),
+    ...(payload.period !== undefined ? { period: payload.period } : {}),
+    ...(payload.featured !== undefined ? { featured: payload.featured } : {}),
+    ...(payload.features !== undefined ? { features: payload.features } : {}),
+    ...(payload.ssoEnabled !== undefined ? { ssoEnabled: payload.ssoEnabled } : {}),
+    ...(payload.auditLogsEnabled !== undefined ? { auditLogsEnabled: payload.auditLogsEnabled } : {}),
+  }
 }
 
-export const updatePlanApi = async (
-  planId: string,
-  payload: UpdatePlanPayload
-): Promise<Plan> => {
-  const { data } = await httpClient.patch(`/plans/${planId}`, payload)
-  return data.data
-}
+export const deletePlanApi = async (_id: string): Promise<void> => {}
 
-export const deletePlanApi = async (planId: string): Promise<void> => {
-  const { data } = await httpClient.delete(`/plans/${planId}`)
-  return data
-}
+export default billingApi

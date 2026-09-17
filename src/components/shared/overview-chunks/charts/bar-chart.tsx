@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -203,8 +204,8 @@ function ChartBarInteractive() {
                 <ChartTooltipContent
                   className="w-[150px]"
                   nameKey="views"
-                  labelFormatter={(value: any) => {
-                    return new Date(value).toLocaleDateString("en-US", {
+                  labelFormatter={(value) => {
+                    return new Date(String(value)).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
@@ -217,6 +218,11 @@ function ChartBarInteractive() {
           </BarChart>
         </ChartContainer>
       </CardContent>
+      <CardFooter className="flex-col items-start gap-1 border-t px-6 py-4 text-xs text-muted-foreground leading-relaxed">
+        <p>
+          <span className="font-semibold text-foreground">Device Throughput & Session Velocity:</span> Aggregates discrete daily page view volumes split between desktop and mobile client environments. Toggle views above to analyze platform-specific engagement trends and identify device conversion disparities.
+        </p>
+      </CardFooter>
     </Card>
   )
 }

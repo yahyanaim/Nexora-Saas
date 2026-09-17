@@ -22,8 +22,9 @@ export function usePlans() {
       toast.success("Plan created successfully")
       invalidatePlans()
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to create plan")
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } }
+      toast.error(err?.response?.data?.message || "Failed to create plan")
     },
   })
 
@@ -34,8 +35,9 @@ export function usePlans() {
       toast.success("Plan updated successfully")
       invalidatePlans()
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to update plan")
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } }
+      toast.error(err?.response?.data?.message || "Failed to update plan")
     },
   })
 
@@ -45,8 +47,9 @@ export function usePlans() {
       toast.success("Plan deleted successfully")
       invalidatePlans()
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to delete plan")
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { message?: string } } }
+      toast.error(err?.response?.data?.message || "Failed to delete plan")
     },
   })
 

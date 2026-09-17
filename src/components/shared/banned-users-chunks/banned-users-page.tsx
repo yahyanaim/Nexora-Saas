@@ -1,14 +1,14 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
 import { DataTable } from "../data-table-chunks/data-table"
 import { getBannedUsersColumns } from "./banned-users-columns"
 import { toggleBanUserApi } from "@/lib/api/users-apis"
-import { User } from "@/types/users"
+import { User, UserType } from "@/types/users"
 import { useUsersTable } from "@/hooks/users/use-users-table"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { useTranslations } from "next-intl"
+import { BannedUsersSummaryCards } from "./banned-users-summary-cards"
 
 type PendingAction =
   | { type: "delete"; user: User }
@@ -18,7 +18,6 @@ type PendingAction =
 
 export default function BannedUsersPage() {
   const t = useTranslations()
-  const router = useRouter()
 
   const {
     items: users,
@@ -71,7 +70,7 @@ export default function BannedUsersPage() {
         },
         t
       ),
-    [router]
+    [t]
   )
 
   // Dialog copy per action type, kept in one place
@@ -92,7 +91,12 @@ export default function BannedUsersPage() {
   }, [pendingAction, isBanLoading, t])
 
   return (
-    <>
+    <div className="p-4 md:p-6 space-y-6">
+      <BannedUsersSummaryCards
+        users={users}
+        totalCount={totalItems}
+        isLoading={isLoading}
+      />
       <DataTable
         manual
         title={t("banned")}
@@ -111,6 +115,17 @@ export default function BannedUsersPage() {
         searchValue={search}
         onSearchChange={setSearch}
         searchPlaceholder={t("searchByNameEmailUsername")}
+        filters={[
+          {
+            columnId: "userType",
+            title: t("userType") || "Account Type",
+            options: [
+              { label: t("user") || "User", value: UserType.USER },
+              { label: t("staff") || "Staff", value: UserType.STAFF },
+              { label: t("admin") || "Admin", value: UserType.ADMIN },
+            ],
+          },
+        ]}
       />
 
       {confirmConfig && (
@@ -125,6 +140,6 @@ export default function BannedUsersPage() {
           onConfirm={handleConfirm}
         />
       )}
-    </>
+    </div>
   )
 }

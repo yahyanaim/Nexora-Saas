@@ -14,7 +14,7 @@ import {
   CreditCard,
   Receipt,
   Building,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useContentReportsTable } from "@/hooks/reports/use-content-reports-table"
@@ -193,7 +193,7 @@ export default function ContentReportsPage() {
   ]
 
   return (
-    <>
+    <div className="p-4 md:p-6 space-y-6">
       <DataTable
         manual
         title={t("contentReports")}
@@ -297,6 +297,6 @@ export default function ContentReportsPage() {
           onConfirm={handleConfirm}
         />
       )}
-    </>
+    </div>
   )
 }

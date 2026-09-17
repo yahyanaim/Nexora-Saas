@@ -5,9 +5,11 @@ export function useBrowserNotifications() {
     useState<NotificationPermission>("default")
 
   useEffect(() => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      setPermission(Notification.permission)
-    }
+    queueMicrotask(() => {
+      if (typeof window !== "undefined" && "Notification" in window) {
+        setPermission(Notification.permission)
+      }
+    })
   }, [])
 
   const requestPermission = useCallback(async () => {

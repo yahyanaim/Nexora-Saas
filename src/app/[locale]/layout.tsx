@@ -1,29 +1,24 @@
 import NextTopLoader from "nextjs-toploader"
-import NProgress from "nprogress"
 import ProviderContexts from "@/contexts/app-provider"
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages, getTranslations } from "next-intl/server"
-import localFont from "next/font/local"
+import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google"
+import { cn } from "@/lib/utils"
 import { routing } from "@/i18n/routing"
 import "./globals.css"
 import { notFound } from "next/navigation"
 
-NProgress.configure({ showSpinner: false })
-
-const myFont = localFont({
-  src: [
-    {
-      path: "../../../public/fonts/NotoKufiArabicRegular.woff",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../../../public/fonts/NotoKufiArabicBold.woff",
-      weight: "700",
-      style: "normal",
-    },
-  ],
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-sans",
+  display: "swap",
+})
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
   display: "swap",
 })
 
@@ -55,7 +50,7 @@ interface LayoutProps {
 
 export default async function LocaleLayout({ children, params }: LayoutProps) {
   const { locale } = await params
-  if (!routing.locales.includes(locale as any)) {
+  if (!(routing.locales as readonly string[]).includes(locale)) {
     notFound()
   }
 
@@ -63,7 +58,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
 
   return (
     <html
-      className={myFont.variable}
+      className={cn(ibmPlexSans.variable, ibmPlexMono.variable)}
       suppressHydrationWarning
       lang={locale}
       dir={locale === "ar" || locale === "ur" ? "rtl" : "ltr"}

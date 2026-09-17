@@ -74,7 +74,17 @@ export const StaffForm = forwardRef<UserFormHandle, Props>(function UserForm(
       bio: defaultValues?.bio ?? "",
       roles: getRoleIds(defaultValues?.roles),
     })
-  }, [defaultValues?.id])
+  }, [
+    defaultValues?.id,
+    defaultValues?.name,
+    defaultValues?.username,
+    defaultValues?.email,
+    defaultValues?.status,
+    defaultValues?.is2FA,
+    defaultValues?.bio,
+    defaultValues?.roles,
+    form,
+  ])
 
   useImperativeHandle(ref, () => ({
     submit: () => form.handleSubmit(onValid)(),

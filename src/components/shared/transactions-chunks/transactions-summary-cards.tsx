@@ -5,19 +5,11 @@ import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
-  CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
 import {
   TrendingDown,
   TrendingUp,
@@ -25,7 +17,7 @@ import {
   Clock,
   AlertCircle,
   CheckCircle,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { Transaction, TransactionStatus } from "@/types/transactions"
 
 interface TransactionsSummaryCardsProps {
@@ -139,52 +131,32 @@ export function TransactionsSummaryCards({
   ]
 
   return (
-    <div className="p-3">
-      <Carousel className="w-full">
-        <CarouselContent>
-          {cards.map((card) => (
-            <CarouselItem
-              key={card.key}
-              className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 w-full">
+      {cards.map((card) => (
+        <Card key={card.key} className="h-full flex flex-col justify-between">
+          <CardHeader className="p-5 pb-3">
+            <div className="flex items-center justify-between gap-2">
+              <CardDescription className="text-xs font-medium uppercase tracking-wider">{card.title}</CardDescription>
+              <Badge
+                variant={card.badge.variant}
+                className={card.badge.className}
+              >
+                <card.badge.icon className="size-3" />
+                {card.badge.label}
+              </Badge>
+            </div>
+            <CardTitle
+              className={`text-2xl font-bold font-mono tabular-nums @[250px]/card:text-3xl mt-2 ${card.valueClassName}`}
             >
-              <div className="h-full">
-                <Card className="h-full">
-                  <CardHeader>
-                    <CardDescription>{card.title}</CardDescription>
-                    <CardTitle
-                      className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl ${card.valueClassName}`}
-                    >
-                      {card.value}
-                    </CardTitle>
-                    <CardAction>
-                      <Badge
-                        variant={card.badge.variant}
-                        className={card.badge.className}
-                      >
-                        <card.badge.icon className="size-3" />
-                        {card.badge.label}
-                      </Badge>
-                    </CardAction>
-                  </CardHeader>
-                  <CardFooter className="h-full flex-col items-start gap-1.5 text-sm">
-                    <div
-                      className={`line-clamp-1 flex gap-2 font-medium ${card.footer.className}`}
-                    >
-                      <card.footer.icon className="size-4" />
-                      {card.footer.text}
-                    </div>
-                    {/* <div className="text-muted-foreground">
-                      {card.footer.subtext}
-                    </div> */}
-                  </CardFooter>
-                </Card>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden sm:flex" />
-        <CarouselNext className="hidden sm:flex" />
-      </Carousel>
+              {card.value}
+            </CardTitle>
+          </CardHeader>
+          <CardFooter className="px-5 py-3 pt-0 border-t-0 flex items-center gap-1.5 text-xs text-muted-foreground mt-auto">
+            <card.footer.icon className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate font-medium">{card.footer.text}</span>
+          </CardFooter>
+        </Card>
+      ))}
     </div>
   )
 }

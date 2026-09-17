@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { X, Plus } from "lucide-react"
+import { X, Plus } from "@/components/ui/carbon/icons"
 import { useTranslations } from "next-intl"
 import {
   getInvoiceFormSchema,

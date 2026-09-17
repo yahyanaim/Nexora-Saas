@@ -9,7 +9,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
+import { Loader2 } from "@/components/ui/carbon/icons"
 import { CSSProperties } from "react"
 import { useTranslations } from "next-intl"
 

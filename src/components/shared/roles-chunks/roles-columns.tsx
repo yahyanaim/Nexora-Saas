@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { ShieldCheck, Pencil, Ban, CheckCircle2, Trash2 } from "lucide-react"
+import { ShieldCheck, Pencil, Ban, CheckCircle2, Trash2 } from "@/components/ui/carbon/icons"
 import { Badge } from "@/components/ui/badge"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { DataTableColumnHeader } from "../data-table-chunks/data-table-column-header"

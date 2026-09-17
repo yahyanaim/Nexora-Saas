@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table"
 import { StatusBadge } from "@/components/ui/status-badge"
-import { Ban, Trash2, CheckCircle2, Pencil } from "lucide-react"
+import { Ban, CheckCircle2, Pencil } from "@/components/ui/carbon/icons"
 import { DataTableColumnHeader } from "../data-table-chunks/data-table-column-header"
 import {
   DataTableRowActions,

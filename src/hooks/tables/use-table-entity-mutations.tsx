@@ -30,9 +30,10 @@ export function useEntityMutations<T, TCreateInput, TUpdateInput>({
       toast.success(`${entityLabel} created`)
       invalidate()
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
+      const errorObj = err as { response?: { data?: { message?: string } } }
       toast.error(
-        err?.response?.data?.message ??
+        errorObj?.response?.data?.message ??
           `Couldn't create ${entityLabel.toLowerCase()}`
       )
     },
@@ -45,9 +46,10 @@ export function useEntityMutations<T, TCreateInput, TUpdateInput>({
       toast.success(`${entityLabel} updated`)
       invalidate()
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
+      const errorObj = err as { response?: { data?: { message?: string } } }
       toast.error(
-        err?.response?.data?.message ??
+        errorObj?.response?.data?.message ??
           `Couldn't update ${entityLabel.toLowerCase()}`
       )
     },
@@ -62,9 +64,10 @@ export function useEntityMutations<T, TCreateInput, TUpdateInput>({
       toast.success(`${entityLabel} deleted`)
       invalidate()
     },
-    onError: (err: any) => {
+    onError: (err: unknown) => {
+      const errorObj = err as { response?: { data?: { message?: string } } }
       toast.error(
-        err?.response?.data?.message ??
+        errorObj?.response?.data?.message ??
           `Couldn't delete ${entityLabel.toLowerCase()}`
       )
     },

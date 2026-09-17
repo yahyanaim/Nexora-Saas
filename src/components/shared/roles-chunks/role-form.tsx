@@ -12,7 +12,6 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { PermissionsSelector } from "./permissions-selector"
 import { Role } from "@/types/roles"
 import {
@@ -32,7 +31,7 @@ interface RoleFormProps {
 }
 
 export const RoleForm = forwardRef<RoleFormHandle, RoleFormProps>(
-  function RoleForm({ mode, defaultValues, onValid }, ref) {
+  function RoleForm({ mode: _mode, defaultValues, onValid }, ref) {
     const t = useTranslations()
 
     const form = useForm<RoleFormValues>({
@@ -48,7 +47,7 @@ export const RoleForm = forwardRef<RoleFormHandle, RoleFormProps>(
         name: defaultValues?.name ?? "",
         permissions: defaultValues?.permissions ?? [],
       })
-    }, [defaultValues?.id])
+    }, [defaultValues?.id, defaultValues?.name, defaultValues?.permissions, form])
 
     useImperativeHandle(ref, () => ({
       submit: () => form.handleSubmit(onValid)(),

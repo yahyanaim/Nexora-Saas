@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Clock, Globe, Power, PowerOff, Trash2 } from "lucide-react"
+import { Clock, Globe, Power, PowerOff, Trash2 } from "@/components/ui/carbon/icons"
 import { formatDistanceToNow, format } from "date-fns"
 import { DataTableColumnHeader } from "../data-table-chunks/data-table-column-header"
 import {

@@ -1,26 +1,11 @@
-import { DatePicker } from "@/components/ui/date-picker"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-  InputGroupText,
-} from "@/components/ui/input-group"
-import { ProfileFormValues } from "@/hooks/my-profile/use-my-profile"
-import { FieldErrors, UseFormRegister } from "react-hook-form"
+import { FieldGroup } from "@/components/ui/field"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { TwoStepDialog } from "./two-step-dialog"
 import { PasscodeDialog } from "./passcode-dialog"
 import { ChangePasswordDialog } from "./change-password-dialog"
 import { Button } from "@/components/ui/button"
-import { KeyRound, Lock, ShieldCheck } from "lucide-react"
+import { KeyRound, Lock, ShieldCheck } from "@/components/ui/carbon/icons"
 
 export const Security = () => {
   const t = useTranslations()

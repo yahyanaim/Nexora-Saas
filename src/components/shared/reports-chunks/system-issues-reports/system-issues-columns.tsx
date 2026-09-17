@@ -2,7 +2,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { SystemIssue, IssueStatus, IssuePriority } from "@/types/reports"
 import { formatDistanceToNow } from "date-fns"
-import { ArrowUpCircle, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { ArrowUpCircle, CheckCircle, XCircle, AlertCircle } from "@/components/ui/carbon/icons"
 import { DataTableColumnHeader } from "../../data-table-chunks/data-table-column-header"
 import {
   DataTableRowActions,

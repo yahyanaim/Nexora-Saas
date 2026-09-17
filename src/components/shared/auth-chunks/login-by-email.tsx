@@ -1,43 +1,36 @@
 "use client"
-import { Button } from "@/components/ui/button"
+
 import { Input } from "@/components/ui/input"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2, UserRoundKey } from "lucide-react"
+import { Loader2 } from "@/components/ui/carbon/icons"
 import { Dispatch, SetStateAction } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { AuthSections } from "./auth"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Highlighter } from "@/components/ui/highlighter"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { useMutation } from "@tanstack/react-query"
-import { loginApi } from "@/lib/api/auth-apis"
-import { toast } from "@/lib/utils/toast"
+import { loginApi, isDemoMode } from "@/lib/api/auth-apis"
+import { tokenStorage } from "@/lib/myapi/token-storage"
+import { toast } from "sonner"
+import { apiErrorMessage } from "@/lib/myapi/client"
 
 interface Props {
   setAuthSections: Dispatch<SetStateAction<AuthSections>>
+  setMfaToken?: (token: string) => void
 }
 
 const loginSchema = (t: (key: string) => string) =>
   z.object({
     email: z.string().min(1, t("emailRequired")).email(t("validEmail")),
-    password: z
-      .string()
-      .min(1, t("passwordRequired"))
-      .min(6, t("passwordMinLength")),
+    password: z.string().min(1, t("passwordRequired")),
   })
 
 type LoginFormValues = z.infer<ReturnType<typeof loginSchema>>
 
-export function LoginByEmail({ setAuthSections }: Props) {
+export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
   const t = useTranslations()
+  const locale = useLocale()
   const { initializeAuth } = useAuthGuard()
 
   const {
@@ -47,119 +40,139 @@ export function LoginByEmail({ setAuthSections }: Props) {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema(t)),
     defaultValues: {
-      email: "admin@volix.saas.com",
-      password: "Aa123456",
+      email: "founder@saas.test",
+      password: "",
     },
   })
+
   const { mutate, isPending } = useMutation({
     mutationFn: loginApi,
+    onSuccess: async (data) => {
+      if (data?.mfaRequired && data?.mfaToken) {
+        setMfaToken?.(data.mfaToken)
+        setAuthSections("very-account")
+        toast.info("Two-factor authentication required. Enter your 6-digit code.")
+      } else {
+        toast.success("Welcome back!")
+        await initializeAuth(true)
+        if (typeof window !== "undefined") {
+          window.location.href = `/${locale}/dashboard/overview`
+        }
+      }
+    },
+    onError: (error: unknown) => {
+      toast.error(apiErrorMessage(error, t("loginFailed")))
+    },
   })
 
-  const onSubmit = async (values: LoginFormValues) => {
-    mutate(values, {
-      onSuccess: (data) => {
-        if (data?.otpId) {
-          if (data?.otpId) localStorage.setItem("otpId", data?.otpId)
-          if (data?.email) localStorage.setItem("email", data?.email)
-          setAuthSections("very-account")
-        } else {
-          initializeAuth(true)
-        }
-      },
-      onError: (error: any) => {
-        const message =
-          error?.response?.data?.message || error?.message || t("loginFailed")
-        toast.error(message)
-      },
-    })
+  const onSubmit = (values: LoginFormValues) => {
+    mutate(values)
   }
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="mx-auto flex w-full max-w-xl flex-col gap-6"
+      className="mx-auto flex w-full max-w-sm flex-col gap-6"
     >
-      <FieldGroup>
-        <div className="flex flex-col items-center gap-2 text-center">
-          <UserRoundKey className="size-25 text-primary md:size-30" />
-          <h1 className="text-3xl font-bold md:min-h-[3.5rem] md:text-5xl">
-            {t("signIn")}{" "}
-            <Highlighter action="highlight" className="text-white">
-              {t("admin")}
-            </Highlighter>
-          </h1>
-        </div>
+      <div className="flex flex-col gap-1 text-left">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Welcome back
+        </h1>
+        <p className="text-xs text-muted-foreground">
+          Enter your credentials to access your account
+        </p>
+      </div>
 
-        <Field data-invalid={!!errors.email}>
-          <FieldLabel className="font-bold" htmlFor="email">
-            {t("email")}
-          </FieldLabel>
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <label
+            htmlFor="email"
+            className="block text-xs font-medium text-foreground"
+          >
+            Work email
+          </label>
           <Input
             id="email"
             type="email"
-            placeholder="m@example.com"
-            aria-invalid={!!errors.email}
+            placeholder="rico@acme.com"
+            className="h-10 rounded-md border-border/50 bg-muted/40 px-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background"
             disabled={isPending}
             {...register("email")}
           />
-          {errors.email?.message ? (
-            <FieldError className="font-bold">
-              {errors.email.message}
-            </FieldError>
-          ) : (
-            <FieldDescription className="font-bold">
-              {t("enterRegisteredEmail")}
-            </FieldDescription>
+          {errors.email && (
+            <p className="text-[11px] text-destructive">{errors.email.message}</p>
           )}
-        </Field>
+        </div>
 
-        <Field data-invalid={!!errors.password}>
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <FieldLabel className="font-bold" htmlFor="password">
-              {t("password")}
-            </FieldLabel>
+            <label
+              htmlFor="password"
+              className="block text-xs font-medium text-foreground"
+            >
+              Password
+            </label>
             <button
               type="button"
               onClick={() => setAuthSections("forgot-password")}
-              className="cursor-pointer text-sm font-bold text-primary underline-offset-4 hover:underline"
+              className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
             >
-              {t("forgotPassword")}
+              Forgot?
             </button>
           </div>
           <Input
             id="password"
             type="password"
-            placeholder="••••••••"
-            aria-invalid={!!errors.password}
+            placeholder="Enter your password"
+            className="h-10 rounded-md border-border/50 bg-muted/40 px-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background"
             disabled={isPending}
             {...register("password")}
           />
-          {errors.password?.message ? (
-            <FieldError className="font-bold">
-              {errors.password.message}
-            </FieldError>
-          ) : (
-            <FieldDescription className="font-bold">
-              {t("enterPassword")}{" "}
-              <Highlighter action="underline">
-                {t("passwordMinChars")}
-              </Highlighter>
-            </FieldDescription>
+          {errors.password && (
+            <p className="text-[11px] text-destructive">{errors.password.message}</p>
           )}
-        </Field>
+        </div>
 
-        <Field>
-          <Button
-            type="submit"
-            variant={"primary"}
-            disabled={isPending}
-            className="w-full"
+        <button
+          type="submit"
+          disabled={isPending}
+          className="mt-2 flex h-10 w-full items-center justify-center rounded-lg bg-neutral-900 px-4 text-xs font-semibold text-white shadow-xs transition-all hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200 cursor-pointer"
+        >
+          {isPending && <Loader2 className="mr-2 size-3.5 animate-spin" />}
+          Continue
+        </button>
+
+        {isDemoMode() && (
+          <button
+            type="button"
+            onClick={async () => {
+              if (typeof window !== "undefined") {
+                sessionStorage.removeItem("saas_demo_logged_out")
+                tokenStorage.set("demo-session-token")
+              }
+              toast.success("Welcome! Exploring SaaS as Demo Administrator.")
+              await initializeAuth(true)
+              if (typeof window !== "undefined") {
+                window.location.href = `/${locale}/dashboard/overview`
+              }
+            }}
+            className="w-full text-center text-xs text-muted-foreground hover:text-foreground py-1 cursor-pointer transition-colors"
           >
-            {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-            {isPending ? t("waiting") : t("signIn")}
-          </Button>
-        </Field>
-      </FieldGroup>
+            Or continue with Instant Demo Preview →
+          </button>
+        )}
+
+        <p className="pt-1 text-center text-xs text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <button
+            type="button"
+            onClick={() => setAuthSections("register")}
+            className="font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+          >
+            Sign up
+          </button>
+        </p>
+      </div>
     </form>
   )
 }

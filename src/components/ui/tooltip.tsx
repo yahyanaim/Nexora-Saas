@@ -1,57 +1,91 @@
 "use client"
 
 import * as React from "react"
-import { Tooltip as TooltipPrimitive } from "radix-ui"
-
 import { cn } from "@/lib/utils"
 
-function TooltipProvider({
-  delayDuration = 0,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
-  return (
-    <TooltipPrimitive.Provider
-      data-slot="tooltip-provider"
-      delayDuration={delayDuration}
-      {...props}
-    />
-  )
+interface TooltipContextType {
+  open: boolean
+  setOpen: (open: boolean) => void
 }
 
-function Tooltip({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Root>) {
-  return <TooltipPrimitive.Root data-slot="tooltip" {...props} />
+const TooltipContext = React.createContext<TooltipContextType | undefined>(undefined)
+
+export function TooltipProvider({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
 }
 
-function TooltipTrigger({
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
-  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />
-}
-
-function TooltipContent({
-  className,
-  sideOffset = 0,
+export function Tooltip({
   children,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+  open: controlledOpen,
+  onOpenChange,
+}: {
+  children: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}) {
+  const [internalOpen, setInternalOpen] = React.useState(false)
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+
+  const setOpen = React.useCallback(
+    (next: boolean) => {
+      if (!isControlled) setInternalOpen(next)
+      onOpenChange?.(next)
+    },
+    [isControlled, onOpenChange]
+  )
+
   return (
-    <TooltipPrimitive.Portal>
-      <TooltipPrimitive.Content
-        data-slot="tooltip-content"
-        sideOffset={sideOffset}
-        className={cn(
-          "z-50 inline-flex w-fit max-w-xs origin-(--radix-tooltip-content-transform-origin) items-center gap-1.5 rounded-md bg-foreground px-3 py-1.5 text-xs text-background has-data-[slot=kbd]:pr-1.5 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 **:data-[slot=kbd]:relative **:data-[slot=kbd]:isolate **:data-[slot=kbd]:z-50 **:data-[slot=kbd]:rounded-sm data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-          className
-        )}
-        {...props}
+    <TooltipContext.Provider value={{ open, setOpen }}>
+      <div
+        className="relative inline-flex"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
       >
         {children}
-        <TooltipPrimitive.Arrow className="z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px] bg-foreground fill-foreground" />
-      </TooltipPrimitive.Content>
-    </TooltipPrimitive.Portal>
+      </div>
+    </TooltipContext.Provider>
   )
 }
 
-export { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }
+export function TooltipTrigger({
+  asChild,
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLElement> & { asChild?: boolean }) {
+  if (asChild && React.isValidElement(children)) {
+    return children
+  }
+  return <span {...props}>{children}</span>
+}
+
+export function TooltipContent({
+  className,
+  side = "top",
+  children,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & {
+  side?: "top" | "bottom" | "left" | "right"
+}) {
+  const context = React.useContext(TooltipContext)
+  if (!context?.open) return null
+
+  return (
+    <div
+      role="tooltip"
+      className={cn(
+        "absolute z-50 overflow-hidden rounded-md border border-border/80 bg-popover px-3 py-1.5 text-xs text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 pointer-events-none whitespace-nowrap",
+        side === "top" && "bottom-full mb-1.5 left-1/2 -translate-x-1/2",
+        side === "bottom" && "top-full mt-1.5 left-1/2 -translate-x-1/2",
+        side === "left" && "right-full mr-1.5 top-1/2 -translate-y-1/2",
+        side === "right" && "left-full ml-1.5 top-1/2 -translate-y-1/2",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}

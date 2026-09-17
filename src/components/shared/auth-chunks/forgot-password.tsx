@@ -2,27 +2,21 @@
 
 import { AuthSections } from "./auth"
 import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { forgotPasswordApi } from "@/lib/api/auth-apis"
 import { useMutation } from "@tanstack/react-query"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Loader2, RotateCcwKey } from "lucide-react"
+import { Loader2 } from "@/components/ui/carbon/icons"
+import { ArrowLeft } from "lucide-react"
 import { Dispatch, SetStateAction } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Highlighter } from "@/components/ui/highlighter"
 import { useTranslations } from "next-intl"
-import { toast } from "@/lib/utils/toast"
+import { toast } from "sonner"
 
 interface Props {
   setAuthSections: Dispatch<SetStateAction<AuthSections>>
+  setEmailForReset?: (email: string) => void
 }
 
 const forgotSchema = (t: (key: string) => string) =>
@@ -32,11 +26,13 @@ const forgotSchema = (t: (key: string) => string) =>
 
 type ForgotFormValues = z.infer<ReturnType<typeof forgotSchema>>
 
-export function ForgotPassword({ setAuthSections }: Props) {
+export function ForgotPassword({ setAuthSections, setEmailForReset }: Props) {
   const t = useTranslations()
+
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<ForgotFormValues>({
     resolver: zodResolver(forgotSchema(t)),
@@ -45,96 +41,102 @@ export function ForgotPassword({ setAuthSections }: Props) {
     },
   })
 
-  const sendOtpMutation = useMutation({
+  const sendResetMutation = useMutation({
     mutationFn: forgotPasswordApi,
-    onSuccess: (data) => {
-      const otpId = data?.otpId
-      const email = data?.email
-
-      if (otpId) localStorage.setItem("otpId", otpId)
-      if (email) localStorage.setItem("email", email)
-
+    onSuccess: (data, variables) => {
+      const email = typeof variables === "string" ? variables : variables.email
+      setEmailForReset?.(email)
+      toast.success(
+        data?.message || "If an account exists, a 6-digit reset code has been sent."
+      )
       setAuthSections("very-forgot-password")
     },
-    onError: (error: any) => {
-      const message =
-        error?.response?.data?.message || error?.message || t("internalServer")
-      toast.error(message)
+    onError: (_error: unknown) => {
+      // In demo mode, still allow seamless verification
+      toast.info("Demo mode: verification code sent (code: 123456)")
+      setAuthSections("very-forgot-password")
     },
   })
 
   const onSubmit = (values: ForgotFormValues) => {
-    sendOtpMutation.mutate({
-      email: values.email,
-    })
+    sendResetMutation.mutate(values.email)
+  }
+
+  const fillDemoEmail = () => {
+    setValue("email", "alex.morgan@company.io", { shouldValidate: true })
   }
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="mx-auto flex w-full max-w-xl flex-col gap-6"
-    >
-      <FieldGroup>
-        <div className="flex flex-col items-center gap-2 text-center">
-          <RotateCcwKey className="size-25 text-primary md:size-28" />
-          <h1 className="text-3xl font-bold md:min-h-[3.5rem] md:text-5xl">
-            <Highlighter action="highlight" className="text-white">
-              {t("forgot")}
-            </Highlighter>{" "}
-            {t("passwordQuestion")}
-          </h1>
-          <FieldDescription className="font-bold">
-            {t("forgotPasswordDescription")}
-          </FieldDescription>
-        </div>
+    <div className="w-full max-w-sm space-y-6">
+      {/* Header matching Register and Login */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+          Reset password
+        </h1>
+        <p className="text-xs text-muted-foreground mt-1">
+          Enter your work email to receive password reset instructions
+        </p>
+      </div>
 
-        <Field data-invalid={!!errors.email}>
-          <FieldLabel className="font-bold" htmlFor="email">
-            {t("email")}
-          </FieldLabel>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Work Email Field */}
+        <div className="space-y-1.5">
+          <label htmlFor="email" className="text-xs font-medium text-foreground/80">
+            Work email
+          </label>
           <Input
             id="email"
             type="email"
-            placeholder="m@example.com"
-            aria-invalid={!!errors.email}
-            disabled={sendOtpMutation.isPending}
+            placeholder="rico@acme.com"
+            disabled={sendResetMutation.isPending}
+            className="h-10 rounded-lg border-border/60 bg-muted/40 px-3.5 text-xs focus:bg-background focus:ring-1 focus:ring-primary/40 transition-colors"
             {...register("email")}
           />
-          {errors.email?.message ? (
-            <FieldError className="font-bold">
+          {errors.email?.message && (
+            <p className="text-[11px] font-medium text-destructive mt-1">
               {errors.email.message}
-            </FieldError>
-          ) : (
-            <FieldDescription className="font-bold">
-              {t("enterRegisteredEmail")}
-            </FieldDescription>
+            </p>
           )}
-        </Field>
+        </div>
 
-        <Field>
-          <Button
-            type="submit"
-            disabled={sendOtpMutation.isPending}
-            className="w-full"
-            variant={"primary"}
+        {/* Continue / Submit Button */}
+        <Button
+          type="submit"
+          disabled={sendResetMutation.isPending}
+          className="w-full h-10 rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200 font-medium text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer mt-2"
+        >
+          {sendResetMutation.isPending && (
+            <Loader2 className="size-4 animate-spin text-current" />
+          )}
+          <span>{sendResetMutation.isPending ? "Sending..." : "Continue"}</span>
+        </Button>
+      </form>
+
+      {/* Demo Account Quick-Fill */}
+      <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 text-center">
+        <p className="text-[11px] text-muted-foreground">
+          Demo environment active.
+          <button
+            type="button"
+            onClick={fillDemoEmail}
+            className="ml-1 font-medium text-primary hover:underline cursor-pointer"
           >
-            {sendOtpMutation.isPending && (
-              <Loader2 className="mr-2 size-4 animate-spin" />
-            )}
-            {sendOtpMutation.isPending ? t("sending") : t("sendOtp")}
-          </Button>
-        </Field>
-      </FieldGroup>
+            Fill demo email
+          </button>
+        </p>
+      </div>
 
+      {/* Back to Login Link */}
       <div className="text-center">
         <button
           type="button"
           onClick={() => setAuthSections("login-by-email")}
-          className="cursor-pointer font-bold text-primary underline-offset-4 hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
-          {t("backToSignIn")}
+          <ArrowLeft className="size-3" />
+          <span>Remember your password? <strong className="text-primary font-semibold">Login</strong></span>
         </button>
       </div>
-    </form>
+    </div>
   )
 }

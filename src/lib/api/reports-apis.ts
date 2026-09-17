@@ -1,9 +1,8 @@
 // lib/api/reports-apis.ts
 
-import httpClient from "./http-client"
+import httpClient from "@/lib/myapi/client"
 import type {
   ApiPaginatedResponse,
-  PaginatedResponse,
   ServerTableParams,
 } from "@/types/tables"
 import type {

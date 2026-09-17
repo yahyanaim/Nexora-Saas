@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { InvoicePreview } from "./invoice-preview"
 import { useTranslations } from "next-intl"
-import { Download, Send } from "lucide-react"
+import { Download, Send } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 
 interface InvoiceDialogProps {

@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import { X, Plus } from "lucide-react"
+import { X, Plus } from "@/components/ui/carbon/icons"
 import { useTranslations } from "next-intl"
 import {
   getSubscriptionFormSchema,

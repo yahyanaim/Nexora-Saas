@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import { DataTable } from "@/components/shared/data-table-chunks/data-table"
 import {
   createInvoiceApi,
@@ -10,7 +10,7 @@ import {
   downloadInvoiceApi,
   markAsPaidApi,
 } from "@/lib/api/invoices-api"
-import { Invoice, InvoiceStatus, InvoiceMethod } from "@/types/invoices"
+import { Invoice, InvoiceStatus, InvoiceMethod, CreateInvoicePayload } from "@/types/invoices"
 import { useInvoicesTable } from "@/hooks/invoices/use-invoices-table"
 import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
@@ -21,7 +21,7 @@ import { InvoiceForm, InvoiceFormHandle } from "./invoice-form"
 import { getInvoicesColumns } from "./invoices-columns"
 import { InvoicesSummaryCards } from "./invoices-summary-cards"
 import { InvoiceDialog } from "./invoice-dialog"
-import { Plus } from "lucide-react"
+import { Plus } from "@/components/ui/carbon/icons"
 
 type PendingAction =
   | { type: "delete"; invoice: Invoice }
@@ -80,7 +80,7 @@ export default function InvoicesPage() {
     setFormOpen(true)
   }
 
-  function handleFormValid(values: any) {
+  function handleFormValid(values: CreateInvoicePayload) {
     if (formMode === "create") {
       create(values, { onSuccess: () => setFormOpen(false) })
     } else if (editingInvoice) {
@@ -89,23 +89,23 @@ export default function InvoicesPage() {
     }
   }
 
-  async function handleDownload(invoice: Invoice) {
+  const handleDownload = useCallback(async (invoice: Invoice) => {
     try {
       await downloadInvoiceApi(invoice.id)
       toast.success(t("downloadStarted"))
-    } catch (error) {
+    } catch (_error) {
       toast.error(t("downloadFailed"))
     }
-  }
+  }, [t])
 
-  async function handleSend(invoice: Invoice) {
+  const handleSend = useCallback(async (invoice: Invoice) => {
     try {
       await sendInvoiceApi(invoice.id)
       toast.success(t("invoiceSent"))
-    } catch (error) {
+    } catch (_error) {
       toast.error(t("sendFailed"))
     }
-  }
+  }, [t])
 
   async function handleMarkAsPaid(invoice: Invoice) {
     setPendingAction({ type: "markAsPaid", invoice })
@@ -115,7 +115,7 @@ export default function InvoicesPage() {
     setPendingAction({ type: "cancel", invoice })
   }
 
-  const handleDuplicate = (invoice: Invoice) => {
+  const handleDuplicate = useCallback((invoice: Invoice) => {
     const newInvoice = {
       user: invoice.user.id,
       items: invoice.items.map((item) => ({
@@ -134,9 +134,9 @@ export default function InvoicesPage() {
         refresh()
       },
     })
-  }
+  }, [create, refresh, t])
 
-  const handlePrint = (invoice: Invoice) => {
+  const handlePrint = useCallback((invoice: Invoice) => {
     const printWindow = window.open("", "_blank")
     if (printWindow) {
       printWindow.document.write(`
@@ -173,16 +173,16 @@ export default function InvoicesPage() {
       printWindow.document.close()
       printWindow.print()
     }
-  }
+  }, [t])
 
-  const handleSendReminder = async (invoice: Invoice) => {
+  const handleSendReminder = useCallback(async (invoice: Invoice) => {
     try {
       await sendInvoiceApi(invoice.id)
       toast.success(t("reminderSent"))
-    } catch (error) {
+    } catch (_error) {
       toast.error(t("reminderFailed"))
     }
-  }
+  }, [t])
 
   async function handleConfirm() {
     if (!pendingAction) return
@@ -243,7 +243,7 @@ export default function InvoicesPage() {
         },
         t
       ),
-    [t]
+    [t, handleDownload, handleSend, handleDuplicate, handlePrint, handleSendReminder]
   )
 
   const confirmConfig = useMemo(() => {
@@ -296,57 +296,59 @@ export default function InvoicesPage() {
 
   return (
     <>
-      <InvoicesSummaryCards invoices={invoices} />
+      <div className="p-4 md:p-6 space-y-6">
+        <InvoicesSummaryCards invoices={invoices} />
 
-      <DataTable
-        manual
-        title={t("invoices")}
-        isLoading={isLoading}
-        isFetching={isFetching}
-        columns={columns}
-        data={invoices}
-        rowCount={totalItems}
-        pageCount={pageCount}
-        pagination={pagination}
-        onPaginationChange={setPagination}
-        columnFilters={columnFilters}
-        onColumnFiltersChange={setColumnFilters}
-        sorting={sorting}
-        onSortingChange={setSorting}
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder={t("searchInvoices")}
-        actions={[
-          {
-            label: t("create"),
-            onClick: () => openCreateForm(),
-            iconOnly: true,
-            icon: Plus,
-            variant: "primary",
-          },
-        ]}
-        filters={[
-          {
-            columnId: "status",
-            title: t("status"),
-            options: [
-              { label: t("paid"), value: InvoiceStatus.PAID },
-              { label: t("pending"), value: InvoiceStatus.PENDING },
-              { label: t("overdue"), value: InvoiceStatus.OVERDUE },
-              { label: t("cancelled"), value: InvoiceStatus.CANCELLED },
-              { label: t("draft"), value: InvoiceStatus.DRAFT },
-            ],
-          },
-          {
-            columnId: "method",
-            title: t("method"),
-            options: Object.values(InvoiceMethod).map((method) => ({
-              label: t(method.toLowerCase()),
-              value: method,
-            })),
-          },
-        ]}
-      />
+        <DataTable
+          manual
+          title={t("invoices")}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          columns={columns}
+          data={invoices}
+          rowCount={totalItems}
+          pageCount={pageCount}
+          pagination={pagination}
+          onPaginationChange={setPagination}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={setColumnFilters}
+          sorting={sorting}
+          onSortingChange={setSorting}
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder={t("searchInvoices")}
+          actions={[
+            {
+              label: t("create"),
+              onClick: () => openCreateForm(),
+              iconOnly: true,
+              icon: Plus,
+              variant: "primary",
+            },
+          ]}
+          filters={[
+            {
+              columnId: "status",
+              title: t("status"),
+              options: [
+                { label: t("paid"), value: InvoiceStatus.PAID },
+                { label: t("pending"), value: InvoiceStatus.PENDING },
+                { label: t("overdue"), value: InvoiceStatus.OVERDUE },
+                { label: t("cancelled"), value: InvoiceStatus.CANCELLED },
+                { label: t("draft"), value: InvoiceStatus.DRAFT },
+              ],
+            },
+            {
+              columnId: "method",
+              title: t("method"),
+              options: Object.values(InvoiceMethod).map((method) => ({
+                label: t(method.toLowerCase()),
+                value: method,
+              })),
+            },
+          ]}
+        />
+      </div>
 
       <DataTableEntityFormSheet
         open={formOpen}

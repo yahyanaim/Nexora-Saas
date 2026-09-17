@@ -1,6 +1,6 @@
 "use client"
-import { useState, useCallback, useRef, useLayoutEffect } from "react"
-import { motion } from "motion/react"
+
+import * as React from "react"
 import { cn } from "@/lib/utils"
 
 export type TabItem = {
@@ -30,135 +30,76 @@ export function Tabs({
   defaultTabId,
   onChange,
   containerClassName,
-  activeTabClassName,
   tabClassName,
-  labelClassName,
   contentClassName,
-  animateContent = true,
-  instanceId = "default",
 }: TabsProps) {
-  const [activeId, setActiveId] = useState(defaultTabId)
-  const activeTab = tabs.find((t) => t.id === activeId) || tabs[0]
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
-
-  const scrollTabIntoView = useCallback((tabId: string) => {
-    const container = scrollContainerRef.current
-    const tabEl = tabRefs.current[tabId]
-    if (!container || !tabEl) return
-
-    const containerWidth = container.offsetWidth
-    const scrollLeft = container.scrollLeft
-    const tabLeft = tabEl.offsetLeft
-    const tabWidth = tabEl.offsetWidth
-
-    const targetScroll = tabLeft - containerWidth / 2 + tabWidth / 2
-
-    container.scrollTo({
-      left: targetScroll,
-      behavior: "smooth",
-    })
-  }, [])
-
-  const handleClick = useCallback(
-    (tab: TabItem) => {
-      if (tab.disabled) return
-      tab.onClick?.(tab)
-      setActiveId(tab.id)
-      onChange?.(tab)
-      scrollTabIntoView(tab.id)
-    },
-    [onChange, scrollTabIntoView]
+  const initialIndex = Math.max(
+    0,
+    tabs.findIndex((t) => t.id === defaultTabId)
   )
+  const [selectedIndex, setSelectedIndex] = React.useState(initialIndex)
 
-  // Scroll to default active tab on mount
-  useLayoutEffect(() => {
-    const id = activeId ?? tabs[0]?.id
-    if (!id) return
-
-    // rAF ensures the browser has painted and refs are populated
-    const raf = requestAnimationFrame(() => {
-      scrollTabIntoView(id)
-    })
-    return () => cancelAnimationFrame(raf)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  const handleTabClick = (tab: TabItem, index: number) => {
+    if (tab.disabled) return
+    setSelectedIndex(index)
+    tab.onClick?.(tab)
+    onChange?.(tab)
+  }
 
   return (
-    <div className="flex flex-col">
-      {tabs?.length > 1 && (
-        <div
-          ref={scrollContainerRef}
-          role="tablist"
-          className={cn(
-            "relative flex w-full items-center -space-x-1 overflow-x-auto overflow-y-hidden rounded-4xl bg-card p-1 md:-space-x-2",
-            // Hide scrollbar cross-browser
-            "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-            containerClassName
-          )}
-        >
-          {tabs.map((tab) => {
-            const isActive = tab.id === activeId
-            return (
-              <button
-                key={tab.id}
-                ref={(el) => {
-                  tabRefs.current[tab.id] = el
-                }}
-                role="tab"
-                aria-selected={isActive}
-                disabled={tab.disabled}
-                onClick={() => handleClick(tab)}
-                className={cn(
-                  "relative flex shrink-0 grow items-center justify-center gap-1 rounded-full px-2.5 py-1.5 text-sm font-medium transition-colors md:gap-1.5 md:px-4 md:py-2.5",
-                  "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-                  tab.disabled && "cursor-not-allowed opacity-50",
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:text-foreground",
-                  tabClassName
-                )}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId={`active-tab-bg-${instanceId}`}
-                    transition={{
-                      type: "spring",
-                      bounce: 0.2,
-                      duration: 0.5,
-                    }}
-                    className={cn(
-                      "absolute inset-0 rounded-full bg-primary/10",
-                      activeTabClassName
-                    )}
-                  />
-                )}
-                {tab.icon && <span className="relative z-10">{tab.icon}</span>}
-                {tab.label && (
-                  <span
-                    className={cn(
-                      "relative z-10 text-[13px] whitespace-nowrap md:text-sm",
-                      labelClassName
-                    )}
-                  >
-                    {tab.label}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      )}
-
-      {activeTab?.content && (
-        <div className={cn("relative mt-2 px-2", contentClassName)}>
-          {animateContent ? (
-            <div key={activeId}>{activeTab?.content}</div>
-          ) : (
-            <div key={activeId}>{activeTab?.content}</div>
-          )}
-        </div>
-      )}
+    <div className={cn("flex flex-col w-full", containerClassName)}>
+      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-muted/60 border border-border/50 w-fit overflow-x-auto max-w-full">
+        {tabs.map((tab, idx) => {
+          const isSelected = idx === selectedIndex
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              disabled={tab.disabled}
+              onClick={() => handleTabClick(tab, idx)}
+              className={cn(
+                "inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all duration-150 whitespace-nowrap select-none cursor-pointer",
+                isSelected
+                  ? "bg-card text-foreground shadow-xs border border-border/60 font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
+                tab.disabled && "opacity-50 cursor-not-allowed",
+                tabClassName
+              )}
+            >
+              {tab.icon && <span className="size-4 shrink-0">{tab.icon}</span>}
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+      <div className={cn("pt-4", contentClassName)}>
+        {tabs[selectedIndex]?.content}
+      </div>
     </div>
   )
+}
+
+export function TabList({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("inline-flex items-center gap-1 p-1 rounded-xl bg-muted/60 border border-border/50", className)} {...props} />
+}
+
+export function Tab({ className, active, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
+  return (
+    <button
+      className={cn(
+        "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all select-none",
+        active ? "bg-card text-foreground shadow-xs border border-border/60" : "text-muted-foreground hover:text-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export function TabPanels({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("pt-4", className)} {...props} />
+}
+
+export function TabPanel({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("w-full", className)} {...props} />
 }

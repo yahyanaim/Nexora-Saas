@@ -12,7 +12,7 @@ import { FileItem, FileType, FileVisibility } from "@/types/files"
 import {
   File,
   FileText,
-  Image,
+  Image as ImageIcon,
   Video,
   Music,
   Archive,
@@ -28,7 +28,7 @@ import {
   Globe,
   Lock,
   Users,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -51,19 +51,19 @@ export interface FilesColumnActions {
   onChangeVisibility?: (file: FileItem, visibility: FileVisibility) => void
 }
 
-// Helper function - format file size
 const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return "0 B"
   const k = 1024
   const sizes = ["B", "KB", "MB", "GB"]
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1)
+  const unit = sizes[i] ?? "GB"
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${unit}`
 }
 
 const FILE_ICONS: Record<FileType, React.ReactNode> = {
   [FileType.FOLDER]: <Folder className="h-5 w-5 text-amber-500" />,
   [FileType.DOCUMENT]: <FileText className="h-5 w-5 text-blue-500" />,
-  [FileType.IMAGE]: <Image className="h-5 w-5 text-purple-500" />,
+  [FileType.IMAGE]: <ImageIcon className="h-5 w-5 text-purple-500" />,
   [FileType.VIDEO]: <Video className="h-5 w-5 text-pink-500" />,
   [FileType.AUDIO]: <Music className="h-5 w-5 text-emerald-500" />,
   [FileType.ARCHIVE]: <Archive className="h-5 w-5 text-orange-500" />,
@@ -97,7 +97,7 @@ export const VISIBILITY_ICONS: Record<FileVisibility, React.ReactNode> = {
 export function getFilesColumns(
   actions: FilesColumnActions,
   t: (key: string, values?: Record<string, string | number>) => string
-): ColumnDef<FileItem, any>[] {
+): ColumnDef<FileItem>[] {
   return [
     {
       id: "name",
@@ -321,7 +321,8 @@ export function getFilesColumns(
               const visibilities = Object.values(FileVisibility)
               const currentIndex = visibilities.indexOf(file.visibility)
               const nextIndex = (currentIndex + 1) % visibilities.length
-              actions.onChangeVisibility?.(file, visibilities[nextIndex])
+              const nextVis = visibilities[nextIndex] ?? FileVisibility.PRIVATE
+              actions.onChangeVisibility?.(file, nextVis)
             },
           })
         }

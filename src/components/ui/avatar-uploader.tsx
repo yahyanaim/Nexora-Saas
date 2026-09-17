@@ -7,7 +7,7 @@ import {
   forwardRef,
   useImperativeHandle,
 } from "react"
-import { Upload, Trash, Users, Megaphone, User, Network } from "lucide-react"
+import { Upload, Trash, Users, Megaphone, User, Network } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 
 export interface AvatarUploaderHandle {

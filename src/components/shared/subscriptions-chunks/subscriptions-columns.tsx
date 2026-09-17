@@ -10,7 +10,7 @@ import {
   Eye,
   CheckCircle,
   RefreshCw,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { DataTableColumnHeader } from "@/components/shared/data-table-chunks/data-table-column-header"
 import {
   DataTableRowActions,
@@ -32,7 +32,7 @@ export interface SubscriptionsColumnActions {
 export function getSubscriptionsColumns(
   actions: SubscriptionsColumnActions,
   t: (key: string) => string
-): ColumnDef<Subscription, any>[] {
+): ColumnDef<Subscription>[] {
   const STATUS_CONFIG: Record<
     SubscriptionStatus,
     { label: string; className: string }

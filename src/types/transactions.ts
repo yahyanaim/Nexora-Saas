@@ -51,7 +51,7 @@ export interface CreateTransactionPayload {
   reference?: string
 }
 
-export interface UpdateTransactionPayload extends Partial<CreateTransactionPayload> {}
+export type UpdateTransactionPayload = Partial<CreateTransactionPayload>
 
 export interface TransactionFilters {
   status?: TransactionStatus[]

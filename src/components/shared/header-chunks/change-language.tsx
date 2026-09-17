@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Check, Languages } from "lucide-react"
+import { Check, Languages } from "@/components/ui/carbon/icons"
 import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
 
@@ -69,7 +69,7 @@ export const ChangeLanguage = () => {
         </div>
         <DialogFooter>
           <DialogClose
-            className="flex-1 rounded-md bg-destructive/20 p-3 text-destructive"
+            className="flex-1 rounded-md bg-destructive text-white hover:bg-destructive/90 p-2.5 text-xs font-semibold shadow-xs transition-colors"
             type="button"
           >
             {t("close")}

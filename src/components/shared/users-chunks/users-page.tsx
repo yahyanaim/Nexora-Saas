@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { DataTable } from "../data-table-chunks/data-table"
 import { getUsersColumns } from "./users-columns"
 import { UserForm, UserFormHandle } from "./user-form"
+import { UserFormValues } from "@/hooks/users/user-form-schema"
 import {
   createUserApi,
   updateUserApi,
@@ -17,7 +18,8 @@ import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { useTranslations } from "next-intl"
-import { Plus } from "lucide-react"
+import { Plus } from "@/components/ui/carbon/icons"
+import { UsersSummaryCards } from "./users-summary-cards"
 
 type PendingAction =
   | { type: "delete"; user: User }
@@ -83,11 +85,11 @@ export default function UsersPage() {
     setFormOpen(true)
   }
 
-  function handleFormValid(values: any) {
+  function handleFormValid(values: UserFormValues) {
     if (formMode === "create") {
-      create(values, { onSuccess: () => setFormOpen(false) })
+      create(values as unknown as { name: string; email: string; role?: string } & Partial<User>, { onSuccess: () => setFormOpen(false) })
     } else if (editingUser) {
-      update(editingUser.id, values)
+      update(editingUser.id, values as unknown as Partial<User>)
       setFormOpen(false)
     }
   }
@@ -165,46 +167,53 @@ export default function UsersPage() {
 
   return (
     <>
-      <DataTable
-        manual
-        title={t("users")}
-        isLoading={isLoading}
-        isFetching={isFetching}
-        columns={columns}
-        data={users}
-        rowCount={totalItems}
-        pageCount={pageCount}
-        pagination={pagination}
-        onPaginationChange={setPagination}
-        columnFilters={columnFilters}
-        onColumnFiltersChange={setColumnFilters}
-        sorting={sorting}
-        onSortingChange={setSorting}
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder={t("searchByNameEmailUsername")}
-        actions={[
-          {
-            label: t("create"),
-            onClick: () => openCreateForm(),
-            iconOnly: true,
-            icon: Plus,
-            variant: "primary",
-          },
-        ]}
-        filters={[
-          {
-            columnId: "status",
-            title: t("status"),
-            options: [
-              { label: t("active"), value: UserStatus.ACTIVE },
-              { label: t("inactive"), value: UserStatus.INACTIVE },
-              { label: t("notVerified"), value: UserStatus.NOT_VERIFIED },
-              { label: t("banned"), value: UserStatus.BANNED },
-            ],
-          },
-        ]}
-      />
+      <div className="p-4 md:p-6 space-y-6">
+        <UsersSummaryCards
+          users={users}
+          totalCount={totalItems}
+          isLoading={isLoading}
+        />
+        <DataTable
+          manual
+          title={t("users")}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          columns={columns}
+          data={users}
+          rowCount={totalItems}
+          pageCount={pageCount}
+          pagination={pagination}
+          onPaginationChange={setPagination}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={setColumnFilters}
+          sorting={sorting}
+          onSortingChange={setSorting}
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder={t("searchByNameEmailUsername")}
+          actions={[
+            {
+              label: t("create"),
+              onClick: () => openCreateForm(),
+              iconOnly: true,
+              icon: Plus,
+              variant: "primary",
+            },
+          ]}
+          filters={[
+            {
+              columnId: "status",
+              title: t("status"),
+              options: [
+                { label: t("active"), value: UserStatus.ACTIVE },
+                { label: t("inactive"), value: UserStatus.INACTIVE },
+                { label: t("notVerified"), value: UserStatus.NOT_VERIFIED },
+                { label: t("banned"), value: UserStatus.BANNED },
+              ],
+            },
+          ]}
+        />
+      </div>
 
       <DataTableEntityFormSheet
         open={formOpen}

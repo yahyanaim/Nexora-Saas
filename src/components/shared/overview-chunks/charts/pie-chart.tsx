@@ -3,7 +3,6 @@
 import * as React from "react"
 import { Label, Pie, PieChart, Sector } from "recharts"
 import type {
-  PieSectorDataItem,
   PieSectorShapeProps,
 } from "recharts/types/polar/Pie"
 
@@ -11,6 +10,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -75,7 +75,7 @@ const chartConfig = {
 function ChartPieInteractive() {
   const t = useTranslations()
   const id = "pie-interactive"
-  const [activeMonth, setActiveMonth] = React.useState(desktopData[0].month)
+  const [activeMonth, setActiveMonth] = React.useState(desktopData[0]!.month)
 
   const activeIndex = React.useMemo(
     () => desktopData.findIndex((item) => item.month === activeMonth),
@@ -181,7 +181,7 @@ function ChartPieInteractive() {
                           y={viewBox.cy}
                           className="fill-foreground text-3xl font-bold"
                         >
-                          {desktopData[activeIndex].desktop.toLocaleString()}
+                          {desktopData[activeIndex]?.desktop.toLocaleString() ?? 0}
                         </tspan>
                         <tspan
                           x={viewBox.cx}
@@ -199,6 +199,11 @@ function ChartPieInteractive() {
           </PieChart>
         </ChartContainer>
       </CardContent>
+      <CardFooter className="flex-col items-start gap-1 border-t px-6 py-4 text-xs text-muted-foreground leading-relaxed">
+        <p>
+          <span className="font-semibold text-foreground">Cohort Share & Seasonality:</span> Illustrates the proportional distribution of active platform visitors across calendar months. Interactive segment inspection reveals quarterly retention dynamics and peak engagement periods.
+        </p>
+      </CardFooter>
     </Card>
   )
 }

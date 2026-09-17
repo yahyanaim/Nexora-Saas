@@ -1,5 +1,5 @@
 import { Session, SessionStatus } from "@/types/sessions"
-import httpClient from "./http-client"
+import httpClient from "@/lib/myapi/client"
 import { ApiPaginatedResponse, ServerTableParams } from "@/types/tables"
 
 export const fetchSessionsApi = async ({

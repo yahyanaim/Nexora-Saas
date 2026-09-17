@@ -18,7 +18,7 @@ import {
   Activity,
   Settings,
   LayoutDashboard,
-} from "lucide-react"
+} from "@/components/ui/carbon/icons"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 
 interface ProjectDetailProps {

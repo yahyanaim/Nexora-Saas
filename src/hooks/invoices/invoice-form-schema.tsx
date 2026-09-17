@@ -21,6 +21,6 @@ export const invoiceFormSchema = z.object({
 
 export type InvoiceFormValues = z.infer<typeof invoiceFormSchema>
 
-export function getInvoiceFormSchema(mode: "create" | "edit") {
+export function getInvoiceFormSchema(_mode: "create" | "edit") {
   return invoiceFormSchema
 }

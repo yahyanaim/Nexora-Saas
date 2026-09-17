@@ -30,7 +30,7 @@ export const toast: ToastFn = new Proxy(sonnerToast, {
   get(target, prop, receiver) {
     const original = Reflect.get(target, prop, receiver)
     if (typeof original === "function") {
-      return (...args: any[]) => {
+      return (...args: unknown[]) => {
         playSound()
         return original.apply(target, args)
       }

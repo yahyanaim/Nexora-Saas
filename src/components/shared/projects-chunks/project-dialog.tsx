@@ -3,7 +3,6 @@
 import { Project } from "@/types/projects"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { ProjectDetail } from "./project-detail"
-import { useTranslations } from "next-intl"
 
 interface ProjectDialogProps {
   open: boolean
@@ -16,8 +15,6 @@ export function ProjectDialog({
   onOpenChange,
   project,
 }: ProjectDialogProps) {
-  const t = useTranslations()
-
   if (!project) return null
 
   return (

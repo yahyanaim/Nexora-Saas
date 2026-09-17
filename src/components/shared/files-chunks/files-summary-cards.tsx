@@ -7,20 +7,12 @@ import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
-  CardAction,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
-import { File, FileText, Image, Video, Archive, Upload } from "lucide-react"
+import { File, FileText, Image, Video, Archive, Upload } from "@/components/ui/carbon/icons"
 import { FileItem, FileType, FileSummary } from "@/types/files"
 
 interface FilesSummaryCardsProps {
@@ -106,24 +98,18 @@ export function FilesSummaryCards({
 
   if (isLoading) {
     return (
-      <div className="p-3">
-        <Carousel className="w-full">
-          <CarouselContent>
-            {[1, 2, 3, 4].map((i) => (
-              <CarouselItem
-                key={i}
-                className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
-              >
-                <Card className="animate-pulse">
-                  <CardHeader>
-                    <div className="h-4 w-24 rounded bg-muted" />
-                    <div className="mt-2 h-8 w-16 rounded bg-muted" />
-                  </CardHeader>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-        </Carousel>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 w-full">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="animate-pulse h-full flex flex-col justify-between">
+            <CardHeader className="p-5 pb-3">
+              <div className="h-4 w-24 rounded bg-muted" />
+              <div className="mt-2 h-8 w-16 rounded bg-muted" />
+            </CardHeader>
+            <CardFooter className="px-5 py-3 pt-0 border-t-0 mt-auto">
+              <div className="h-3 w-32 rounded bg-muted" />
+            </CardFooter>
+          </Card>
+        ))}
       </div>
     )
   }
@@ -214,50 +200,32 @@ export function FilesSummaryCards({
   ]
 
   return (
-    <div className="p-3">
-      <Carousel className="w-full">
-        <CarouselContent>
-          {cards.map((card) => (
-            <CarouselItem
-              key={card.key}
-              className="pl-4 md:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 w-full">
+      {cards.map((card) => (
+        <Card key={card.key} className="h-full flex flex-col justify-between">
+          <CardHeader className="p-5 pb-3">
+            <div className="flex items-center justify-between gap-2">
+              <CardDescription className="text-xs font-medium uppercase tracking-wider">{card.title}</CardDescription>
+              <Badge
+                variant={card.badge.variant}
+                className={card.badge.className}
+              >
+                <card.badge.icon className="size-3" />
+                {card.badge.label}
+              </Badge>
+            </div>
+            <CardTitle
+              className={`text-2xl font-bold font-mono tabular-nums @[250px]/card:text-3xl mt-2 ${card.valueClassName}`}
             >
-              <div className="h-full">
-                <Card className="h-full">
-                  <CardHeader>
-                    <CardDescription>{card.title}</CardDescription>
-                    <CardTitle
-                      className={`text-2xl font-semibold tabular-nums @[250px]/card:text-3xl ${card.valueClassName}`}
-                    >
-                      {card.value}
-                    </CardTitle>
-                    <CardAction>
-                      <Badge
-                        variant={card.badge.variant}
-                        className={card.badge.className}
-                      >
-                        <card.badge.icon className="size-3" />
-                        {card.badge.label}
-                      </Badge>
-                    </CardAction>
-                  </CardHeader>
-                  <CardFooter className="h-full flex-col items-start gap-1.5 text-sm">
-                    <div
-                      className={`line-clamp-1 flex gap-2 font-medium ${card.footer.className}`}
-                    >
-                      <card.footer.icon className="size-4" />
-                      {card.footer.text}
-                    </div>
-                    {/* <div className="text-muted-foreground">{card.footer.subtext}</div> */}
-                  </CardFooter>
-                </Card>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden sm:flex" />
-        <CarouselNext className="hidden sm:flex" />
-      </Carousel>
+              {card.value}
+            </CardTitle>
+          </CardHeader>
+          <CardFooter className="px-5 py-3 pt-0 border-t-0 flex items-center gap-1.5 text-xs text-muted-foreground mt-auto">
+            <card.footer.icon className="size-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate font-medium">{card.footer.text}</span>
+          </CardFooter>
+        </Card>
+      ))}
     </div>
   )
 }

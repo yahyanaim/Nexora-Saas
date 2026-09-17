@@ -1,5 +1,38 @@
+import { User, UserRole } from "./users"
 import { Session } from "./sessions"
-import { User } from "./users"
+
+export type { UserRole }
+
+export interface NewLoginAlert {
+  session: Session
+  receivedAt: string
+}
+
+export interface AuthUser {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  emailVerified?: boolean
+  orgId?: string
+  avatar?: string | null
+  profileColor?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface AuthResponse {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  emailVerified?: boolean
+  orgId?: string
+  avatar?: string | null
+  profileColor?: string
+  mfaRequired?: boolean
+  mfaToken?: string
+}
 
 export interface LoginPayload {
   email: string
@@ -10,18 +43,18 @@ export interface RegisterPayload {
   name: string
   email: string
   password: string
+  confirmPassword?: string
 }
 
 export interface VerifyOtpPayload {
-  otpId: string // was email
-  otpCode: string // was otp / otpCode
+  token: string
 }
 
-export interface VerifyAccountPayload extends VerifyOtpPayload {}
+export type VerifyAccountPayload = VerifyOtpPayload
 
 export interface SendOtpPayload {
   email: string
-  typeSend: "account-verification" | "password-recovery"
+  typeSend?: "account-verification" | "password-recovery"
 }
 
 export interface ForgotPasswordPayload {
@@ -29,77 +62,82 @@ export interface ForgotPasswordPayload {
 }
 
 export interface ResetPasswordPayload {
-  resetToken: string
+  token: string
   newPassword: string
+  confirmNewPassword?: string
 }
 
 export interface ChangePasswordPayload {
-  currentPassword: string // was oldPassword
+  currentPassword: string
   newPassword: string
 }
 
 export interface ChangeProfilePayload {
   name?: string
+  email?: string
   username?: string
   avatar?: string
   cover?: string
   profileColor?: string
   bio?: string
   dateOfBirth?: string
-  is2FA?: boolean
-  isPasscodeLocked?: boolean
   passcodeLock?: string
-  currentPassword?: string
-  password?: string
+  isPasscodeLocked?: boolean
+  is2FA?: boolean
+}
+
+export interface InviteAcceptPayload {
+  token: string
+  password: string
+  confirmPassword: string
+  name?: string
+}
+
+export interface TwoFactorVerifyPayload {
+  mfaToken: string
+  code: string
 }
 
 export interface LoginResponse {
-  success: boolean
-  message: string
-  // Direct login (active user, no 2FA)
-  token?: string
-  user?: User
-  // OTP gate (2FA or NOT_VERIFIED account)
-  otpId?: string
+  success?: boolean
+  message?: string
+  id?: string
+  name?: string
   email?: string
-  userId?: string
+  role?: UserRole
+  emailVerified?: boolean
+  orgId?: string
+  mfaRequired?: boolean
+  mfaToken?: string
+  user?: User | AuthUser
+  token?: string
 }
 
 export interface RegisterResponse {
-  success: boolean
-  message: string
-  userId?: string
+  id?: string
+  name?: string
+  email?: string
+  role?: UserRole
+  message?: string
+  success?: boolean
+  user?: User | AuthUser
 }
 
 export interface SendOtpResponse {
-  otpId?: string
-  email?: string
+  message?: string
 }
 
 export interface LogoutResponse {
-  success: boolean
-  message: string
+  message?: string
 }
 
 export interface AuthMeResponse {
-  success: boolean
-  user: User
-}
-
-export interface VerifyTokenResponse {
-  success: boolean
-  user: User
-}
-
-export interface InactiveSessionAckResponse {
-  success: boolean
-  targetSessionId: string
-  error?: string
-}
-
-export interface NewLoginAlert {
-  session: Session
-  receivedAt: string
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  emailVerified?: boolean
+  orgId?: string
 }
 
 export enum OtpPurpose {

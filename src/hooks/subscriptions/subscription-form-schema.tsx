@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { SubscriptionStatus } from "@/types/subscriptions"
 
-export const getSubscriptionFormSchema = (mode: "create" | "edit") =>
+export const getSubscriptionFormSchema = (_mode: "create" | "edit") =>
   z.object({
     name: z.string().min(1, "Name is required"),
     description: z.string().optional(),

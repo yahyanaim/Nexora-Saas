@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useMutation } from "@tanstack/react-query"
-import { Delete } from "lucide-react"
+import { Delete } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -10,6 +10,8 @@ import { verifyPasscodeApi } from "@/lib/api/auth-apis"
 import { GridPattern } from "@/components/ui/grid-pattern"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { useTranslations } from "next-intl"
+import { toast } from "sonner"
+import { apiErrorMessage } from "@/lib/myapi/client"
 
 const MIN_LENGTH = 4
 const MAX_LENGTH = 4
@@ -25,31 +27,44 @@ export function LockScreen() {
 
   const { mutate: verify, isPending } = useMutation({
     mutationFn: verifyPasscodeApi,
-    onSuccess: () => unlock(),
-    onError: () => {
+    onSuccess: (isValid) => {
+      if (isValid) {
+        unlock()
+      } else {
+        setError(true)
+        setShakeKey((k) => k + 1)
+        setPasscode("")
+        toast.error("Invalid passcode")
+      }
+    },
+    onError: (err: unknown) => {
       setError(true)
       setShakeKey((k) => k + 1)
       setPasscode("")
+      toast.error(apiErrorMessage(err, "Invalid passcode"))
     },
   })
 
-  const handleDigit = (digit: string) => {
-    if (isPending || passcode.length >= MAX_LENGTH) return
-    setError(false)
+  const handleDigit = useCallback(
+    (digit: string) => {
+      if (isPending || passcode.length >= MAX_LENGTH) return
+      setError(false)
 
-    const next = passcode + digit
-    setPasscode(next)
+      const next = passcode + digit
+      setPasscode(next)
 
-    if (next.length >= MAX_LENGTH) {
-      verify(next)
-    }
-  }
+      if (next.length >= MAX_LENGTH) {
+        verify(next)
+      }
+    },
+    [isPending, passcode, verify]
+  )
 
-  const handleBackspace = () => {
+  const handleBackspace = useCallback(() => {
     if (isPending) return
     setError(false)
     setPasscode((prev) => prev.slice(0, -1))
-  }
+  }, [isPending])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -69,7 +84,7 @@ export function LockScreen() {
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [passcode, isPending])
+  }, [handleBackspace, handleDigit])
 
   return (
     <>

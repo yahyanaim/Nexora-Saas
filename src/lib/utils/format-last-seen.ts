@@ -1,5 +1,5 @@
-import type { LucideIcon } from "lucide-react"
-import { CloudFog, Ghost, Clock } from "lucide-react"
+import type { LucideIcon } from "@/components/ui/carbon/icons"
+import { CloudFog, Ghost, Clock } from "@/components/ui/carbon/icons"
 
 export type LastSeenStatus = "visible" | "ghost" | "professional"
 
