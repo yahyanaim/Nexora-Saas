@@ -159,9 +159,9 @@ All identified audit findings have been systematically resolved and verified in 
 | Severity | Category | Finding / Opportunity | Resolution Applied | Status |
 | :---: | :---: | :--- | :--- | :---: |
 | **MEDIUM** | **Performance** | Avatars were high-res `.jpg` (~600KB each) | Resized all corporate portrait headshots with macOS `sips -Z 256` to 256x256, dropping directory size by **97%** (from 8.5MB to ~250KB total, ~20KB per avatar) with zero broken image artifacts. | **RESOLVED** |
-| **MEDIUM** | **Security** | Access tokens stored solely in `localStorage` | Implemented [`token-storage.ts`](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/src/lib/myapi/token-storage.ts) with origin-safe dual-synchronization across `localStorage` and `SameSite=Lax` cookies, wired into `apiClient` request interceptor. | **RESOLVED** |
-| **LOW** | **Type Safety** | `mapUser` accepted `u: any` | Defined explicit [`RawBackendUser`](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/src/lib/api/users-apis.ts) interface with optional backend fields, enforcing strict compile-time types across data mappers. | **RESOLVED** |
-| **LOW** | **Refactor** | Repeated summary card grid structures | Extracted reusable, enterprise-grade [`MetricCardGrid`](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/src/components/ui/metric-card-grid.tsx) component and refactored Users, Staffs, and Banned Users to consume it. | **RESOLVED** |
+| **MEDIUM** | **Security** | Access tokens stored solely in `localStorage` | Implemented [`token-storage.ts`](../src/lib/myapi/token-storage.ts) with origin-safe dual-synchronization across `localStorage` and `SameSite=Lax` cookies, wired into `apiClient` request interceptor. | **RESOLVED** |
+| **LOW** | **Type Safety** | `mapUser` accepted `u: any` | Defined explicit [`RawBackendUser`](../src/lib/api/users-apis.ts) interface with optional backend fields, enforcing strict compile-time types across data mappers. | **RESOLVED** |
+| **LOW** | **Refactor** | Repeated summary card grid structures | Extracted reusable, enterprise-grade [`MetricCardGrid`](../src/components/ui/metric-card-grid.tsx) component and refactored Users, Staffs, and Banned Users to consume it. | **RESOLVED** |
 | **LOW** | **i18n** | KPI cards were using hardcoded fallbacks | Injected 24 localized translation keys across all 9 language bundles (`ar.json`, `de.json`, `es.json`, `fr.json`, `hi.json`, `ru.json`, `ur.json`, `zh.json`, `en.json`). | **RESOLVED** |
 
 ---
@@ -170,5 +170,5 @@ All identified audit findings have been systematically resolved and verified in 
 
 The **Nexora SaaS** codebase exhibits high architectural discipline. The adoption of the IBM Carbon Design System combined with shadcn/ui and Tailwind v4 produces a sleek, data-dense enterprise application. 
 
-With **30 passing Vitest tests**, zero TypeScript errors, clean separation of concerns, 97% lighter optimized avatar assets, and built-in API resiliency, this platform is **exceptionally well-positioned as a production-ready enterprise foundation**.
+With **161 passing Vitest tests across 20 test suites**, zero TypeScript errors, clean separation of concerns, 97% lighter optimized avatar assets, and built-in API resiliency, this platform is **exceptionally well-positioned as a production-ready enterprise foundation**.
 

@@ -11,7 +11,8 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "i18n:check": "node scripts/check-i18n-sync.mjs"
   },
   "dependencies": {
     "@carbon/icons-react": "^11.88.0",
@@ -33,7 +34,8 @@
     "embla-carousel-react": "^8.6.0",
     "emoji-picker-react": "^4.19.1",
     "input-otp": "^1.4.2",
-    "lottie-react": "^2.4.2",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "lucide-react": "^0.577.0",
     "motion": "^12.38.0",
     "next": "16.1.6",

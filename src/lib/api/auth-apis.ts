@@ -1,4 +1,4 @@
-import apiClient from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
 import { tokenStorage } from "@/lib/myapi/token-storage"
 import {
   LoginPayload,
@@ -115,8 +115,8 @@ export const refreshApi = async (): Promise<AuthResponse> => {
 export const logoutApi = async (): Promise<void> => {
   try {
     await apiClient.post("/auth/logout")
-  } catch {
-    // ignore network errors on logout
+  } catch (error) {
+    console.error("logoutApi error:", apiErrorMessage(error, "Failed to logout on server"))
   }
   if (typeof window !== "undefined") {
     sessionStorage.setItem("saas_demo_logged_out", "true")
@@ -128,8 +128,12 @@ export const fetchMyAccountApi = async (): Promise<AuthUser> => {
   try {
     const { data } = await apiClient.get("/auth/me")
     if (data?.id) return data
-  } catch {
-    // Backend session not active; fall through to demo session if enabled
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Backend session not active")
+    console.error("fetchMyAccountApi error:", msg)
+    if (!isBackendUnreachable(error) && !isDemoMode()) {
+      throw error
+    }
   }
 
   // Only provide demo user when demo mode is on
@@ -268,7 +272,8 @@ export const fetchSocketTokenApi = async (): Promise<string | null> => {
   try {
     const { data } = await apiClient.post<{ token: string }>("/auth/socket-token")
     return data?.token ?? null
-  } catch {
+  } catch (error) {
+    console.error("fetchSocketTokenApi error:", apiErrorMessage(error, "Failed to fetch socket token"))
     return null
   }
 }

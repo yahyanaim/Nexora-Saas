@@ -1,5 +1,5 @@
 import { User, UserRole, UserStatus, UserType, RoleSummary } from "@/types/users"
-import apiClient from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
 import { ApiPaginatedResponse, ServerTableParams } from "../../types/tables"
 import {
   getDemoUsers,
@@ -104,8 +104,12 @@ export const fetchUsersApi = async (
           (u.email?.toLowerCase().includes(search) ?? false)
       )
     }
-  } catch {
-    // Fallback to demo users
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to fetch users")
+    console.error("[API Error] fetchUsersApi failed:", message, error)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw error
+    }
   }
 
   return paginateDemoList(
@@ -127,8 +131,13 @@ export const toggleStatusUserApi = async (
       isActive !== undefined ? { isActive } : {}
     )
     return mapUser(data)
-  } catch {
-    return updateDemoUser(id, { isActive: isActive ?? true })
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to toggle status for user ${id}`)
+    console.error("[API Error] toggleStatusUserApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return updateDemoUser(id, { isActive: isActive ?? true })
+    }
+    throw error
   }
 }
 
@@ -138,11 +147,16 @@ export const toggleBanUserApi = async (
 ): Promise<User> => {
   try {
     return await toggleStatusUserApi(id, isBanned !== undefined ? !isBanned : undefined)
-  } catch {
-    return updateDemoUser(id, {
-      status: isBanned ? UserStatus.BANNED : UserStatus.ACTIVE,
-      isActive: !isBanned,
-    })
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to toggle ban for user ${id}`)
+    console.error("[API Error] toggleBanUserApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return updateDemoUser(id, {
+        status: isBanned ? UserStatus.BANNED : UserStatus.ACTIVE,
+        isActive: !isBanned,
+      })
+    }
+    throw error
   }
 }
 
@@ -156,8 +170,14 @@ export const activateUserApi = async (
 export const deleteUserApi = async (id: string): Promise<void> => {
   try {
     await apiClient.delete(`/users/${id}`)
-  } catch {
-    deleteDemoUser(id)
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to delete user ${id}`)
+    console.error("[API Error] deleteUserApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      deleteDemoUser(id)
+      return
+    }
+    throw error
   }
 }
 
@@ -169,12 +189,17 @@ export const createUserApi = async (input: {
   try {
     const { data } = await apiClient.post("/users", input)
     return mapUser(data)
-  } catch {
-    return addDemoUser({
-      name: input.name,
-      email: input.email,
-      role: (input.role as UserRole) || "user",
-    })
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to create user")
+    console.error("[API Error] createUserApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return addDemoUser({
+        name: input.name,
+        email: input.email,
+        role: (input.role as UserRole) || "user",
+      })
+    }
+    throw error
   }
 }
 
@@ -182,9 +207,17 @@ export const getUserApi = async (id: string): Promise<User> => {
   try {
     const { data } = await apiClient.get(`/users/${id}`)
     return mapUser(data)
-  } catch {
-    const found = getDemoUsers().find((u) => u.id === id)
-    return found || getDemoUsers()[0]!
+  } catch (error) {
+    const message = apiErrorMessage(error, `User with ID ${id} not found`)
+    console.error("[API Error] getUserApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      const found = getDemoUsers().find((u) => u.id === id)
+      if (found) {
+        return found
+      }
+      throw new Error(`User with ID ${id} not found: ${message}`)
+    }
+    throw error
   }
 }
 
@@ -195,7 +228,12 @@ export const updateUserApi = async (
   try {
     const { data } = await apiClient.patch(`/users/${id}`, input)
     return mapUser(data)
-  } catch {
-    return updateDemoUser(id, input)
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to update user ${id}`)
+    console.error("[API Error] updateUserApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return updateDemoUser(id, input)
+    }
+    throw error
   }
 }

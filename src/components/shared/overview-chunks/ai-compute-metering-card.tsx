@@ -39,15 +39,27 @@ export function AiComputeMeteringCard() {
       }
     }
 
+    if (dateRange === "Last 1 year") {
+      return {
+        tokenBurn: "21.8B",
+        tokenUnit: "tokens / yr",
+        cacheHit: "84.5%",
+        cacheSaving: "-19% token cost",
+        p99Latency: "41ms",
+        explanation:
+          "Trailing 12-month compute telemetry: 21.8B tokens executed across global edge networks with 84.5% shared prefix prompt caching, saving an estimated $410k in raw LLM compute costs.",
+      }
+    }
+
     if (dateRange === "Year to date") {
       return {
-        tokenBurn: "12.8B",
+        tokenBurn: "18.5B",
         tokenUnit: "tokens / YTD",
-        cacheHit: "81.5%",
-        cacheSaving: "-16% token cost",
-        p99Latency: "46ms",
+        cacheHit: "83.8%",
+        cacheSaving: "-18% token cost",
+        p99Latency: "42ms",
         explanation:
-          "Year-to-date cumulative compute: 12.8B tokens processed globally with 99.99% edge gateway availability.",
+          "Year-to-date cumulative compute: 18.5B tokens processed globally with 99.99% edge gateway availability and sub-45ms global P99 latency.",
       }
     }
 

@@ -52,7 +52,7 @@ Nexora SaaS is architected to accelerate time-to-market for modern B2B SaaS busi
 - **Dual-Mode Resilient API Layer**: Seamlessly connects to live microservice REST backends via a Next.js server proxy while offering automatic in-memory demo data fallback with live filtering, searching, and pagination.
 - **Internationalization (i18n)**: Native multi-lingual routing powered by `next-intl` supporting 9 languages (English, Arabic, German, Spanish, French, Hindi, Russian, Urdu, Chinese).
 - **Security & RBAC**: JWT token management, 2FA setup, lock screen security, session termination, and permission-based UI gatekeeping.
-- **Automated Testing Suite**: 58 comprehensive unit and integration tests powered by Vitest and React Testing Library across 12 test suites.
+- **Automated Testing Suite**: 161 comprehensive unit and integration tests powered by Vitest and React Testing Library across 20 test suites.
 
 ---
 
@@ -222,19 +222,19 @@ NEXT_PUBLIC_DEFAULT_LOCALE=en
 
 For comprehensive technical, operational, and architectural documentation, refer to the dedicated markdown files:
 
-1. **[Workflow from Entry Point to Client Side](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/docs/WORKFLOW_ENTRY_TO_CLIENT.md)**  
+1. **[Workflow from Entry Point to Client Side](docs/WORKFLOW_ENTRY_TO_CLIENT.md)**  
    *Traces the complete lifecycle of a request from network ingress, Next.js routing, and SSR layout resolution down to client-side hydration, React Query caches, and UI rendering.*
 
-2. **[Code Review and Security & Architecture Audit](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/docs/CODE_REVIEW_AND_AUDIT.md)**  
+2. **[Code Review and Security & Architecture Audit](docs/CODE_REVIEW_AND_AUDIT.md)**  
    *Deep-dive evaluation of codebase quality, TypeScript strictness, authentication security (JWT/cookies/XSS/CSRF), performance, accessibility, and prioritized remediation roadmap.*
 
-3. **[Frontend and API Architecture](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/docs/FRONTEND_AND_API_ARCHITECTURE.md)**  
+3. **[Frontend and API Architecture](docs/FRONTEND_AND_API_ARCHITECTURE.md)**  
    *Technical analysis of the IBM Carbon Design System, Tailwind v4 tokens, feature-chunk component pattern, TanStack data tables, and the Dual-Mode Resilient API layer.*
 
-4. **[Project Codebase Commentary](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/docs/PROJECT_CODEBASE_COMMENTARY.md)**  
+4. **[Project Codebase Commentary](docs/PROJECT_CODEBASE_COMMENTARY.md)**  
    *A complete file-by-file and directory-by-directory annotated architectural commentary of every module across the repository.*
 
-5. **[User & Developer Guide](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/docs/USER_AND_DEVELOPER_GUIDE.md)**  
+5. **[User & Developer Guide](docs/USER_AND_DEVELOPER_GUIDE.md)**  
    *Operational manual for platform administrators and an onboarding guide for developers wishing to extend or integrate new features.*
 
 ---

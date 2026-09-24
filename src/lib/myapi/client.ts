@@ -142,4 +142,21 @@ export function apiErrorMessage(
   return fallback
 }
 
+/**
+ * Detects whether an error indicates that the backend is unreachable
+ * (network drop, DNS failure, connection refused, or 502/503/504 gateway outage).
+ */
+export function isBackendUnreachable(error: unknown): boolean {
+  if (axios.isAxiosError(error)) {
+    return (
+      !error.response ||
+      error.code === "ECONNREFUSED" ||
+      error.code === "ERR_NETWORK" ||
+      (typeof error.response.status === "number" &&
+        [404, 502, 503, 504].includes(error.response.status))
+    )
+  }
+  return true
+}
+
 export default apiClient

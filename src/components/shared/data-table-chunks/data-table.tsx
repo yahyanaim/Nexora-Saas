@@ -146,8 +146,6 @@ export function DataTable<TData, TValue>({
     manualPagination: manual,
     manualFiltering: manual,
     manualSorting: manual,
-    // TODO: sorting is temporarily disabled — remove this line to re-enable it.
-    enableSorting: false,
     pageCount: manual ? (pageCount ?? -1) : undefined,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,

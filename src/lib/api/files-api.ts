@@ -1,8 +1,8 @@
 // lib/api/files-api.ts
 
-import httpClient from "@/lib/myapi/client"
+import httpClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
 import type { ApiPaginatedResponse, ServerTableParams } from "@/types/tables"
-import type { FileItem, FileSummary } from "@/types/files"
+import { FileItem, FileSummary, FileType, FileVisibility } from "@/types/files"
 import {
   getDemoFiles,
   getDemoFilesSummary,
@@ -42,8 +42,12 @@ export const fetchFilesApi = async (
         },
       }
     }
-  } catch {
-    // Fallback to demo files
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to fetch files")
+    console.error("[API Error] fetchFilesApi failed:", message, error)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw error
+    }
   }
 
   return paginateDemoList(
@@ -57,8 +61,15 @@ export const getFileApi = async (id: string): Promise<FileItem> => {
   try {
     const { data } = await httpClient.get(`/files/${id}`)
     return data.data
-  } catch {
-    return getDemoFiles().find((f) => f.id === id) || getDemoFiles()[0]!
+  } catch (error) {
+    const message = apiErrorMessage(error, `File ${id} not found`)
+    console.error("[API Error] getFileApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      const found = getDemoFiles().find((f) => f.id === id)
+      if (found) return found
+      throw new Error(`File with ID ${id} not found: ${message}`)
+    }
+    throw error
   }
 }
 
@@ -70,8 +81,25 @@ export const uploadFileApi = async (formData: FormData): Promise<FileItem> => {
       },
     })
     return data.data
-  } catch {
-    return getDemoFiles()[0]!
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to upload file")
+    console.error("[API Error] uploadFileApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      const file = formData.get("file") as File | null
+      const demoFile: FileItem = {
+        id: `file-demo-${Date.now()}`,
+        name: file?.name || "Uploaded_Document.pdf",
+        size: file?.size || 1024 * 1024,
+        type: FileType.DOCUMENT,
+        visibility: FileVisibility.PRIVATE,
+        owner: { id: "usr-1", name: "Alex Morgan", email: "alex.morgan@company.io" },
+        uploadedAt: new Date().toISOString(),
+        modifiedAt: new Date().toISOString(),
+        starred: false,
+      }
+      return demoFile
+    }
+    throw error
   }
 }
 
@@ -82,17 +110,28 @@ export const updateFileApi = async (
   try {
     const { data } = await httpClient.patch(`/files/${id}`, payload)
     return data.data
-  } catch {
-    const found = getDemoFiles().find((f) => f.id === id)
-    return found ? { ...found, ...payload } : getDemoFiles()[0]!
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to update file ${id}`)
+    console.error("[API Error] updateFileApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      const found = getDemoFiles().find((f) => f.id === id)
+      if (!found) throw new Error(`File with ID ${id} not found: ${message}`)
+      return { ...found, ...payload, modifiedAt: new Date().toISOString() }
+    }
+    throw error
   }
 }
 
 export const deleteFileApi = async (id: string): Promise<void> => {
   try {
     await httpClient.delete(`/files/${id}`)
-  } catch {
-    // Demo deletion ok
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to delete file ${id}`)
+    console.error("[API Error] deleteFileApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return
+    }
+    throw error
   }
 }
 
@@ -114,8 +153,13 @@ export const getFileDownloadUrlApi = async (
   try {
     const { data } = await httpClient.get(`/files/${id}/download`)
     return data.data
-  } catch {
-    return { url: "#", filename: "demo-file.pdf" }
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to get download URL for file ${id}`)
+    console.error("[API Error] getFileDownloadUrlApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return { url: "#", filename: "demo-file.pdf" }
+    }
+    throw error
   }
 }
 
@@ -123,8 +167,12 @@ export const fetchFilesSummaryApi = async (): Promise<FileSummary> => {
   try {
     const { data } = await httpClient.get("/files/summary")
     if (data?.data) return data.data
-  } catch {
-    // Fallback to demo summary
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to fetch files summary")
+    console.error("[API Error] fetchFilesSummaryApi failed:", message, error)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw error
+    }
   }
   return getDemoFilesSummary()
 }

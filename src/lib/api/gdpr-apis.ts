@@ -1,4 +1,4 @@
-import apiClient from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
 
 export interface DataExportRequest {
   id: string
@@ -26,7 +26,13 @@ export async function requestDataExportApi(
   try {
     const res = await apiClient.post<DataExportRequest>("/gdpr/export", { format })
     if (res?.data) return res.data
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to request data export")
+    console.error("requestDataExportApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   // Demo fallback
   return {
@@ -49,7 +55,13 @@ export async function getDataExportStatusApi(
   try {
     const res = await apiClient.get<DataExportRequest>(`/gdpr/export/${exportId}`)
     if (res?.data) return res.data
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to get data export status")
+    console.error("getDataExportStatusApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   return {
     id: exportId,
@@ -71,7 +83,13 @@ export async function requestAccountDeletionApi(payload: {
   try {
     const res = await apiClient.post<AccountDeletionRequest>("/gdpr/delete-account", payload)
     if (res?.data) return res.data
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to request account deletion")
+    console.error("requestAccountDeletionApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   const scheduledFor = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
   return {
@@ -89,7 +107,13 @@ export async function cancelAccountDeletionApi(): Promise<{ success: boolean }> 
   try {
     const res = await apiClient.post<{ success: boolean }>("/gdpr/cancel-deletion")
     if (res?.data) return res.data
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to cancel account deletion")
+    console.error("cancelAccountDeletionApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   return { success: true }
 }

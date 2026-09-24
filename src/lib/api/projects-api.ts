@@ -1,6 +1,6 @@
 // lib/api/projects-api.ts
 
-import httpClient from "@/lib/myapi/client"
+import httpClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
 import type { ApiPaginatedResponse, ServerTableParams } from "@/types/tables"
 import {
   ProjectStatus,
@@ -38,9 +38,9 @@ export const fetchProjectsApi = async (
     if (data?.data) {
       return {
         success: data.success ?? true,
-        data: data.data.projects || data.data.items || [],
+        data: data.data.items || [],
         pagination: {
-          totalItems: data.data.totalItems || data.data.total || 0,
+          totalItems: data.data.total || 0,
           page: data.data.page || 0,
           pageSize: data.data.pageSize || 10,
           totalPages: data.data.totalPages || 1,
@@ -49,8 +49,12 @@ export const fetchProjectsApi = async (
         },
       }
     }
-  } catch {
-    // Fallback to demo projects
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to fetch projects")
+    console.error("[API Error] fetchProjectsApi failed:", message, error)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw error
+    }
   }
 
   return paginateDemoList(
@@ -66,8 +70,15 @@ export const getProjectApi = async (id: string): Promise<Project> => {
   try {
     const { data } = await httpClient.get(`/projects/${id}`)
     return data.data
-  } catch {
-    return getDemoProjects().find((p) => p.id === id) || getDemoProjects()[0]!
+  } catch (error) {
+    const message = apiErrorMessage(error, `Project ${id} not found`)
+    console.error("[API Error] getProjectApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      const found = getDemoProjects().find((p) => p.id === id)
+      if (found) return found
+      throw new Error(`Project with ID ${id} not found: ${message}`)
+    }
+    throw error
   }
 }
 
@@ -77,8 +88,13 @@ export const createProjectApi = async (
   try {
     const { data } = await httpClient.post("/projects", payload)
     return data.data
-  } catch {
-    return addDemoProject(payload)
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to create project")
+    console.error("[API Error] createProjectApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return addDemoProject(payload)
+    }
+    throw error
   }
 }
 
@@ -89,26 +105,37 @@ export const updateProjectApi = async (
   try {
     const { data } = await httpClient.patch(`/projects/${id}`, payload)
     return data.data
-  } catch {
-    const found = getDemoProjects().find((p) => p.id === id)
-    if (!found) return getDemoProjects()[0]!
-    return {
-      ...found,
-      ...(payload.name ? { name: payload.name } : {}),
-      ...(payload.description !== undefined ? { description: payload.description } : {}),
-      ...(payload.status ? { status: payload.status } : {}),
-      ...(payload.startDate ? { startDate: payload.startDate } : {}),
-      ...(payload.endDate !== undefined ? { endDate: payload.endDate } : {}),
-      updatedAt: new Date().toISOString(),
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to update project ${id}`)
+    console.error("[API Error] updateProjectApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      const found = getDemoProjects().find((p) => p.id === id)
+      if (!found) throw new Error(`Project with ID ${id} not found: ${message}`)
+      return {
+        ...found,
+        ...(payload.name ? { name: payload.name } : {}),
+        ...(payload.description !== undefined ? { description: payload.description } : {}),
+        ...(payload.status ? { status: payload.status } : {}),
+        ...(payload.startDate ? { startDate: payload.startDate } : {}),
+        ...(payload.endDate !== undefined ? { endDate: payload.endDate } : {}),
+        updatedAt: new Date().toISOString(),
+      }
     }
+    throw error
   }
 }
 
 export const deleteProjectApi = async (id: string): Promise<void> => {
   try {
     await httpClient.delete(`/projects/${id}`)
-  } catch {
-    deleteDemoProject(id)
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to delete project ${id}`)
+    console.error("[API Error] deleteProjectApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      deleteDemoProject(id)
+      return
+    }
+    throw error
   }
 }
 
@@ -116,8 +143,13 @@ export const archiveProjectApi = async (id: string): Promise<Project> => {
   try {
     const { data } = await httpClient.post(`/projects/${id}/archive`)
     return data.data
-  } catch {
-    return getDemoProjects()[0]!
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to archive project ${id}`)
+    console.error("[API Error] archiveProjectApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return updateProjectApi(id, { status: ProjectStatus.ARCHIVED })
+    }
+    throw error
   }
 }
 
@@ -125,8 +157,12 @@ export const fetchProjectsSummaryApi = async (): Promise<ProjectsSummary> => {
   try {
     const { data } = await httpClient.get("/projects/summary")
     if (data?.data) return data.data
-  } catch {
-    // Fallback to demo summary
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to fetch projects summary")
+    console.error("[API Error] fetchProjectsSummaryApi failed:", message, error)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw error
+    }
   }
 
   const projects = getDemoProjects()
@@ -141,10 +177,7 @@ export const fetchProjectsSummaryApi = async (): Promise<ProjectsSummary> => {
     (acc, p) => acc + (p.tasks?.filter((t) => t.status === "done").length || 0),
     0
   )
-  const avgProgress =
-    total > 0
-      ? Math.round(projects.reduce((acc, p) => acc + (p.progress || 0), 0) / total)
-      : 0
+  const avgProgress = total > 0 ? Math.round(projects.reduce((acc, p) => acc + (p.progress || 0), 0) / total) : 0
 
   return {
     total,

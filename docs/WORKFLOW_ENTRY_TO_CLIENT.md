@@ -260,9 +260,9 @@ sequenceDiagram
 
 | Layer | Primary Files | Main Responsibility |
 | :--- | :--- | :--- |
-| **Network & Ingress** | [`proxy.ts`](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/src/proxy.ts), Next.js Middleware | Reverse proxy headers, TLS termination, locale routing |
+| **Network & Ingress** | [`proxy.ts`](../src/proxy.ts), Next.js Middleware | Reverse proxy headers, TLS termination, locale routing |
 | **Server Shell** | `src/app/[locale]/layout.tsx`, `layout.tsx` | Translation loading, HTML `dir` attribute injection, metadata |
-| **Client Contexts** | [`theme-provider.tsx`](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/src/contexts/theme-provider.tsx), [`auth-provider.tsx`](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/src/contexts/auth-provider.tsx) | Theme tokens, session state, JWT storage, route protection |
-| **Data Fetching** | [`client.ts`](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/src/lib/myapi/client.ts), `src/lib/api/*` | Token injection, error handling, live API calls |
-| **Resilience Engine** | [`index.ts`](file:///Users/mac/Documents/nextjs-fullstack-saas-starter/src/lib/demo-data/index.ts) | In-memory filtering, pagination, search, seeder records |
+| **Client Contexts** | [`theme-provider.tsx`](../src/contexts/theme-provider.tsx), [`auth-provider.tsx`](../src/contexts/auth-provider.tsx) | Theme tokens, session state, JWT storage, route protection |
+| **Data Fetching** | [`client.ts`](../src/lib/myapi/client.ts), `src/lib/api/*` | Token injection, error handling, live API calls |
+| **Resilience Engine** | [`index.ts`](../src/lib/demo-data/index.ts) | In-memory filtering, pagination, search, seeder records |
 | **Presentation** | `src/components/shared/*-chunks/` | Metric summary cards, TanStack tables, Recharts visualizations |

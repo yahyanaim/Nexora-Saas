@@ -1,4 +1,4 @@
-import apiClient from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
 import { AuditLogEntry, demoAuditLogs } from "@/lib/demo-data/audit-logs"
 
 export interface AuditLogsResponse {
@@ -16,8 +16,12 @@ export async function getAuditLogsApi(): Promise<AuditLogsResponse> {
       return res.data
     }
     return { logs: demoAuditLogs, total: demoAuditLogs.length }
-  } catch {
-    // Graceful fallback to demo data for isolated offline mode
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to fetch audit logs")
+    console.error("[API Error] getAuditLogsApi failed:", message, error)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw error
+    }
     return { logs: demoAuditLogs, total: demoAuditLogs.length }
   }
 }

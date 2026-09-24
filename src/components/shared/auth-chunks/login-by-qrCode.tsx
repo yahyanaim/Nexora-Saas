@@ -56,7 +56,7 @@ export const LoginByQrCode = ({ setAuthSections }: Props) => {
         })
         setQrDataUrl(url)
       } catch (err) {
-        console.log("Failed to generate QR code:", err)
+        console.error("Failed to generate QR code:", err)
       }
     }
 

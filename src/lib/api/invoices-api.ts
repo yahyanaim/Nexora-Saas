@@ -1,6 +1,6 @@
 // lib/api/invoices-api.ts
 
-import httpClient from "@/lib/myapi/client"
+import httpClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
 import type {
   ApiPaginatedResponse,
   ServerTableParams,
@@ -53,8 +53,12 @@ export const fetchInvoicesApi = async (
         },
       }
     }
-  } catch {
-    // Fallback to demo invoices
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to fetch invoices")
+    console.error("[API Error] fetchInvoicesApi failed:", message, error)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw error
+    }
   }
 
   return paginateDemoList(
@@ -71,8 +75,15 @@ export const getInvoiceApi = async (id: string): Promise<Invoice> => {
   try {
     const { data } = await httpClient.get(`/invoices/${id}`)
     return data.data
-  } catch {
-    return getDemoInvoices().find((i) => i.id === id) || getDemoInvoices()[0]!
+  } catch (error) {
+    const message = apiErrorMessage(error, `Invoice ${id} not found`)
+    console.error("[API Error] getInvoiceApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      const found = getDemoInvoices().find((i) => i.id === id)
+      if (found) return found
+      throw new Error(`Invoice with ID ${id} not found: ${message}`)
+    }
+    throw error
   }
 }
 
@@ -82,8 +93,13 @@ export const createInvoiceApi = async (
   try {
     const { data } = await httpClient.post("/invoices", payload)
     return data.data
-  } catch {
-    return addDemoInvoice(payload)
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to create invoice")
+    console.error("[API Error] createInvoiceApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return addDemoInvoice(payload)
+    }
+    throw error
   }
 }
 
@@ -94,25 +110,36 @@ export const updateInvoiceApi = async (
   try {
     const { data } = await httpClient.patch(`/invoices/${id}`, payload)
     return data.data
-  } catch {
-    const found = getDemoInvoices().find((i) => i.id === id)
-    if (!found) return getDemoInvoices()[0]!
-    return {
-      ...found,
-      ...(payload.status ? { status: payload.status } : {}),
-      ...(payload.method ? { method: payload.method } : {}),
-      ...(payload.notes !== undefined ? { notes: payload.notes } : {}),
-      ...(payload.dueDate ? { dueDate: payload.dueDate } : {}),
-      updatedAt: new Date().toISOString(),
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to update invoice ${id}`)
+    console.error("[API Error] updateInvoiceApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      const found = getDemoInvoices().find((i) => i.id === id)
+      if (!found) throw new Error(`Invoice with ID ${id} not found: ${message}`)
+      return {
+        ...found,
+        ...(payload.status ? { status: payload.status } : {}),
+        ...(payload.method ? { method: payload.method } : {}),
+        ...(payload.notes !== undefined ? { notes: payload.notes } : {}),
+        ...(payload.dueDate ? { dueDate: payload.dueDate } : {}),
+        updatedAt: new Date().toISOString(),
+      }
     }
+    throw error
   }
 }
 
 export const deleteInvoiceApi = async (id: string): Promise<void> => {
   try {
     await httpClient.delete(`/invoices/${id}`)
-  } catch {
-    deleteDemoInvoice(id)
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to delete invoice ${id}`)
+    console.error("[API Error] deleteInvoiceApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      deleteDemoInvoice(id)
+      return
+    }
+    throw error
   }
 }
 
@@ -120,8 +147,13 @@ export const sendInvoiceApi = async (id: string): Promise<unknown> => {
   try {
     const { data } = await httpClient.post(`/invoices/${id}/send`)
     return data
-  } catch {
-    return { success: true, message: "Invoice sent via email (demo)" }
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to send invoice ${id}`)
+    console.error("[API Error] sendInvoiceApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return { success: true, message: "Invoice sent via email (demo)" }
+    }
+    throw error
   }
 }
 
@@ -129,8 +161,13 @@ export const downloadInvoiceApi = async (id: string): Promise<unknown> => {
   try {
     const { data } = await httpClient.get(`/invoices/${id}/download`)
     return data
-  } catch {
-    return { success: true }
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to download invoice ${id}`)
+    console.error("[API Error] downloadInvoiceApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return { success: true }
+    }
+    throw error
   }
 }
 
@@ -138,8 +175,13 @@ export const markAsPaidApi = async (id: string): Promise<Invoice> => {
   try {
     const { data } = await httpClient.post(`/invoices/${id}/mark-paid`)
     return data.data
-  } catch {
-    return markDemoInvoicePaid(id)
+  } catch (error) {
+    const message = apiErrorMessage(error, `Failed to mark invoice ${id} as paid`)
+    console.error("[API Error] markAsPaidApi failed:", message, error)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return markDemoInvoicePaid(id)
+    }
+    throw error
   }
 }
 
@@ -147,8 +189,12 @@ export const fetchInvoicesSummaryApi = async (): Promise<InvoicesSummary> => {
   try {
     const { data } = await httpClient.get("/invoices/summary")
     if (data?.data) return data.data
-  } catch {
-    // Fallback to demo summary
+  } catch (error) {
+    const message = apiErrorMessage(error, "Failed to fetch invoices summary")
+    console.error("[API Error] fetchInvoicesSummaryApi failed:", message, error)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw error
+    }
   }
   return getDemoInvoicesSummary()
 }

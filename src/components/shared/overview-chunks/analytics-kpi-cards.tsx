@@ -17,7 +17,7 @@ function MiniBarSparkline({ heights, className }: SparklineBarProps) {
         <div
           key={i}
           style={{ height: `${Math.max(15, h)}%` }}
-          className="w-1.5 rounded-xs bg-muted-foreground/25 dark:bg-muted-foreground/35 transition-all hover:bg-primary"
+          className="w-1.5 rounded-full bg-muted-foreground/25 dark:bg-muted-foreground/35 transition-all hover:bg-primary"
         />
       ))}
     </div>
@@ -124,25 +124,68 @@ export function AnalyticsKpiCards() {
       ]
     }
 
+    if (dateRange === "Last 1 year") {
+      const rev1y = 1992000
+      const activeWorkspaces = Math.round(2840 * workspaceMultiplier)
+      return [
+        {
+          title: "Annualized Run-rate (ARR)",
+          value: formatCurrency(rev1y),
+          change: "+118.4% YoY",
+          isPositive: true,
+          sparkline: [24, 30, 38, 46, 55, 63, 72, 80, 86, 91, 96, 100], // 12 months
+          description: "Total contracted annual recurring revenue across all enterprise and team tiers.",
+          explanation: "SaaS annual recurring revenue scaled to $1.99M over the past year with 118.4% net revenue retention.",
+        },
+        {
+          title: "Net Revenue Retention",
+          value: "118.4%",
+          change: "+14.2%",
+          isPositive: true,
+          sparkline: [75, 80, 84, 88, 91, 93, 95, 96, 97, 98, 99, 100],
+          description: "Annualized customer lifetime retention.",
+          explanation: "Net retention compounding steadily as customer product adoption matures.",
+        },
+        {
+          title: "Active Workspaces",
+          value: activeWorkspaces.toLocaleString(),
+          change: "+112.5%",
+          isPositive: true,
+          sparkline: [18, 26, 36, 48, 58, 68, 76, 84, 89, 93, 97, 100],
+          description: "Active tenant organizations onboarded over the past 12 months.",
+          explanation: "More than doubled active multi-tenant clusters provisioned across global regions.",
+        },
+        {
+          title: "Customer Churn Rate",
+          value: "1.2%",
+          change: "-2.4%",
+          isPositive: true,
+          sparkline: [95, 86, 76, 65, 54, 44, 35, 28, 24, 20, 16, 12],
+          description: "Annualized logo churn rate across all tiers.",
+          explanation: "Sub-1.5% churn benchmark sustained throughout the trailing 12 months.",
+        },
+      ]
+    }
+
     if (dateRange === "Year to date") {
-      const revYtd = 1124000
-      const activeWorkspaces = Math.round(1428 * workspaceMultiplier)
+      const revYtd = 1689200
+      const activeWorkspaces = Math.round(2450 * workspaceMultiplier)
       return [
         {
           title: "Year-to-Date Revenue",
           value: formatCurrency(revYtd),
-          change: "+71.5%",
+          change: "+94.2%",
           isPositive: true,
-          sparkline: [28, 38, 50, 62, 75, 88, 100], // 7 months (Jan-Jul)
+          sparkline: [25, 32, 40, 48, 56, 64, 72, 80, 86, 91, 95, 100], // 12 months
           description: "Cumulative revenue recognized since January 1.",
-          explanation: "Pacing 18% above annual target with accelerating enterprise pipeline.",
+          explanation: "Pacing 22% above annual target with accelerating enterprise pipeline.",
         },
         {
           title: "Net Revenue Retention",
           value: "118.4%",
           change: "+12.6%",
           isPositive: true,
-          sparkline: [78, 82, 86, 90, 93, 96, 99],
+          sparkline: [78, 82, 86, 90, 93, 96, 99, 100, 100, 101, 102, 103],
           description: "Annualized customer lifetime retention.",
           explanation: "Net retention compounding steadily as customer usage matures.",
         },
@@ -151,7 +194,7 @@ export function AnalyticsKpiCards() {
           value: activeWorkspaces.toLocaleString(),
           change: "+84.0%",
           isPositive: true,
-          sparkline: [20, 32, 46, 60, 74, 88, 100],
+          sparkline: [20, 32, 46, 60, 74, 88, 92, 95, 97, 98, 99, 100],
           description: "Active tenant organizations onboarded this year.",
           explanation: "84% annual growth in active provisioned multi-tenant clusters.",
         },
@@ -160,7 +203,7 @@ export function AnalyticsKpiCards() {
           value: "1.2%",
           change: "-1.8%",
           isPositive: true,
-          sparkline: [90, 80, 70, 58, 46, 34, 22],
+          sparkline: [90, 80, 70, 58, 46, 34, 28, 25, 22, 18, 15, 12],
           description: "Annualized logo churn rate.",
           explanation: "Sustained sub-1.5% churn tier benchmark across the platform.",
         },

@@ -2,12 +2,13 @@
 
 import React, { createContext, useContext, useState, useMemo, useCallback } from "react"
 
-export type DateRangeOption = "Last 7 days" | "Last 30 days" | "Last 90 days" | "Year to date"
+export type DateRangeOption = "Last 7 days" | "Last 30 days" | "Last 90 days" | "Last 1 year" | "Year to date"
 export type CompareModeOption =
   | "vs Prior period"
   | "vs Prior 7d"
   | "vs Prior 30d"
   | "vs Prior 90d"
+  | "vs Prior year"
   | "vs Same period 2025"
   | "No comparison"
 export type CurrencyOption = "USD" | "EUR" | "GBP" | "JPY" | "CAD"
@@ -60,6 +61,8 @@ export function AnalyticsFilterProvider({ children }: { children: React.ReactNod
       setCompareMode("vs Prior 30d")
     } else if (newRange === "Last 90 days") {
       setCompareMode("vs Prior 90d")
+    } else if (newRange === "Last 1 year") {
+      setCompareMode("vs Prior year")
     } else if (newRange === "Year to date") {
       setCompareMode("vs Same period 2025")
     }

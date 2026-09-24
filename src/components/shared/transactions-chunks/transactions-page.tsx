@@ -27,6 +27,7 @@ import { getTransactionsColumns } from "./transactions-columns"
 import { TransactionsSummaryCards } from "./transactions-summary-cards"
 import { toast } from "@/lib/utils/toast"
 import { Plus } from "@/components/ui/carbon/icons"
+import { generateReceiptPdf, printReceipt } from "@/lib/pdf/generate-receipt-pdf"
 
 type PendingAction =
   | { type: "delete"; transaction: Transaction }
@@ -160,54 +161,25 @@ export default function TransactionsPage() {
   }, [])
 
   // Download receipt handler
-  const handleDownloadReceipt = useCallback((transaction: Transaction) => {
-    // Generate a simple receipt (you can make this more sophisticated)
-    const receipt = {
-      id: transaction.transactionId,
-      user: transaction.user.name,
-      amount: transaction.amount,
-      method: transaction.method,
-      date: transaction.date,
-      status: transaction.status,
+  const handleDownloadReceipt = useCallback(async (transaction: Transaction) => {
+    try {
+      await generateReceiptPdf(transaction)
+      toast.success(t("receiptDownloaded"))
+    } catch (err) {
+      console.error("Failed to generate PDF receipt:", err)
+      toast.error("Failed to generate PDF receipt")
     }
-
-    // Create a JSON blob and download
-    const blob = new Blob([JSON.stringify(receipt, null, 2)], {
-      type: "application/json",
-    })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `receipt-${transaction.transactionId}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-
-    toast.success(t("receiptDownloaded"))
   }, [t])
 
   // Print handler
   const handlePrint = useCallback((transaction: Transaction) => {
-    const printWindow = window.open("", "_blank")
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head><title>${t("receipt")} - ${transaction.transactionId}</title></head>
-          <body>
-            <h1>${t("transactionReceipt")}</h1>
-            <p><strong>${t("id")}:</strong> ${transaction.transactionId}</p>
-            <p><strong>${t("user")}:</strong> ${transaction.user.name}</p>
-            <p><strong>${t("amount")}:</strong> $${transaction.amount.toFixed(2)}</p>
-            <p><strong>${t("method")}:</strong> ${t(transaction.method.toLowerCase())}</p>
-            <p><strong>${t("status")}:</strong> ${t(transaction.status.toLowerCase())}</p>
-            <p><strong>${t("date")}:</strong> ${new Date(transaction.date).toLocaleString()}</p>
-            <p><strong>${t("description")}:</strong> ${transaction.description || t("notAvailable")}</p>
-          </body>
-        </html>
-      `)
-      printWindow.document.close()
-      printWindow.print()
+    try {
+      printReceipt(transaction)
+    } catch (err) {
+      console.error("Failed to print receipt:", err)
+      toast.error("Failed to open print preview")
     }
-  }, [t])
+  }, [])
 
   const columns = useMemo(
     () =>

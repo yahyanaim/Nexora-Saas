@@ -43,6 +43,7 @@ import {
   Terminal,
   History,
 } from "@/components/ui/carbon/icons"
+import { Percent } from "lucide-react"
 import { Link, usePathname } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLogout } from "@/hooks/auth/use-logout"
@@ -132,6 +133,12 @@ export function DashboardSidebar({
           title: t("invoices"),
           url: "/dashboard/invoices",
           icon: Receipt,
+          permission: AdminPermissionsPlatform.INVOICES_READ,
+        },
+        {
+          title: t("taxes") || "Taxes & TVA",
+          url: "/dashboard/taxes",
+          icon: Percent,
           permission: AdminPermissionsPlatform.INVOICES_READ,
         },
       ],

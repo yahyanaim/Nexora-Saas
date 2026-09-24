@@ -7,7 +7,6 @@ import {
   updateInvoiceApi,
   deleteInvoiceApi,
   sendInvoiceApi,
-  downloadInvoiceApi,
   markAsPaidApi,
 } from "@/lib/api/invoices-api"
 import { Invoice, InvoiceStatus, InvoiceMethod, CreateInvoicePayload } from "@/types/invoices"
@@ -22,6 +21,7 @@ import { getInvoicesColumns } from "./invoices-columns"
 import { InvoicesSummaryCards } from "./invoices-summary-cards"
 import { InvoiceDialog } from "./invoice-dialog"
 import { Plus } from "@/components/ui/carbon/icons"
+import { generateInvoicePdf, printInvoice } from "@/lib/pdf/generate-invoice-pdf"
 
 type PendingAction =
   | { type: "delete"; invoice: Invoice }
@@ -91,7 +91,7 @@ export default function InvoicesPage() {
 
   const handleDownload = useCallback(async (invoice: Invoice) => {
     try {
-      await downloadInvoiceApi(invoice.id)
+      await generateInvoicePdf(invoice)
       toast.success(t("downloadStarted"))
     } catch (_error) {
       toast.error(t("downloadFailed"))
@@ -137,43 +137,12 @@ export default function InvoicesPage() {
   }, [create, refresh, t])
 
   const handlePrint = useCallback((invoice: Invoice) => {
-    const printWindow = window.open("", "_blank")
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head><title>${t("invoice")} ${invoice.invoiceNumber}</title></head>
-          <body>
-            <h1>${t("invoice")} ${invoice.invoiceNumber}</h1>
-            <p><strong>${t("customer")}:</strong> ${invoice.user.name}</p>
-            <p><strong>${t("email")}:</strong> ${invoice.user.email}</p>
-            <p><strong>${t("amount")}:</strong> $${invoice.total.toFixed(2)}</p>
-            <p><strong>${t("status")}:</strong> ${t(invoice.status.toLowerCase())}</p>
-            <p><strong>${t("date")}:</strong> ${new Date(invoice.date).toLocaleString()}</p>
-            <table border="1" cellpadding="5">
-              <tr><th>${t("description")}</th><th>${t("qty")}</th><th>${t("unitPrice")}</th><th>${t("total")}</th></tr>
-              ${invoice.items
-                .map(
-                  (item) => `
-                <tr>
-                  <td>${item.description}</td>
-                  <td>${item.quantity}</td>
-                  <td>$${item.unitPrice.toFixed(2)}</td>
-                  <td>$${item.total.toFixed(2)}</td>
-                </tr>
-              `
-                )
-                .join("")}
-            </table>
-            <p><strong>${t("subtotal")}:</strong> $${invoice.subtotal.toFixed(2)}</p>
-            <p><strong>${t("tax")}:</strong> $${invoice.tax.toFixed(2)}</p>
-            <p><strong>${t("total")}:</strong> $${invoice.total.toFixed(2)}</p>
-          </body>
-        </html>
-      `)
-      printWindow.document.close()
-      printWindow.print()
+    try {
+      printInvoice(invoice)
+    } catch (_error) {
+      toast.error("Failed to open print preview")
     }
-  }, [t])
+  }, [])
 
   const handleSendReminder = useCallback(async (invoice: Invoice) => {
     try {

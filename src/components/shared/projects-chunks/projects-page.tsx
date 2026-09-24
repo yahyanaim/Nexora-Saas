@@ -118,16 +118,15 @@ export default function ProjectsPage() {
     })
   }, [create, refresh, t])
 
-  const handleExport = useCallback((project: Project) => {
-    const data = JSON.stringify(project, null, 2)
-    const blob = new Blob([data], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${project.name}-export.json`
-    a.click()
-    URL.revokeObjectURL(url)
-    toast.success(t("projectExported"))
+  const handleExport = useCallback(async (project: Project) => {
+    try {
+      const { generateProjectDocPdf } = await import("@/lib/pdf/generate-project-doc-pdf")
+      await generateProjectDocPdf(project)
+      toast.success(t("projectExported"))
+    } catch (err) {
+      console.error("Export error:", err)
+      toast.error("Failed to export project document")
+    }
   }, [t])
 
   async function handleConfirm() {

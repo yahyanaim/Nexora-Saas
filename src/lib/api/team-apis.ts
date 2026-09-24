@@ -1,4 +1,4 @@
-import apiClient from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
 import { TeamRole } from "@/types/users"
 
 export interface TeamMember {
@@ -124,7 +124,13 @@ export async function fetchTeamMembersApi(): Promise<TeamMember[]> {
   try {
     const res = await apiClient.get<TeamMember[]>("/team/members")
     if (res?.data && Array.isArray(res.data)) return res.data
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to fetch team members")
+    console.error("fetchTeamMembersApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
   return getStoredMembers()
 }
 
@@ -147,7 +153,13 @@ export async function inviteTeamMemberApi(
   try {
     const res = await apiClient.post<TeamInvite>("/team/invites", payload)
     if (res?.data?.id) return res.data
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to invite team member")
+    console.error("inviteTeamMemberApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   const current = getStoredInvites()
   const updated = [newInvite, ...current]
@@ -167,7 +179,13 @@ export async function updateTeamMemberRoleApi(
       teamRole,
     })
     if (res?.data) return res.data
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to update member role")
+    console.error("updateTeamMemberRoleApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   const current = getStoredMembers()
   const member = current.find((m) => m.id === userId)
@@ -188,7 +206,13 @@ export async function removeTeamMemberApi(
 ): Promise<{ success: boolean }> {
   try {
     await apiClient.delete(`/team/members/${userId}`)
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to remove team member")
+    console.error("removeTeamMemberApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   const current = getStoredMembers()
   const updated = current.filter((m) => m.id !== userId)
@@ -203,7 +227,13 @@ export async function fetchPendingInvitesApi(): Promise<TeamInvite[]> {
   try {
     const res = await apiClient.get<TeamInvite[]>("/team/invites")
     if (res?.data && Array.isArray(res.data)) return res.data
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to fetch pending invites")
+    console.error("fetchPendingInvitesApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
   return getStoredInvites()
 }
 
@@ -215,7 +245,13 @@ export async function cancelPendingInviteApi(
 ): Promise<{ success: boolean }> {
   try {
     await apiClient.delete(`/team/invites/${inviteId}`)
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to cancel pending invite")
+    console.error("cancelPendingInviteApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   const current = getStoredInvites()
   const updated = current.filter((i) => i.id !== inviteId)

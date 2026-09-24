@@ -70,14 +70,34 @@ const DATA_90_DAYS = [
   { date: "Jul 28", current: 168920, previous: 135400 },
 ]
 
-const DATA_YTD = [
-  { date: "Jan", current: 98500, previous: 52000 },
-  { date: "Feb", current: 108200, previous: 58000 },
-  { date: "Mar", current: 119400, previous: 66000 },
-  { date: "Apr", current: 131800, previous: 75000 },
-  { date: "May", current: 144500, previous: 86000 },
-  { date: "Jun", current: 156800, previous: 98000 },
+const DATA_1_YEAR = [
+  { date: "Oct", current: 84000, previous: 48000 },
+  { date: "Nov", current: 89500, previous: 51000 },
+  { date: "Dec", current: 94200, previous: 54500 },
+  { date: "Jan", current: 98500, previous: 58000 },
+  { date: "Feb", current: 108200, previous: 64000 },
+  { date: "Mar", current: 119400, previous: 71000 },
+  { date: "Apr", current: 131800, previous: 79000 },
+  { date: "May", current: 144500, previous: 89000 },
+  { date: "Jun", current: 156800, previous: 99500 },
   { date: "Jul", current: 168920, previous: 112000 },
+  { date: "Aug", current: 178400, previous: 122000 },
+  { date: "Sep", current: 189500, previous: 131000 },
+]
+
+const DATA_YTD = [
+  { date: "Jan", current: 98500, previous: 58000 },
+  { date: "Feb", current: 108200, previous: 64000 },
+  { date: "Mar", current: 119400, previous: 71000 },
+  { date: "Apr", current: 131800, previous: 79000 },
+  { date: "May", current: 144500, previous: 89000 },
+  { date: "Jun", current: 156800, previous: 99500 },
+  { date: "Jul", current: 168920, previous: 112000 },
+  { date: "Aug", current: 178400, previous: 122000 },
+  { date: "Sep", current: 189500, previous: 131000 },
+  { date: "Oct", current: 198000, previous: 142000 },
+  { date: "Nov", current: 209000, previous: 153000 },
+  { date: "Dec", current: 221000, previous: 165000 },
 ]
 
 export function TotalSalesChart() {
@@ -126,6 +146,22 @@ export function TotalSalesChart() {
       }
     }
 
+    if (dateRange === "Last 1 year") {
+      const data = DATA_1_YEAR.map((d) => ({
+        date: d.date,
+        current: Math.round(d.current * mult),
+        previous: Math.round(d.previous * mult),
+      }))
+      return {
+        chartData: data,
+        xTicks: ["Oct", "Dec", "Feb", "Apr", "Jun", "Aug", "Sep"],
+        deltaText: `+${formatCurrency(105500)} (+125.6%) vs prior year`,
+        deltaPct: "+125.6%",
+        explanation:
+          "Trailing 12-month annual growth: Total monthly recurring revenue scaled from $84k to $189.5k over the past year, reflecting exceptional compound expansion across high-value enterprise accounts.",
+      }
+    }
+
     if (dateRange === "Year to date") {
       const data = DATA_YTD.map((d) => ({
         date: d.date,
@@ -134,11 +170,11 @@ export function TotalSalesChart() {
       }))
       return {
         chartData: data,
-        xTicks: ["Jan", "Mar", "May", "Jul"],
-        deltaText: `+${formatCurrency(70420)} (+71.5%) vs Jan 1`,
-        deltaPct: "+71.5%",
+        xTicks: ["Jan", "Mar", "May", "Jul", "Sep", "Nov"],
+        deltaText: `+${formatCurrency(122500)} (+124.4%) vs Jan 1`,
+        deltaPct: "+124.4%",
         explanation:
-          "Year-to-date milestone: Annual recurring revenue run-rate scaled from initial baseline, pacing above plan with 118.4% net retention.",
+          "Year-to-date milestone: Annual recurring revenue run-rate scaled from initial baseline, pacing above plan with 118.4% net retention across all active enterprise accounts.",
       }
     }
 

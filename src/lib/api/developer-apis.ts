@@ -1,4 +1,4 @@
-import apiClient from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
 import {
   ApiKey,
   WebhookEndpoint,
@@ -60,8 +60,13 @@ export async function getApiKeysApi(): Promise<ApiKey[]> {
     const res = await apiClient.get<ApiKey[]>("/developer/api-keys")
     if (res?.data && Array.isArray(res.data)) return res.data
     return getStoredKeys()
-  } catch {
-    return getStoredKeys()
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to get API keys")
+    console.error("getApiKeysApi error:", msg)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return getStoredKeys()
+    }
+    throw new Error(msg)
   }
 }
 
@@ -94,7 +99,13 @@ export async function createApiKeyApi(
     if (res?.data?.apiKey) {
       return res.data
     }
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to create API key")
+    console.error("createApiKeyApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   const current = getStoredKeys()
   const updated = [newKey, ...current]
@@ -109,7 +120,13 @@ export async function createApiKeyApi(
 export async function revokeApiKeyApi(id: string): Promise<boolean> {
   try {
     await apiClient.delete(`/developer/api-keys/${id}`)
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to revoke API key")
+    console.error("revokeApiKeyApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   const current = getStoredKeys()
   const updated = current.map((k) => (k.id === id ? { ...k, status: "revoked" as const } : k))
@@ -125,8 +142,13 @@ export async function getWebhooksApi(): Promise<WebhookEndpoint[]> {
     const res = await apiClient.get<WebhookEndpoint[]>("/developer/webhooks")
     if (res?.data && Array.isArray(res.data)) return res.data
     return getStoredWebhooks()
-  } catch {
-    return getStoredWebhooks()
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to get webhooks")
+    console.error("getWebhooksApi error:", msg)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return getStoredWebhooks()
+    }
+    throw new Error(msg)
   }
 }
 
@@ -154,7 +176,13 @@ export async function createWebhookApi(
       events,
     })
     if (res?.data?.id) return res.data
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to create webhook")
+    console.error("createWebhookApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   const current = getStoredWebhooks()
   const updated = [newEndpoint, ...current]

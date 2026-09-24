@@ -82,34 +82,67 @@ export function TopProductsCard() {
       ]
     }
 
-    if (dateRange === "Year to date") {
+    if (dateRange === "Last 1 year") {
       return [
         {
           name: "Enterprise Annual Commitment",
-          revenue: formatCurrency(445800),
-          units: "42 orgs",
-          progressPct: 88,
+          revenue: formatCurrency(892000),
+          units: "48 orgs",
+          progressPct: 92,
           iconEmoji: "🏢",
         },
         {
           name: "Pro Team Workspaces",
-          revenue: formatCurrency(349200),
-          units: "310 teams",
-          progressPct: 72,
+          revenue: formatCurrency(615000),
+          units: "410 teams",
+          progressPct: 78,
           iconEmoji: "👥",
         },
         {
           name: "Nexora AI & Compute Engine",
-          revenue: formatCurrency(147000),
-          units: "12.8B tok",
-          progressPct: 54,
+          revenue: formatCurrency(284000),
+          units: "21.8B tok",
+          progressPct: 65,
           iconEmoji: "⚡",
         },
         {
           name: "Dedicated SOC 2 Compliance Pod",
-          revenue: formatCurrency(71520),
-          units: "18 pods",
-          progressPct: 36,
+          revenue: formatCurrency(142000),
+          units: "24 pods",
+          progressPct: 45,
+          iconEmoji: "🛡️",
+        },
+      ]
+    }
+
+    if (dateRange === "Year to date") {
+      return [
+        {
+          name: "Enterprise Annual Commitment",
+          revenue: formatCurrency(745000),
+          units: "45 orgs",
+          progressPct: 90,
+          iconEmoji: "🏢",
+        },
+        {
+          name: "Pro Team Workspaces",
+          revenue: formatCurrency(520000),
+          units: "380 teams",
+          progressPct: 75,
+          iconEmoji: "👥",
+        },
+        {
+          name: "Nexora AI & Compute Engine",
+          revenue: formatCurrency(240000),
+          units: "18.5B tok",
+          progressPct: 60,
+          iconEmoji: "⚡",
+        },
+        {
+          name: "Dedicated SOC 2 Compliance Pod",
+          revenue: formatCurrency(118000),
+          units: "22 pods",
+          progressPct: 40,
           iconEmoji: "🛡️",
         },
       ]

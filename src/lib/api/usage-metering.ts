@@ -1,4 +1,4 @@
-import apiClient from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
 
 export interface ResourceUsage {
   used: number
@@ -64,8 +64,13 @@ export async function fetchUsageApi(): Promise<UsageSummary> {
     const res = await apiClient.get<UsageSummary>("/billing/usage")
     if (res?.data) return res.data
     return DEMO_USAGE
-  } catch {
-    return DEMO_USAGE
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to fetch usage metrics")
+    console.error("fetchUsageApi error:", msg)
+    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      return DEMO_USAGE
+    }
+    throw new Error(msg)
   }
 }
 
@@ -80,7 +85,13 @@ export async function checkQuotaApi(
       params: { resource },
     })
     if (res?.data) return res.data
-  } catch {}
+  } catch (error) {
+    const msg = apiErrorMessage(error, "Failed to check quota")
+    console.error("checkQuotaApi error:", msg)
+    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      throw new Error(msg)
+    }
+  }
 
   const metric = DEMO_USAGE[resource]
   const remaining = metric.limit === -1 ? Infinity : Math.max(0, metric.limit - metric.used)

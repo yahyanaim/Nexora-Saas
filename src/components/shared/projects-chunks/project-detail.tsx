@@ -18,6 +18,7 @@ import {
   Activity,
   Settings,
   LayoutDashboard,
+  Download,
 } from "@/components/ui/carbon/icons"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 
@@ -220,9 +221,34 @@ export function ProjectDetail({ project, onClose }: ProjectDetailProps) {
                         </p>
                       </div>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {file.uploadedBy.name}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {file.uploadedBy.name}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => {
+                          const blob = new Blob([
+                            `Project Document: ${file.name}\n` +
+                            `Project: ${project.name}\n` +
+                            `Uploaded By: ${file.uploadedBy.name}\n` +
+                            `Date: ${new Date(file.uploadedAt).toISOString()}\n` +
+                            `File Size: ${(file.size / 1024).toFixed(1)} KB\n\n` +
+                            `This document asset is synchronized with Nexora Workspace Storage.`
+                          ], { type: "application/octet-stream" })
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement("a")
+                          a.href = url
+                          a.download = file.name
+                          a.click()
+                          URL.revokeObjectURL(url)
+                        }}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -339,9 +365,22 @@ export function ProjectDetail({ project, onClose }: ProjectDetailProps) {
               </div>
             </div>
           </div>
-          <Button variant="outline" onClick={onClose}>
-            {t("close")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const { generateProjectDocPdf } = await import("@/lib/pdf/generate-project-doc-pdf")
+                await generateProjectDocPdf(project)
+              }}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download Brief
+            </Button>
+            <Button variant="outline" size="sm" onClick={onClose}>
+              {t("close")}
+            </Button>
+          </div>
         </div>
       </div>
 

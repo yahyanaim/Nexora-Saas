@@ -17,7 +17,7 @@ out/
 
 # production
 build/
-dashboard/
+/dashboard/
 
 # misc
 .DS_Store

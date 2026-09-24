@@ -571,7 +571,6 @@
   "updated": "Updated",
   "markAsCompleted": "Mark as Completed",
   "archive": "Archive",
-  "export": "Export",
   "copy": "Copy",
   "projectDuplicated": "Project duplicated successfully",
   "projectExported": "Project exported successfully",
@@ -771,5 +770,6 @@
   "tablet": "Tablet",
   "hindi": "Hindi",
   "urdu": "Urdu",
-  "chinese": "Chinese"
+  "chinese": "Chinese",
+  "taxes": "Taxes & TVA"
 }

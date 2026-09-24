@@ -15,6 +15,7 @@ export default defineConfig({
     env: {
       NEXT_PUBLIC_API_URL: "http://localhost:40001/api",
       NODE_ENV: "test",
+      NEXT_PUBLIC_DEMO_MODE: "true",
     },
     coverage: {
       provider: "v8",

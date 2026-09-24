@@ -50,6 +50,22 @@ const THROUGHPUT_90D = [
   { time: "W11", current: 16800, previous: 14200 },
 ]
 
+// 1-year monthly profile (12 months)
+const THROUGHPUT_1Y = [
+  { time: "Oct", current: 36000, previous: 22000 },
+  { time: "Nov", current: 39000, previous: 24000 },
+  { time: "Dec", current: 42000, previous: 26000 },
+  { time: "Jan", current: 45000, previous: 28000 },
+  { time: "Feb", current: 51000, previous: 32000 },
+  { time: "Mar", current: 58000, previous: 36000 },
+  { time: "Apr", current: 62000, previous: 41000 },
+  { time: "May", current: 67000, previous: 46000 },
+  { time: "Jun", current: 71000, previous: 50000 },
+  { time: "Jul", current: 74500, previous: 54000 },
+  { time: "Aug", current: 79200, previous: 58000 },
+  { time: "Sep", current: 84100, previous: 62000 },
+]
+
 // Year-to-date monthly profile
 const THROUGHPUT_YTD = [
   { time: "Jan", current: 45000, previous: 28000 },
@@ -59,6 +75,11 @@ const THROUGHPUT_YTD = [
   { time: "May", current: 67000, previous: 46000 },
   { time: "Jun", current: 71000, previous: 50000 },
   { time: "Jul", current: 74500, previous: 54000 },
+  { time: "Aug", current: 79200, previous: 58000 },
+  { time: "Sep", current: 84100, previous: 62000 },
+  { time: "Oct", current: 88500, previous: 66000 },
+  { time: "Nov", current: 93200, previous: 70000 },
+  { time: "Dec", current: 98000, previous: 75000 },
 ]
 
 export function SessionOverTimeCard() {
@@ -87,14 +108,25 @@ export function SessionOverTimeCard() {
       }
     }
 
+    if (dateRange === "Last 1 year") {
+      return {
+        data: THROUGHPUT_1Y,
+        ticks: ["Oct", "Jan", "Apr", "Jul", "Sep"],
+        headline: "84.1M",
+        unit: "req / mo",
+        explanation:
+          "Trailing 12-month volume: Annual request throughput scaled +133% year-over-year with global edge distribution.",
+      }
+    }
+
     if (dateRange === "Year to date") {
       return {
         data: THROUGHPUT_YTD,
-        ticks: ["Jan", "Mar", "May", "Jul"],
-        headline: "74.5M",
+        ticks: ["Jan", "Apr", "Jul", "Oct", "Dec"],
+        headline: "98.0M",
         unit: "req / mo",
         explanation:
-          "Annual volume: Total cumulative requests processed through edge gateway clusters exceeding 410M requests year-to-date.",
+          "Annual volume: Total cumulative requests processed through edge gateway clusters exceeding 780M requests year-to-date.",
       }
     }
 
@@ -227,6 +259,21 @@ const ARPU_90D = [
   { time: "Jul", value: 1180 },
 ]
 
+const ARPU_1Y = [
+  { time: "Oct", value: 820 },
+  { time: "Nov", value: 850 },
+  { time: "Dec", value: 870 },
+  { time: "Jan", value: 890 },
+  { time: "Feb", value: 920 },
+  { time: "Mar", value: 950 },
+  { time: "Apr", value: 990 },
+  { time: "May", value: 1040 },
+  { time: "Jun", value: 1090 },
+  { time: "Jul", value: 1180 },
+  { time: "Aug", value: 1240 },
+  { time: "Sep", value: 1310 },
+]
+
 const ARPU_YTD = [
   { time: "Jan", value: 890 },
   { time: "Feb", value: 920 },
@@ -235,6 +282,11 @@ const ARPU_YTD = [
   { time: "May", value: 1040 },
   { time: "Jun", value: 1090 },
   { time: "Jul", value: 1180 },
+  { time: "Aug", value: 1240 },
+  { time: "Sep", value: 1310 },
+  { time: "Oct", value: 1360 },
+  { time: "Nov", value: 1410 },
+  { time: "Dec", value: 1480 },
 ]
 
 export function AverageOrderValueCard() {
@@ -266,14 +318,25 @@ export function AverageOrderValueCard() {
       }
     }
 
+    if (dateRange === "Last 1 year") {
+      const converted = ARPU_1Y.map((d) => ({ time: d.time, value: Math.round(d.value * mult) }))
+      return {
+        data: converted,
+        ticks: ["Oct", "Jan", "Apr", "Jul", "Sep"],
+        deltaText: `+${currencySymbol}${Math.round(490 * mult)} (+59.8% YoY)`,
+        explanation:
+          "Trailing 12-month ARPU growth: Average contract value expanded from $820 to $1,310/mo as enterprise multi-product adoption matured.",
+      }
+    }
+
     if (dateRange === "Year to date") {
       const converted = ARPU_YTD.map((d) => ({ time: d.time, value: Math.round(d.value * mult) }))
       return {
         data: converted,
-        ticks: ["Jan", "Mar", "May", "Jul"],
-        deltaText: `+${currencySymbol}${Math.round(290 * mult)} (+32.5% YTD)`,
+        ticks: ["Jan", "Apr", "Jul", "Oct", "Dec"],
+        deltaText: `+${currencySymbol}${Math.round(590 * mult)} (+66.3% YTD)`,
         explanation:
-          "Year-to-date ARPU expansion: Sustained +32.5% account expansion since January reflecting strong net revenue retention.",
+          "Year-to-date ARPU expansion: Sustained +66.3% account expansion since January reflecting strong net revenue retention.",
       }
     }
 

@@ -8,7 +8,7 @@ import {
   SettingsAdjust,
   Checkmark,
 } from "@/components/ui/carbon/icons"
-import { Building2, Download } from "lucide-react"
+import { Building2, Download, Eye, Printer, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -16,6 +16,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { toast } from "sonner"
 
 import {
@@ -24,6 +30,12 @@ import {
   CompareModeOption,
   CurrencyOption,
 } from "./analytics-filter-context"
+
+import {
+  generateAnalyticsPdf,
+  getAnalyticsReportHtml,
+  printAnalyticsReport,
+} from "@/lib/pdf/generate-analytics-pdf"
 
 interface AnalyticsToolbarProps {
   onRefresh?: () => void
@@ -40,8 +52,11 @@ export function AnalyticsToolbar({ onRefresh }: AnalyticsToolbarProps) {
     workspace,
     setWorkspace,
     currencySymbol,
+    currencyRate,
+    workspaceMultiplier,
   } = useAnalyticsFilter()
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   const handleRefresh = () => {
     setIsRefreshing(true)
@@ -52,66 +67,22 @@ export function AnalyticsToolbar({ onRefresh }: AnalyticsToolbarProps) {
     }, 600)
   }
 
-  const handleExportReport = () => {
-    const reportData = `=====================================================
-NEXORA SAAS — EXECUTIVE TELEMETRY & FINANCIAL REPORT
-=====================================================
-Generated: ${new Date().toUTCString()}
-Environment Scope: ${workspace}
-Currency Standard: ${currency}
-Reporting Window: ${dateRange} (${compareMode})
-
-1. KEY PERFORMANCE INDICATORS (KPIs)
------------------------------------------------------
-- Monthly Recurring Revenue (MRR): $168,920 (+24.8% net)
-- Annual Recurring Revenue (ARR Run-Rate): $2,027,040
-- Net Revenue Retention (NRR): 118.4% (+4.2%)
-- Active Multi-Tenant Workspaces: 1,428 (+18.5%)
-- Customer Churn Rate: 1.2% (-0.6% improvement)
-- Average Revenue Per Account (ARPU): $1,180/mo
-
-2. SUBSCRIPTION LEDGER BREAKDOWN
------------------------------------------------------
-- Enterprise Tier Subscriptions:  $94,500
-- Pro Team Workspaces:            $48,200
-- AI Compute & Token Overages:    $18,450
-- Dedicated Cloud Pods & SLA:     $12,600
-- Developer API Add-ons:          $6,820
-- Expansion & Seat Upgrades:      $8,150
-- Promotional Credits / Promo:   -$11,200
-- Contractions & Churned Seats:   -$8,600
------------------------------------------------------
-NET MONTHLY RECURRING RUN-RATE:  $168,920
-
-3. ENTERPRISE CLOUD & GATEWAY TELEMETRY
------------------------------------------------------
-- Global API Gateway Volume:      2.4M requests / hour
-- Platform SLA Uptime:            99.99%
-- Global Median P99 Latency:      42ms
-- US-East (N. Virginia):          28ms (99.99% SLA)
-- EU-Central (Frankfurt):         34ms (99.98% SLA)
-- AP-South (Singapore):           62ms (99.95% SLA)
-- Monthly AI Token Consumption:   1.82B tokens (84.2% cache hit)
-
-4. EXECUTIVE SUMMARY & GUIDANCE
------------------------------------------------------
-Expansion pace remains sound. Enterprise Tier Annual commitments 
-represent 44% of total billing volume with 88% quota attainment. 
-Proactive retention monitoring recommended for accounts with >20% 
-usage drops over consecutive 14-day rolling windows.
-=====================================================
-`
-    const blob = new Blob([reportData], { type: "text/plain;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement("a")
-    link.href = url
-    link.download = `nexora-executive-analytics-${new Date().toISOString().slice(0, 10)}.txt`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-
-    toast.success("Executive SaaS telemetry report generated & downloaded")
+  const handleExportReport = async () => {
+    try {
+      await generateAnalyticsPdf({
+        workspace,
+        dateRange,
+        compareMode,
+        currency,
+        currencySymbol,
+        currencyRate,
+        workspaceMultiplier,
+      })
+      toast.success("Executive 2-page board-deck report downloaded")
+    } catch (err) {
+      console.error(err)
+      toast.error("Failed to generate executive report")
+    }
   }
 
   return (
@@ -139,7 +110,7 @@ usage drops over consecutive 14-day rolling windows.
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-40 text-xs">
-            {(["Last 7 days", "Last 30 days", "Last 90 days", "Year to date"] as DateRangeOption[]).map((option) => (
+            {(["Last 7 days", "Last 30 days", "Last 90 days", "Last 1 year", "Year to date"] as DateRangeOption[]).map((option) => (
               <DropdownMenuItem
                 key={option}
                 onClick={() => {
@@ -169,6 +140,8 @@ usage drops over consecutive 14-day rolling windows.
                 ? ["vs Prior 7d", "vs Same period 2025", "No comparison"]
                 : dateRange === "Last 90 days"
                 ? ["vs Prior 90d", "vs Same period 2025", "No comparison"]
+                : dateRange === "Last 1 year"
+                ? ["vs Prior year", "vs Prior period", "No comparison"]
                 : dateRange === "Year to date"
                 ? ["vs Prior period", "vs Same period 2025", "No comparison"]
                 : ["vs Prior 30d", "vs Same period 2025", "No comparison"]
@@ -278,15 +251,61 @@ usage drops over consecutive 14-day rolling windows.
           <span>Refresh</span>
         </Button>
 
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={handleExportReport}
-          className="h-8 gap-1.5 text-xs font-medium bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 cursor-pointer"
-        >
-          <Download className="size-3 text-current" />
-          <span>Save as report</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="primary"
+              size="sm"
+              className="h-8 gap-1.5 text-xs font-medium bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 cursor-pointer shadow-xs"
+            >
+              <Download className="size-3 text-current" />
+              <span>Save as report</span>
+              <ChevronSort className="size-3 opacity-60 ml-0.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 text-xs p-1">
+            <DropdownMenuItem
+              onClick={handleExportReport}
+              className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md"
+            >
+              <Download className="size-3.5 text-primary shrink-0" />
+              <div className="flex flex-col">
+                <span className="font-semibold text-foreground">Download Executive PDF</span>
+                <span className="text-[10px] text-muted-foreground">2-page board-deck with vector charts</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setPreviewOpen(true)}
+              className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md"
+            >
+              <Eye className="size-3.5 text-primary shrink-0" />
+              <div className="flex flex-col">
+                <span className="font-semibold text-foreground">Preview Executive Brief</span>
+                <span className="text-[10px] text-muted-foreground">Interactive on-screen report modal</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                printAnalyticsReport({
+                  workspace,
+                  dateRange,
+                  compareMode,
+                  currency,
+                  currencySymbol,
+                  currencyRate,
+                  workspaceMultiplier,
+                })
+              }}
+              className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md"
+            >
+              <Printer className="size-3.5 text-primary shrink-0" />
+              <div className="flex flex-col">
+                <span className="font-semibold text-foreground">Print Executive Brief</span>
+                <span className="text-[10px] text-muted-foreground">Print-ready high-res document</span>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Button
           variant="ghost"
@@ -298,6 +317,64 @@ usage drops over consecutive 14-day rolling windows.
           <span className="hidden sm:inline">Manage Metrics</span>
         </Button>
       </div>
+
+      {/* Interactive Executive Report Preview Modal */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl w-[94vw] max-h-[90vh] p-5 flex flex-col gap-3">
+          <DialogHeader className="flex flex-row items-center justify-between border-b border-border/80 pb-3">
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <FileText className="size-4 text-primary" />
+              <span>Nexora Executive SaaS Intelligence & Telemetry Brief</span>
+            </DialogTitle>
+            <div className="flex items-center gap-2 mr-6">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  printAnalyticsReport({
+                    workspace,
+                    dateRange,
+                    compareMode,
+                    currency,
+                    currencySymbol,
+                    currencyRate,
+                    workspaceMultiplier,
+                  })
+                }}
+                className="h-7 text-xs gap-1.5"
+              >
+                <Printer className="size-3" />
+                <span>Print</span>
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleExportReport}
+                className="h-7 text-xs gap-1.5 bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
+              >
+                <Download className="size-3" />
+                <span>Download PDF</span>
+              </Button>
+            </div>
+          </DialogHeader>
+
+          <div className="flex-1 w-full overflow-hidden rounded-lg border border-border/70 bg-muted/10">
+            <iframe
+              srcDoc={getAnalyticsReportHtml({
+                workspace,
+                dateRange,
+                compareMode,
+                currency,
+                currencySymbol,
+                currencyRate,
+                workspaceMultiplier,
+              })}
+              title="Executive Report Preview"
+              className="w-full h-[66vh] border-0"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

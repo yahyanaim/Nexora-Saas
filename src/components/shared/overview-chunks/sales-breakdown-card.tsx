@@ -83,19 +83,38 @@ export function SalesBreakdownCard() {
       }
     }
 
+    if (dateRange === "Last 1 year") {
+      return {
+        badgeText: "1Y ARR",
+        totalAmount: formatCurrency(1992000),
+        items: [
+          { label: "Enterprise Tier Subscriptions", amount: formatCurrency(1115000), trend: "up" },
+          { label: "Pro Team Workspaces", amount: formatCurrency(568000), trend: "up" },
+          { label: "AI Compute & Token Overages", amount: formatCurrency(218000), trend: "up" },
+          { label: "Dedicated Cloud Pods & SLA", amount: formatCurrency(148000), trend: "up" },
+          { label: "Developer API Add-ons", amount: formatCurrency(81000), trend: "up" },
+          { label: "Expansion & Seat Upgrades", amount: formatCurrency(96000), trend: "up" },
+          { label: "Discounts & Promotional Credits", amount: formatCurrency(-132000), trend: "down" },
+          { label: "Contractions & Churned Seats", amount: formatCurrency(-102000), trend: "down" },
+        ] as BreakdownItem[],
+        explanation:
+          "Trailing 12-month ledger: Annual recognized contract value of $1.99M with enterprise multi-year subscriptions contributing over 56% of total ARR flow.",
+      }
+    }
+
     if (dateRange === "Year to date") {
       return {
         badgeText: "YTD Total",
-        totalAmount: formatCurrency(1013520),
+        totalAmount: formatCurrency(1689200),
         items: [
-          { label: "Enterprise Tier Subscriptions", amount: formatCurrency(567000), trend: "up" },
-          { label: "Pro Team Workspaces", amount: formatCurrency(289200), trend: "up" },
-          { label: "AI Compute & Token Overages", amount: formatCurrency(110700), trend: "up" },
-          { label: "Dedicated Cloud Pods & SLA", amount: formatCurrency(75600), trend: "up" },
-          { label: "Developer API Add-ons", amount: formatCurrency(40920), trend: "up" },
-          { label: "Expansion & Seat Upgrades", amount: formatCurrency(48900), trend: "up" },
-          { label: "Discounts & Promotional Credits", amount: formatCurrency(-67200), trend: "down" },
-          { label: "Contractions & Churned Seats", amount: formatCurrency(-51600), trend: "down" },
+          { label: "Enterprise Tier Subscriptions", amount: formatCurrency(945000), trend: "up" },
+          { label: "Pro Team Workspaces", amount: formatCurrency(482000), trend: "up" },
+          { label: "AI Compute & Token Overages", amount: formatCurrency(185000), trend: "up" },
+          { label: "Dedicated Cloud Pods & SLA", amount: formatCurrency(126000), trend: "up" },
+          { label: "Developer API Add-ons", amount: formatCurrency(68000), trend: "up" },
+          { label: "Expansion & Seat Upgrades", amount: formatCurrency(81500), trend: "up" },
+          { label: "Discounts & Promotional Credits", amount: formatCurrency(-112000), trend: "down" },
+          { label: "Contractions & Churned Seats", amount: formatCurrency(-86300), trend: "down" },
         ] as BreakdownItem[],
         explanation:
           "Annual ledger: Cumulative subscription run-rate compounding at +4.8% MoM across enterprise accounts and usage add-ons.",
