@@ -140,7 +140,7 @@ export function CommandPalette({
             <CommandShortcut>G B</CommandShortcut>
           </CommandItem>
           <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/billing/subscriptions"))}
+            onSelect={() => runCommand(() => router.push("/en/dashboard/subscriptions"))}
           >
             <BadgeCheck className="mr-2 size-4 text-emerald-500" />
             <span>Subscriptions & Usage</span>

@@ -6,6 +6,7 @@ import {
   createCheckoutApi,
   createPortalApi,
   isUpgradeRequired,
+  DEMO_SUBSCRIPTION_INFO,
 } from "./billing-apis"
 
 const dummyConfig = {} as InternalAxiosRequestConfig
@@ -54,6 +55,39 @@ describe("billing-apis", () => {
     const result = await createPortalApi()
     expect(apiClient.post).toHaveBeenCalledWith("/billing/portal")
     expect(result.url).toBe("https://billing.stripe.com/p/session/portal_123")
+  })
+
+  it("getSubscription falls back to DEMO_SUBSCRIPTION_INFO when backend is unreachable in demo mode", async () => {
+    process.env.NEXT_PUBLIC_DEMO_MODE = "true"
+    const networkError = new AxiosError("Network Error", "ERR_NETWORK")
+    vi.spyOn(apiClient, "get").mockRejectedValueOnce(networkError)
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    const result = await billingApi.getSubscription()
+    expect(result).toEqual(DEMO_SUBSCRIPTION_INFO)
+    consoleError.mockRestore()
+  })
+
+  it("createCheckoutApi returns demo success url when backend is unreachable in demo mode", async () => {
+    process.env.NEXT_PUBLIC_DEMO_MODE = "true"
+    const networkError = new AxiosError("Network Error", "ERR_NETWORK")
+    vi.spyOn(apiClient, "post").mockRejectedValueOnce(networkError)
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    const result = await createCheckoutApi("pro")
+    expect(result.url).toContain("/dashboard/billing/success?plan=pro")
+    consoleError.mockRestore()
+  })
+
+  it("createPortalApi returns empty url when backend is unreachable in demo mode", async () => {
+    process.env.NEXT_PUBLIC_DEMO_MODE = "true"
+    const networkError = new AxiosError("Network Error", "ERR_NETWORK")
+    vi.spyOn(apiClient, "post").mockRejectedValueOnce(networkError)
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {})
+
+    const result = await createPortalApi()
+    expect(result.url).toBe("")
+    consoleError.mockRestore()
   })
 })
 
