@@ -1,5 +1,6 @@
 import axios from "axios"
 import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 import { BillingPlan } from "@/types/plans"
 import { SubscriptionInfo } from "@/types/subscriptions"
 
@@ -16,6 +17,10 @@ export const DEMO_SUBSCRIPTION_INFO: SubscriptionInfo = {
   hasPaymentMethod: true,
 }
 
+export function updateDemoPlan(newPlan: BillingPlan): void {
+  DEMO_SUBSCRIPTION_INFO.plan = newPlan
+}
+
 /**
  * Pure predicate: is this failure a plan-gate rejection?
  * Used by the global axios interceptor and UI to route to pricing.
@@ -30,15 +35,17 @@ export const billingApi = {
   getSubscription: async (): Promise<SubscriptionInfo> => {
     try {
       const response = await apiClient.get<SubscriptionInfo>("/billing/subscription")
-      return response.data
+      if (response?.data) return response.data
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to fetch subscription info")
       console.error("[API Error] getSubscription failed:", message)
-      if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      if (isDemoMode() || isBackendUnreachable(error)) {
         return DEMO_SUBSCRIPTION_INFO
       }
       throw error
     }
+    if (isDemoMode()) return DEMO_SUBSCRIPTION_INFO
+    throw new Error("No subscription data received")
   },
 
   /** Creates a Stripe Checkout Session; caller redirects to the returned URL. */
@@ -47,30 +54,38 @@ export const billingApi = {
   ): Promise<{ url: string }> => {
     try {
       const response = await apiClient.post<{ url: string }>("/billing/checkout", { plan })
-      return response.data
+      if (response?.data?.url) return response.data
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to create checkout session")
       console.error("[API Error] createCheckout failed:", message)
-      if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
-        return { url: `/dashboard/billing/success?plan=${plan}&demo=true` }
+      if (isDemoMode() || isBackendUnreachable(error)) {
+        updateDemoPlan(plan)
+        return { url: "" }
       }
       throw error
     }
+    if (isDemoMode()) {
+      updateDemoPlan(plan)
+      return { url: "" }
+    }
+    throw new Error("No checkout URL received")
   },
 
   /** Creates a Stripe customer-portal session for self-serve management. */
   createPortal: async (): Promise<{ url: string }> => {
     try {
       const response = await apiClient.post<{ url: string }>("/billing/portal")
-      return response.data
+      if (response?.data?.url) return response.data
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to open billing portal")
       console.error("[API Error] createPortal failed:", message)
-      if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+      if (isDemoMode() || isBackendUnreachable(error)) {
         return { url: "" }
       }
       throw error
     }
+    if (isDemoMode()) return { url: "" }
+    throw new Error("No portal URL received")
   },
 }
 
@@ -79,4 +94,3 @@ export const createCheckoutApi = billingApi.createCheckout
 export const createPortalApi = billingApi.createPortal
 
 export default billingApi
-

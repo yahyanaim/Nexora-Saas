@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation"
 
-export default function PlansRedirect() {
-  redirect("/dashboard/plans")
+export default async function PlansRedirect({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  redirect(`/${locale}/dashboard/plans`)
 }

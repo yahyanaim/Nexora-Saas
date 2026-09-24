@@ -1,6 +1,7 @@
 export * from "./billing-apis"
 import { billingApi } from "./billing-apis"
 import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 import {
   Subscription,
   SubscriptionsSummary,
@@ -46,7 +47,7 @@ export const fetchSubscriptionsApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch subscriptions")
     console.error("[API Error] fetchSubscriptionsApi failed:", message)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!isDemoMode() && !isBackendUnreachable(error)) {
       throw error
     }
   }
@@ -74,7 +75,7 @@ export const fetchSubscriptionsSummaryApi = async (): Promise<SubscriptionsSumma
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch subscriptions summary")
     console.error("[API Error] fetchSubscriptionsSummaryApi failed:", message)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!isDemoMode() && !isBackendUnreachable(error)) {
       throw error
     }
   }
@@ -92,7 +93,7 @@ export const createSubscriptionApi = async (
     const { data } = await apiClient.post<Subscription>("/subscriptions", payload)
     return data
   } catch (error) {
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!isDemoMode() && !isBackendUnreachable(error)) {
       throw error
     }
     return addDemoSubscription(payload)
@@ -110,7 +111,7 @@ export const updateSubscriptionApi = async (
     const { data } = await apiClient.put<Subscription>(`/subscriptions/${id}`, payload)
     return data
   } catch (error) {
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!isDemoMode() && !isBackendUnreachable(error)) {
       throw error
     }
     return updateDemoSubscription(id, payload)
@@ -124,7 +125,7 @@ export const deleteSubscriptionApi = async (id: string): Promise<void> => {
   try {
     await apiClient.delete(`/subscriptions/${id}`)
   } catch (error) {
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!isDemoMode() && !isBackendUnreachable(error)) {
       throw error
     }
     deleteDemoSubscription(id)
@@ -138,7 +139,7 @@ export const cancelSubscriptionApi = async (id: string): Promise<void> => {
   try {
     await apiClient.post(`/subscriptions/${id}/cancel`)
   } catch (error) {
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!isDemoMode() && !isBackendUnreachable(error)) {
       throw error
     }
     cancelDemoSubscription(id)
