@@ -7,13 +7,13 @@ export const registerSchema = z.object({
     .string()
     .min(3, "Username must be at least 3 characters")
     .optional(),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(10, "Password must be at least 10 characters"),
   dateOfBirth: z.string().optional(),
 })
 
 export const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(1, "Password is required"),
 })
 
 export const updateProfileSchema = z.object({
@@ -30,8 +30,8 @@ export const updateProfileSchema = z.object({
 })
 
 export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(6),
-  newPassword: z.string().min(6),
+  currentPassword: z.string().min(10),
+  newPassword: z.string().min(10),
 })
 
 export const verifyOTPSchema = z.object({
@@ -45,7 +45,7 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: z.string(),
-  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  newPassword: z.string().min(10, "Password must be at least 10 characters"),
 })
 
 export const setPasscodeSchema = z.object({

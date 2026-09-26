@@ -14,6 +14,7 @@ interface PermissionGuardProps {
 }
 
 /**
+ * UI-ONLY — enforced by backend per request
  * Declarative RBAC permission gatekeeper component.
  * Renders `children` only if the authenticated user satisfies the permission requirements.
  * Otherwise, renders optional `fallback` (defaults to null).
@@ -31,6 +32,10 @@ export function PermissionGuard({
   children,
 }: PermissionGuardProps) {
   const { user } = useAuthGuard()
+
+  if (!user) {
+    return <>{fallback}</>
+  }
 
   if (permission && !can(user, permission)) {
     return <>{fallback}</>

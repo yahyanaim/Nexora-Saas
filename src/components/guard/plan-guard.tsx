@@ -20,6 +20,7 @@ interface PlanGuardProps {
 }
 
 /**
+ * UI-ONLY — enforced by backend per request
  * Declarative subscription tier gatekeeper.
  * Renders `children` only if the organization's plan tier is greater than or equal
  * to `requiredPlan`. Super-admins bypass this restriction automatically.
@@ -41,7 +42,12 @@ export function PlanGuard({
     queryFn: fetchSubscriptionApi,
     staleTime: 5 * 60 * 1000,
     retry: false,
+    enabled: !!user,
   })
+
+  if (!user) {
+    return <>{fallback}</>
+  }
 
   // Super-admins and owners bypass plan checks
   if (isSuperUser(user)) {

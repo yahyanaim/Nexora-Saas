@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest"
 import {
   formatDate,
   formatDateFacebook,
@@ -7,6 +7,15 @@ import {
 } from "./format-date"
 
 describe("format-date utilities", () => {
+  beforeAll(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 8, 14, 12, 0, 0)) // Fixed to Sep 14, 2026
+  })
+
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
   describe("formatDate", () => {
     it("formats valid ISO date string in English, French, Spanish, Arabic", () => {
       const dateStr = "2026-09-14T12:00:00.000Z"
@@ -55,13 +64,11 @@ describe("format-date utilities", () => {
       const now = new Date()
       // 30 days ago, same year
       const thirtyDaysAgo = new Date(now.getFullYear(), Math.max(0, now.getMonth() - 1), 1, 10, 0)
-      if (thirtyDaysAgo.getFullYear() === now.getFullYear()) {
-        const enRes = formatDateFacebook(thirtyDaysAgo, "en")
-        expect(enRes).toContain("at")
+      const enRes = formatDateFacebook(thirtyDaysAgo, "en")
+      expect(enRes).toContain("at")
 
-        const arRes = formatDateFacebook(thirtyDaysAgo, "ar")
-        expect(arRes).toContain("الساعة")
-      }
+      const arRes = formatDateFacebook(thirtyDaysAgo, "ar")
+      expect(arRes).toContain("الساعة")
     })
 
     it("formats dates from past years", () => {

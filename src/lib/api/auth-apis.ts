@@ -33,6 +33,26 @@ export const DEMO_ADMIN_USER: AuthUser = {
   avatar: "/avatars/alex-morgan.jpg",
 }
 
+export const DEMO_USERS: Record<string, AuthUser> = {
+  "alex.morgan@company.io": DEMO_ADMIN_USER,
+  "sophia.v@nexora.io": {
+    id: "usr-demo-2",
+    name: "Sophia Vance",
+    email: "sophia.v@nexora.io",
+    role: "admin",
+    emailVerified: true,
+    avatar: "/avatars/sophia-vance.jpg",
+  },
+  "sarah.chen@techcorp.com": {
+    id: "usr-demo-3",
+    name: "Sarah Chen",
+    email: "sarah.chen@techcorp.com",
+    role: "user",
+    emailVerified: true,
+    avatar: "/avatars/sarah-chen.jpg",
+  },
+}
+
 export const loginApi = async (
   payload: LoginPayload
 ): Promise<LoginResponse> => {
@@ -45,21 +65,24 @@ export const loginApi = async (
   } catch (err) {
     // Only fall back to demo user when demo mode is explicitly enabled in local dev
     if (isDemoMode()) {
+      const emailKey = payload.email?.toLowerCase?.() ?? ""
+      const demoUser = DEMO_USERS[emailKey] || DEMO_ADMIN_USER
       console.warn(
-        "[AUTH WARNING] Demo mode fallback used in loginApi: Logged in as Demo Administrator. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production."
+        `[AUTH WARNING] Demo mode fallback used in loginApi: Logged in as ${demoUser.name}. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production.`
       )
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("saas_demo_logged_out")
+        sessionStorage.setItem("saas_demo_user", JSON.stringify(demoUser))
         tokenStorage.set("demo-session-token")
       }
       return {
         success: true,
-        user: DEMO_ADMIN_USER,
-        message: "Logged in as Demo Administrator",
-        id: DEMO_ADMIN_USER.id,
-        name: DEMO_ADMIN_USER.name,
-        email: DEMO_ADMIN_USER.email,
-        role: DEMO_ADMIN_USER.role,
+        user: demoUser,
+        message: `Logged in as ${demoUser.name}`,
+        id: demoUser.id,
+        name: demoUser.name,
+        email: demoUser.email,
+        role: demoUser.role,
       }
     }
     throw err
@@ -120,6 +143,7 @@ export const logoutApi = async (): Promise<void> => {
   }
   if (typeof window !== "undefined") {
     sessionStorage.setItem("saas_demo_logged_out", "true")
+    sessionStorage.removeItem("saas_demo_user")
     tokenStorage.clear()
   }
 }
@@ -142,6 +166,15 @@ export const fetchMyAccountApi = async (): Promise<AuthUser> => {
       if (sessionStorage.getItem("saas_demo_logged_out") === "true") {
         throw new Error("Unauthenticated")
       }
+      const stored = sessionStorage.getItem("saas_demo_user")
+      if (stored) {
+        try {
+          const user = JSON.parse(stored) as AuthUser
+          return user
+        } catch {
+          // ignore error
+        }
+      }
     }
     console.warn(
       "[AUTH WARNING] Demo mode fallback used in fetchMyAccountApi: Returning DEMO_ADMIN_USER. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production."
@@ -162,7 +195,7 @@ export const requestVerificationApi = async (
 export const verifyAccountApi = async (
   token: string
 ): Promise<{ message: string }> => {
-  const { data } = await apiClient.get(`/auth/verify?token=${encodeURIComponent(token)}`)
+  const { data } = await apiClient.post(`/auth/verify`, { token })
   return data
 }
 

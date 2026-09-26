@@ -12,14 +12,14 @@
   "sendOtp": "सत्यापन कोड भेजें",
   "backToSignIn": "साइन इन पर वापस जाएं",
   "passwordRequired": "पासवर्ड आवश्यक है",
-  "passwordMinLength": "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए",
+  "passwordMinLength": "पासवर्ड कम से कम 10 अक्षरों का होना चाहिए",
   "signIn": "साइन इन करें",
   "admin": "व्यवस्थापक",
   "error": "त्रुटि",
   "password": "पासवर्ड",
   "forgotPassword": "पासवर्ड भूल गए?",
   "enterPassword": "अपना पासवर्ड दर्ज करें",
-  "passwordMinChars": "न्यूनतम 6 अक्षर",
+  "passwordMinChars": "न्यूनतम 10 अक्षर",
   "waiting": "कृपया प्रतीक्षा करें...",
   "loginFailed": "लॉगिन विफल। कृपया पुनः प्रयास करें।",
   "active": "सक्रिय",
@@ -294,7 +294,6 @@
   "somethingWentWrong": "कुछ गड़बड़ हो गई। कृपया पुनः प्रयास करें।",
   "changePassword": "पासवर्ड बदलें",
   "changePasswordDescription": "अपना वर्तमान पासवर्ड दर्ज करें और एक नया चुनें",
-  "passwordMin8": "पासवर्ड कम से कम 8 अक्षरों का होना चाहिए",
   "otpRequired": "सत्यापन कोड आवश्यक है",
   "currentPassword": "वर्तमान पासवर्ड",
   "enterCurrentPassword": "अपना वर्तमान पासवर्ड दर्ज करें",
@@ -771,5 +770,6 @@
   "hindi": "हिन्दी",
   "urdu": "उर्दू",
   "chinese": "चीनी",
-  "taxes": "कर और वैट"
+  "taxes": "कर और वैट",
+  "passwordMin10": "पासवर्ड कम से कम 10 अक्षरों का होना चाहिए"
 }

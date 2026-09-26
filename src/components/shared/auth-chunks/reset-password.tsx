@@ -25,7 +25,7 @@ const resetSchema = (_t: (key: string) => string) =>
       token: z.string(),
       password: z
         .string()
-        .min(8, "Password must be at least 8 characters")
+        .min(10, "Password must be at least 10 characters")
         .regex(/[A-Z]/, "Must contain at least one uppercase letter")
         .regex(/[0-9]/, "Must contain at least one number"),
       confirmPassword: z.string().min(1, "Please confirm your password"),

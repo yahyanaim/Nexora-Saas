@@ -10,7 +10,7 @@ import { BillingPlan } from "@/types/plans"
 import { FeatureFlagKey, isFeatureEnabledForPlan } from "@/lib/feature-flags/feature-flags"
 import { isSuperUser } from "@/lib/permissions/can"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { UPGRADE_REQUIRED_EVENT, apiErrorMessage } from "@/lib/myapi/client"
+import { UPGRADE_REQUIRED_EVENT, SESSION_EXPIRED_EVENT, apiErrorMessage } from "@/lib/myapi/client"
 import { isDemoMode } from "@/lib/auth/demo-mode"
 import { tokenStorage } from "@/lib/myapi/token-storage"
 import { toast } from "sonner"
@@ -151,6 +151,18 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     router.replace("/auth")
   }, [queryClient, router])
 
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      if (isDemoMode()) return
+      if (!pathname?.includes("/auth")) {
+        clearAuth()
+        toast.error("Your session has expired. Please log in again.")
+      }
+    }
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+  }, [clearAuth, pathname])
+
   const login = useCallback(
     async (payload: LoginPayload) => {
       const response = await loginApi(payload)
@@ -181,8 +193,12 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
 
   const currentPlan: BillingPlan = subscription?.plan || "free"
 
+  /**
+   * UI-ONLY — enforced by backend per request
+   */
   const hasFeature = useCallback(
     (flag: FeatureFlagKey): boolean => {
+      if (!user) return false
       if (isSuperUser(user)) return true
       return isFeatureEnabledForPlan(flag, currentPlan)
     },

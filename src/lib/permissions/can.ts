@@ -45,10 +45,11 @@ export function isSuperUser(user: User | undefined): boolean {
 }
 
 /**
+ * UI-ONLY — enforced by backend per request
  * Central RBAC gatekeeper. Checks whether a user has a specific permission.
  *
  * Rules:
- * 1. Unauthenticated users have NO permissions.
+ * 1. Unauthenticated or unresolved users have NO permissions.
  * 2. Superusers (admin/owner) have ALL permissions.
  * 3. Users with `AdminPermissionsPlatform.ALL` have ALL permissions.
  * 4. Otherwise, user must possess the specific permission directly or via active roles.
@@ -57,7 +58,7 @@ export function can(
   user: User | undefined,
   permission: AdminPermissionsPlatform
 ): boolean {
-  if (!user) return false
+  if (!user || (!user.role && !user.userType)) return false
   if (isSuperUser(user)) return true
 
   const perms = getUserPermissions(user)
@@ -67,25 +68,27 @@ export function can(
 }
 
 /**
+ * UI-ONLY — enforced by backend per request
  * Checks whether a user possesses ALL of the specified permissions.
  */
 export function canAll(
   user: User | undefined,
   permissions: AdminPermissionsPlatform[]
 ): boolean {
-  if (!user) return false
+  if (!user || (!user.role && !user.userType)) return false
   if (isSuperUser(user)) return true
   return permissions.every((p) => can(user, p))
 }
 
 /**
+ * UI-ONLY — enforced by backend per request
  * Checks whether a user possesses AT LEAST ONE of the specified permissions.
  */
 export function canAny(
   user: User | undefined,
   permissions: AdminPermissionsPlatform[]
 ): boolean {
-  if (!user) return false
+  if (!user || (!user.role && !user.userType)) return false
   if (isSuperUser(user)) return true
   return permissions.some((p) => can(user, p))
 }

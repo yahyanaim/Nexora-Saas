@@ -1,15 +1,7 @@
-import { describe, it, expect, beforeAll } from "vitest"
+import { describe, it, expect } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { CommandDialog, CommandInput, CommandList, CommandItem } from "./command"
 
-beforeAll(() => {
-  global.ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-  window.HTMLElement.prototype.scrollIntoView = function () {}
-})
 
 describe("CommandDialog", () => {
   it("renders with top-center positioning instead of bottom", () => {

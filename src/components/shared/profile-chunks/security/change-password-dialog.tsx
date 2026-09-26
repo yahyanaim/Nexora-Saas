@@ -135,8 +135,8 @@ export function ChangePasswordDialog({
   const validateChange = () => {
     const errs: Record<string, string> = {}
     if (!currentPassword) errs.currentPassword = t("passwordRequired")
-    if (!newPassword || newPassword.length < 8)
-      errs.newPassword = t("passwordMin8")
+    if (!newPassword || newPassword.length < 10)
+      errs.newPassword = t("passwordMin10")
     if (newPassword !== confirmPassword)
       errs.confirmPassword = t("passwordsDoNotMatch")
     setErrors(errs)
@@ -153,8 +153,8 @@ export function ChangePasswordDialog({
 
   const validateReset = () => {
     const errs: Record<string, string> = {}
-    if (!newPassword || newPassword.length < 8)
-      errs.newPassword = t("passwordMin8")
+    if (!newPassword || newPassword.length < 10)
+      errs.newPassword = t("passwordMin10")
     if (newPassword !== confirmPassword)
       errs.confirmPassword = t("passwordsDoNotMatch")
     setErrors(errs)

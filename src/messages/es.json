@@ -12,14 +12,14 @@
   "sendOtp": "Enviar código de verificación",
   "backToSignIn": "Volver a iniciar sesión",
   "passwordRequired": "La contraseña es obligatoria",
-  "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+  "passwordMinLength": "La contraseña debe tener al menos 10 caracteres",
   "signIn": "Iniciar sesión",
   "admin": "Administrador",
   "error": "Error",
   "password": "Contraseña",
   "forgotPassword": "¿Olvidaste tu contraseña?",
   "enterPassword": "Introduce tu contraseña",
-  "passwordMinChars": "mínimo 6 caracteres",
+  "passwordMinChars": "mínimo 10 caracteres",
   "waiting": "Por favor, espera...",
   "loginFailed": "Error al iniciar sesión. Inténtalo de nuevo.",
   "active": "Activo",
@@ -294,7 +294,6 @@
   "somethingWentWrong": "Algo salió mal. Inténtalo de nuevo.",
   "changePassword": "Cambiar contraseña",
   "changePasswordDescription": "Introduce tu contraseña actual y elige una nueva",
-  "passwordMin8": "La contraseña debe tener al menos 8 caracteres",
   "otpRequired": "El código de verificación es obligatorio",
   "currentPassword": "Contraseña actual",
   "enterCurrentPassword": "Introduce tu contraseña actual",
@@ -771,5 +770,6 @@
   "hindi": "Hindi",
   "urdu": "Urdu",
   "chinese": "Chino",
-  "taxes": "Impuestos y IVA"
+  "taxes": "Impuestos y IVA",
+  "passwordMin10": "La contraseña debe tener al menos 10 caracteres"
 }

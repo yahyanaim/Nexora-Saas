@@ -12,14 +12,14 @@
   "sendOtp": "发送验证码",
   "backToSignIn": "返回登录",
   "passwordRequired": "密码为必填项",
-  "passwordMinLength": "密码至少为6个字符",
+  "passwordMinLength": "密码至少为10个字符",
   "signIn": "登录",
   "admin": "管理员",
   "error": "错误",
   "password": "密码",
   "forgotPassword": "忘记密码？",
   "enterPassword": "输入您的密码",
-  "passwordMinChars": "至少6个字符",
+  "passwordMinChars": "至少10个字符",
   "waiting": "请稍候...",
   "loginFailed": "登录失败，请重试。",
   "active": "已激活",
@@ -294,7 +294,6 @@
   "somethingWentWrong": "出了点问题，请重试。",
   "changePassword": "修改密码",
   "changePasswordDescription": "输入您当前的密码并设置新密码",
-  "passwordMin8": "密码至少为8个字符",
   "otpRequired": "验证码为必填项",
   "currentPassword": "当前密码",
   "enterCurrentPassword": "输入您当前的密码",
@@ -771,5 +770,6 @@
   "hindi": "印地语",
   "urdu": "乌尔都语",
   "chinese": "中文",
-  "taxes": "税收与增值税"
+  "taxes": "税收与增值税",
+  "passwordMin10": "密码至少为10个字符"
 }

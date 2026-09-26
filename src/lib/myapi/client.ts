@@ -23,6 +23,7 @@ export const apiClient = axios.create({
  * Consumed by AuthGuardProvider and navigation listeners to prompt subscription upgrades.
  */
 export const UPGRADE_REQUIRED_EVENT = "billing:upgrade-required"
+export const SESSION_EXPIRED_EVENT = "auth:session-expired"
 
 let isRefreshing = false
 let refreshPromise: Promise<AxiosResponse<AuthResponse>> | null = null
@@ -58,12 +59,13 @@ apiClient.interceptors.response.use(
     }
 
     // 2. Automatic session refresh on 401:
-    // Skip if already retried, or if this request was itself an auth attempt
+    // Skip if already retried, or if this request was itself an auth check / attempt
     const url = originalRequest?.url ?? ""
     const isAuthRoute =
       url.includes("/auth/login") ||
       url.includes("/auth/register") ||
-      url.includes("/auth/refresh")
+      url.includes("/auth/refresh") ||
+      url.includes("/auth/me")
 
     if (
       status === 401 &&
@@ -87,6 +89,9 @@ apiClient.interceptors.response.use(
         await refreshPromise
         return apiClient(originalRequest)
       } catch (refreshError) {
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT))
+        }
         return Promise.reject(refreshError)
       }
     }

@@ -12,14 +12,14 @@
   "sendOtp": "Send Verification Code",
   "backToSignIn": "Back to Sign In",
   "passwordRequired": "Password is required",
-  "passwordMinLength": "Password must be at least 6 characters",
+  "passwordMinLength": "Password must be at least 10 characters",
   "signIn": "Sign In",
   "admin": "Admin",
   "error": "Error",
   "password": "Password",
   "forgotPassword": "Forgot Password?",
   "enterPassword": "Enter your password",
-  "passwordMinChars": "minimum 6 characters",
+  "passwordMinChars": "minimum 10 characters",
   "waiting": "Please wait...",
   "loginFailed": "Login failed. Please try again.",
   "active": "Active",
@@ -294,7 +294,6 @@
   "somethingWentWrong": "Something went wrong. Please try again.",
   "changePassword": "Change Password",
   "changePasswordDescription": "Enter your current password and choose a new one",
-  "passwordMin8": "Password must be at least 8 characters",
   "otpRequired": "Verification code is required",
   "currentPassword": "Current Password",
   "enterCurrentPassword": "Enter your current password",
@@ -771,5 +770,6 @@
   "hindi": "Hindi",
   "urdu": "Urdu",
   "chinese": "Chinese",
-  "taxes": "Taxes & TVA"
+  "taxes": "Taxes & TVA",
+  "passwordMin10": "Password must be at least 10 characters"
 }

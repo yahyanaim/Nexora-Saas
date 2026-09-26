@@ -12,14 +12,14 @@
   "sendOtp": "تصدیقی کوڈ بھیجیں",
   "backToSignIn": "سائن ان پر واپس جائیں",
   "passwordRequired": "پاس ورڈ درکار ہے",
-  "passwordMinLength": "پاس ورڈ کم از کم 6 حروف کا ہونا چاہیے",
+  "passwordMinLength": "پاس ورڈ کم از کم 10 حروف کا ہونا چاہیے",
   "signIn": "سائن ان کریں",
   "admin": "منتظم",
   "error": "خرابی",
   "password": "پاس ورڈ",
   "forgotPassword": "پاس ورڈ بھول گئے؟",
   "enterPassword": "اپنا پاس ورڈ درج کریں",
-  "passwordMinChars": "کم از کم 6 حروف",
+  "passwordMinChars": "کم از کم 10 حروف",
   "waiting": "براہ کرم انتظار کریں...",
   "loginFailed": "لاگ ان ناکام۔ براہ کرم دوبارہ کوشش کریں۔",
   "active": "فعال",
@@ -294,7 +294,6 @@
   "somethingWentWrong": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔",
   "changePassword": "پاس ورڈ تبدیل کریں",
   "changePasswordDescription": "اپنا موجودہ پاس ورڈ درج کریں اور ایک نیا منتخب کریں",
-  "passwordMin8": "پاس ورڈ کم از کم 8 حروف کا ہونا چاہیے",
   "otpRequired": "تصدیقی کوڈ درکار ہے",
   "currentPassword": "موجودہ پاس ورڈ",
   "enterCurrentPassword": "اپنا موجودہ پاس ورڈ درج کریں",
@@ -771,5 +770,6 @@
   "hindi": "ہندی",
   "urdu": "اردو",
   "chinese": "چینی",
-  "taxes": "ٹیکس اور وی اے ٹی"
+  "taxes": "ٹیکس اور وی اے ٹی",
+  "passwordMin10": "پاس ورڈ کم از کم 10 حروف کا ہونا چاہیے"
 }

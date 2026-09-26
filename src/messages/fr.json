@@ -12,14 +12,14 @@
   "sendOtp": "Envoyer le code de vérification",
   "backToSignIn": "Retour à la connexion",
   "passwordRequired": "Le mot de passe est requis",
-  "passwordMinLength": "Le mot de passe doit comporter au moins 6 caractères",
+  "passwordMinLength": "Le mot de passe doit comporter au moins 10 caractères",
   "signIn": "Se connecter",
   "admin": "Administrateur",
   "error": "Erreur",
   "password": "Mot de passe",
   "forgotPassword": "Mot de passe oublié ?",
   "enterPassword": "Entrez votre mot de passe",
-  "passwordMinChars": "6 caractères minimum",
+  "passwordMinChars": "10 caractères minimum",
   "waiting": "Veuillez patienter...",
   "loginFailed": "Échec de la connexion. Veuillez réessayer.",
   "active": "Actif",
@@ -294,7 +294,6 @@
   "somethingWentWrong": "Quelque chose s'est mal passé. Veuillez réessayer.",
   "changePassword": "Changer le mot de passe",
   "changePasswordDescription": "Entrez votre mot de passe actuel et choisissez-en un nouveau",
-  "passwordMin8": "Le mot de passe doit comporter au moins 8 caractères",
   "otpRequired": "Le code de vérification est requis",
   "currentPassword": "Mot de passe actuel",
   "enterCurrentPassword": "Entrez votre mot de passe actuel",
@@ -771,5 +770,6 @@
   "hindi": "Hindi",
   "urdu": "Ourdou",
   "chinese": "Chinois",
-  "taxes": "Taxes & TVA"
+  "taxes": "Taxes & TVA",
+  "passwordMin10": "Le mot de passe doit comporter au moins 10 caractères"
 }

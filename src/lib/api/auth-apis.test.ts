@@ -97,13 +97,13 @@ describe("auth-apis", () => {
     expect(res.message).toBe("Verification email sent")
   })
 
-  it("verifyAccountApi sends GET /auth/verify with encoded token", async () => {
-    vi.spyOn(apiClient, "get").mockResolvedValueOnce({
+  it("verifyAccountApi sends POST /auth/verify with token body", async () => {
+    vi.spyOn(apiClient, "post").mockResolvedValueOnce({
       data: { message: "Account verified" },
     })
 
     const res = await verifyAccountApi("abc+123")
-    expect(apiClient.get).toHaveBeenCalledWith("/auth/verify?token=abc%2B123")
+    expect(apiClient.post).toHaveBeenCalledWith("/auth/verify", { token: "abc+123" })
     expect(res.message).toBe("Account verified")
   })
 
