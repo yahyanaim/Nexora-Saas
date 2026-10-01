@@ -1,6 +1,7 @@
 import axios, { type AxiosResponse } from "axios"
 import type { AuthResponse } from "@/types/auth"
 import { env } from "@/env"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 
 /**
  * Central Axios HTTP client singleton for Nexora SaaS.
@@ -149,19 +150,21 @@ export function apiErrorMessage(
 
 /**
  * Detects whether an error indicates that the backend is unreachable
- * (network drop, DNS failure, connection refused, or 502/503/504 gateway outage).
+ * (network drop, DNS failure, connection refused, timeout, or 502/503/504 gateway outage).
+ * Application-level responses such as 404 are NOT treated as unreachable.
  */
 export function isBackendUnreachable(error: unknown): boolean {
-  if (axios.isAxiosError(error)) {
-    return (
-      !error.response ||
-      error.code === "ECONNREFUSED" ||
-      error.code === "ERR_NETWORK" ||
-      (typeof error.response.status === "number" &&
-        [404, 502, 503, 504].includes(error.response.status))
-    )
-  }
-  return true
+  if (!axios.isAxiosError(error)) return false
+  if (!error.response) return true
+  return [502, 503, 504].includes(error.response.status)
+}
+
+/**
+ * True when an API helper should fall back to local demo data:
+ * demo mode is enabled AND the backend could not be reached.
+ */
+export function shouldUseDemoFallback(error: unknown): boolean {
+  return isDemoMode() && isBackendUnreachable(error)
 }
 
 export default apiClient

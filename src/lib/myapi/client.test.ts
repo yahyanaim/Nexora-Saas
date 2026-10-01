@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { AxiosError } from "axios"
 import apiClient, {
   apiErrorMessage,
+  isBackendUnreachable,
   UPGRADE_REQUIRED_EVENT,
 } from "./client"
 
@@ -159,5 +160,34 @@ describe("apiClient interceptors", () => {
     }
 
     await expect(apiClient.post("/auth/refresh")).rejects.toThrow()
+  })
+})
+
+describe("isBackendUnreachable", () => {
+  const withStatus = (status: number) =>
+    new AxiosError("Request failed", "ERR_BAD_RESPONSE", undefined, undefined, {
+      status,
+      data: {},
+    } as never)
+
+  it("treats network errors without a response as unreachable", () => {
+    expect(isBackendUnreachable(new AxiosError("Network Error", "ERR_NETWORK"))).toBe(true)
+  })
+
+  it("treats gateway errors as unreachable", () => {
+    for (const status of [502, 503, 504]) {
+      expect(isBackendUnreachable(withStatus(status))).toBe(true)
+    }
+  })
+
+  it("does not treat application responses as unreachable", () => {
+    for (const status of [400, 401, 403, 404, 500]) {
+      expect(isBackendUnreachable(withStatus(status))).toBe(false)
+    }
+  })
+
+  it("does not treat non-Axios errors as unreachable", () => {
+    expect(isBackendUnreachable(new Error("boom"))).toBe(false)
+    expect(isBackendUnreachable(undefined)).toBe(false)
   })
 })

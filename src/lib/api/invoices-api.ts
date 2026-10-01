@@ -1,6 +1,7 @@
 // lib/api/invoices-api.ts
 
-import httpClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import httpClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 import type {
   ApiPaginatedResponse,
   ServerTableParams,
@@ -39,7 +40,7 @@ export const fetchInvoicesApi = async (
       },
     })
 
-    if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+    if (data?.data && Array.isArray(data.data) && (data.data.length > 0 || !isDemoMode())) {
       return {
         success: data.success ?? true,
         data: data.data || [],
@@ -56,7 +57,7 @@ export const fetchInvoicesApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch invoices")
     console.error("[API Error] fetchInvoicesApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
@@ -78,7 +79,7 @@ export const getInvoiceApi = async (id: string): Promise<Invoice> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Invoice ${id} not found`)
     console.error("[API Error] getInvoiceApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoInvoices().find((i) => i.id === id)
       if (found) return found
       throw new Error(`Invoice with ID ${id} not found: ${message}`)
@@ -96,7 +97,7 @@ export const createInvoiceApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to create invoice")
     console.error("[API Error] createInvoiceApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return addDemoInvoice(payload)
     }
     throw error
@@ -113,7 +114,7 @@ export const updateInvoiceApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update invoice ${id}`)
     console.error("[API Error] updateInvoiceApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoInvoices().find((i) => i.id === id)
       if (!found) throw new Error(`Invoice with ID ${id} not found: ${message}`)
       return {
@@ -135,7 +136,7 @@ export const deleteInvoiceApi = async (id: string): Promise<void> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete invoice ${id}`)
     console.error("[API Error] deleteInvoiceApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       deleteDemoInvoice(id)
       return
     }
@@ -150,7 +151,7 @@ export const sendInvoiceApi = async (id: string): Promise<unknown> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to send invoice ${id}`)
     console.error("[API Error] sendInvoiceApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return { success: true, message: "Invoice sent via email (demo)" }
     }
     throw error
@@ -164,7 +165,7 @@ export const downloadInvoiceApi = async (id: string): Promise<unknown> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to download invoice ${id}`)
     console.error("[API Error] downloadInvoiceApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return { success: true }
     }
     throw error
@@ -178,7 +179,7 @@ export const markAsPaidApi = async (id: string): Promise<Invoice> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to mark invoice ${id} as paid`)
     console.error("[API Error] markAsPaidApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return markDemoInvoicePaid(id)
     }
     throw error
@@ -192,7 +193,7 @@ export const fetchInvoicesSummaryApi = async (): Promise<InvoicesSummary> => {
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch invoices summary")
     console.error("[API Error] fetchInvoicesSummaryApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }

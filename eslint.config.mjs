@@ -30,6 +30,22 @@ const eslintConfig = defineConfig([
       "@next/next/no-img-element": "off",
     },
   },
+  {
+    // Demo mode must only be detected through isDemoMode() so the
+    // production guard cannot be bypassed.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/auth/demo-mode.ts", "src/env.ts", "src/**/*.test.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "MemberExpression[object.object.name='process'][object.property.name='env'][property.name='NEXT_PUBLIC_DEMO_MODE']",
+          message: "Use isDemoMode() from @/lib/auth/demo-mode instead.",
+        },
+      ],
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

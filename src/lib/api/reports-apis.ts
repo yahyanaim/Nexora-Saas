@@ -1,6 +1,7 @@
 // lib/api/reports-apis.ts
 
-import httpClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import httpClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 import type {
   ApiPaginatedResponse,
   ServerTableParams,
@@ -43,7 +44,7 @@ export const fetchContentReportsApi = async (
       },
     })
 
-    if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+    if (data?.data && Array.isArray(data.data) && (data.data.length > 0 || !isDemoMode())) {
       return {
         success: data.success ?? true,
         data: data.data || [],
@@ -60,7 +61,7 @@ export const fetchContentReportsApi = async (
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to fetch content reports")
     console.error("fetchContentReportsApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -86,7 +87,7 @@ export const fetchContentReportsStatsApi =
     } catch (error) {
       const msg = apiErrorMessage(error, "Failed to fetch content reports stats")
       console.error("fetchContentReportsStatsApi error:", msg)
-      if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      if (!shouldUseDemoFallback(error)) {
         throw new Error(msg)
       }
     }
@@ -116,7 +117,7 @@ export const updateContentReportStatusApi = async ({
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to update content report status")
     console.error("updateContentReportStatusApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -143,7 +144,7 @@ export const fetchSystemIssuesApi = async (
       },
     })
 
-    if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+    if (data?.data && Array.isArray(data.data) && (data.data.length > 0 || !isDemoMode())) {
       return {
         success: data.success ?? true,
         data: data.data || [],
@@ -160,7 +161,7 @@ export const fetchSystemIssuesApi = async (
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to fetch system issues")
     console.error("fetchSystemIssuesApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -189,7 +190,7 @@ export const fetchSystemIssuesStatsApi =
     } catch (error) {
       const msg = apiErrorMessage(error, "Failed to fetch system issues stats")
       console.error("fetchSystemIssuesStatsApi error:", msg)
-      if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      if (!shouldUseDemoFallback(error)) {
         throw new Error(msg)
       }
     }
@@ -219,7 +220,7 @@ export const updateSystemIssueStatusApi = async ({
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to update system issue status")
     console.error("updateSystemIssueStatusApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }

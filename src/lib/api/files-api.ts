@@ -1,6 +1,7 @@
 // lib/api/files-api.ts
 
-import httpClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import httpClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 import type { ApiPaginatedResponse, ServerTableParams } from "@/types/tables"
 import { FileItem, FileSummary, FileType, FileVisibility } from "@/types/files"
 import {
@@ -28,7 +29,7 @@ export const fetchFilesApi = async (
       },
     })
 
-    if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+    if (data?.data && Array.isArray(data.data) && (data.data.length > 0 || !isDemoMode())) {
       return {
         success: data.success ?? true,
         data: data.data || [],
@@ -45,7 +46,7 @@ export const fetchFilesApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch files")
     console.error("[API Error] fetchFilesApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
@@ -64,7 +65,7 @@ export const getFileApi = async (id: string): Promise<FileItem> => {
   } catch (error) {
     const message = apiErrorMessage(error, `File ${id} not found`)
     console.error("[API Error] getFileApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoFiles().find((f) => f.id === id)
       if (found) return found
       throw new Error(`File with ID ${id} not found: ${message}`)
@@ -84,7 +85,7 @@ export const uploadFileApi = async (formData: FormData): Promise<FileItem> => {
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to upload file")
     console.error("[API Error] uploadFileApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const file = formData.get("file") as File | null
       const demoFile: FileItem = {
         id: `file-demo-${Date.now()}`,
@@ -113,7 +114,7 @@ export const updateFileApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update file ${id}`)
     console.error("[API Error] updateFileApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoFiles().find((f) => f.id === id)
       if (!found) throw new Error(`File with ID ${id} not found: ${message}`)
       return { ...found, ...payload, modifiedAt: new Date().toISOString() }
@@ -128,7 +129,7 @@ export const deleteFileApi = async (id: string): Promise<void> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete file ${id}`)
     console.error("[API Error] deleteFileApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return
     }
     throw error
@@ -156,7 +157,7 @@ export const getFileDownloadUrlApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to get download URL for file ${id}`)
     console.error("[API Error] getFileDownloadUrlApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return { url: "#", filename: "demo-file.pdf" }
     }
     throw error
@@ -170,7 +171,7 @@ export const fetchFilesSummaryApi = async (): Promise<FileSummary> => {
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch files summary")
     console.error("[API Error] fetchFilesSummaryApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }

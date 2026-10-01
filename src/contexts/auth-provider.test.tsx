@@ -25,6 +25,7 @@ function TestConsumer() {
     <div>
       <div data-testid="auth-loading">{auth.isLoading ? "loading" : "ready"}</div>
       <div data-testid="auth-status">{auth.isAuthenticated ? "authenticated" : "guest"}</div>
+      <div data-testid="passcode-locked">{auth.isPasscodeLocked ? "locked" : "open"}</div>
       <div data-testid="user-name">{auth.authedUser?.name || "none"}</div>
       <button onClick={() => auth.logout()}>Logout</button>
     </div>
@@ -71,6 +72,22 @@ describe("AuthProvider", () => {
 
     expect(screen.getByTestId("auth-status").textContent).toBe("authenticated")
     expect(screen.getByTestId("user-name").textContent).toBe("Founder")
+  })
+
+  it("exposes isPasscodeLocked from the session user", async () => {
+    vi.spyOn(authApis, "fetchMyAccountApi").mockResolvedValueOnce({
+      id: "usr-123",
+      name: "Founder",
+      email: "founder@saas.test",
+      role: "admin",
+      isPasscodeLocked: true,
+    })
+
+    renderWithProviders(<TestConsumer />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId("passcode-locked").textContent).toBe("locked")
+    })
   })
 
   it("sets unauthenticated state when fetchMyAccountApi fails", async () => {

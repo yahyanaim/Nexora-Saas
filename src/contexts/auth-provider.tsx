@@ -14,6 +14,7 @@ import { UPGRADE_REQUIRED_EVENT, SESSION_EXPIRED_EVENT, apiErrorMessage } from "
 import { isDemoMode } from "@/lib/auth/demo-mode"
 import { tokenStorage } from "@/lib/myapi/token-storage"
 import { toast } from "sonner"
+import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 
 /**
  * Context value exposed by {@link AuthGuardProvider}.
@@ -147,6 +148,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
 
   const clearAuth = useCallback(() => {
     queryClient.setQueryData(["myAccount"], null)
+    useLockScreenStore.getState().lock()
     setLocalOverrides({})
     router.replace("/auth")
   }, [queryClient, router])
@@ -216,6 +218,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     currentUserId: user?.id,
     myEmail: user?.email,
     isAuthenticated,
+    isPasscodeLocked: Boolean(user?.isPasscodeLocked),
     isError,
     isLoading,
     token: isDemoMode() ? (tokenStorage.get() ?? undefined) : undefined, // Production relies on HttpOnly cookies

@@ -1,6 +1,6 @@
 // lib/api/projects-api.ts
 
-import httpClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import httpClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import type { ApiPaginatedResponse, ServerTableParams } from "@/types/tables"
 import {
   ProjectStatus,
@@ -52,7 +52,7 @@ export const fetchProjectsApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch projects")
     console.error("[API Error] fetchProjectsApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
@@ -73,7 +73,7 @@ export const getProjectApi = async (id: string): Promise<Project> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Project ${id} not found`)
     console.error("[API Error] getProjectApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoProjects().find((p) => p.id === id)
       if (found) return found
       throw new Error(`Project with ID ${id} not found: ${message}`)
@@ -91,7 +91,7 @@ export const createProjectApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to create project")
     console.error("[API Error] createProjectApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return addDemoProject(payload)
     }
     throw error
@@ -108,7 +108,7 @@ export const updateProjectApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update project ${id}`)
     console.error("[API Error] updateProjectApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoProjects().find((p) => p.id === id)
       if (!found) throw new Error(`Project with ID ${id} not found: ${message}`)
       return {
@@ -131,7 +131,7 @@ export const deleteProjectApi = async (id: string): Promise<void> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete project ${id}`)
     console.error("[API Error] deleteProjectApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       deleteDemoProject(id)
       return
     }
@@ -146,7 +146,7 @@ export const archiveProjectApi = async (id: string): Promise<Project> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to archive project ${id}`)
     console.error("[API Error] archiveProjectApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return updateProjectApi(id, { status: ProjectStatus.ARCHIVED })
     }
     throw error
@@ -160,7 +160,7 @@ export const fetchProjectsSummaryApi = async (): Promise<ProjectsSummary> => {
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch projects summary")
     console.error("[API Error] fetchProjectsSummaryApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }

@@ -1,5 +1,5 @@
 import axios from "axios"
-import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import { isDemoMode } from "@/lib/auth/demo-mode"
 import { BillingPlan } from "@/types/plans"
 import { SubscriptionInfo } from "@/types/subscriptions"
@@ -39,7 +39,7 @@ export const billingApi = {
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to fetch subscription info")
       console.error("[API Error] getSubscription failed:", message)
-      if (isDemoMode() || isBackendUnreachable(error)) {
+      if (shouldUseDemoFallback(error)) {
         return DEMO_SUBSCRIPTION_INFO
       }
       throw error
@@ -58,7 +58,7 @@ export const billingApi = {
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to create checkout session")
       console.error("[API Error] createCheckout failed:", message)
-      if (isDemoMode() || isBackendUnreachable(error)) {
+      if (shouldUseDemoFallback(error)) {
         updateDemoPlan(plan)
         return { url: "" }
       }
@@ -79,7 +79,7 @@ export const billingApi = {
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to open billing portal")
       console.error("[API Error] createPortal failed:", message)
-      if (isDemoMode() || isBackendUnreachable(error)) {
+      if (shouldUseDemoFallback(error)) {
         return { url: "" }
       }
       throw error

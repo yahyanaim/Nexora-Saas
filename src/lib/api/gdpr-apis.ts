@@ -1,4 +1,4 @@
-import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 
 export interface DataExportRequest {
   id: string
@@ -29,7 +29,7 @@ export async function requestDataExportApi(
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to request data export")
     console.error("requestDataExportApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -58,7 +58,7 @@ export async function getDataExportStatusApi(
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to get data export status")
     console.error("getDataExportStatusApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -86,7 +86,7 @@ export async function requestAccountDeletionApi(payload: {
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to request account deletion")
     console.error("requestAccountDeletionApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -110,7 +110,7 @@ export async function cancelAccountDeletionApi(): Promise<{ success: boolean }> 
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to cancel account deletion")
     console.error("cancelAccountDeletionApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }

@@ -1,4 +1,4 @@
-import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import { TeamRole } from "@/types/users"
 
 export interface TeamMember {
@@ -127,7 +127,7 @@ export async function fetchTeamMembersApi(): Promise<TeamMember[]> {
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to fetch team members")
     console.error("fetchTeamMembersApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -156,7 +156,7 @@ export async function inviteTeamMemberApi(
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to invite team member")
     console.error("inviteTeamMemberApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -182,7 +182,7 @@ export async function updateTeamMemberRoleApi(
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to update member role")
     console.error("updateTeamMemberRoleApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -209,7 +209,7 @@ export async function removeTeamMemberApi(
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to remove team member")
     console.error("removeTeamMemberApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -230,7 +230,7 @@ export async function fetchPendingInvitesApi(): Promise<TeamInvite[]> {
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to fetch pending invites")
     console.error("fetchPendingInvitesApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -248,7 +248,7 @@ export async function cancelPendingInviteApi(
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to cancel pending invite")
     console.error("cancelPendingInviteApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }

@@ -17,6 +17,7 @@ export interface AuthUser {
   orgId?: string
   avatar?: string | null
   profileColor?: string
+  isPasscodeLocked?: boolean
   createdAt?: string
   updatedAt?: string
 }

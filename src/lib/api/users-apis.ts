@@ -1,5 +1,6 @@
 import { User, UserRole, UserStatus, UserType, RoleSummary } from "@/types/users"
-import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 import { ApiPaginatedResponse, ServerTableParams } from "../../types/tables"
 import {
   getDemoUsers,
@@ -94,7 +95,7 @@ export const fetchUsersApi = async (
     const rawList: RawBackendUser[] = Array.isArray(data)
       ? (data as RawBackendUser[])
       : ((data as { data?: RawBackendUser[] })?.data || [])
-    if (rawList.length > 0) {
+    if (rawList.length > 0 || !isDemoMode()) {
       const mappedList = rawList.map(mapUser)
       return paginateDemoList(
         mappedList,
@@ -107,7 +108,7 @@ export const fetchUsersApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch users")
     console.error("[API Error] fetchUsersApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
@@ -134,7 +135,7 @@ export const toggleStatusUserApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to toggle status for user ${id}`)
     console.error("[API Error] toggleStatusUserApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return updateDemoUser(id, { isActive: isActive ?? true })
     }
     throw error
@@ -150,7 +151,7 @@ export const toggleBanUserApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to toggle ban for user ${id}`)
     console.error("[API Error] toggleBanUserApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return updateDemoUser(id, {
         status: isBanned ? UserStatus.BANNED : UserStatus.ACTIVE,
         isActive: !isBanned,
@@ -173,7 +174,7 @@ export const deleteUserApi = async (id: string): Promise<void> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete user ${id}`)
     console.error("[API Error] deleteUserApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       deleteDemoUser(id)
       return
     }
@@ -192,7 +193,7 @@ export const createUserApi = async (input: {
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to create user")
     console.error("[API Error] createUserApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return addDemoUser({
         name: input.name,
         email: input.email,
@@ -210,7 +211,7 @@ export const getUserApi = async (id: string): Promise<User> => {
   } catch (error) {
     const message = apiErrorMessage(error, `User with ID ${id} not found`)
     console.error("[API Error] getUserApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoUsers().find((u) => u.id === id)
       if (found) {
         return found
@@ -231,7 +232,7 @@ export const updateUserApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update user ${id}`)
     console.error("[API Error] updateUserApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return updateDemoUser(id, input)
     }
     throw error

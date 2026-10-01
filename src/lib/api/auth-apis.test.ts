@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { AxiosError } from "axios"
 import apiClient from "@/lib/myapi/client"
 import { tokenStorage } from "@/lib/myapi/token-storage"
 import {
@@ -252,10 +253,19 @@ describe("auth-apis", () => {
       expect(isDemoMode()).toBe(true)
     })
 
-    it("isDemoMode() returns false in production even if NEXT_PUBLIC_DEMO_MODE is 'true'", () => {
-      process.env.VERCEL_ENV = "production"
+    it("isDemoMode() returns false in a production build even if NEXT_PUBLIC_DEMO_MODE is 'true'", () => {
+      vi.stubEnv("NODE_ENV", "production")
       process.env.NEXT_PUBLIC_DEMO_MODE = "true"
       expect(isDemoMode()).toBe(false)
+      vi.unstubAllEnvs()
+    })
+
+    it("isDemoMode() allows a production build only with NEXT_PUBLIC_ALLOW_DEMO_BUILD", () => {
+      vi.stubEnv("NODE_ENV", "production")
+      vi.stubEnv("NEXT_PUBLIC_ALLOW_DEMO_BUILD", "true")
+      process.env.NEXT_PUBLIC_DEMO_MODE = "true"
+      expect(isDemoMode()).toBe(true)
+      vi.unstubAllEnvs()
     })
 
     it("loginApi throws error when backend fails and isDemoMode() is false", async () => {
@@ -268,14 +278,36 @@ describe("auth-apis", () => {
       ).rejects.toThrow("Invalid credentials")
     })
 
-    it("loginApi logs console.warn, sets demo token, and returns DEMO_ADMIN_USER when isDemoMode() is true", async () => {
+    it("loginApi never falls back for unknown emails, even in demo mode with the backend down", async () => {
+      process.env.NEXT_PUBLIC_DEMO_MODE = "true"
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new AxiosError("Network Error", "ERR_NETWORK"))
+
+      await expect(
+        loginApi({ email: "attacker@test.com", password: "any" })
+      ).rejects.toThrow("Network Error")
+    })
+
+    it("loginApi does not fall back when the backend rejects credentials in demo mode", async () => {
+      process.env.NEXT_PUBLIC_DEMO_MODE = "true"
+      const rejected = new AxiosError("Unauthorized", "ERR_BAD_REQUEST", undefined, undefined, {
+        status: 401,
+        data: {},
+      } as never)
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(rejected)
+
+      await expect(
+        loginApi({ email: DEMO_ADMIN_USER.email, password: "wrong" })
+      ).rejects.toThrow("Unauthorized")
+    })
+
+    it("loginApi logs console.warn, sets demo token, and returns the demo user when demo mode is on and the backend is unreachable", async () => {
       delete process.env.VERCEL_ENV
       process.env.NEXT_PUBLIC_DEMO_MODE = "true"
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
       const tokenSpy = vi.spyOn(tokenStorage, "set").mockImplementation(() => {})
-      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new Error("Network Error"))
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(new AxiosError("Network Error", "ERR_NETWORK"))
 
-      const result = await loginApi({ email: "demo@test.com", password: "any" })
+      const result = await loginApi({ email: DEMO_ADMIN_USER.email, password: "any" })
 
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining("[AUTH WARNING] Demo mode fallback used in loginApi")
@@ -289,14 +321,14 @@ describe("auth-apis", () => {
       delete process.env.VERCEL_ENV
       vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Unauthorized"))
 
-      await expect(fetchMyAccountApi()).rejects.toThrow("Unauthenticated")
+      await expect(fetchMyAccountApi()).rejects.toThrow("Unauthorized")
     })
 
-    it("fetchMyAccountApi logs console.warn and returns DEMO_ADMIN_USER when isDemoMode() is true", async () => {
+    it("fetchMyAccountApi logs console.warn and returns DEMO_ADMIN_USER when demo mode is on and the backend is unreachable", async () => {
       delete process.env.VERCEL_ENV
       process.env.NEXT_PUBLIC_DEMO_MODE = "true"
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
-      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new Error("Unauthorized"))
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new AxiosError("Network Error", "ERR_NETWORK"))
 
       const user = await fetchMyAccountApi()
 

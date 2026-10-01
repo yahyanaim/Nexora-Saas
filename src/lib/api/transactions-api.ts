@@ -1,6 +1,7 @@
 // lib/api/transactions-api.ts
 
-import httpClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import httpClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 import type {
   ApiPaginatedResponse,
   ServerTableParams,
@@ -37,7 +38,7 @@ export const fetchTransactionsApi = async (
       },
     })
 
-    if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+    if (data?.data && Array.isArray(data.data) && (data.data.length > 0 || !isDemoMode())) {
       return {
         success: data.success ?? true,
         data: data.data || [],
@@ -54,7 +55,7 @@ export const fetchTransactionsApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch transactions")
     console.error("[API Error] fetchTransactionsApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
@@ -77,7 +78,7 @@ export const getTransactionApi = async (id: string): Promise<Transaction> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Transaction ${id} not found`)
     console.error("[API Error] getTransactionApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoTransactions().find((t) => t.id === id)
       if (found) return found
       throw new Error(`Transaction with ID ${id} not found: ${message}`)
@@ -95,7 +96,7 @@ export const createTransactionApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to create transaction")
     console.error("[API Error] createTransactionApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const demoTx: Transaction = {
         id: `tx-demo-${Date.now()}`,
         transactionId: `TX-${Math.floor(100000 + Math.random() * 900000)}`,
@@ -124,7 +125,7 @@ export const updateTransactionApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update transaction ${id}`)
     console.error("[API Error] updateTransactionApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoTransactions().find((t) => t.id === id)
       if (!found) throw new Error(`Transaction with ID ${id} not found: ${message}`)
       return { ...found, ...payload }
@@ -139,7 +140,7 @@ export const deleteTransactionApi = async (id: string): Promise<void> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete transaction ${id}`)
     console.error("[API Error] deleteTransactionApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return
     }
     throw error
@@ -155,7 +156,7 @@ export const refundTransactionApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to refund transaction ${id}`)
     console.error("[API Error] refundTransactionApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoTransactions().find((t) => t.id === id)
       if (!found) throw new Error(`Transaction with ID ${id} not found: ${message}`)
       return { ...found, status: "refunded" as Transaction["status"] }
@@ -172,7 +173,7 @@ export const fetchTransactionsSummaryApi =
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to fetch transactions summary")
       console.error("[API Error] fetchTransactionsSummaryApi failed:", message, error)
-      if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+      if (!shouldUseDemoFallback(error)) {
         throw error
       }
     }

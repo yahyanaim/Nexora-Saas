@@ -1,4 +1,4 @@
-import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 
 export interface ResourceUsage {
   used: number
@@ -67,7 +67,7 @@ export async function fetchUsageApi(): Promise<UsageSummary> {
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to fetch usage metrics")
     console.error("fetchUsageApi error:", msg)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return DEMO_USAGE
     }
     throw new Error(msg)
@@ -88,7 +88,7 @@ export async function checkQuotaApi(
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to check quota")
     console.error("checkQuotaApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
