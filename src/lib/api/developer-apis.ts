@@ -1,4 +1,4 @@
-import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import {
   ApiKey,
   WebhookEndpoint,
@@ -63,7 +63,7 @@ export async function getApiKeysApi(): Promise<ApiKey[]> {
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to get API keys")
     console.error("getApiKeysApi error:", msg)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return getStoredKeys()
     }
     throw new Error(msg)
@@ -102,7 +102,7 @@ export async function createApiKeyApi(
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to create API key")
     console.error("createApiKeyApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -123,7 +123,7 @@ export async function revokeApiKeyApi(id: string): Promise<boolean> {
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to revoke API key")
     console.error("revokeApiKeyApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }
@@ -145,7 +145,7 @@ export async function getWebhooksApi(): Promise<WebhookEndpoint[]> {
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to get webhooks")
     console.error("getWebhooksApi error:", msg)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return getStoredWebhooks()
     }
     throw new Error(msg)
@@ -179,7 +179,7 @@ export async function createWebhookApi(
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to create webhook")
     console.error("createWebhookApi error:", msg)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
   }

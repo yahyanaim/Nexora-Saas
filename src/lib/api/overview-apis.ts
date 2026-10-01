@@ -1,4 +1,4 @@
-import httpClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import httpClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import {
   ActivityRange,
   ActivityItem,
@@ -23,7 +23,7 @@ export const fetchOverviewStatsApi = async (): Promise<OverviewStats> => {
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch overview stats")
     console.error("[API Error] fetchOverviewStatsApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
@@ -41,7 +41,7 @@ export const fetchPlatformActivityApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch platform activity")
     console.error("[API Error] fetchPlatformActivityApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
@@ -55,7 +55,7 @@ export const fetchPendingActionsApi = async (): Promise<PendingAction[]> => {
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch pending actions")
     console.error("[API Error] fetchPendingActionsApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
@@ -73,7 +73,7 @@ export const fetchRecentActivityApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch recent activity")
     console.error("[API Error] fetchRecentActivityApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
@@ -89,7 +89,7 @@ export const fetchLiveCallsApi = async (limit = 5): Promise<LiveCall[]> => {
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch live calls")
     console.error("[API Error] fetchLiveCallsApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }

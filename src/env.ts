@@ -22,6 +22,12 @@ export const envSchema = z.object({
     })
     .default("false"),
 
+  NEXT_PUBLIC_ALLOW_DEMO_BUILD: z
+    .enum(["true", "false"], {
+      message: "NEXT_PUBLIC_ALLOW_DEMO_BUILD must be either 'true' or 'false'",
+    })
+    .default("false"),
+
   NEXT_PUBLIC_APP_NAME: z
     .string()
     .min(1, "NEXT_PUBLIC_APP_NAME cannot be empty")
@@ -44,6 +50,7 @@ export function validateEnv(customEnv?: Record<string, string | undefined>): Env
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_DEMO_MODE: process.env.NEXT_PUBLIC_DEMO_MODE,
+    NEXT_PUBLIC_ALLOW_DEMO_BUILD: process.env.NEXT_PUBLIC_ALLOW_DEMO_BUILD,
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     NEXT_PUBLIC_DEFAULT_LOCALE: process.env.NEXT_PUBLIC_DEFAULT_LOCALE,
   }

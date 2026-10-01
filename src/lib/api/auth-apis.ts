@@ -1,4 +1,4 @@
-import apiClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import { tokenStorage } from "@/lib/myapi/token-storage"
 import {
   LoginPayload,
@@ -63,10 +63,11 @@ export const loginApi = async (
     }
     return data
   } catch (err) {
-    // Only fall back to demo user when demo mode is explicitly enabled in local dev
-    if (isDemoMode()) {
-      const emailKey = payload.email?.toLowerCase?.() ?? ""
-      const demoUser = DEMO_USERS[emailKey] || DEMO_ADMIN_USER
+    // Demo fallback only when demo mode is on AND the backend is unreachable,
+    // and only for the known demo accounts — never for arbitrary credentials.
+    const emailKey = payload.email?.toLowerCase?.() ?? ""
+    const demoUser = DEMO_USERS[emailKey]
+    if (demoUser && shouldUseDemoFallback(err)) {
       console.warn(
         `[AUTH WARNING] Demo mode fallback used in loginApi: Logged in as ${demoUser.name}. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production.`
       )
@@ -99,7 +100,7 @@ export const registerApi = async (
     }
     return data
   } catch (err) {
-    if (isDemoMode()) {
+    if (shouldUseDemoFallback(err)) {
       console.warn(
         "[AUTH WARNING] Demo mode fallback used in registerApi: Created local demo user. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production."
       )
@@ -155,12 +156,12 @@ export const fetchMyAccountApi = async (): Promise<AuthUser> => {
   } catch (error) {
     const msg = apiErrorMessage(error, "Backend session not active")
     console.error("fetchMyAccountApi error:", msg)
-    if (!isBackendUnreachable(error) && !isDemoMode()) {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
 
-  // Only provide demo user when demo mode is on
+  // Only provide demo user when demo mode is on and the backend is unreachable
   if (isDemoMode()) {
     if (typeof window !== "undefined") {
       if (sessionStorage.getItem("saas_demo_logged_out") === "true") {

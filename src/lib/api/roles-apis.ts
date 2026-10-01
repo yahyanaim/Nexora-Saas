@@ -1,4 +1,5 @@
-import httpClient, { apiErrorMessage, isBackendUnreachable } from "@/lib/myapi/client"
+import httpClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 import type { ApiPaginatedResponse, ServerTableParams } from "@/types/tables"
 import type { Role, CreateRolePayload, UpdateRolePayload } from "@/types/roles"
 import { ActivationStatus } from "@/types/users"
@@ -29,7 +30,7 @@ export const fetchRolesListApi = async (
       },
     })
 
-    if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
+    if (data?.data && Array.isArray(data.data) && (data.data.length > 0 || !isDemoMode())) {
       return {
         success: data.success ?? true,
         data: data.data || [],
@@ -46,7 +47,7 @@ export const fetchRolesListApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch roles")
     console.error("[API Error] fetchRolesListApi failed:", message, error)
-    if (!isBackendUnreachable(error) || process.env.NEXT_PUBLIC_DEMO_MODE !== "true") {
+    if (!shouldUseDemoFallback(error)) {
       throw error
     }
   }
@@ -69,7 +70,7 @@ export const createRoleApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to create role")
     console.error("[API Error] createRoleApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       return addDemoRole(payload)
     }
     throw error
@@ -86,7 +87,7 @@ export const updateRoleApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update role ${roleId}`)
     console.error("[API Error] updateRoleApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoRoles().find((r) => r.id === roleId)
       if (!found) throw new Error(`Role with ID ${roleId} not found: ${message}`)
       const updatedStatus: ActivationStatus | undefined =
@@ -114,7 +115,7 @@ export const deleteRoleApi = async (roleId: string): Promise<void> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete role ${roleId}`)
     console.error("[API Error] deleteRoleApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       deleteDemoRole(roleId)
       return
     }
@@ -132,7 +133,7 @@ export const toggleRoleStatusApi = async (
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to toggle status for role ${roleId}`)
     console.error("[API Error] toggleRoleStatusApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoRoles().find((r) => r.id === roleId)
       if (!found) throw new Error(`Role with ID ${roleId} not found: ${message}`)
       return { ...found, status }
@@ -148,7 +149,7 @@ export const getRoleApi = async (roleId: string): Promise<Role> => {
   } catch (error) {
     const message = apiErrorMessage(error, `Role ${roleId} not found`)
     console.error("[API Error] getRoleApi failed:", message, error)
-    if (isBackendUnreachable(error) && process.env.NEXT_PUBLIC_DEMO_MODE === "true") {
+    if (shouldUseDemoFallback(error)) {
       const found = getDemoRoles().find((r) => r.id === roleId)
       if (found) return found
       throw new Error(`Role with ID ${roleId} not found: ${message}`)
