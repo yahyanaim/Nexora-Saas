@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { routing } from "@/i18n/routing"
 import "./globals.css"
 import { notFound } from "next/navigation"
+import { headers } from "next/headers"
 
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ["latin"],
@@ -55,6 +56,8 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
   }
 
   const messages = await getMessages()
+  // Per-request CSP nonce set by src/proxy.ts (reading it renders dynamically)
+  const nonce = (await headers()).get("x-nonce") ?? undefined
 
   return (
     <html
@@ -65,7 +68,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
     >
       <body className="font-sans antialiased">
         <NextIntlClientProvider messages={messages}>
-          <ProviderContexts>
+          <ProviderContexts nonce={nonce}>
             <NextTopLoader
               color="var(--primary)"
               height={3}

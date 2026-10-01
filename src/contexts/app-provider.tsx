@@ -8,12 +8,18 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { AuthGuardProvider } from "./auth-provider"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
 
-const ProviderContexts = ({ children }: { children: React.ReactNode }) => {
+const ProviderContexts = ({
+  children,
+  nonce,
+}: {
+  children: React.ReactNode
+  nonce?: string
+}) => {
   const [queryClient] = useState(() => new QueryClient())
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
+      <ThemeProvider nonce={nonce}>
         <TooltipProvider>
           <AuthGuardProvider>
             <ErrorBoundary>

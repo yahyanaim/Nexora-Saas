@@ -124,6 +124,29 @@ describe("AuthProvider", () => {
     expect(mockPush).toHaveBeenCalledWith("/dashboard/plans")
   })
 
+  it("navigates only once when several upgrade_required events fire together", async () => {
+    vi.spyOn(authApis, "fetchMyAccountApi").mockResolvedValueOnce({
+      id: "usr-123",
+      name: "Founder",
+      email: "founder@saas.test",
+      role: "admin",
+    })
+
+    renderWithProviders(<TestConsumer />)
+
+    await waitFor(() => {
+      expect(screen.getByTestId("auth-status").textContent).toBe("authenticated")
+    })
+
+    act(() => {
+      for (let i = 0; i < 5; i++) {
+        window.dispatchEvent(new CustomEvent(UPGRADE_REQUIRED_EVENT))
+      }
+    })
+
+    expect(mockPush).toHaveBeenCalledTimes(1)
+  })
+
   it("calls logoutApi and updates state on logout", async () => {
     vi.spyOn(authApis, "fetchMyAccountApi").mockResolvedValueOnce({
       id: "usr-123",

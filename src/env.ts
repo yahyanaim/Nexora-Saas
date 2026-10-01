@@ -1,5 +1,9 @@
 import { z } from "zod"
 
+// Our CSP forbids eval; stop Zod probing for it with `new Function` (which
+// would only log CSP violation reports, as Zod falls back automatically).
+z.config({ jitless: true })
+
 /**
  * Validates and types all public and runtime environment variables for Nexora SaaS.
  * Provides explicit typing, URL validation, enum checks, and actionable error messages.
