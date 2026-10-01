@@ -1,4 +1,5 @@
 import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
+import { logger } from "@/lib/logger"
 
 export interface ResourceUsage {
   used: number
@@ -66,7 +67,7 @@ export async function fetchUsageApi(): Promise<UsageSummary> {
     return DEMO_USAGE
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to fetch usage metrics")
-    console.error("fetchUsageApi error:", msg)
+    logger.error("fetchUsageApi error:", msg)
     if (shouldUseDemoFallback(error)) {
       return DEMO_USAGE
     }
@@ -87,7 +88,7 @@ export async function checkQuotaApi(
     if (res?.data) return res.data
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to check quota")
-    console.error("checkQuotaApi error:", msg)
+    logger.error("checkQuotaApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }

@@ -5,6 +5,7 @@ import {
   initialApiKeys,
   initialWebhooks,
 } from "@/lib/demo-data/developer"
+import { logger } from "@/lib/logger"
 
 const STORAGE_KEYS_KEY = "nexora_developer_api_keys"
 const STORAGE_WEBHOOKS_KEY = "nexora_developer_webhooks"
@@ -62,7 +63,7 @@ export async function getApiKeysApi(): Promise<ApiKey[]> {
     return getStoredKeys()
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to get API keys")
-    console.error("getApiKeysApi error:", msg)
+    logger.error("getApiKeysApi error:", msg)
     if (shouldUseDemoFallback(error)) {
       return getStoredKeys()
     }
@@ -101,7 +102,7 @@ export async function createApiKeyApi(
     }
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to create API key")
-    console.error("createApiKeyApi error:", msg)
+    logger.error("createApiKeyApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -122,7 +123,7 @@ export async function revokeApiKeyApi(id: string): Promise<boolean> {
     await apiClient.delete(`/developer/api-keys/${id}`)
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to revoke API key")
-    console.error("revokeApiKeyApi error:", msg)
+    logger.error("revokeApiKeyApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -144,7 +145,7 @@ export async function getWebhooksApi(): Promise<WebhookEndpoint[]> {
     return getStoredWebhooks()
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to get webhooks")
-    console.error("getWebhooksApi error:", msg)
+    logger.error("getWebhooksApi error:", msg)
     if (shouldUseDemoFallback(error)) {
       return getStoredWebhooks()
     }
@@ -178,7 +179,7 @@ export async function createWebhookApi(
     if (res?.data?.id) return res.data
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to create webhook")
-    console.error("createWebhookApi error:", msg)
+    logger.error("createWebhookApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }

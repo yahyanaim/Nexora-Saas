@@ -1,5 +1,6 @@
 import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import { AuditLogEntry, demoAuditLogs } from "@/lib/demo-data/audit-logs"
+import { logger } from "@/lib/logger"
 
 export interface AuditLogsResponse {
   logs: AuditLogEntry[]
@@ -18,7 +19,7 @@ export async function getAuditLogsApi(): Promise<AuditLogsResponse> {
     return { logs: demoAuditLogs, total: demoAuditLogs.length }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch audit logs")
-    console.error("[API Error] getAuditLogsApi failed:", message, error)
+    logger.error("[API Error] getAuditLogsApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }

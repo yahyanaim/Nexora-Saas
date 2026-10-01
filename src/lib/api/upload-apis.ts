@@ -1,4 +1,5 @@
 import axios from "axios"
+import { logger } from "@/lib/logger"
 
 export interface UploadResponse {
   url: string
@@ -121,7 +122,7 @@ export async function uploadMultipleFiles(
   }
 
   if (errors.length > 0) {
-    console.warn("Some files failed to upload:", errors)
+    logger.warn("Some files failed to upload:", errors)
   }
 
   return results

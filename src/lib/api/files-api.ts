@@ -9,6 +9,7 @@ import {
   getDemoFilesSummary,
   paginateDemoList,
 } from "@/lib/demo-data"
+import { logger } from "@/lib/logger"
 
 export const fetchFilesApi = async (
   params: ServerTableParams
@@ -45,7 +46,7 @@ export const fetchFilesApi = async (
     }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch files")
-    console.error("[API Error] fetchFilesApi failed:", message, error)
+    logger.error("[API Error] fetchFilesApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }
@@ -64,7 +65,7 @@ export const getFileApi = async (id: string): Promise<FileItem> => {
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `File ${id} not found`)
-    console.error("[API Error] getFileApi failed:", message, error)
+    logger.error("[API Error] getFileApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoFiles().find((f) => f.id === id)
       if (found) return found
@@ -84,7 +85,7 @@ export const uploadFileApi = async (formData: FormData): Promise<FileItem> => {
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to upload file")
-    console.error("[API Error] uploadFileApi failed:", message, error)
+    logger.error("[API Error] uploadFileApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const file = formData.get("file") as File | null
       const demoFile: FileItem = {
@@ -113,7 +114,7 @@ export const updateFileApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update file ${id}`)
-    console.error("[API Error] updateFileApi failed:", message, error)
+    logger.error("[API Error] updateFileApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoFiles().find((f) => f.id === id)
       if (!found) throw new Error(`File with ID ${id} not found: ${message}`)
@@ -128,7 +129,7 @@ export const deleteFileApi = async (id: string): Promise<void> => {
     await httpClient.delete(`/files/${id}`)
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete file ${id}`)
-    console.error("[API Error] deleteFileApi failed:", message, error)
+    logger.error("[API Error] deleteFileApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return
     }
@@ -156,7 +157,7 @@ export const getFileDownloadUrlApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to get download URL for file ${id}`)
-    console.error("[API Error] getFileDownloadUrlApi failed:", message, error)
+    logger.error("[API Error] getFileDownloadUrlApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return { url: "#", filename: "demo-file.pdf" }
     }
@@ -170,7 +171,7 @@ export const fetchFilesSummaryApi = async (): Promise<FileSummary> => {
     if (data?.data) return data.data
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch files summary")
-    console.error("[API Error] fetchFilesSummaryApi failed:", message, error)
+    logger.error("[API Error] fetchFilesSummaryApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }

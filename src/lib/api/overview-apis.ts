@@ -15,6 +15,7 @@ import {
   DEMO_RECENT_ACTIVITY,
   DEMO_LIVE_CALLS,
 } from "@/lib/demo-data"
+import { logger } from "@/lib/logger"
 
 export const fetchOverviewStatsApi = async (): Promise<OverviewStats> => {
   try {
@@ -22,7 +23,7 @@ export const fetchOverviewStatsApi = async (): Promise<OverviewStats> => {
     if (data?.content) return data.content
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch overview stats")
-    console.error("[API Error] fetchOverviewStatsApi failed:", message, error)
+    logger.error("[API Error] fetchOverviewStatsApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }
@@ -40,7 +41,7 @@ export const fetchPlatformActivityApi = async (
     if (data?.content) return data.content
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch platform activity")
-    console.error("[API Error] fetchPlatformActivityApi failed:", message, error)
+    logger.error("[API Error] fetchPlatformActivityApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }
@@ -54,7 +55,7 @@ export const fetchPendingActionsApi = async (): Promise<PendingAction[]> => {
     if (data?.content) return data.content
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch pending actions")
-    console.error("[API Error] fetchPendingActionsApi failed:", message, error)
+    logger.error("[API Error] fetchPendingActionsApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }
@@ -72,7 +73,7 @@ export const fetchRecentActivityApi = async (
     if (data?.content) return data.content
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch recent activity")
-    console.error("[API Error] fetchRecentActivityApi failed:", message, error)
+    logger.error("[API Error] fetchRecentActivityApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }
@@ -88,7 +89,7 @@ export const fetchLiveCallsApi = async (limit = 5): Promise<LiveCall[]> => {
     if (data?.content) return data.content
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch live calls")
-    console.error("[API Error] fetchLiveCallsApi failed:", message, error)
+    logger.error("[API Error] fetchLiveCallsApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }

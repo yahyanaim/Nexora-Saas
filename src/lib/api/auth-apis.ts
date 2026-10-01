@@ -22,6 +22,7 @@ import {
  * is unreachable — intended strictly for showcases and local dev.
  */
 import { isDemoMode } from "@/lib/auth/demo-mode"
+import { logger } from "@/lib/logger"
 export { isDemoMode }
 
 export const DEMO_ADMIN_USER: AuthUser = {
@@ -68,7 +69,7 @@ export const loginApi = async (
     const emailKey = payload.email?.toLowerCase?.() ?? ""
     const demoUser = DEMO_USERS[emailKey]
     if (demoUser && shouldUseDemoFallback(err)) {
-      console.warn(
+      logger.warn(
         `[AUTH WARNING] Demo mode fallback used in loginApi: Logged in as ${demoUser.name}. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production.`
       )
       if (typeof window !== "undefined") {
@@ -101,7 +102,7 @@ export const registerApi = async (
     return data
   } catch (err) {
     if (shouldUseDemoFallback(err)) {
-      console.warn(
+      logger.warn(
         "[AUTH WARNING] Demo mode fallback used in registerApi: Created local demo user. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production."
       )
       if (typeof window !== "undefined") {
@@ -140,7 +141,7 @@ export const logoutApi = async (): Promise<void> => {
   try {
     await apiClient.post("/auth/logout")
   } catch (error) {
-    console.error("logoutApi error:", apiErrorMessage(error, "Failed to logout on server"))
+    logger.error("logoutApi error:", apiErrorMessage(error, "Failed to logout on server"))
   }
   if (typeof window !== "undefined") {
     sessionStorage.setItem("saas_demo_logged_out", "true")
@@ -155,7 +156,7 @@ export const fetchMyAccountApi = async (): Promise<AuthUser> => {
     if (data?.id) return data
   } catch (error) {
     const msg = apiErrorMessage(error, "Backend session not active")
-    console.error("fetchMyAccountApi error:", msg)
+    logger.error("fetchMyAccountApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }
@@ -177,7 +178,7 @@ export const fetchMyAccountApi = async (): Promise<AuthUser> => {
         }
       }
     }
-    console.warn(
+    logger.warn(
       "[AUTH WARNING] Demo mode fallback used in fetchMyAccountApi: Returning DEMO_ADMIN_USER. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production."
     )
     return DEMO_ADMIN_USER
@@ -307,7 +308,7 @@ export const fetchSocketTokenApi = async (): Promise<string | null> => {
     const { data } = await apiClient.post<{ token: string }>("/auth/socket-token")
     return data?.token ?? null
   } catch (error) {
-    console.error("fetchSocketTokenApi error:", apiErrorMessage(error, "Failed to fetch socket token"))
+    logger.error("fetchSocketTokenApi error:", apiErrorMessage(error, "Failed to fetch socket token"))
     return null
   }
 }

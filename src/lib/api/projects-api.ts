@@ -15,6 +15,7 @@ import {
   deleteDemoProject,
   paginateDemoList,
 } from "@/lib/demo-data"
+import { logger } from "@/lib/logger"
 
 export const fetchProjectsApi = async (
   params: ServerTableParams
@@ -51,7 +52,7 @@ export const fetchProjectsApi = async (
     }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch projects")
-    console.error("[API Error] fetchProjectsApi failed:", message, error)
+    logger.error("[API Error] fetchProjectsApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }
@@ -72,7 +73,7 @@ export const getProjectApi = async (id: string): Promise<Project> => {
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Project ${id} not found`)
-    console.error("[API Error] getProjectApi failed:", message, error)
+    logger.error("[API Error] getProjectApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoProjects().find((p) => p.id === id)
       if (found) return found
@@ -90,7 +91,7 @@ export const createProjectApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to create project")
-    console.error("[API Error] createProjectApi failed:", message, error)
+    logger.error("[API Error] createProjectApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return addDemoProject(payload)
     }
@@ -107,7 +108,7 @@ export const updateProjectApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update project ${id}`)
-    console.error("[API Error] updateProjectApi failed:", message, error)
+    logger.error("[API Error] updateProjectApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoProjects().find((p) => p.id === id)
       if (!found) throw new Error(`Project with ID ${id} not found: ${message}`)
@@ -130,7 +131,7 @@ export const deleteProjectApi = async (id: string): Promise<void> => {
     await httpClient.delete(`/projects/${id}`)
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete project ${id}`)
-    console.error("[API Error] deleteProjectApi failed:", message, error)
+    logger.error("[API Error] deleteProjectApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       deleteDemoProject(id)
       return
@@ -145,7 +146,7 @@ export const archiveProjectApi = async (id: string): Promise<Project> => {
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to archive project ${id}`)
-    console.error("[API Error] archiveProjectApi failed:", message, error)
+    logger.error("[API Error] archiveProjectApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return updateProjectApi(id, { status: ProjectStatus.ARCHIVED })
     }
@@ -159,7 +160,7 @@ export const fetchProjectsSummaryApi = async (): Promise<ProjectsSummary> => {
     if (data?.data) return data.data
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch projects summary")
-    console.error("[API Error] fetchProjectsSummaryApi failed:", message, error)
+    logger.error("[API Error] fetchProjectsSummaryApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }

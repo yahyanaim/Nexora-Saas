@@ -3,6 +3,7 @@ import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/c
 import { isDemoMode } from "@/lib/auth/demo-mode"
 import { BillingPlan } from "@/types/plans"
 import { SubscriptionInfo } from "@/types/subscriptions"
+import { logger } from "@/lib/logger"
 
 export type { BillingPlan, SubscriptionInfo }
 
@@ -38,7 +39,7 @@ export const billingApi = {
       if (response?.data) return response.data
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to fetch subscription info")
-      console.error("[API Error] getSubscription failed:", message)
+      logger.error("[API Error] getSubscription failed:", message)
       if (shouldUseDemoFallback(error)) {
         return DEMO_SUBSCRIPTION_INFO
       }
@@ -57,7 +58,7 @@ export const billingApi = {
       if (response?.data?.url) return response.data
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to create checkout session")
-      console.error("[API Error] createCheckout failed:", message)
+      logger.error("[API Error] createCheckout failed:", message)
       if (shouldUseDemoFallback(error)) {
         updateDemoPlan(plan)
         return { url: "" }
@@ -78,7 +79,7 @@ export const billingApi = {
       if (response?.data?.url) return response.data
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to open billing portal")
-      console.error("[API Error] createPortal failed:", message)
+      logger.error("[API Error] createPortal failed:", message)
       if (shouldUseDemoFallback(error)) {
         return { url: "" }
       }

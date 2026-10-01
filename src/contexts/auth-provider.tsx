@@ -97,10 +97,10 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     staleTime: 5 * 60 * 1000,
   })
 
-  const baseUser = mapAuthUserToUser(myAccount)
   const user: User | undefined = useMemo(() => {
+    const baseUser = mapAuthUserToUser(myAccount)
     return baseUser ? { ...baseUser, ...localOverrides } : undefined
-  }, [baseUser, localOverrides])
+  }, [myAccount, localOverrides])
   const isAuthenticated = !!user
 
   // 1. Plan gate handler: 403 upgrade_required -> route to /dashboard/plans
@@ -231,26 +231,55 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     clearAuth()
   }, [clearAuth])
 
-  const value: AuthGuardContextType = {
-    authedUser: user,
-    user,
-    currentUserId: user?.id,
-    myEmail: user?.email,
-    isAuthenticated,
-    isPasscodeLocked: Boolean(user?.isPasscodeLocked),
-    isError,
-    isLoading,
-    token: isDemoMode() ? (tokenStorage.get() ?? undefined) : undefined, // Production relies on HttpOnly cookies
-    currentPlan,
-    hasFeature,
-    initializeAuth,
-    clearAuth,
-    updatedUser,
-    login,
-    register,
-    logout,
-    refetchUser: () => refetch(),
-  }
+  const refetchUser = useCallback(() => {
+    void refetch()
+  }, [refetch])
+
+  // Demo-only client token; production relies on HttpOnly cookies
+  const token = useMemo(
+    () => (isAuthenticated && isDemoMode() ? (tokenStorage.get() ?? undefined) : undefined),
+    [isAuthenticated]
+  )
+
+  // Memoized so consumers only re-render when auth state actually changes
+  const value = useMemo<AuthGuardContextType>(
+    () => ({
+      authedUser: user,
+      user,
+      currentUserId: user?.id,
+      myEmail: user?.email,
+      isAuthenticated,
+      isPasscodeLocked: Boolean(user?.isPasscodeLocked),
+      isError,
+      isLoading,
+      token,
+      currentPlan,
+      hasFeature,
+      initializeAuth,
+      clearAuth,
+      updatedUser,
+      login,
+      register,
+      logout,
+      refetchUser,
+    }),
+    [
+      user,
+      isAuthenticated,
+      isError,
+      isLoading,
+      token,
+      currentPlan,
+      hasFeature,
+      initializeAuth,
+      clearAuth,
+      updatedUser,
+      login,
+      register,
+      logout,
+      refetchUser,
+    ]
+  )
 
   return (
     <AuthGuardContext.Provider value={value}>
