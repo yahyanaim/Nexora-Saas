@@ -28,13 +28,31 @@ describe("Edge Proxy Middleware (src/proxy.ts)", () => {
   }
 
   describe("Dashboard Route Guarding", () => {
+    it("falls back to the default locale for unknown locale prefixes", async () => {
+      const res = await proxy(createMockRequest("http://localhost:3000/zz/dashboard"))
+      // /zz/dashboard is not a dashboard route for a known locale, so it is not guarded here
+      expect(res.headers.get("x-middleware-matched")).toBe("intl")
+    })
+
+    it("preserves the query string in the next parameter", async () => {
+      const res = await proxy(createMockRequest("http://localhost:3000/en/dashboard/users?page=2"))
+      const location = new URL(res.headers.get("location")!)
+      expect(location.pathname).toBe("/en/auth")
+      expect(location.searchParams.get("next")).toBe("/dashboard/users?page=2")
+    })
+
+    it("does not guard routes that merely start with 'dashboard'", async () => {
+      const res = await proxy(createMockRequest("http://localhost:3000/en/dashboards-info"))
+      expect(res.headers.get("x-middleware-matched")).toBe("intl")
+    })
+
     it("redirects unauthenticated access to /en/dashboard to /en/auth", async () => {
       const req = createMockRequest("http://localhost:3000/en/dashboard")
       const res = await proxy(req)
 
       expect(res.status).toBe(302)
       const location = res.headers.get("location")
-      expect(location).toBe("http://localhost:3000/en/auth")
+      expect(location).toBe("http://localhost:3000/en/auth?next=%2Fdashboard")
     })
 
     it("redirects unauthenticated access to /dashboard (no locale prefix) to defaultLocale /auth", async () => {
@@ -43,7 +61,7 @@ describe("Edge Proxy Middleware (src/proxy.ts)", () => {
 
       expect(res.status).toBe(302)
       const location = res.headers.get("location")
-      expect(location).toBe(`http://localhost:3000/${routing.defaultLocale}/auth`)
+      expect(location).toBe(`http://localhost:3000/${routing.defaultLocale}/auth?next=%2Fdashboard`)
     })
 
     it("redirects unauthenticated nested dashboard routes with specific locale (/ar/dashboard/overview)", async () => {
@@ -52,7 +70,7 @@ describe("Edge Proxy Middleware (src/proxy.ts)", () => {
 
       expect(res.status).toBe(302)
       const location = res.headers.get("location")
-      expect(location).toBe("http://localhost:3000/ar/auth")
+      expect(location).toBe("http://localhost:3000/ar/auth?next=%2Fdashboard%2Foverview")
     })
 
     it("redirects unauthenticated access to /fr/dashboard/invoices to /fr/auth", async () => {
@@ -61,7 +79,7 @@ describe("Edge Proxy Middleware (src/proxy.ts)", () => {
 
       expect(res.status).toBe(302)
       const location = res.headers.get("location")
-      expect(location).toBe("http://localhost:3000/fr/auth")
+      expect(location).toBe("http://localhost:3000/fr/auth?next=%2Fdashboard%2Finvoices")
     })
 
     it("allows authenticated request with token cookie to pass through to intlMiddleware", async () => {

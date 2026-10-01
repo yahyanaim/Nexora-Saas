@@ -15,6 +15,7 @@ import { isDemoMode } from "@/lib/auth/demo-mode"
 import { tokenStorage } from "@/lib/myapi/token-storage"
 import { toast } from "sonner"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
+import { isUnderPath, resolveAfterLoginPath } from "@/lib/auth/safe-redirect"
 
 /**
  * Context value exposed by {@link AuthGuardProvider}.
@@ -110,13 +111,14 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoading) return
 
-    const isAuthPage = pathname?.includes("/auth")
-    const isDashboardPage = pathname?.includes("/dashboard")
+    const isAuthPage = isUnderPath(pathname, "/auth")
+    const isDashboardPage = isUnderPath(pathname, "/dashboard")
 
     if (isAuthenticated && isAuthPage) {
-      router.replace("/dashboard/overview")
+      router.replace(resolveAfterLoginPath(window.location.search))
     } else if (!isAuthenticated && isDashboardPage) {
-      router.replace("/auth")
+      const next = encodeURIComponent(`${pathname}${window.location.search}`)
+      router.replace(`/auth?next=${next}`)
     }
   }, [isAuthenticated, isLoading, pathname, router])
 
@@ -136,7 +138,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
       await queryClient.invalidateQueries({ queryKey: ["myAccount"] })
       const res = await refetch()
       if (enableRouter && res.data) {
-        router.replace("/dashboard/overview")
+        router.replace(resolveAfterLoginPath(window.location.search))
       }
     },
     [queryClient, refetch, router]
@@ -156,7 +158,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleSessionExpired = () => {
       if (isDemoMode()) return
-      if (!pathname?.includes("/auth")) {
+      if (!isUnderPath(pathname, "/auth")) {
         clearAuth()
         toast.error("Your session has expired. Please log in again.")
       }

@@ -4,7 +4,26 @@ import apiClient, {
   apiErrorMessage,
   isBackendUnreachable,
   UPGRADE_REQUIRED_EVENT,
+  __resetRefreshStateForTests,
 } from "./client"
+import type { InternalAxiosRequestConfig } from "axios"
+
+const unauthorized = (config: InternalAxiosRequestConfig) =>
+  new AxiosError("Unauthorized", "401", config, null, {
+    status: 401,
+    data: {},
+    statusText: "Unauthorized",
+    headers: {},
+    config,
+  })
+
+const ok = (config: InternalAxiosRequestConfig, data: unknown = {}) => ({
+  status: 200,
+  data,
+  statusText: "OK",
+  headers: {},
+  config,
+})
 
 describe("apiClient configuration", () => {
   it("has withCredentials set to true for cookie-based sessions", () => {
@@ -145,6 +164,90 @@ describe("apiClient interceptors", () => {
     const response = await apiClient.get("/resource")
     expect(response.data).toEqual({ success: true, retried: true })
     expect(callCount).toBe(3)
+  })
+
+  it("performs exactly one refresh for concurrent 401s", async () => {
+    __resetRefreshStateForTests()
+    let refreshCalls = 0
+    let refreshed = false
+
+    apiClient.defaults.adapter = async (config) => {
+      if (config.url === "/auth/refresh") {
+        refreshCalls++
+        await new Promise((r) => setTimeout(r, 10))
+        refreshed = true
+        return ok(config)
+      }
+      if (!refreshed) throw unauthorized(config)
+      return ok(config, { url: config.url })
+    }
+
+    const results = await Promise.all([
+      apiClient.get("/a"),
+      apiClient.get("/b"),
+      apiClient.get("/c"),
+    ])
+    expect(results.map((r) => r.data.url)).toEqual(["/a", "/b", "/c"])
+    expect(refreshCalls).toBe(1)
+  })
+
+  it("does not refresh again for a 401 from a request sent before the last refresh", async () => {
+    __resetRefreshStateForTests()
+    let refreshCalls = 0
+    let releaseSlow: () => void = () => {}
+    const slowGate = new Promise<void>((r) => (releaseSlow = r))
+    let slowAttempts = 0
+
+    apiClient.defaults.adapter = async (config) => {
+      if (config.url === "/auth/refresh") {
+        refreshCalls++
+        return ok(config)
+      }
+      if (config.url === "/slow") {
+        slowAttempts++
+        if (slowAttempts === 1) {
+          // Sent with the old session, answers 401 after the refresh finished
+          await slowGate
+          throw unauthorized(config)
+        }
+        return ok(config, { url: "/slow" })
+      }
+      if (refreshCalls === 0) throw unauthorized(config)
+      return ok(config, { url: config.url })
+    }
+
+    const slow = apiClient.get("/slow")
+    await apiClient.get("/fast")
+    releaseSlow()
+    const res = await slow
+
+    expect(res.data.url).toBe("/slow")
+    expect(refreshCalls).toBe(1)
+  })
+
+  it("matches auth routes exactly rather than by substring", async () => {
+    __resetRefreshStateForTests()
+    let refreshCalls = 0
+    let refreshed = false
+
+    apiClient.defaults.adapter = async (config) => {
+      if (config.url === "/auth/refresh") {
+        refreshCalls++
+        refreshed = true
+        return ok(config)
+      }
+      if (!refreshed) throw unauthorized(config)
+      return ok(config)
+    }
+
+    await apiClient.get("/users/auth/me-preferences")
+    expect(refreshCalls).toBe(1)
+
+    __resetRefreshStateForTests()
+    refreshed = false
+    refreshCalls = 0
+    await expect(apiClient.get("/auth/me?x=1")).rejects.toThrow()
+    expect(refreshCalls).toBe(0)
   })
 
   it("rejects without infinite retry loop if /auth/refresh fails with 401", async () => {

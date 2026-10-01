@@ -1,4 +1,4 @@
-import axios, { type AxiosResponse } from "axios"
+import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from "axios"
 import type { AuthResponse } from "@/types/auth"
 import { env } from "@/env"
 import { isDemoMode } from "@/lib/auth/demo-mode"
@@ -26,15 +26,40 @@ export const apiClient = axios.create({
 export const UPGRADE_REQUIRED_EVENT = "billing:upgrade-required"
 export const SESSION_EXPIRED_EVENT = "auth:session-expired"
 
-let isRefreshing = false
 let refreshPromise: Promise<AxiosResponse<AuthResponse>> | null = null
+/** Incremented on every successful session refresh. */
+let refreshGeneration = 0
 
-/**
- * Global response interceptor:
- * 1. Plan Gate Interceptor: Listens for 403 + upgrade_required to trigger billing prompts.
- * 2. Token Refresh Interceptor: Transparently queues failed 401s, attempts session refresh,
- *    and replays the original request with minimal friction.
- */
+/** Auth endpoints that must never trigger a refresh-and-retry cycle. */
+const AUTH_ROUTES = new Set(["/auth/login", "/auth/register", "/auth/refresh", "/auth/me"])
+
+type RetriableConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean
+  _refreshGeneration?: number
+}
+
+/** Normalizes a request URL to its path (no query/hash), relative to the API base. */
+function requestPath(url: string | undefined): string {
+  if (!url) return ""
+  const path = url.split(/[?#]/)[0] ?? ""
+  if (/^https?:\/\//.test(path)) {
+    const base = env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
+    return path.startsWith(base) ? path.slice(base.length) || "/" : new URL(path).pathname
+  }
+  return path.startsWith("/") ? path : `/${path}`
+}
+
+/** @internal Test-only reset of refresh bookkeeping. */
+export function __resetRefreshStateForTests() {
+  refreshPromise = null
+  refreshGeneration = 0
+}
+
+apiClient.interceptors.request.use((config) => {
+  ;(config as RetriableConfig)._refreshGeneration = refreshGeneration
+  return config
+})
+
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error) => {
@@ -42,9 +67,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    const originalRequest = error.config as typeof error.config & {
-      _retry?: boolean
-    }
+    const originalRequest = error.config as RetriableConfig | undefined
     const status = error.response?.status
 
     // 1. Plan gate handler: route to pricing
@@ -61,12 +84,7 @@ apiClient.interceptors.response.use(
 
     // 2. Automatic session refresh on 401:
     // Skip if already retried, or if this request was itself an auth check / attempt
-    const url = originalRequest?.url ?? ""
-    const isAuthRoute =
-      url.includes("/auth/login") ||
-      url.includes("/auth/register") ||
-      url.includes("/auth/refresh") ||
-      url.includes("/auth/me")
+    const isAuthRoute = AUTH_ROUTES.has(requestPath(originalRequest?.url))
 
     if (
       status === 401 &&
@@ -76,13 +94,21 @@ apiClient.interceptors.response.use(
     ) {
       originalRequest._retry = true
 
+      // The request was sent before a refresh that has since completed:
+      // the session is already fresh, so just replay it.
+      if ((originalRequest._refreshGeneration ?? refreshGeneration) < refreshGeneration) {
+        return apiClient(originalRequest)
+      }
+
       try {
-        if (!isRefreshing) {
-          isRefreshing = true
+        if (!refreshPromise) {
           refreshPromise = apiClient
             .post<AuthResponse>("/auth/refresh")
+            .then((res) => {
+              refreshGeneration++
+              return res
+            })
             .finally(() => {
-              isRefreshing = false
               refreshPromise = null
             })
         }
