@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { AlertTriangle, RefreshCw, Home, ChevronDown, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "@/i18n/navigation"
 
 interface ErrorProps {
   error: Error & { digest?: string }
@@ -10,6 +11,7 @@ interface ErrorProps {
 }
 
 export default function ErrorBoundaryPage({ error, reset }: ErrorProps) {
+  const router = useRouter()
   const [showDetails, setShowDetails] = useState(false)
 
   useEffect(() => {
@@ -46,11 +48,7 @@ export default function ErrorBoundaryPage({ error, reset }: ErrorProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                window.location.href = "/"
-              }
-            }}
+            onClick={() => router.push("/")}
             className="gap-2"
           >
             <Home className="h-4 w-4" />

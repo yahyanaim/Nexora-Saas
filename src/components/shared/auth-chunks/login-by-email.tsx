@@ -1,7 +1,6 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { resolveAfterLoginPath } from "@/lib/auth/safe-redirect"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "@/components/ui/carbon/icons"
 import { Dispatch, SetStateAction } from "react"
@@ -9,7 +8,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { AuthSections } from "./auth"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
-import { useTranslations, useLocale } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useMutation } from "@tanstack/react-query"
 import { loginApi, isDemoMode } from "@/lib/api/auth-apis"
 import { tokenStorage } from "@/lib/myapi/token-storage"
@@ -31,7 +30,6 @@ type LoginFormValues = z.infer<ReturnType<typeof loginSchema>>
 
 export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
   const t = useTranslations()
-  const locale = useLocale()
   const { initializeAuth } = useAuthGuard()
 
   const {
@@ -55,10 +53,8 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
         toast.info("Two-factor authentication required. Enter your 6-digit code.")
       } else {
         toast.success("Welcome back!")
+        // Navigates to the safe ?next path (or the overview)
         await initializeAuth(true)
-        if (typeof window !== "undefined") {
-          window.location.href = `/${locale}${resolveAfterLoginPath(window.location.search)}`
-        }
       }
     },
     onError: (error: unknown) => {
@@ -153,9 +149,6 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
               }
               toast.success("Welcome! Exploring SaaS as Demo Administrator.")
               await initializeAuth(true)
-              if (typeof window !== "undefined") {
-                window.location.href = `/${locale}${resolveAfterLoginPath(window.location.search)}`
-              }
             }}
             className="w-full text-center text-xs text-muted-foreground hover:text-foreground py-1 cursor-pointer transition-colors"
           >

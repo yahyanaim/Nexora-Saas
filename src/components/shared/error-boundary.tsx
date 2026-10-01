@@ -1,8 +1,16 @@
 "use client"
 
 import { Component, ErrorInfo, ReactNode } from "react"
-import { AlertTriangle, RefreshCw, Home, ChevronDown, ChevronUp } from "lucide-react"
+import {
+  AlertTriangle,
+  RefreshCw,
+  Home,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "@/i18n/navigation"
+import { logger } from "@/lib/logger"
 
 interface Props {
   children: ReactNode
@@ -15,6 +23,30 @@ interface State {
   error: Error | null
   errorInfo: ErrorInfo | null
   showDetails: boolean
+}
+
+/** Navigates to the dashboard with the locale-aware router after resetting the boundary. */
+function DashboardLinkButton({
+  children,
+  onNavigate,
+}: {
+  children: ReactNode
+  onNavigate: () => void
+}) {
+  const router = useRouter()
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => {
+        onNavigate()
+        router.push("/dashboard")
+      }}
+      className="gap-2"
+    >
+      {children}
+    </Button>
+  )
 }
 
 /**
@@ -37,7 +69,7 @@ export class ErrorBoundary extends Component<Props, State> {
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo })
     // In production, send to telemetry (Sentry, Datadog, etc.)
-    console.error("Uncaught application error:", error, errorInfo)
+    logger.error("Uncaught application error:", error, errorInfo)
   }
 
   private handleReset = () => {
@@ -72,8 +104,8 @@ export class ErrorBoundary extends Component<Props, State> {
             </h2>
 
             <p className="mt-2 text-sm text-muted-foreground">
-              An unexpected error occurred while rendering this section. You can try
-              refreshing the view or return to the dashboard.
+              An unexpected error occurred while rendering this section. You can
+              try refreshing the view or return to the dashboard.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -87,19 +119,10 @@ export class ErrorBoundary extends Component<Props, State> {
                 Try again
               </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.location.href = "/dashboard"
-                  }
-                }}
-                className="gap-2"
-              >
+              <DashboardLinkButton onNavigate={this.handleReset}>
                 <Home className="h-4 w-4" />
                 Go to Dashboard
-              </Button>
+              </DashboardLinkButton>
             </div>
 
             {this.state.error && (
