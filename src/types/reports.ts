@@ -7,7 +7,7 @@ export enum ReportStatus {
   DISMISSED = "dismissed",
 }
 
-// Report types for Volix SaaS Starter
+// Report types for Nexora SaaS
 export enum ReportType {
   USER = "user",
   PROJECT = "project",

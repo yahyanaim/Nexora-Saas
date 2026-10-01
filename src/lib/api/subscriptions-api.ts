@@ -18,6 +18,7 @@ import {
   cancelDemoSubscription,
   paginateDemoList,
 } from "@/lib/demo-data"
+import { logger } from "@/lib/logger"
 
 /**
  * Retrieves a paginated list of subscriptions matching query parameters.
@@ -46,7 +47,7 @@ export const fetchSubscriptionsApi = async (
     }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch subscriptions")
-    console.error("[API Error] fetchSubscriptionsApi failed:", message)
+    logger.error("[API Error] fetchSubscriptionsApi failed:", message)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }
@@ -74,7 +75,7 @@ export const fetchSubscriptionsSummaryApi = async (): Promise<SubscriptionsSumma
     }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch subscriptions summary")
-    console.error("[API Error] fetchSubscriptionsSummaryApi failed:", message)
+    logger.error("[API Error] fetchSubscriptionsSummaryApi failed:", message)
     if (!shouldUseDemoFallback(error)) {
       throw error
     }

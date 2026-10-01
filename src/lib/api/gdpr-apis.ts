@@ -1,4 +1,5 @@
 import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
+import { logger } from "@/lib/logger"
 
 export interface DataExportRequest {
   id: string
@@ -28,7 +29,7 @@ export async function requestDataExportApi(
     if (res?.data) return res.data
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to request data export")
-    console.error("requestDataExportApi error:", msg)
+    logger.error("requestDataExportApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -57,7 +58,7 @@ export async function getDataExportStatusApi(
     if (res?.data) return res.data
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to get data export status")
-    console.error("getDataExportStatusApi error:", msg)
+    logger.error("getDataExportStatusApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -85,7 +86,7 @@ export async function requestAccountDeletionApi(payload: {
     if (res?.data) return res.data
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to request account deletion")
-    console.error("requestAccountDeletionApi error:", msg)
+    logger.error("requestAccountDeletionApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -109,7 +110,7 @@ export async function cancelAccountDeletionApi(): Promise<{ success: boolean }> 
     if (res?.data) return res.data
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to cancel account deletion")
-    console.error("cancelAccountDeletionApi error:", msg)
+    logger.error("cancelAccountDeletionApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }

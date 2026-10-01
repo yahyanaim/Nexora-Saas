@@ -1,6 +1,7 @@
 import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import { TeamRole } from "@/types/users"
 import { z } from "zod"
+import { logger } from "@/lib/logger"
 
 export interface TeamMember {
   id: string
@@ -158,7 +159,7 @@ export async function fetchTeamMembersApi(): Promise<TeamMember[]> {
     if (res?.data && Array.isArray(res.data)) return res.data
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to fetch team members")
-    console.error("fetchTeamMembersApi error:", msg)
+    logger.error("fetchTeamMembersApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -187,7 +188,7 @@ export async function inviteTeamMemberApi(
     if (res?.data?.id) return res.data
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to invite team member")
-    console.error("inviteTeamMemberApi error:", msg)
+    logger.error("inviteTeamMemberApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -213,7 +214,7 @@ export async function updateTeamMemberRoleApi(
     if (res?.data) return res.data
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to update member role")
-    console.error("updateTeamMemberRoleApi error:", msg)
+    logger.error("updateTeamMemberRoleApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -240,7 +241,7 @@ export async function removeTeamMemberApi(
     await apiClient.delete(`/team/members/${userId}`)
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to remove team member")
-    console.error("removeTeamMemberApi error:", msg)
+    logger.error("removeTeamMemberApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -261,7 +262,7 @@ export async function fetchPendingInvitesApi(): Promise<TeamInvite[]> {
     if (res?.data && Array.isArray(res.data)) return res.data
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to fetch pending invites")
-    console.error("fetchPendingInvitesApi error:", msg)
+    logger.error("fetchPendingInvitesApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -279,7 +280,7 @@ export async function cancelPendingInviteApi(
     await apiClient.delete(`/team/invites/${inviteId}`)
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to cancel pending invite")
-    console.error("cancelPendingInviteApi error:", msg)
+    logger.error("cancelPendingInviteApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }

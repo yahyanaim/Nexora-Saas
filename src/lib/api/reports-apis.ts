@@ -23,6 +23,7 @@ import {
   getDemoSystemIssuesStats,
   updateDemoSystemIssueStatus,
 } from "@/lib/demo-data/reports"
+import { logger } from "@/lib/logger"
 
 // Content Reports
 export const fetchContentReportsApi = async (
@@ -60,7 +61,7 @@ export const fetchContentReportsApi = async (
     }
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to fetch content reports")
-    console.error("fetchContentReportsApi error:", msg)
+    logger.error("fetchContentReportsApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -86,7 +87,7 @@ export const fetchContentReportsStatsApi =
       }
     } catch (error) {
       const msg = apiErrorMessage(error, "Failed to fetch content reports stats")
-      console.error("fetchContentReportsStatsApi error:", msg)
+      logger.error("fetchContentReportsStatsApi error:", msg)
       if (!shouldUseDemoFallback(error)) {
         throw new Error(msg)
       }
@@ -116,7 +117,7 @@ export const updateContentReportStatusApi = async ({
     }
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to update content report status")
-    console.error("updateContentReportStatusApi error:", msg)
+    logger.error("updateContentReportStatusApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -160,7 +161,7 @@ export const fetchSystemIssuesApi = async (
     }
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to fetch system issues")
-    console.error("fetchSystemIssuesApi error:", msg)
+    logger.error("fetchSystemIssuesApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }
@@ -189,7 +190,7 @@ export const fetchSystemIssuesStatsApi =
       }
     } catch (error) {
       const msg = apiErrorMessage(error, "Failed to fetch system issues stats")
-      console.error("fetchSystemIssuesStatsApi error:", msg)
+      logger.error("fetchSystemIssuesStatsApi error:", msg)
       if (!shouldUseDemoFallback(error)) {
         throw new Error(msg)
       }
@@ -219,7 +220,7 @@ export const updateSystemIssueStatusApi = async ({
     }
   } catch (error) {
     const msg = apiErrorMessage(error, "Failed to update system issue status")
-    console.error("updateSystemIssueStatusApi error:", msg)
+    logger.error("updateSystemIssueStatusApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
       throw new Error(msg)
     }

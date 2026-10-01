@@ -1,5 +1,5 @@
 /**
- * @fileoverview Cookie-Only Token Storage for Volix SaaS.
+ * @fileoverview Cookie-Only Token Storage for Nexora SaaS.
  *
  * In production, session tokens are managed exclusively as HttpOnly, Secure,
  * SameSite cookies by the backend. Client JavaScript does not and cannot read
