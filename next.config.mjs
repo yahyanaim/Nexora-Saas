@@ -1,5 +1,6 @@
 import createNextIntlPlugin from "next-intl/plugin"
 import "./src/env.ts"
+import { buildApiProxyRewrites } from "./src/lib/api-proxy.ts"
 
 // Build-time security guard: prevent demo mode auth bypass in production deployments
 const isProductionBuild =
@@ -53,6 +54,14 @@ const nextConfig = {
     ],
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  async rewrites() {
+    // Optional same-origin API proxy for API hosts on another domain
+    return {
+      beforeFiles: buildApiProxyRewrites(process.env.API_PROXY_TARGET),
+      afterFiles: [],
+      fallback: [],
+    }
   },
   async headers() {
     return [

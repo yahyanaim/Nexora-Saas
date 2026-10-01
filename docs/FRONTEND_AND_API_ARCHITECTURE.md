@@ -105,21 +105,22 @@ flowchart LR
 ### 2.1 The Resilient Dual-Mode API Pattern
 One of the key engineering achievements in Nexora SaaS is the **Dual-Mode API Layer**:
 
-1. **Production Mode (Live Microservices)**:
-   - When configured with `NEXT_PUBLIC_API_URL` or `API_BACKEND_URL`, requests route through the Next.js server proxy (`/api/[...catchall]`) to external Node.js, Go, or Python backends.
-   - All authorization tokens are transmitted securely via HTTP headers.
-2. **Resilience & Demo Mode (Offline / Showcase)**:
-   - If the external backend is offline, unreachable, or returns a 5xx error, the client API wrapper silently intercepts the failure.
-   - Instead of breaking the UI with error screens, it queries the in-memory engine in `src/lib/demo-data/index.ts`.
-   - The demo engine replicates full backend functionality: in-memory search, status filtering, multi-column sorting, and pagination metadata.
-   - This ensures continuous uptime for design reviews, stakeholder presentations, and developer onboarding.
+1. **Production Mode (Live Backend)**:
+   - The browser calls the backend directly at `NEXT_PUBLIC_API_URL` through the shared Axios client (`withCredentials: true`).
+   - Sessions live in HttpOnly cookies set by the backend; client JavaScript never reads or stores tokens.
+   - Backend errors are surfaced to the user. No demo data is ever shown in this mode.
+2. **Demo Mode (local development / intentional showcase only)**:
+   - Enabled only when `NEXT_PUBLIC_DEMO_MODE=true`, and in a production build only if `NEXT_PUBLIC_ALLOW_DEMO_BUILD=true` is also set (the build fails otherwise).
+   - API helpers fall back to the in-memory engine in `src/lib/demo-data/index.ts` **only** when the backend is unreachable (network failure or 502/503/504) — see `shouldUseDemoFallback()` in `src/lib/myapi/client.ts`. Application errors (400/401/404/500) are always surfaced.
+   - Demo login only works for the known demo accounts while the backend is unreachable.
+   - Always detect demo mode with `isDemoMode()` (`src/lib/auth/demo-mode.ts`); ESLint blocks reading `NEXT_PUBLIC_DEMO_MODE` directly.
 
 ### 2.2 Central Axios Client (`src/lib/myapi/client.ts`)
 The API subsystem utilizes a centralized Axios singleton configured for secure HttpOnly cookie session management:
 
 ```typescript
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:40001/api",
+  baseURL: env.NEXT_PUBLIC_API_URL, // validated in src/env.ts
   headers: {
     "Content-Type": "application/json",
   },
@@ -138,11 +139,24 @@ apiClient.interceptors.response.use(
 );
 ```
 
-### 2.3 Next.js Catch-All Proxy (`/api/[...catchall]`)
-The server proxy route (`src/app/api/[...catchall]/route.ts`) provides several enterprise benefits:
-- **Topology Masking**: Hides internal microservice hostnames and ports (`http://localhost:40001`) from browser visibility.
-- **CORS Elimination**: Requests from the browser originate from the same domain (`/api/*`), eliminating CORS pre-flight latency.
-- **Header Sanitization**: Removes dangerous client-supplied headers before proxying to internal network endpoints.
+### 2.3 API Deployment Topologies
+The app has no backend of its own: `src/app/api/[...catchall]/route.ts` returns **410 Gone** unless the optional proxy below is enabled. Pick one of two setups.
+
+The client relies on `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me` (should include `isPasscodeLocked`) and `POST /auth/logout`. Session cookies are always `HttpOnly; Secure; Path=/`, and the session cookie must be named `token` (the edge guard in `src/proxy.ts` checks for it).
+
+#### Option A — Same parent domain, direct calls (e.g. `app.example.com` + `api.example.com`)
+- `NEXT_PUBLIC_API_URL=https://api.example.com/api`
+- API sets the cookie with `Domain=.example.com; SameSite=Lax` so the frontend host sees it.
+- API CORS: `Access-Control-Allow-Origin: https://app.example.com` (exact origin, never `*`), `Access-Control-Allow-Credentials: true`, and answer `OPTIONS` preflights.
+
+#### Option B — Unrelated domains, same-origin proxy (e.g. `app.acme.io` + `api.other-host.com`)
+- Set `API_PROXY_TARGET=https://api.other-host.com` **at build time**. Next.js rewrites `/api/*` to `${API_PROXY_TARGET}/api/*` (`src/lib/api-proxy.ts`, registered as a `beforeFiles` rewrite so it takes precedence over the 410 route).
+- `NEXT_PUBLIC_API_URL=https://app.acme.io/api` (must be absolute, see `src/env.ts`).
+- API sets the cookie **without** a `Domain` attribute (host-only) and `SameSite=Lax`. The browser stores it for `app.acme.io`, so the edge guard sees it. No CORS configuration is needed.
+- Socket.io is not proxied: it still connects to `NEXT_PUBLIC_SOCKET_URL`, where the frontend cookie is not sent. Either host the socket under the same parent domain as the app, or authenticate it with a short-lived token: `fetchSocketTokenApi()` (`POST /auth/socket-token`) and `connectSocket(token)` already exist, but `SocketProvider` does not call them yet outside demo mode.
+
+#### Content Security Policy
+`src/proxy.ts` only allows network access to `'self'` and the origins of `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_SOCKET_URL` (plus `wss:` equivalents), over HTTPS (`upgrade-insecure-requests`). With Option B, API calls are same-origin and need no extra entries.
 
 ### 2.4 Data Contracts & Type Schema Synchronization
 All data moving across the wire is governed by strict TypeScript contracts:

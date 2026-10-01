@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { AlertTriangle, RefreshCw, LayoutDashboard, ChevronDown, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "@/i18n/navigation"
 
 interface DashboardErrorProps {
   error: Error & { digest?: string }
@@ -13,6 +14,7 @@ export default function DashboardErrorBoundary({
   error,
   reset,
 }: DashboardErrorProps) {
+  const router = useRouter()
   const [showDetails, setShowDetails] = useState(false)
 
   useEffect(() => {
@@ -49,11 +51,7 @@ export default function DashboardErrorBoundary({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                window.location.href = "/dashboard/overview"
-              }
-            }}
+            onClick={() => router.push("/dashboard/overview")}
             className="gap-2"
           >
             <LayoutDashboard className="h-4 w-4" />

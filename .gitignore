@@ -39,3 +39,7 @@ pnpm-debug.log*
 next-env.d.ts
 # Local lint/debug dumps
 /scratch/
+
+# Playwright
+/test-results/
+/playwright-report/
