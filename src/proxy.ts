@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server"
 import createMiddleware from "next-intl/middleware"
 import { routing } from "./i18n/routing"
-import { env } from "./env"
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -27,20 +26,25 @@ const intlMiddleware = createMiddleware(routing)
  * Note: In local demo mode (NEXT_PUBLIC_DEMO_MODE=true), the cookie may be set client-side
  * for mock demonstration.
  */
+const localePattern = routing.locales.join("|")
+const LOCALE_PREFIX = new RegExp(`^/(${localePattern})(?=/|$)`)
+const DASHBOARD_ROUTE = new RegExp(`^(?:/(?:${localePattern}))?/dashboard(?:/|$)`)
+
 export async function proxy(req: NextRequest) {
-  const { pathname } = req.nextUrl
+  const { pathname, search } = req.nextUrl
 
   // Check for auth cookie presence (HttpOnly in production; fallback in demo mode)
   const token = req.cookies.get("token")?.value
 
-  // Extract locale prefix from pathname (e.g., /en/dashboard → "en")
-  const localeMatch = pathname.match(/^\/([a-z]{2})(\/|$)/)
-  const locale = localeMatch?.[1] || env.NEXT_PUBLIC_DEFAULT_LOCALE || routing.defaultLocale
-
   // Guard dashboard routes: redirect to login if no session cookie
-  const isDashboardRoute = pathname.match(/^\/([a-z]{2}\/)?dashboard/)
-  if (isDashboardRoute && !token) {
+  if (DASHBOARD_ROUTE.test(pathname) && !token) {
+    // Only known locales are honored; anything else falls back to the default
+    const localeMatch = pathname.match(LOCALE_PREFIX)
+    const locale = localeMatch?.[1] ?? routing.defaultLocale
+    const returnTo = (localeMatch ? pathname.slice(localeMatch[0].length) : pathname) + search
+
     const loginUrl = new URL(`/${locale}/auth`, req.url)
+    loginUrl.searchParams.set("next", returnTo)
     return Response.redirect(loginUrl)
   }
 
