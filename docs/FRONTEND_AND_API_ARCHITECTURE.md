@@ -139,21 +139,24 @@ apiClient.interceptors.response.use(
 );
 ```
 
-### 2.3 Cross-Site API Deployment Requirements
-There is no server-side API proxy: `src/app/api/[...catchall]/route.ts` deliberately returns **410 Gone**. Because the frontend and API are usually on different origins (e.g. `app.example.com` and `api.example.com`), the backend must be configured for credentialed cross-origin requests:
+### 2.3 API Deployment Topologies
+The app has no backend of its own: `src/app/api/[...catchall]/route.ts` returns **410 Gone** unless the optional proxy below is enabled. Pick one of two setups.
 
-- **CORS** on the API:
-  - `Access-Control-Allow-Origin: <exact frontend origin>` (never `*` when credentials are used)
-  - `Access-Control-Allow-Credentials: true`
-  - Allow the methods and headers the client sends (`Content-Type`, etc.) and answer `OPTIONS` preflights.
-- **Session cookies** set by the API:
-  - `HttpOnly; Secure; Path=/`
-  - `SameSite=Lax` when frontend and API share a registrable domain (`app.example.com` / `api.example.com`) — set `Domain=.example.com` so the edge guard in `src/proxy.ts` can see the `token` cookie on the frontend host.
-  - `SameSite=None; Secure` only when they are on unrelated domains. Note that the edge guard cannot see a cookie scoped to a different site, so in that setup the frontend must be served from the same site as the API for dashboard redirects to work.
-- **Endpoints** the client relies on: `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me` (should include `isPasscodeLocked`), `POST /auth/logout`.
-- **CSP**: `src/proxy.ts` only allows network access to the origins of `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_SOCKET_URL` (plus `wss:` equivalents). Set both correctly, served over HTTPS (the policy includes `upgrade-insecure-requests`).
+The client relies on `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me` (should include `isPasscodeLocked`) and `POST /auth/logout`. Session cookies are always `HttpOnly; Secure; Path=/`, and the session cookie must be named `token` (the edge guard in `src/proxy.ts` checks for it).
 
-If you prefer same-origin requests (no CORS, first-party cookies), replace the 410 route with a Next.js `rewrites()` entry mapping `/api/:path*` to `API_BACKEND_URL` and point `NEXT_PUBLIC_API_URL` at `https://<frontend-host>/api` (it must be an absolute URL — see `src/env.ts`).
+#### Option A — Same parent domain, direct calls (e.g. `app.example.com` + `api.example.com`)
+- `NEXT_PUBLIC_API_URL=https://api.example.com/api`
+- API sets the cookie with `Domain=.example.com; SameSite=Lax` so the frontend host sees it.
+- API CORS: `Access-Control-Allow-Origin: https://app.example.com` (exact origin, never `*`), `Access-Control-Allow-Credentials: true`, and answer `OPTIONS` preflights.
+
+#### Option B — Unrelated domains, same-origin proxy (e.g. `app.acme.io` + `api.other-host.com`)
+- Set `API_PROXY_TARGET=https://api.other-host.com` **at build time**. Next.js rewrites `/api/*` to `${API_PROXY_TARGET}/api/*` (`src/lib/api-proxy.ts`, registered as a `beforeFiles` rewrite so it takes precedence over the 410 route).
+- `NEXT_PUBLIC_API_URL=https://app.acme.io/api` (must be absolute, see `src/env.ts`).
+- API sets the cookie **without** a `Domain` attribute (host-only) and `SameSite=Lax`. The browser stores it for `app.acme.io`, so the edge guard sees it. No CORS configuration is needed.
+- Socket.io is not proxied: it still connects to `NEXT_PUBLIC_SOCKET_URL`, where the frontend cookie is not sent. Either host the socket under the same parent domain as the app, or authenticate it with a short-lived token: `fetchSocketTokenApi()` (`POST /auth/socket-token`) and `connectSocket(token)` already exist, but `SocketProvider` does not call them yet outside demo mode.
+
+#### Content Security Policy
+`src/proxy.ts` only allows network access to `'self'` and the origins of `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_SOCKET_URL` (plus `wss:` equivalents), over HTTPS (`upgrade-insecure-requests`). With Option B, API calls are same-origin and need no extra entries.
 
 ### 2.4 Data Contracts & Type Schema Synchronization
 All data moving across the wire is governed by strict TypeScript contracts:
