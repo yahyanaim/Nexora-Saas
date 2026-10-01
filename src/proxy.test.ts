@@ -27,6 +27,27 @@ describe("Edge Proxy Middleware (src/proxy.ts)", () => {
     return req
   }
 
+  describe("Content Security Policy", () => {
+    it("sets a nonce-based CSP on pass-through responses", async () => {
+      const res = await proxy(createMockRequest("http://localhost:3000/en/auth"))
+      const csp = res.headers.get("content-security-policy") ?? ""
+      expect(csp).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/)
+    })
+
+    it("uses a fresh nonce per request", async () => {
+      const nonceOf = async () =>
+        (await proxy(createMockRequest("http://localhost:3000/en/auth")))
+          .headers.get("content-security-policy")
+          ?.match(/'nonce-([^']+)'/)?.[1]
+      expect(await nonceOf()).not.toBe(await nonceOf())
+    })
+
+    it("sets the CSP on redirects", async () => {
+      const res = await proxy(createMockRequest("http://localhost:3000/en/dashboard"))
+      expect(res.headers.get("content-security-policy")).toContain("'strict-dynamic'")
+    })
+  })
+
   describe("Dashboard Route Guarding", () => {
     it("falls back to the default locale for unknown locale prefixes", async () => {
       const res = await proxy(createMockRequest("http://localhost:3000/zz/dashboard"))

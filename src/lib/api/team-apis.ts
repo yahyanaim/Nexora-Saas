@@ -1,5 +1,6 @@
 import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import { TeamRole } from "@/types/users"
+import { z } from "zod"
 
 export interface TeamMember {
   id: string
@@ -27,8 +28,47 @@ export interface InviteMemberPayload {
   teamRole: TeamRole
 }
 
-const STORAGE_TEAM_KEY = "nexora_team_members"
-const STORAGE_INVITES_KEY = "nexora_team_invites"
+const STORAGE_TEAM_KEY = "nexora:demo:team-members"
+const STORAGE_INVITES_KEY = "nexora:demo:team-invites"
+
+const teamRoleSchema = z.enum(["owner", "admin", "member", "viewer"])
+
+const teamMembersSchema = z.array(
+  z.object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+    avatar: z.string().optional(),
+    teamRole: teamRoleSchema,
+    status: z.enum(["active", "invited", "suspended"]),
+    joinedAt: z.string(),
+    lastActiveAt: z.string().optional(),
+  })
+)
+
+const teamInvitesSchema = z.array(
+  z.object({
+    id: z.string(),
+    email: z.string(),
+    teamRole: teamRoleSchema,
+    invitedBy: z.string(),
+    invitedAt: z.string(),
+    expiresAt: z.string(),
+    status: z.enum(["pending", "accepted", "expired", "revoked"]),
+  })
+)
+
+/** Reads and validates a JSON value from localStorage; returns null when absent or invalid. */
+function readStored<T>(key: string, schema: z.ZodType<T>): T | null {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return null
+    const parsed = schema.safeParse(JSON.parse(raw))
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
+}
 
 const INITIAL_TEAM_MEMBERS: TeamMember[] = [
   {
@@ -87,11 +127,7 @@ const INITIAL_INVITES: TeamInvite[] = [
 
 function getStoredMembers(): TeamMember[] {
   if (typeof window === "undefined") return INITIAL_TEAM_MEMBERS
-  try {
-    const raw = localStorage.getItem(STORAGE_TEAM_KEY)
-    if (raw) return JSON.parse(raw)
-  } catch {}
-  return INITIAL_TEAM_MEMBERS
+  return readStored(STORAGE_TEAM_KEY, teamMembersSchema) ?? INITIAL_TEAM_MEMBERS
 }
 
 function saveStoredMembers(members: TeamMember[]) {
@@ -103,11 +139,7 @@ function saveStoredMembers(members: TeamMember[]) {
 
 function getStoredInvites(): TeamInvite[] {
   if (typeof window === "undefined") return INITIAL_INVITES
-  try {
-    const raw = localStorage.getItem(STORAGE_INVITES_KEY)
-    if (raw) return JSON.parse(raw)
-  } catch {}
-  return INITIAL_INVITES
+  return readStored(STORAGE_INVITES_KEY, teamInvitesSchema) ?? INITIAL_INVITES
 }
 
 function saveStoredInvites(invites: TeamInvite[]) {

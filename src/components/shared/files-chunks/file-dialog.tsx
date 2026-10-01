@@ -92,6 +92,7 @@ export function FileDialog({
     file?.visibility || FileVisibility.PRIVATE
   )
   const [imageError, setImageError] = useState(false)
+  const [videoError, setVideoError] = useState(false)
 
   if (!file) return null
 
@@ -173,31 +174,29 @@ export function FileDialog({
       return (
         <div className="flex flex-col items-center gap-4">
           <div className="w-full overflow-hidden rounded-lg border bg-muted/20">
-            <video
-              controls
-              className="max-h-[400px] w-full"
-              poster={file.thumbnail}
-              onError={(e) => {
-                e.currentTarget.style.display = "none"
-                const parent = e.currentTarget.parentElement
-                if (parent) {
-                  const fallback = document.createElement("div")
-                  fallback.className =
-                    "flex min-h-[200px] flex-col items-center justify-center p-8 text-center"
-                  fallback.innerHTML = `
-                    <div class="text-6xl mb-4">🎬</div>
-                    <p class="text-sm text-muted-foreground">${t("videoNotAvailable")}</p>
-                    <button class="mt-4 inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium">${t("download")}</button>
-                  `
-                  parent.appendChild(fallback)
-                  const btn = fallback.querySelector("button")
-                  if (btn) btn.onclick = handleDownload
-                }
-              }}
-            >
-              <source src={fileUrl} type={file.mimeType || "video/mp4"} />
-              {t("videoNotSupported")}
-            </video>
+            {!videoError ? (
+              <video
+                controls
+                className="max-h-[400px] w-full"
+                poster={file.thumbnail}
+                onError={() => setVideoError(true)}
+              >
+                <source
+                  src={fileUrl}
+                  type={file.mimeType || "video/mp4"}
+                  onError={() => setVideoError(true)}
+                />
+                {t("videoNotSupported")}
+              </video>
+            ) : (
+              <div className="flex min-h-[200px] flex-col items-center justify-center p-8 text-center">
+                <div className="mb-4 text-6xl">🎬</div>
+                <p className="text-sm text-muted-foreground">{t("videoNotAvailable")}</p>
+                <Button variant="outline" className="mt-4" onClick={handleDownload}>
+                  {t("download")}
+                </Button>
+              </div>
+            )}
           </div>
           <p className="text-sm text-muted-foreground">
             {formatFileSize(file.size)} • {t("video")}

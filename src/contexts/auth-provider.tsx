@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useEffect, useState, useCallback, useMemo } from "react"
+import { createContext, useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { useRouter, usePathname } from "@/i18n/navigation"
 import { User, UserStatus, UserType } from "@/types/users"
 import { AuthUser, LoginPayload, LoginResponse, RegisterPayload, RegisterResponse } from "@/types/auth"
@@ -52,6 +52,8 @@ export interface AuthGuardContextType {
 
 export const AuthGuardContext = createContext<AuthGuardContextType | null>(null)
 
+const UPGRADE_PROMPT_COOLDOWN_MS = 3000
+
 /**
  * Transforms an {@link AuthUser} payload into the full platform {@link User} entity.
  * Prioritizes custom uploaded or AI portrait avatars, applying a deterministic fallback.
@@ -76,6 +78,10 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const queryClient = useQueryClient()
   const [localOverrides, setLocalOverrides] = useState<Partial<User>>({})
+  const pathnameRef = useRef(pathname)
+  useEffect(() => {
+    pathnameRef.current = pathname
+  }, [pathname])
 
   // Session query via HTTP-only cookie
   const {
@@ -98,10 +104,21 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = !!user
 
   // 1. Plan gate handler: 403 upgrade_required -> route to /dashboard/plans
+  // Parallel requests can all fail with upgrade_required; show one toast and
+  // navigate once instead of once per request.
+  const lastUpgradePromptRef = useRef(0)
   useEffect(() => {
     const goPricing = () => {
-      toast.error("Your current plan does not include this feature. Upgrade to continue.")
-      router.push("/dashboard/plans")
+      const now = Date.now()
+      if (now - lastUpgradePromptRef.current < UPGRADE_PROMPT_COOLDOWN_MS) return
+      lastUpgradePromptRef.current = now
+
+      toast.error("Your current plan does not include this feature. Upgrade to continue.", {
+        id: "upgrade-required",
+      })
+      if (!isUnderPath(pathnameRef.current, "/dashboard/plans")) {
+        router.push("/dashboard/plans")
+      }
     }
     window.addEventListener(UPGRADE_REQUIRED_EVENT, goPricing)
     return () => window.removeEventListener(UPGRADE_REQUIRED_EVENT, goPricing)

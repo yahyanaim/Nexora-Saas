@@ -19,18 +19,7 @@ const isProduction =
   process.env.NODE_ENV === "production" ||
   process.env.VERCEL_ENV === "production"
 
-// Content Security Policy directive string
-const cspHeader = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https: blob:",
-  "font-src 'self' data:",
-  "connect-src 'self' https: wss: http://localhost:* ws://localhost:*",
-  "frame-ancestors 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-].join("; ")
+// Content-Security-Policy is set per request (with a script nonce) in src/proxy.ts
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -70,10 +59,6 @@ const nextConfig = {
       {
         source: "/(.*)",
         headers: [
-          {
-            key: "Content-Security-Policy",
-            value: cspHeader,
-          },
           {
             key: "Strict-Transport-Security",
             value: "max-age=63072000; includeSubDomains; preload",

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/input-otp"
 import { changeProfileInfApi } from "@/lib/api/auth-apis"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 import { useTranslations } from "next-intl"
 
 const PASSCODE_LENGTH = 4
@@ -54,6 +55,7 @@ interface PasscodeDialogProps {
 export function PasscodeDialog({ open, onOpenChange }: PasscodeDialogProps) {
   const t = useTranslations()
   const { authedUser, updatedUser, isPasscodeLocked } = useAuthGuard()
+  const unlock = useLockScreenStore((state) => state.unlock)
 
   const {
     control,
@@ -79,13 +81,11 @@ export function PasscodeDialog({ open, onOpenChange }: PasscodeDialogProps) {
         name: authedUser?.name || "",
       }),
     onSuccess: (data, passcodeLock) => {
+      // The server-side isPasscodeLocked flag is the source of truth; keep the
+      // current session unlocked so enabling the lock does not lock it at once.
+      if (passcodeLock) unlock()
       updatedUser(data)
       onOpenChange(false)
-      if (Boolean(passcodeLock)) {
-        localStorage.setItem("passcode", "yes")
-      } else {
-        localStorage.removeItem("passcode")
-      }
     },
   })
 
