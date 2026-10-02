@@ -157,6 +157,8 @@ The client relies on `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me` (s
   - The backend must expose `POST /auth/socket-token`, authenticated by the session cookie, returning `{ "token": "<short-lived token>" }` (short TTL, e.g. 60 s). Return `401` when the session is invalid.
   - The Socket.io server must validate the token from the handshake's `auth.token` (`socket.handshake.auth.token`) and reject invalid/expired tokens with an auth error.
   - The client (`SocketProvider` → `connectSocket(fetchSocketTokenApi)`) requests a fresh token on every handshake, including reconnects. If the endpoint returns no token it falls back to cookie auth (same-domain setups); a `401` stops reconnection.
+  - Transient token failures (network errors, 5xx, 429) are retried up to 3 attempts per handshake (backoff 300 ms, then 900 ms). `404`/`501` or a response without a token mean "no token by design" and fall back to cookie auth immediately.
+  - Transient failures never stop the socket permanently: if all attempts fail, the resulting auth rejection lets socket.io's capped reconnection (10 attempts) try again with a fresh token instead of disconnecting.
 
 #### Content Security Policy
 `src/proxy.ts` only allows network access to `'self'` and the origins of `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_SOCKET_URL` (plus `wss:` equivalents), over HTTPS (`upgrade-insecure-requests`). With Option B, API calls are same-origin and need no extra entries.
