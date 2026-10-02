@@ -12,6 +12,7 @@ import {
   forgotPasswordApi,
   verifyForgotPasswordApi,
   verifyPasscodeApi,
+  fetchSocketTokenApi,
   resetPasswordApi,
   changePasswordApi,
   isDemoMode,
@@ -220,6 +221,32 @@ describe("auth-apis", () => {
       await expect(verifyPasscodeApi("0000")).rejects.toThrow(
         "Passcode verification failed"
       )
+    })
+  })
+
+  describe("fetchSocketTokenApi", () => {
+    it("returns the token, or null when the endpoint fails for non-auth reasons", async () => {
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({ data: { token: "ticket-1" } })
+      await expect(fetchSocketTokenApi()).resolves.toBe("ticket-1")
+
+      vi.spyOn(console, "error").mockImplementation(() => {})
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new AxiosError("Not Found", "ERR_BAD_REQUEST", undefined, undefined, {
+          status: 404,
+          data: {},
+        } as never)
+      )
+      await expect(fetchSocketTokenApi()).resolves.toBeNull()
+    })
+
+    it("rethrows 401 so the socket client can stop reconnecting", async () => {
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        new AxiosError("Unauthorized", "ERR_BAD_REQUEST", undefined, undefined, {
+          status: 401,
+          data: {},
+        } as never)
+      )
+      await expect(fetchSocketTokenApi()).rejects.toThrow("Unauthorized")
     })
   })
 

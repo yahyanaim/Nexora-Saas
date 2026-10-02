@@ -1,3 +1,4 @@
+import axios from "axios"
 import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import { tokenStorage } from "@/lib/myapi/token-storage"
 import {
@@ -300,14 +301,16 @@ export const deleteAccountApi = async (): Promise<{ message: string }> => {
 
 /**
  * Fetches a short-lived socket ticket token if supported by backend.
- * For backends using HttpOnly cookie authentication, this returns null
- * and the client relies on `withCredentials: true` during socket handshake.
+ * Returns null when unavailable (e.g. the endpoint is not implemented) so the
+ * client falls back to cookie auth during the socket handshake.
+ * Rethrows 401 so the socket client can stop reconnecting when the session is gone.
  */
 export const fetchSocketTokenApi = async (): Promise<string | null> => {
   try {
     const { data } = await apiClient.post<{ token: string }>("/auth/socket-token")
     return data?.token ?? null
   } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) throw error
     logger.error("fetchSocketTokenApi error:", apiErrorMessage(error, "Failed to fetch socket token"))
     return null
   }

@@ -4,6 +4,9 @@ import { useAuthAnnounceLogin } from "@/hooks/auth/use-auth-announce-login"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useBrowserNotifications } from "@/hooks/notifications/use-browser-notifications"
 import { connectSocket } from "@/lib/socket/socket-client"
+import { fetchSocketTokenApi } from "@/lib/api/auth-apis"
+import { isDemoMode } from "@/lib/auth/demo-mode"
+import { tokenStorage } from "@/lib/myapi/token-storage"
 import { SocketEvents } from "@/types/socket"
 import {
   createContext,
@@ -36,7 +39,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [isOffline, setIsOffline] = useState(
     typeof navigator !== "undefined" ? !navigator.onLine : false
   )
-  const { isAuthenticated, token } = useAuthGuard()
+  const { isAuthenticated } = useAuthGuard()
 
   const connect = useCallback(() => {
     if (!isAuthenticated) {
@@ -50,7 +53,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       return
     }
 
-    const s = connectSocket(token)
+    // Demo mode keeps its static client token; otherwise a short-lived token is
+    // fetched on every handshake (cookie auth is used when none is available).
+    const s = isDemoMode()
+      ? connectSocket(tokenStorage.get() ?? undefined)
+      : connectSocket(fetchSocketTokenApi)
 
     const onConnect = () => {
       setIsConnected(true)
@@ -110,7 +117,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       s.removeAllListeners()
       s.disconnect()
     }
-  }, [isAuthenticated, token, socket?.connected, authAnnounceLogin, sendNotification])
+  }, [isAuthenticated, socket?.connected, authAnnounceLogin, sendNotification])
 
   const reconnect = useCallback(() => {
     if (!isAuthenticated) return

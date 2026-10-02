@@ -7,6 +7,7 @@ import {
   getSocketUrl,
 } from "./socket-client"
 import { io, Socket } from "socket.io-client"
+import { AxiosError } from "axios"
 
 vi.mock("socket.io-client", () => {
   return {
@@ -150,6 +151,81 @@ describe("socket-client", () => {
           auth: { token: "short-lived-ticket-token-123" },
         })
       )
+    })
+  })
+
+  describe("connectSocket - Short-Lived Token Provider", () => {
+    type AuthFn = (cb: (data: Record<string, unknown>) => void) => void
+
+    const getAuthFn = (): AuthFn => {
+      const options = vi.mocked(io).mock.calls[0]![1] as Record<string, unknown>
+      expect(typeof options.auth).toBe("function")
+      return options.auth as AuthFn
+    }
+
+    const runHandshake = (auth: AuthFn) =>
+      new Promise<Record<string, unknown>>((resolve) => auth(resolve))
+
+    beforeEach(() => {
+      process.env.NEXT_PUBLIC_DEMO_MODE = "false"
+    })
+
+    it("uses the function form of auth and returns { token } when the provider resolves one", async () => {
+      connectSocket(() => Promise.resolve("ticket-abc"))
+
+      await expect(runHandshake(getAuthFn())).resolves.toEqual({ token: "ticket-abc" })
+    })
+
+    it("falls back to {} (cookie auth) when the provider returns null or empty", async () => {
+      const provider = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce("  ")
+      connectSocket(provider)
+      const auth = getAuthFn()
+
+      await expect(runHandshake(auth)).resolves.toEqual({})
+      await expect(runHandshake(auth)).resolves.toEqual({})
+    })
+
+    it("falls back to {} when the provider throws, without disconnecting", async () => {
+      connectSocket(() => Promise.reject(new Error("network down")))
+
+      await expect(runHandshake(getAuthFn())).resolves.toEqual({})
+      expect(mockSocket.disconnect).not.toHaveBeenCalled()
+    })
+
+    it("fetches a fresh token on every handshake, including reconnects", async () => {
+      const provider = vi
+        .fn<() => Promise<string | null>>()
+        .mockResolvedValueOnce("ticket-1")
+        .mockResolvedValueOnce("ticket-2")
+      connectSocket(provider)
+      const auth = getAuthFn()
+
+      await expect(runHandshake(auth)).resolves.toEqual({ token: "ticket-1" })
+      await expect(runHandshake(auth)).resolves.toEqual({ token: "ticket-2" })
+      expect(provider).toHaveBeenCalledTimes(2)
+    })
+
+    it("stops reconnecting when the token request is rejected with 401", async () => {
+      const unauthorized = new AxiosError("Unauthorized", "ERR_BAD_REQUEST", undefined, undefined, {
+        status: 401,
+        data: {},
+      } as never)
+      connectSocket(() => Promise.reject(unauthorized))
+      vi.spyOn(console, "warn").mockImplementation(() => {})
+
+      await expect(runHandshake(getAuthFn())).resolves.toEqual({})
+      expect(mockSocket.disconnect).toHaveBeenCalledTimes(1)
+    })
+
+    it("does not add an auth function or call the provider in demo mode", () => {
+      process.env.NEXT_PUBLIC_DEMO_MODE = "true"
+      const provider = vi.fn()
+
+      connectSocket(provider)
+
+      const options = vi.mocked(io).mock.calls[0]![1] as Record<string, unknown>
+      expect(options.auth).toBeUndefined()
+      expect(provider).not.toHaveBeenCalled()
     })
   })
 

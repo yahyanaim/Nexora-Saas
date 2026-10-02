@@ -1,4 +1,6 @@
 import { io, Socket, type SocketOptions, type ManagerOptions } from "socket.io-client"
+import axios from "axios"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 
 let socket: Socket | null = null
 
@@ -46,16 +48,50 @@ export const getSocketAsync = (timeoutMs = 10_000): Promise<Socket> => {
   })
 }
 
+/** Resolves a short-lived socket token; null/empty means "use cookies". */
+export type SocketTokenProvider = () => Promise<string | null>
+
+type SocketAuthPayload = { token?: string }
+
+/** True when the token request itself was rejected as unauthenticated. */
+function isUnauthorizedError(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 401
+}
+
+/**
+ * Builds socket.io's function-form `auth`, which runs on every handshake
+ * (including automatic reconnects), so a fresh short-lived token is used each time.
+ * Falls back to `{}` (cookie auth via withCredentials) when no token is available.
+ */
+export function createSocketAuth(getToken: SocketTokenProvider) {
+  return (cb: (data: SocketAuthPayload) => void) => {
+    getToken()
+      .then((token) => {
+        cb(token && token.trim() !== "" ? { token } : {})
+      })
+      .catch((error: unknown) => {
+        cb({})
+        // The session is gone: stop instead of re-fetching on every reconnect
+        if (isUnauthorizedError(error)) {
+          console.warn("[SOCKET AUTH ERROR] Socket token request was unauthorized. Disconnecting.")
+          socket?.disconnect()
+        }
+      })
+  }
+}
+
 /**
  * Initializes and connects the Socket.io client.
  *
  * Authentication Strategy:
- * - If a non-empty `token` string is provided, passes `{ auth: { token } }`.
- * - If `token` is omitted/undefined (e.g. cookie-based auth in production),
- *   omits the `auth` property entirely and relies on `withCredentials: true`
- *   for the browser to authenticate via HttpOnly cookies during the handshake.
+ * - Token provider function (production): fetched on every handshake via the
+ *   function form of `auth`, so reconnects never reuse an expired token.
+ * - Static non-empty token string (demo mode): passed once as `{ auth: { token } }`.
+ * - Nothing / empty: `auth` is omitted and the browser authenticates the
+ *   handshake with HttpOnly cookies (`withCredentials: true`).
+ * - In demo mode a provider is ignored so no token request is made.
  */
-export const connectSocket = (token?: string): Socket => {
+export const connectSocket = (auth?: SocketTokenProvider | string): Socket => {
   if (socket?.connected) return socket
 
   const socketUrl = getSocketUrl()
@@ -70,9 +106,13 @@ export const connectSocket = (token?: string): Socket => {
     randomizationFactor: 0.5,
   }
 
-  // Only pass auth payload if a valid non-empty token is provided
-  if (token && typeof token === "string" && token.trim() !== "") {
-    options.auth = { token }
+  if (typeof auth === "function") {
+    if (!isDemoMode()) {
+      options.auth = createSocketAuth(auth)
+    }
+  } else if (auth && auth.trim() !== "") {
+    // Only pass a static auth payload if a valid non-empty token is provided
+    options.auth = { token: auth }
   }
 
   socket = io(socketUrl, options)

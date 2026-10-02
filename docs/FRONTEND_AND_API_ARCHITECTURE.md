@@ -153,7 +153,10 @@ The client relies on `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me` (s
 - Set `API_PROXY_TARGET=https://api.other-host.com` **at build time**. Next.js rewrites `/api/*` to `${API_PROXY_TARGET}/api/*` (`src/lib/api-proxy.ts`, registered as a `beforeFiles` rewrite so it takes precedence over the 410 route).
 - `NEXT_PUBLIC_API_URL=https://app.acme.io/api` (must be absolute, see `src/env.ts`).
 - API sets the cookie **without** a `Domain` attribute (host-only) and `SameSite=Lax`. The browser stores it for `app.acme.io`, so the edge guard sees it. No CORS configuration is needed.
-- Socket.io is not proxied: it still connects to `NEXT_PUBLIC_SOCKET_URL`, where the frontend cookie is not sent. Either host the socket under the same parent domain as the app, or authenticate it with a short-lived token: `fetchSocketTokenApi()` (`POST /auth/socket-token`) and `connectSocket(token)` already exist, but `SocketProvider` does not call them yet outside demo mode.
+- Socket.io is not proxied: it connects to `NEXT_PUBLIC_SOCKET_URL`, where the frontend cookie is not sent, so it authenticates with a short-lived token instead:
+  - The backend must expose `POST /auth/socket-token`, authenticated by the session cookie, returning `{ "token": "<short-lived token>" }` (short TTL, e.g. 60 s). Return `401` when the session is invalid.
+  - The Socket.io server must validate the token from the handshake's `auth.token` (`socket.handshake.auth.token`) and reject invalid/expired tokens with an auth error.
+  - The client (`SocketProvider` → `connectSocket(fetchSocketTokenApi)`) requests a fresh token on every handshake, including reconnects. If the endpoint returns no token it falls back to cookie auth (same-domain setups); a `401` stops reconnection.
 
 #### Content Security Policy
 `src/proxy.ts` only allows network access to `'self'` and the origins of `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_SOCKET_URL` (plus `wss:` equivalents), over HTTPS (`upgrade-insecure-requests`). With Option B, API calls are same-origin and need no extra entries.
