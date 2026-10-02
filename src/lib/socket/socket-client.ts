@@ -72,9 +72,31 @@ export const TOKEN_FETCH_RETRY_DELAYS_MS = [300, 900] as const
  */
 let lastTokenFetchFailed = false
 
-/** @internal Test-only reset of token fetch bookkeeping. */
+/**
+ * Manual reconnect backoff after an auth rejection that followed a failed
+ * token fetch (max 5 attempts per outage). socket.io-client destroys the
+ * socket on a server-side auth rejection (CONNECT_ERROR), so its built-in
+ * reconnection does not run; socket.connect() re-runs the function-form
+ * auth and therefore fetches a fresh token.
+ */
+export const AUTH_RECONNECT_DELAYS_MS = [2000, 5000, 15000, 30000, 60000] as const
+
+let authReconnectTimer: ReturnType<typeof setTimeout> | null = null
+let authReconnectAttempts = 0
+
+/** Cancels a pending manual reconnect (the attempt counter is kept). */
+function clearAuthReconnect() {
+  if (authReconnectTimer !== null) {
+    clearTimeout(authReconnectTimer)
+    authReconnectTimer = null
+  }
+}
+
+/** @internal Test-only reset of token fetch and reconnect bookkeeping. */
 export function __resetSocketAuthStateForTests() {
   lastTokenFetchFailed = false
+  clearAuthReconnect()
+  authReconnectAttempts = 0
 }
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
@@ -92,15 +114,15 @@ const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, 
 export function createSocketAuth(getToken: SocketTokenProvider) {
   return (cb: (data: SocketAuthPayload) => void) => {
     void (async () => {
+      let token: string | null = null
       for (let attempt = 0; ; attempt++) {
         try {
-          const token = await getToken()
-          lastTokenFetchFailed = false
-          cb(token && token.trim() !== "" ? { token } : {})
-          return
+          token = await getToken()
+          break
         } catch (error: unknown) {
           if (isUnauthorizedError(error)) {
             console.warn("[SOCKET AUTH ERROR] Socket token request was unauthorized. Disconnecting.")
+            clearAuthReconnect()
             socket?.disconnect()
             return
           }
@@ -113,6 +135,9 @@ export function createSocketAuth(getToken: SocketTokenProvider) {
           await wait(delay)
         }
       }
+      // Outside the try: an exception thrown by cb is not a token failure
+      lastTokenFetchFailed = false
+      cb(token && token.trim() !== "" ? { token } : {})
     })()
   }
 }
@@ -152,7 +177,16 @@ export const connectSocket = (auth?: SocketTokenProvider | string): Socket => {
     options.auth = { token: auth }
   }
 
+  // A new socket starts a fresh outage window
+  clearAuthReconnect()
+  authReconnectAttempts = 0
+
   socket = io(socketUrl, options)
+
+  socket.on("connect", () => {
+    clearAuthReconnect()
+    authReconnectAttempts = 0
+  })
 
   // Halt reconnection on authentication rejection to prevent infinite reconnect spam
   socket.on("connect_error", (err: Error) => {
@@ -163,14 +197,27 @@ export const connectSocket = (auth?: SocketTokenProvider | string): Socket => {
       message.includes("jwt") ||
       message.includes("auth")
 
-    // A rejection after a failed token fetch is expected: let socket.io's
-    // capped reconnection re-run the auth function with a fresh token.
-    if (isAuthError && !lastTokenFetchFailed) {
-      console.warn(
-        `[SOCKET AUTH ERROR] Connection rejected by server (${err.message}). Disconnecting.`
-      )
-      socket?.disconnect()
+    if (!isAuthError) return
+
+    // A rejection after a failed token fetch is expected (the handshake went
+    // out without a token): reconnect manually with backoff to fetch a fresh one.
+    const delay = AUTH_RECONNECT_DELAYS_MS[authReconnectAttempts]
+    if (lastTokenFetchFailed && delay !== undefined) {
+      authReconnectAttempts++
+      clearAuthReconnect()
+      const target = socket
+      authReconnectTimer = setTimeout(() => {
+        authReconnectTimer = null
+        if (socket === target) target?.connect()
+      }, delay)
+      return
     }
+
+    console.warn(
+      `[SOCKET AUTH ERROR] Connection rejected by server (${err.message}). Disconnecting.`
+    )
+    clearAuthReconnect()
+    socket?.disconnect()
   })
 
   pendingResolvers.forEach((resolve) => resolve(socket!))
@@ -180,6 +227,7 @@ export const connectSocket = (auth?: SocketTokenProvider | string): Socket => {
 }
 
 export const disconnectSocket = () => {
+  clearAuthReconnect()
   socket?.disconnect()
   socket = null
 }
