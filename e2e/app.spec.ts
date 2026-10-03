@@ -46,7 +46,9 @@ test("login through the same-origin proxy reaches the requested page", async ({ 
   // A full reload goes through the server-side guard
   await page.reload()
   await expect(page).toHaveURL(/\/en\/dashboard\/users$/)
-  await expect(page.getByText("Proxy User").first()).toBeVisible()
+  // The signed-in user's name is in the profile menu (the top bar shows it only on wide screens)
+  await page.getByRole("button", { name: "Profile" }).click()
+  await expect(page.getByRole("menu").getByText("Proxy User")).toBeVisible()
   expect(violations).toEqual([])
 })
 
