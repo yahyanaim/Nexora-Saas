@@ -93,13 +93,16 @@ export function SelectTrigger({
 
 export function SelectValue({
   placeholder = "Select an option",
+  children,
 }: {
   placeholder?: React.ReactNode
+  /** Label of the current value; items only register their labels once the menu has opened */
+  children?: React.ReactNode
 }) {
   const context = React.useContext(SelectContext)
   if (!context) return null
 
-  const display = context.selectedLabel || context.value
+  const display = children ?? (context.selectedLabel || context.value)
 
   return (
     <span className={cn(display ? "text-foreground" : "text-muted-foreground")}>

@@ -22,6 +22,9 @@ import {
   LayoutDashboard,
   Settings,
   Percent,
+  Building,
+  Briefcase,
+  Handshake,
   type LucideIcon,
 } from "@/components/ui/carbon/icons"
 import { usePathname } from "@/i18n/navigation"
@@ -73,6 +76,27 @@ export function useDashboardNav() {
             icon: ChartNoAxesCombined,
             descriptionKey: "pageDescOverview",
             permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
+          },
+        ],
+      },
+      {
+        id: "organization",
+        title: t("organization"),
+        icon: Building,
+        items: [
+          {
+            title: t("employees"),
+            url: "/dashboard/employees",
+            icon: Briefcase,
+            descriptionKey: "pageDescEmployees",
+            permission: AdminPermissionsPlatform.EMPLOYEES_READ,
+          },
+          {
+            title: t("clients"),
+            url: "/dashboard/clients",
+            icon: Handshake,
+            descriptionKey: "pageDescClients",
+            permission: AdminPermissionsPlatform.CLIENTS_READ,
           },
         ],
       },

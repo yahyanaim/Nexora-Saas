@@ -22,7 +22,9 @@ import {
   Bell as LBell,
   BrushCleaning as LBrushCleaning,
   Bug as LBug,
+  Briefcase as LBriefcase,
   Building2 as LBuilding2,
+  Handshake as LHandshake,
   Calendar as LCalendar,
   ChartLine as LChartLine,
   ChartNoAxesCombined as LChartNoAxesCombined,
@@ -292,6 +294,8 @@ export const ArrowRight = icon(LArrowRight, "ArrowRight")
 export const ArrowUp = icon(LArrowUp, "ArrowUp")
 export const ArrowUpRight = icon(LArrowUpRight, "ArrowUpRight")
 export const Building = icon(LBuilding2, "Building")
+export const Briefcase = icon(LBriefcase, "Briefcase")
+export const Handshake = icon(LHandshake, "Handshake")
 export const Calendar = icon(LCalendar, "Calendar")
 export const ChartLine = icon(LChartLine, "ChartLine")
 export const ChartLineData = icon(LChartSpline, "ChartLineData")

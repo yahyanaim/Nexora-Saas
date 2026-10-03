@@ -40,7 +40,7 @@ describe("useDashboardNav", () => {
   it("shows every section to an admin and resolves the active page", () => {
     renderIntl(<NavProbe />)
     expect(screen.getByTestId("groups").textContent).toBe(
-      "dashboard,users,billing,management,support,system"
+      "dashboard,organization,users,billing,management,support,system"
     )
     expect(screen.getByTestId("active-group").textContent).toBe("billing")
     expect(screen.getByTestId("active-item").textContent).toBe("/dashboard/invoices")
