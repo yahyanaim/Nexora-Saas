@@ -72,8 +72,8 @@ export function ProjectDetail({ project, onClose }: ProjectDetailProps) {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-emerald-500/10 p-2">
-                    <CheckCircle className="h-5 w-5 text-emerald-600" />
+                  <div className="rounded-full bg-success-soft p-2">
+                    <CheckCircle className="h-5 w-5 text-success-foreground" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{taskCounts.done}</p>
@@ -87,8 +87,8 @@ export function ProjectDetail({ project, onClose }: ProjectDetailProps) {
             <Card>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
-                  <div className="rounded-full bg-amber-500/10 p-2">
-                    <Clock className="h-5 w-5 text-amber-600" />
+                  <div className="rounded-full bg-warning-soft p-2">
+                    <Clock className="h-5 w-5 text-warning-foreground" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">

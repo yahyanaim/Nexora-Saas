@@ -50,7 +50,7 @@ export function QuickDocsCard() {
 
   const renderSnippet = (lang: keyof typeof SNIPPETS, label: string) => (
     <div className="rounded-xl border border-border/60 bg-neutral-950 p-4 text-neutral-100 font-mono text-xs overflow-x-auto">
-      <div className="flex items-center justify-between pb-3 mb-3 border-b border-neutral-800 text-neutral-400 text-[11px]">
+      <div className="flex items-center justify-between pb-3 mb-3 border-b border-neutral-800 text-neutral-400 text-xs">
         <span className="flex items-center gap-1.5">
           <Code className="size-3.5" />
           <span>{label}</span>
@@ -61,7 +61,7 @@ export function QuickDocsCard() {
           onClick={() => handleCopy(lang)}
           className="h-7 px-2 text-xs text-neutral-300 hover:text-white hover:bg-neutral-800 gap-1"
         >
-          {copiedKey === lang ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
+          {copiedKey === lang ? <Check className="size-3 text-success-foreground" /> : <Copy className="size-3" />}
           <span>{copiedKey === lang ? "Copied" : "Copy"}</span>
         </Button>
       </div>
@@ -109,7 +109,7 @@ export function QuickDocsCard() {
             <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
               Base URL
             </span>
-            <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
+            <span className="text-xs font-mono text-success-foreground">
               HTTPS TLS 1.3
             </span>
           </div>

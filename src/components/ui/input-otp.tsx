@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { OTPInput, OTPInputContext } from "input-otp"
-import { Subtract } from "@carbon/icons-react"
+import { Minus as Subtract } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 
 export function InputOTP({

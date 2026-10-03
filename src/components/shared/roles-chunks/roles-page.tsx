@@ -18,6 +18,7 @@ import { DataTableEntityFormDialog } from "../data-table-chunks/data-table-entit
 import { useTranslations } from "next-intl"
 import { ActivationStatus } from "@/types/users"
 import { Plus } from "@/components/ui/carbon/icons"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction =
   | { type: "delete"; role: Role }
@@ -160,6 +161,7 @@ export default function RolesPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
+      <PageHeader />
       <DataTable
         manual
         title={t("roles")}

@@ -190,7 +190,7 @@ export function TopProductsCard() {
             <Information className="size-3.5 text-muted-foreground/70" />
             <span className="font-medium">Top Tiers & Cloud Add-ons</span>
           </div>
-          <span className="text-[11px] font-mono text-muted-foreground">{dateRange}</span>
+          <span className="text-xs tabular-nums text-muted-foreground">{dateRange}</span>
         </div>
 
         {/* Product Rows */}
@@ -202,8 +202,8 @@ export function TopProductsCard() {
                   <span>{prod.iconEmoji}</span>
                   <span className="truncate font-medium text-foreground">{prod.name}</span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 font-mono">
-                  <span className="text-muted-foreground text-[11px]">{prod.units}</span>
+                <div className="flex items-center gap-2 shrink-0 tabular-nums">
+                  <span className="text-muted-foreground text-xs">{prod.units}</span>
                   <span className="font-semibold text-foreground">{prod.revenue}</span>
                 </div>
               </div>
@@ -221,7 +221,7 @@ export function TopProductsCard() {
       </div>
 
       {/* Operational Explanation Paragraph */}
-      <div className="mt-4 border-t border-border/40 pt-3 text-[11px] leading-relaxed text-muted-foreground">
+      <div className="mt-4 border-t border-border/40 pt-3 text-xs leading-relaxed text-muted-foreground">
         <span className="font-semibold text-foreground">Catalog Performance: </span>
         Enterprise Annual commitments represent 44% of total volume with 88% quota attainment. AI compute token overages represent the fastest-growing velocity add-on.
       </div>

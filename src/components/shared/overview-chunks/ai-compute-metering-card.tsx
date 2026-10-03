@@ -83,10 +83,10 @@ export function AiComputeMeteringCard() {
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Information className="size-3.5 text-muted-foreground/70" />
             <span className="font-medium">AI Compute & Edge Gateway Health</span>
-            <span className="text-[10px] font-mono text-muted-foreground">({dateRange})</span>
+            <span className="text-xs tabular-nums text-muted-foreground">({dateRange})</span>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-xs font-medium text-success-foreground">
+            <span className="size-1.5 rounded-full bg-success animate-pulse" />
             Edge Clusters Normal
           </span>
         </div>
@@ -94,49 +94,49 @@ export function AiComputeMeteringCard() {
         {/* Compute & Token Metrics Grid */}
         <div className="mt-2 grid grid-cols-3 gap-2">
           <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5">
-            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Cpu className="size-3 text-primary" />
               <span>Token Burn</span>
             </div>
-            <p className="mt-1 text-base font-bold font-mono text-foreground">
+            <p className="mt-1 text-base font-bold tabular-nums text-foreground">
               {tokenBurn}
             </p>
-            <p className="text-[10px] text-muted-foreground">{tokenUnit}</p>
+            <p className="text-xs text-muted-foreground">{tokenUnit}</p>
           </div>
 
           <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5">
-            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-              <Zap className="size-3 text-amber-500" />
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Zap className="size-3 text-warning-foreground" />
               <span>Cache Hit</span>
             </div>
-            <p className="mt-1 text-base font-bold font-mono text-foreground">
+            <p className="mt-1 text-base font-bold tabular-nums text-foreground">
               {cacheHit}
             </p>
-            <p className="text-[10px] text-emerald-600 dark:text-emerald-400">{cacheSaving}</p>
+            <p className="text-xs text-success-foreground">{cacheSaving}</p>
           </div>
 
           <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5">
-            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Globe className="size-3 text-indigo-500" />
               <span>Median P99</span>
             </div>
-            <p className="mt-1 text-base font-bold font-mono text-foreground">
+            <p className="mt-1 text-base font-bold tabular-nums text-foreground">
               {p99Latency}
             </p>
-            <p className="text-[10px] text-muted-foreground">global edge</p>
+            <p className="text-xs text-muted-foreground">global edge</p>
           </div>
         </div>
 
         {/* Regional Gateway Table */}
         <div className="mt-3 space-y-1.5">
-          <p className="text-[11px] font-medium text-foreground/80">Regional Ingress Gateways</p>
+          <p className="text-xs font-medium text-foreground/80">Regional Ingress Gateways</p>
           <div className="divide-y divide-border/40 text-xs">
             {EDGE_REGIONS.map((r) => (
               <div key={r.region} className="flex items-center justify-between py-1.5">
                 <span className="text-foreground/90 font-normal">{r.region}</span>
-                <div className="flex items-center gap-2 font-mono text-[11px]">
+                <div className="flex items-center gap-2 tabular-nums text-xs">
                   <span className="text-muted-foreground">{r.uptime}</span>
-                  <span className="rounded-xs bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                  <span className="rounded-xs bg-success-soft px-1.5 py-0.5 text-xs font-semibold text-success-foreground">
                     {r.latency}
                   </span>
                 </div>
@@ -147,7 +147,7 @@ export function AiComputeMeteringCard() {
       </div>
 
       {/* Operational Explanation Paragraph */}
-      <div className="mt-4 border-t border-border/40 pt-3 text-[11px] leading-relaxed text-muted-foreground">
+      <div className="mt-4 border-t border-border/40 pt-3 text-xs leading-relaxed text-muted-foreground">
         <span className="font-semibold text-foreground">Infrastructure Telemetry: </span>
         {explanation}
       </div>

@@ -20,7 +20,7 @@ const CATEGORY_CONFIG: Record<
   Billing: {
     label: "Billing",
     icon: CreditCard,
-    className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    className: "bg-success-soft text-success-foreground border-success/20",
   },
   Team: {
     label: "Team",
@@ -30,7 +30,7 @@ const CATEGORY_CONFIG: Record<
   API: {
     label: "API",
     icon: Terminal,
-    className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20",
+    className: "bg-info-soft text-info-foreground border-primary/20",
   },
   System: {
     label: "System",
@@ -46,12 +46,12 @@ const STATUS_CONFIG: Record<
   success: {
     label: "Success",
     icon: CheckCircle,
-    className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+    className: "bg-success-soft text-success-foreground border-success/20",
   },
   warning: {
     label: "Warning",
     icon: Warning,
-    className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
+    className: "bg-warning-soft text-warning-foreground border-warning/20",
   },
   error: {
     label: "Failed",
@@ -103,7 +103,7 @@ export function getAuditLogsColumns(
         return (
           <Badge
             variant="outline"
-            className={`text-[10px] px-2 py-0.5 h-5 gap-1 font-mono uppercase tracking-wider ${catConfig.className}`}
+            className={`text-xs px-2 py-0.5 h-5 gap-1 tabular-nums uppercase tracking-wider ${catConfig.className}`}
           >
             <CatIcon className="size-3" />
             {catConfig.label}
@@ -142,7 +142,7 @@ export function getAuditLogsColumns(
               {item.targetResource}
             </span>
             {item.details && (
-              <span className="text-[11px] text-muted-foreground truncate" title={item.details}>
+              <span className="text-xs text-muted-foreground truncate" title={item.details}>
                 {item.details}
               </span>
             )}
@@ -162,7 +162,7 @@ export function getAuditLogsColumns(
             <span className="text-xs font-mono text-foreground font-medium">
               {item.ipAddress}
             </span>
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {item.location}
             </span>
           </div>

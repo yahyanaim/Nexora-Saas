@@ -22,6 +22,7 @@ import { useQuery } from "@tanstack/react-query"
 import { getFilesColumns } from "./files-columns"
 import { FilesSummaryCards } from "./files-summary-cards"
 import { FileDialog } from "./file-dialog"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction = { type: "delete"; file: FileItem } | null
 
@@ -314,6 +315,7 @@ export default function FilesPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
+      <PageHeader />
       <FilesSummaryCards
         files={files}
         summary={summaryData}

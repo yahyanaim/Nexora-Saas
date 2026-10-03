@@ -186,7 +186,7 @@ export function FileUploadDialog({
               isDragging
                 ? "border-primary bg-primary/5"
                 : "border-muted-foreground/25 hover:border-primary/50",
-              files.length > 0 && "border-emerald-500/50 bg-emerald-500/5"
+              files.length > 0 && "border-success/20 bg-success-soft"
             )}
           >
             <input
@@ -236,7 +236,7 @@ export function FileUploadDialog({
                       className={cn(
                         "flex items-center gap-3 rounded-lg border p-3",
                         isComplete
-                          ? "border-emerald-500/30 bg-emerald-500/5"
+                          ? "border-success/20 bg-success-soft"
                           : isError
                             ? "border-destructive/30 bg-destructive/5"
                             : "bg-muted/30"
@@ -261,7 +261,7 @@ export function FileUploadDialog({
                           </span>
                         )}
                         {isComplete && (
-                          <CheckCircle className="h-5 w-5 text-emerald-500" />
+                          <CheckCircle className="h-5 w-5 text-success-foreground" />
                         )}
                         {isError && (
                           <AlertCircle className="h-5 w-5 text-destructive" />
@@ -286,7 +286,7 @@ export function FileUploadDialog({
         <DialogFooter className="border-t pt-4">
           <Button
             className="flex-1"
-            variant="destructive"
+            variant="outline"
             onClick={() => handleOpenChange(false)}
           >
             {t("cancel")}

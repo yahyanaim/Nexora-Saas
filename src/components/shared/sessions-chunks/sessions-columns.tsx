@@ -37,17 +37,17 @@ export function getSessionsColumns(
     [SessionStatus.ACTIVE]: {
       label: t("active"),
       className:
-        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-transparent",
+        "bg-success-soft text-success-foreground border-transparent",
     },
     [SessionStatus.EXPIRED]: {
       label: t("inactive"),
       className:
-        "bg-red-500/10 text-red-600 dark:text-red-400 border-transparent",
+        "bg-danger-soft text-danger-foreground border-transparent",
     },
     [SessionStatus.INACTIVE]: {
       label: t("inactive"),
       className:
-        "bg-red-500/10 text-red-600 dark:text-red-400 border-transparent",
+        "bg-danger-soft text-danger-foreground border-transparent",
     },
   }
 

@@ -49,3 +49,26 @@ test("login through the same-origin proxy reaches the requested page", async ({ 
   await expect(page.getByText("Proxy User").first()).toBeVisible()
   expect(violations).toEqual([])
 })
+
+test("phone layout: drawer navigation and no horizontal overflow", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true })
+  const page = await context.newPage()
+
+  await page.goto("/en/dashboard/overview")
+  await page.locator('input[type="email"], input[name="email"]').first().fill("founder@saas.test")
+  await page.locator('input[type="password"]').fill("Password123!")
+  await page.locator('button[type="submit"]').first().click()
+  await expect(page).toHaveURL(/\/en\/dashboard\/overview$/)
+
+  // The desktop rail is hidden on phones; navigation lives in the drawer
+  await page.getByRole("button", { name: "Open menu" }).click()
+  await page.getByRole("link", { name: "Invoices" }).click()
+  await expect(page).toHaveURL(/\/en\/dashboard\/invoices$/)
+  await expect(page.getByRole("heading", { level: 1, name: "Invoices" })).toBeVisible()
+
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth
+  )
+  expect(overflow).toBeLessThanOrEqual(0)
+  await context.close()
+})

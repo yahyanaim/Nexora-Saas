@@ -11,6 +11,18 @@ interface DialogContextType {
 
 const DialogContext = React.createContext<DialogContextType | null>(null)
 
+/** Closes an open overlay when Escape is pressed (keyboard accessibility). */
+function useEscapeToClose(open: boolean, close: () => void) {
+  React.useEffect(() => {
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close()
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [open, close])
+}
+
 export function Dialog({
   children,
   open: controlledOpen,
@@ -34,6 +46,9 @@ export function Dialog({
     },
     [controlledOpen, onOpenChange]
   )
+
+  const close = React.useCallback(() => setOpen(false), [setOpen])
+  useEscapeToClose(open, close)
 
   return (
     <DialogContext.Provider value={{ open, setOpen }}>
@@ -92,7 +107,7 @@ export function DialogOverlay({
     <div
       onClick={() => context?.setOpen(false)}
       className={cn(
-        "fixed inset-0 z-50 bg-black/70 backdrop-blur-xs animate-in fade-in-0 duration-200",
+        "fixed inset-0 z-50 bg-gray-950/40 backdrop-blur-[2px] animate-in fade-in-0 duration-200",
         className
       )}
       {...props}
@@ -125,7 +140,7 @@ export function DialogContent({
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-50 w-full max-w-lg rounded-xl border border-border/80 bg-card p-6 text-card-foreground shadow-2xl animate-in zoom-in-95 fade-in-0 duration-200",
+          "relative z-50 w-full max-w-lg rounded-3xl border border-border bg-card p-6 text-card-foreground shadow-2xl animate-in zoom-in-95 fade-in-0 duration-200",
           className
         )}
         {...props}
@@ -135,7 +150,7 @@ export function DialogContent({
           <button
             type="button"
             onClick={() => context?.setOpen(false)}
-            className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+            className="absolute end-4 top-4 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
           >
             <Close className="size-4" />
             <span className="sr-only">Close</span>

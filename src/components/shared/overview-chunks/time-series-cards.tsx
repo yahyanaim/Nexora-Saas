@@ -151,16 +151,16 @@ export function SessionOverTimeCard() {
             <Information className="size-3.5 text-muted-foreground/70" />
             <span className="font-medium">API Request Throughput</span>
           </div>
-          <span className="text-[10px] font-mono text-muted-foreground">
+          <span className="text-xs tabular-nums text-muted-foreground">
             {dateRange}
           </span>
         </div>
         <div className="mt-1 flex items-baseline gap-2">
-          <span className="text-2xl font-bold tracking-tight text-foreground font-mono">
+          <span className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {headline}
           </span>
           <span className="text-xs text-muted-foreground">{unit}</span>
-          <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+          <span className="text-xs font-medium text-success-foreground">
             99.99% Uptime
           </span>
         </div>
@@ -197,7 +197,7 @@ export function SessionOverTimeCard() {
                   return (
                     <div className="rounded-md border border-border/80 bg-popover px-2.5 py-1.5 text-xs shadow-md">
                       <span className="font-medium text-foreground">{label}: </span>
-                      <span className="font-mono text-primary font-medium">
+                      <span className="tabular-nums text-primary font-medium">
                         {payload[0]?.value}k req
                       </span>
                     </div>
@@ -227,7 +227,7 @@ export function SessionOverTimeCard() {
       </div>
 
       {/* Operational Explanation Paragraph */}
-      <div className="mt-3 border-t border-border/40 pt-2.5 text-[11px] leading-relaxed text-muted-foreground">
+      <div className="mt-3 border-t border-border/40 pt-2.5 text-xs leading-relaxed text-muted-foreground">
         <span className="font-semibold text-foreground">Throughput Telemetry: </span>
         {explanation}
       </div>
@@ -365,16 +365,16 @@ export function AverageOrderValueCard() {
             <Information className="size-3.5 text-muted-foreground/70" />
             <span className="font-medium">Average Revenue Per Account (ARPU)</span>
           </div>
-          <span className="text-[10px] font-mono text-muted-foreground">
+          <span className="text-xs tabular-nums text-muted-foreground">
             {dateRange}
           </span>
         </div>
         <div className="mt-1 flex items-baseline gap-2">
-          <span className="text-2xl font-bold tracking-tight text-foreground font-mono">
+          <span className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {currencySymbol}{latestVal.toLocaleString()}
           </span>
           <span className="text-xs text-muted-foreground">/ mo</span>
-          <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+          <span className="text-xs font-medium text-success-foreground">
             {deltaText}
           </span>
         </div>
@@ -412,7 +412,7 @@ export function AverageOrderValueCard() {
                   return (
                     <div className="rounded-md border border-border/80 bg-popover px-2.5 py-1.5 text-xs shadow-md">
                       <span className="font-medium text-foreground">{label}: </span>
-                      <span className="font-mono text-primary font-medium">
+                      <span className="tabular-nums text-primary font-medium">
                         {currencySymbol}{payload[0]?.value} / account
                       </span>
                     </div>
@@ -432,7 +432,7 @@ export function AverageOrderValueCard() {
       </div>
 
       {/* Operational Explanation Paragraph */}
-      <div className="mt-3 border-t border-border/40 pt-2.5 text-[11px] leading-relaxed text-muted-foreground">
+      <div className="mt-3 border-t border-border/40 pt-2.5 text-xs leading-relaxed text-muted-foreground">
         <span className="font-semibold text-foreground">Unit Economics: </span>
         {explanation}
       </div>

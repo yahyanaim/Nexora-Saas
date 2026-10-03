@@ -214,18 +214,18 @@ export function TotalSalesChart() {
             <Information className="size-3.5 text-muted-foreground/70" />
             <span className="font-medium">MRR & Recurring Revenue Growth</span>
           </div>
-          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
             {dateRange}
           </span>
         </div>
         <div className="mt-1 flex flex-wrap items-baseline gap-3">
-          <span className="text-2xl font-bold tracking-tight text-foreground font-mono">
+          <span className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
             {formatCurrency(latestCurrent / (currencyRate * workspaceMultiplier))}
           </span>
-          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+          <span className="text-xs font-medium text-success-foreground">
             {deltaText}
           </span>
-          <span className="hidden sm:inline-block text-xs text-muted-foreground font-mono">
+          <span className="hidden sm:inline-block text-xs text-muted-foreground tabular-nums">
             (ARR: {formatCurrency(arrRunRate / (currencyRate * workspaceMultiplier), { compact: true })})
           </span>
         </div>
@@ -269,16 +269,16 @@ export function TotalSalesChart() {
                   <div className="rounded-lg border border-border/80 bg-popover px-3 py-2 text-xs shadow-md">
                     <p className="font-semibold text-foreground">{label}</p>
                     <div className="mt-1 space-y-1">
-                      <p className="text-primary font-mono font-medium">
+                      <p className="text-primary tabular-nums font-medium">
                         Current: {currencySymbol}{curr.toLocaleString()}
                       </p>
                       {prev !== null && (
-                        <p className="text-muted-foreground font-mono text-[11px]">
+                        <p className="text-muted-foreground tabular-nums text-xs">
                           {compareMode}: {currencySymbol}{prev.toLocaleString()}
                         </p>
                       )}
                       {delta !== null && (
-                        <p className="text-emerald-600 dark:text-emerald-400 font-mono text-[11px]">
+                        <p className="text-success-foreground tabular-nums text-xs">
                           Variance: {delta >= 0 ? "+" : ""}{currencySymbol}{delta.toLocaleString()}
                         </p>
                       )}
@@ -326,7 +326,7 @@ export function TotalSalesChart() {
             </div>
           )}
         </div>
-        <span className="font-mono text-[11px] text-muted-foreground">
+        <span className="tabular-nums text-xs text-muted-foreground">
           Scope: {workspace}
         </span>
       </div>

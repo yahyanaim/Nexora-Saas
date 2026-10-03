@@ -26,17 +26,17 @@ export function getSystemIssuesColumns(
     [IssueStatus.OPEN]: {
       label: t("open"),
       className:
-        "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-transparent",
+        "bg-warning-soft text-warning-foreground border-transparent",
     },
     [IssueStatus.IN_PROGRESS]: {
       label: t("inProgress"),
       className:
-        "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-transparent",
+        "bg-info-soft text-info-foreground border-transparent",
     },
     [IssueStatus.RESOLVED]: {
       label: t("resolved"),
       className:
-        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-transparent",
+        "bg-success-soft text-success-foreground border-transparent",
     },
     [IssueStatus.CLOSED]: {
       label: t("closed"),
@@ -49,8 +49,8 @@ export function getSystemIssuesColumns(
     { label: string; color: string }
   > = {
     [IssuePriority.LOW]: { label: t("low"), color: "text-muted-foreground" },
-    [IssuePriority.MEDIUM]: { label: t("medium"), color: "text-amber-500" },
-    [IssuePriority.HIGH]: { label: t("high"), color: "text-orange-500" },
+    [IssuePriority.MEDIUM]: { label: t("medium"), color: "text-warning-foreground" },
+    [IssuePriority.HIGH]: { label: t("high"), color: "text-warning-foreground" },
     [IssuePriority.CRITICAL]: {
       label: t("critical"),
       color: "text-destructive",

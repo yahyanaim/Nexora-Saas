@@ -1,33 +1,40 @@
 "use client"
-import React from "react"
-import { SidebarProvider } from "../ui/sidebar"
-import { DashboardSidebar } from "./sidebar-chunks/dashboard-sidebar"
-import { DashboardHeader } from "./header-chunks/dashboard-header"
+import React, { useState } from "react"
+import { DashboardTopbar } from "./navigation/dashboard-topbar"
+import { DashboardRail } from "./navigation/dashboard-rail"
+import { MobileNavDrawer } from "./navigation/mobile-nav-drawer"
 import { LockScreen } from "./lock-screen"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 import { ErrorBoundary } from "./error-boundary"
+
 interface Props {
   children: React.ReactNode
 }
 
+/**
+ * App shell: floating top bar, floating icon rail (md+) and a drawer for
+ * small screens, around a scrollable content area on the grey canvas.
+ */
 export const DashboardLayout = ({ children }: Props) => {
   const { isPasscodeLocked } = useAuthGuard()
   const { isUnlocked } = useLockScreenStore()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   if (isPasscodeLocked && !isUnlocked) return <LockScreen />
 
   return (
-    <SidebarProvider className="flex h-dvh w-full overflow-hidden bg-background">
-      <DashboardSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-        <DashboardHeader />
-        <main className="flex-1 overflow-auto">
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
+    <div className="flex h-dvh w-full flex-col overflow-hidden bg-background">
+      <div className="px-4 pt-3 md:px-6 md:pt-4">
+        <DashboardTopbar onOpenMenu={() => setMenuOpen(true)} />
+      </div>
+      <div className="flex min-h-0 flex-1 md:ps-6">
+        <DashboardRail className="my-6 hidden md:flex" />
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>
-    </SidebarProvider>
+      <MobileNavDrawer open={menuOpen} onOpenChange={setMenuOpen} />
+    </div>
   )
 }

@@ -17,6 +17,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction = {
   type: "resolve" | "close" | "progress"
@@ -163,6 +164,7 @@ export default function SystemIssuesPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
+      <PageHeader />
       <DataTable
         manual
         title={t("systemIssues")}

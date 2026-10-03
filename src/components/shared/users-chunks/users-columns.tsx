@@ -30,7 +30,7 @@ export function getUsersColumns(
     [UserStatus.ACTIVE]: {
       label: t("active"),
       className:
-        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-transparent",
+        "bg-success-soft text-success-foreground border-transparent",
     },
     [UserStatus.INACTIVE]: {
       label: t("inactive"),
@@ -39,7 +39,7 @@ export function getUsersColumns(
     [UserStatus.NOT_VERIFIED]: {
       label: t("notVerified"),
       className:
-        "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-transparent",
+        "bg-warning-soft text-warning-foreground border-transparent",
     },
     [UserStatus.BANNED]: {
       label: t("banned"),
@@ -63,7 +63,7 @@ export function getUsersColumns(
     [UserType.STAFF]: {
       label: t("staff"),
       className:
-        "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-transparent",
+        "bg-info-soft text-info-foreground border-transparent",
     },
     [UserType.ADMIN]: {
       label: t("admin"),

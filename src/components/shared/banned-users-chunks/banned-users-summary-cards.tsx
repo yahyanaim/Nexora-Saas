@@ -92,13 +92,13 @@ export function BannedUsersSummaryCards({
       key: "staffSuspensions",
       title: t("staffSuspensions") || "Staff Suspensions",
       value: summary.staffBans,
-      valueClassName: "text-amber-600 dark:text-amber-400",
+      valueClassName: "text-warning-foreground",
       badge: {
         label: t("staff") || "Staff",
         icon: ShieldUser,
         variant: "outline",
         className:
-          "gap-1 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+          "gap-1 border-warning/20 bg-warning-soft text-warning-foreground",
       },
       footer: {
         icon: ShieldUser,

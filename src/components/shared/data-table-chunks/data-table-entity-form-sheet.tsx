@@ -57,7 +57,7 @@ export function DataTableEntityFormSheet({
 
         <SheetFooter className="flex-row border-t px-6 py-4 gap-3">
           <Button
-            variant="destructive"
+            variant="outline"
             className="flex-1"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}

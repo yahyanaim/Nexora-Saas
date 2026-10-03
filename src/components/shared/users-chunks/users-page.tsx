@@ -20,6 +20,7 @@ import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { useTranslations } from "next-intl"
 import { Plus } from "@/components/ui/carbon/icons"
 import { UsersSummaryCards } from "./users-summary-cards"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction =
   | { type: "delete"; user: User }
@@ -168,6 +169,7 @@ export default function UsersPage() {
   return (
     <>
       <div className="p-4 md:p-6 space-y-6">
+        <PageHeader />
         <UsersSummaryCards
           users={users}
           totalCount={totalItems}

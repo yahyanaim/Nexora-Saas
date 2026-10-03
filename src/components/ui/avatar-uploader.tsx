@@ -227,8 +227,8 @@ export const AvatarUploader = memo(
           </div>
           {isCommunity && (
             <>
-              <div className="absolute -right-1 -bottom-1 z-0 h-full w-full rounded-full bg-green-500 shadow-md" />
-              <div className="absolute bottom-1 -left-2 z-0 h-full w-full rounded-full bg-blue-500 shadow-md" />
+              <div className="absolute -right-1 -bottom-1 z-0 h-full w-full rounded-full bg-success shadow-md" />
+              <div className="absolute bottom-1 -left-2 z-0 h-full w-full rounded-full bg-primary shadow-md" />
               <div className="absolute -bottom-1 -left-1 z-0 h-full w-full rounded-full bg-white shadow-md" />
               <div className="absolute -top-1 left-1 z-0 h-full w-full rounded-full bg-gray-500 shadow-md" />
             </>

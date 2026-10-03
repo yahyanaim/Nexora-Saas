@@ -128,7 +128,7 @@ export function CommandPalette({
           <CommandItem
             onSelect={() => runCommand(() => router.push("/en/dashboard/staffs"))}
           >
-            <ShieldUser className="mr-2 size-4 text-blue-500" />
+            <ShieldUser className="mr-2 size-4 text-info-foreground" />
             <span>Staff Directory</span>
             <CommandShortcut>G S</CommandShortcut>
           </CommandItem>
@@ -142,7 +142,7 @@ export function CommandPalette({
           <CommandItem
             onSelect={() => runCommand(() => router.push("/en/dashboard/subscriptions"))}
           >
-            <BadgeCheck className="mr-2 size-4 text-emerald-500" />
+            <BadgeCheck className="mr-2 size-4 text-success-foreground" />
             <span>Subscriptions & Usage</span>
           </CommandItem>
           <CommandItem
@@ -160,7 +160,7 @@ export function CommandPalette({
           <CommandItem
             onSelect={() => runCommand(() => router.push("/en/dashboard/projects"))}
           >
-            <FolderKanban className="mr-2 size-4 text-amber-500" />
+            <FolderKanban className="mr-2 size-4 text-warning-foreground" />
             <span>Projects Workspace</span>
           </CommandItem>
           <CommandItem
@@ -172,14 +172,14 @@ export function CommandPalette({
           <CommandItem
             onSelect={() => runCommand(() => router.push("/en/dashboard/developer"))}
           >
-            <Terminal className="mr-2 size-4 text-blue-500" />
+            <Terminal className="mr-2 size-4 text-info-foreground" />
             <span>Developer & API Portal</span>
             <CommandShortcut>G D</CommandShortcut>
           </CommandItem>
           <CommandItem
             onSelect={() => runCommand(() => router.push("/en/dashboard/audit-logs"))}
           >
-            <History className="mr-2 size-4 text-emerald-500" />
+            <History className="mr-2 size-4 text-success-foreground" />
             <span>Audit Logs & Security Timeline</span>
             <CommandShortcut>G A</CommandShortcut>
           </CommandItem>
@@ -207,7 +207,7 @@ export function CommandPalette({
                 />
                 <div className="flex flex-col">
                   <span className="font-medium text-xs">{user.name}</span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {user.email}
                   </span>
                 </div>
@@ -235,11 +235,11 @@ export function CommandPalette({
                   <span className="font-medium text-xs">
                     {inv.invoiceNumber} — {inv.user?.name || "Client"}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     ${inv.total?.toLocaleString() ?? "0"} · {inv.status}
                   </span>
                 </div>
-                <span className="ml-auto text-[10px] uppercase text-muted-foreground">
+                <span className="ml-auto text-xs uppercase text-muted-foreground">
                   {inv.status}
                 </span>
               </CommandItem>
@@ -252,7 +252,7 @@ export function CommandPalette({
         {/* 4. Quick Actions */}
         <CommandGroup heading="Actions & System">
           <CommandItem onSelect={() => runCommand(() => setTheme("light"))}>
-            <Sun className="mr-2 size-4 text-amber-500" />
+            <Sun className="mr-2 size-4 text-warning-foreground" />
             <span>Switch to IBM Carbon Light Mode</span>
           </CommandItem>
           <CommandItem onSelect={() => runCommand(() => setTheme("dark"))}>

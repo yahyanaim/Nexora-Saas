@@ -37,17 +37,17 @@ export function getContentReportsColumns(
     [ReportStatus.PENDING]: {
       label: t("pending"),
       className:
-        "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-transparent",
+        "bg-warning-soft text-warning-foreground border-transparent",
     },
     [ReportStatus.REVIEWING]: {
       label: t("reviewing"),
       className:
-        "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-transparent",
+        "bg-info-soft text-info-foreground border-transparent",
     },
     [ReportStatus.RESOLVED]: {
       label: t("resolved"),
       className:
-        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-transparent",
+        "bg-success-soft text-success-foreground border-transparent",
     },
     [ReportStatus.DISMISSED]: {
       label: t("dismissed"),

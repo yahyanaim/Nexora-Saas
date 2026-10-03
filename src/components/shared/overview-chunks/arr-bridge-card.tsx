@@ -200,7 +200,7 @@ export function ArrBridgeCard() {
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Information className="size-3.5 text-muted-foreground/70" />
             <span className="font-medium">ARR Expansion Dynamics & Retention</span>
-            <span className="text-[10px] font-mono text-muted-foreground">({dateRange})</span>
+            <span className="text-xs tabular-nums text-muted-foreground">({dateRange})</span>
           </div>
 
           <div className="flex items-center rounded-lg border border-border/60 bg-muted/30 p-0.5 text-xs">
@@ -236,19 +236,19 @@ export function ArrBridgeCard() {
           <div className="mt-2 space-y-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
-                <span className="text-2xl font-bold tracking-tight text-foreground font-mono">
+                <span className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
                   {headlineAmount}
                 </span>
-                <span className="ml-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="ml-2 text-xs font-semibold text-success-foreground">
                   {netDeltaBadge}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground font-mono">
+                <span className="text-xs text-muted-foreground tabular-nums">
                   Target: {formatCurrency(2200000, { compact: true })} (90.5%)
                 </span>
                 {/* View toggle pill */}
-                <div className="flex items-center rounded-md border border-border/50 bg-muted/40 p-0.5 text-[10px]">
+                <div className="flex items-center rounded-md border border-border/50 bg-muted/40 p-0.5 text-xs">
                   <button
                     type="button"
                     onClick={() => setChartView("components")}
@@ -287,7 +287,7 @@ export function ArrBridgeCard() {
 
                   return (
                     <div key={step.label} className="group flex flex-col items-center justify-end gap-1.5">
-                      <span className="font-mono text-[11px] font-semibold text-foreground tracking-tight transition-transform group-hover:scale-105">
+                      <span className="tabular-nums text-xs font-semibold text-foreground tracking-tight transition-transform group-hover:scale-105">
                         {step.amount}
                       </span>
                       
@@ -304,21 +304,21 @@ export function ArrBridgeCard() {
                           className={cn(
                             "w-full rounded-t-md rounded-b-none transition-all duration-300 shadow-2xs",
                             isAnchor && "bg-primary shadow-primary/20",
-                            isPositive && "bg-emerald-500 shadow-emerald-500/20",
-                            isNegative && "bg-rose-500 shadow-rose-500/20"
+                            isPositive && "bg-success shadow-emerald-500/20",
+                            isNegative && "bg-destructive shadow-rose-500/20"
                           )}
                         />
                       </div>
 
                       <div className="flex flex-col items-center">
-                        <span className="text-center text-[10px] font-medium text-foreground line-clamp-1">
+                        <span className="text-center text-xs font-medium text-foreground line-clamp-1">
                           {step.shortLabel}
                         </span>
                         <span
                           className={cn(
-                            "font-mono text-[9px] font-medium",
-                            isPositive && "text-emerald-600 dark:text-emerald-400",
-                            isNegative && "text-rose-600 dark:text-rose-400",
+                            "tabular-nums text-xs font-medium",
+                            isPositive && "text-success-foreground",
+                            isNegative && "text-danger-foreground",
                             isAnchor && "text-muted-foreground"
                           )}
                         >
@@ -358,7 +358,7 @@ export function ArrBridgeCard() {
                           return (
                             <div className="rounded-lg border border-border/80 bg-popover/95 px-3 py-2 text-xs shadow-md backdrop-blur-md">
                               <p className="font-semibold text-foreground">{data.label}</p>
-                              <p className="font-mono text-primary font-bold">{data.formatted}</p>
+                              <p className="tabular-nums text-primary font-bold">{data.formatted}</p>
                             </div>
                           )
                         }
@@ -376,7 +376,7 @@ export function ArrBridgeCard() {
           <div className="mt-2 space-y-2.5">
             <div className="flex items-center justify-between text-xs">
               <span className="font-medium text-foreground">At-Risk Accounts Requiring Intervention</span>
-              <span className="text-rose-600 dark:text-rose-400 font-medium text-[11px]">3 accounts flagged</span>
+              <span className="text-danger-foreground font-medium text-xs">3 accounts flagged</span>
             </div>
 
             <div className="divide-y divide-border/40 text-xs">
@@ -386,21 +386,21 @@ export function ArrBridgeCard() {
                     <ShieldAlert
                       className={cn(
                         "size-4 shrink-0",
-                        account.riskLevel === "high" ? "text-rose-500" : "text-amber-500"
+                        account.riskLevel === "high" ? "text-danger-foreground" : "text-warning-foreground"
                       )}
                     />
                     <div>
                       <p className="font-medium text-foreground">{account.name}</p>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         {account.tier} · {account.seats} seats
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="font-mono font-medium text-rose-600 dark:text-rose-400">
+                    <span className="tabular-nums font-medium text-danger-foreground">
                       {account.usageDrop}
                     </span>
-                    <p className="text-[10px] text-muted-foreground">30d activity drop</p>
+                    <p className="text-xs text-muted-foreground">30d activity drop</p>
                   </div>
                 </div>
               ))}
@@ -410,7 +410,7 @@ export function ArrBridgeCard() {
       </div>
 
       {/* Operational Explanation Paragraph */}
-      <div className="mt-4 border-t border-border/40 pt-3 text-[11px] leading-relaxed text-muted-foreground">
+      <div className="mt-4 border-t border-border/40 pt-3 text-xs leading-relaxed text-muted-foreground">
         <span className="font-semibold text-foreground">Executive Growth Summary: </span>
         {explanation}
       </div>

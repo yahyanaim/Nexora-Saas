@@ -28,7 +28,7 @@ export function getBannedUsersColumns(
     [UserType.STAFF]: {
       label: t("staff"),
       className:
-        "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-transparent",
+        "bg-info-soft text-info-foreground border-transparent",
     },
     [UserType.ADMIN]: {
       label: t("admin"),
@@ -58,7 +58,7 @@ export function getBannedUsersColumns(
                 {user.status && (
                   <Badge
                     variant="destructive"
-                    className="border-transparent px-1.5 py-0 text-[10px] capitalize md:text-xs"
+                    className="border-transparent px-1.5 py-0 text-xs capitalize md:text-xs"
                   >
                     {t(user.status)}
                   </Badge>

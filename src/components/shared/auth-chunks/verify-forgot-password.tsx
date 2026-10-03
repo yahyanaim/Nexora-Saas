@@ -106,19 +106,19 @@ export function VerifyForgotPassword({ setAuthSections, email, setResetToken }: 
                   onChange={field.onChange}
                 >
                   <InputOTPGroup className="gap-1.5">
-                    <InputOTPSlot index={0} className="h-10 w-10 rounded-md border-border/60 text-sm font-mono" />
-                    <InputOTPSlot index={1} className="h-10 w-10 rounded-md border-border/60 text-sm font-mono" />
-                    <InputOTPSlot index={2} className="h-10 w-10 rounded-md border-border/60 text-sm font-mono" />
-                    <InputOTPSlot index={3} className="h-10 w-10 rounded-md border-border/60 text-sm font-mono" />
-                    <InputOTPSlot index={4} className="h-10 w-10 rounded-md border-border/60 text-sm font-mono" />
-                    <InputOTPSlot index={5} className="h-10 w-10 rounded-md border-border/60 text-sm font-mono" />
+                    <InputOTPSlot index={0} className="h-10 w-10 rounded-md border-border/60 text-sm tabular-nums" />
+                    <InputOTPSlot index={1} className="h-10 w-10 rounded-md border-border/60 text-sm tabular-nums" />
+                    <InputOTPSlot index={2} className="h-10 w-10 rounded-md border-border/60 text-sm tabular-nums" />
+                    <InputOTPSlot index={3} className="h-10 w-10 rounded-md border-border/60 text-sm tabular-nums" />
+                    <InputOTPSlot index={4} className="h-10 w-10 rounded-md border-border/60 text-sm tabular-nums" />
+                    <InputOTPSlot index={5} className="h-10 w-10 rounded-md border-border/60 text-sm tabular-nums" />
                   </InputOTPGroup>
                 </InputOTP>
               )}
             />
           </div>
           {errors.otp?.message && (
-            <p className="text-center text-[11px] font-medium text-destructive mt-1">
+            <p className="text-center text-xs font-medium text-destructive mt-1">
               {errors.otp.message}
             </p>
           )}
@@ -128,7 +128,7 @@ export function VerifyForgotPassword({ setAuthSections, email, setResetToken }: 
         <Button
           type="submit"
           disabled={isVerifying}
-          className="w-full h-10 rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200 font-medium text-xs transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 cursor-pointer"
         >
           {isVerifying && <Loader2 className="size-4 animate-spin text-current" />}
           <span>{isVerifying ? "Verifying..." : "Continue"}</span>
@@ -137,7 +137,7 @@ export function VerifyForgotPassword({ setAuthSections, email, setResetToken }: 
 
       {/* Demo Code Helper */}
       <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 text-center">
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Testing locally?
           <button
             type="button"

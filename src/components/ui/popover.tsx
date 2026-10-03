@@ -124,7 +124,7 @@ export function PopoverContent({
     <div
       role="dialog"
       className={cn(
-        "absolute z-50 min-w-[14rem] rounded-xl border border-border/70 bg-popover/95 p-4 text-popover-foreground shadow-xl backdrop-blur-md animate-in fade-in-0 zoom-in-95 duration-150",
+        "absolute z-50 min-w-[14rem] rounded-2xl border border-border bg-popover p-4 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 duration-150",
         align === "end" ? "right-0" : align === "center" ? "left-1/2 -translate-x-1/2" : "left-0",
         side === "top" ? "bottom-full mb-2" : "top-full mt-2",
         className

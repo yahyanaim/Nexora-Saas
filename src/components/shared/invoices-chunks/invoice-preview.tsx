@@ -82,14 +82,14 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                 <h2 className="text-xl font-bold tracking-tight text-foreground">
                   {fiscalConfig.companyName}
                 </h2>
-                <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs">
+                <Badge variant="outline" className="border-primary/20 bg-info-soft text-info-foreground text-xs">
                   Enterprise
                 </Badge>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {fiscalConfig.address}, {fiscalConfig.city}, {fiscalConfig.country}
               </p>
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-mono text-muted-foreground/80">
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tabular-nums text-muted-foreground/80">
                 <span>ICE: <strong className="text-foreground">{fiscalConfig.ice}</strong></span>
                 <span>IF: <strong className="text-foreground">{fiscalConfig.ifNumber}</strong></span>
                 <span>RC: <strong className="text-foreground">{fiscalConfig.rcNumber}</strong></span>
@@ -103,25 +103,25 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 INVOICE
               </span>
-              <span className="font-mono text-base font-bold text-foreground">
+              <span className="tabular-nums text-base font-bold text-foreground">
                 {invoice.invoiceNumber}
               </span>
             </div>
             <div className="mt-2">
               {isPaid && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-xs font-medium text-success-foreground border border-success/20">
                   <CheckCircle2 className="h-3.5 w-3.5" />
                   {t("paid") || "Paid in Full"}
                 </span>
               )}
               {isPending && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-soft px-3 py-1 text-xs font-medium text-warning-foreground border border-warning/20">
                   <Clock className="h-3.5 w-3.5" />
                   {t("pending") || "Pending Payment"}
                 </span>
               )}
               {isOverdue && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 px-3 py-1 text-xs font-medium text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-3 py-1 text-xs font-medium text-danger-foreground border border-destructive/20">
                   <AlertTriangle className="h-3.5 w-3.5" />
                   {t("overdue") || "Payment Overdue"}
                 </span>
@@ -171,7 +171,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                 <p className="text-muted-foreground text-xs">{customerEmail}</p>
               )}
               <div className="pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                <ShieldCheck className="h-3.5 w-3.5 text-success-foreground" />
                 <span>Verified Corporate Account</span>
               </div>
             </div>
@@ -230,13 +230,13 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                   <td className="px-4 py-3 text-center text-xs text-muted-foreground">
                     Monthly
                   </td>
-                  <td className="px-4 py-3 text-center text-xs text-foreground font-mono">
+                  <td className="px-4 py-3 text-center text-xs text-foreground tabular-nums">
                     {item.quantity}
                   </td>
-                  <td className="px-4 py-3 text-right text-xs text-foreground font-mono">
+                  <td className="px-4 py-3 text-right text-xs text-foreground tabular-nums">
                     {formatCurrency(item.unitPrice)}
                   </td>
-                  <td className="px-4 py-3 text-right text-sm font-semibold text-foreground font-mono">
+                  <td className="px-4 py-3 text-right text-sm font-semibold text-foreground tabular-nums">
                     {formatCurrency(item.quantity * item.unitPrice)}
                   </td>
                 </tr>
@@ -250,19 +250,19 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
           <div className="w-full max-w-sm rounded-lg border bg-muted/30 p-4 space-y-2.5">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Montant Hors Taxe (HT):</span>
-              <span className="font-mono text-foreground font-medium">
+              <span className="tabular-nums text-foreground font-medium">
                 {formatCurrency(invoice.subtotal)}
               </span>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>TVA Maroc ({invoice.taxRate ?? 20}%):</span>
-              <span className="font-mono text-foreground font-medium">
+              <span className="tabular-nums text-foreground font-medium">
                 {formatCurrency(invoice.tax)}
               </span>
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Remise / Discount:</span>
-              <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">
+              <span className="tabular-nums text-success-foreground font-medium">
                 $0.00
               </span>
             </div>
@@ -271,9 +271,9 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                 <span className="text-sm font-bold text-foreground block">
                   Total TTC:
                 </span>
-                <span className="text-[10px] text-muted-foreground">Toutes Taxes Comprises</span>
+                <span className="text-xs text-muted-foreground">Toutes Taxes Comprises</span>
               </div>
-              <span className="text-lg font-extrabold text-foreground font-mono">
+              <span className="text-lg font-extrabold text-foreground tabular-nums">
                 {formatCurrency(invoice.total)} <span className="text-xs font-semibold">USD</span>
               </span>
             </div>
@@ -287,20 +287,20 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <span className="text-muted-foreground block text-[11px]">Bank Name</span>
+              <span className="text-muted-foreground block text-xs">Bank Name</span>
               <span className="font-medium text-foreground">Silicon Valley Bank</span>
             </div>
             <div>
-              <span className="text-muted-foreground block text-[11px]">Routing (ABA)</span>
-              <span className="font-mono text-foreground">121000358</span>
+              <span className="text-muted-foreground block text-xs">Routing (ABA)</span>
+              <span className="tabular-nums text-foreground">121000358</span>
             </div>
             <div>
-              <span className="text-muted-foreground block text-[11px]">Account (USD)</span>
-              <span className="font-mono text-foreground">98402819034</span>
+              <span className="text-muted-foreground block text-xs">Account (USD)</span>
+              <span className="tabular-nums text-foreground">98402819034</span>
             </div>
             <div>
-              <span className="text-muted-foreground block text-[11px]">SWIFT / BIC</span>
-              <span className="font-mono text-foreground">SVBKUS6S</span>
+              <span className="text-muted-foreground block text-xs">SWIFT / BIC</span>
+              <span className="tabular-nums text-foreground">SVBKUS6S</span>
             </div>
           </div>
         </div>
@@ -316,12 +316,12 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
         )}
 
         {/* Compliance Footer */}
-        <div className="border-t pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-muted-foreground">
+        <div className="border-t pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
           <div className="text-center sm:text-left">
             <span>Facture électronique conforme aux dispositions du CGI marocain. </span>
-            <span className="font-mono">ICE {fiscalConfig.ice}</span>
+            <span className="tabular-nums">ICE {fiscalConfig.ice}</span>
           </div>
-          <div className="font-mono text-[10px] bg-muted px-2 py-0.5 rounded border">
+          <div className="tabular-nums text-xs bg-muted px-2 py-0.5 rounded border">
             SHA256-INV-{invoice.invoiceNumber}-AUTHENTICATED
           </div>
         </div>

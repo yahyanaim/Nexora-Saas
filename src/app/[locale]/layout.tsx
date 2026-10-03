@@ -2,23 +2,23 @@ import NextTopLoader from "nextjs-toploader"
 import ProviderContexts from "@/contexts/app-provider"
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages, getTranslations } from "next-intl/server"
-import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google"
+import { Inter, JetBrains_Mono } from "next/font/google"
 import { cn } from "@/lib/utils"
 import { routing } from "@/i18n/routing"
 import "./globals.css"
 import { notFound } from "next/navigation"
 import { headers } from "next/headers"
 
-const ibmPlexSans = IBM_Plex_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 })
 
-const ibmPlexMono = IBM_Plex_Mono({
+// Code only (API keys, snippets); numbers use Inter's tabular figures
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500"],
   variable: "--font-mono",
   display: "swap",
 })
@@ -61,7 +61,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
 
   return (
     <html
-      className={cn(ibmPlexSans.variable, ibmPlexMono.variable)}
+      className={cn(inter.variable, jetbrainsMono.variable)}
       suppressHydrationWarning
       lang={locale}
       dir={locale === "ar" || locale === "ur" ? "rtl" : "ltr"}

@@ -28,6 +28,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction = {
   type: "resolve" | "dismiss" | "review"
@@ -194,6 +195,7 @@ export default function ContentReportsPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
+      <PageHeader />
       <DataTable
         manual
         title={t("contentReports")}

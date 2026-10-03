@@ -3,10 +3,10 @@
 import { useState, useMemo } from "react"
 import { useTranslations } from "next-intl"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { Purchase, Renew, Help } from "@carbon/icons-react"
+import { CreditCard as Purchase, RefreshCw as Renew, CircleHelp as Help } from "@/components/ui/carbon/icons"
 import confetti from "canvas-confetti"
 import { Button } from "@/components/ui/button"
-import { FooterGradient } from "@/components/ui/footer-gradient"
+import { PageHeader } from "@/components/shared/page-header"
 import { PlanCard, PlanCardData } from "./plan-card"
 import { billingApi, createCheckoutApi, createPortalApi } from "@/lib/api/billing-apis"
 import { apiErrorMessage } from "@/lib/myapi/client"
@@ -176,36 +176,30 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden">
-      <div className="h-full w-full space-y-8 overflow-auto p-4 pb-24 md:p-6 md:pb-28">
-        {/* Header */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              {t("plans")}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {t("plansDescription")} Choose the plan that best fits your scaling team.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            {subscription?.hasPaymentMethod && (
-              <Button
-                variant="outline"
-                onClick={handleManageBilling}
-                disabled={isOpeningPortal}
-                className="gap-2"
-              >
-                {isOpeningPortal ? (
-                  <Renew className="size-4 animate-spin" />
-                ) : (
-                  <Purchase className="size-4" />
+    <div className="w-full">
+      <div className="w-full space-y-6 p-4 md:p-6">
+        <PageHeader
+          description={`${t("plansDescription")} Choose the plan that best fits your scaling team.`}
+          actions={
+            <>
+                {subscription?.hasPaymentMethod && (
+                  <Button
+                    variant="outline"
+                    onClick={handleManageBilling}
+                    disabled={isOpeningPortal}
+                    className="gap-2"
+                  >
+                    {isOpeningPortal ? (
+                      <Renew className="size-4 animate-spin" />
+                    ) : (
+                      <Purchase className="size-4" />
+                    )}
+                    Manage Billing
+                  </Button>
                 )}
-                Manage Billing
-              </Button>
-            )}
-          </div>
-        </div>
+            </>
+          }
+        />
 
         {/* Billing Service Unavailable Banner (only if real fatal error) */}
         {isError && !subscription && (
@@ -257,14 +251,14 @@ export default function PlansPage() {
 
         {/* Billing Cycle Toggle */}
         <div className="flex flex-col items-center justify-center gap-3 pt-2">
-          <div className="inline-flex items-center rounded-xl border border-border/80 bg-muted/60 p-1 shadow-xs">
+          <div className="inline-flex items-center rounded-full bg-muted p-1" role="group" aria-label="Billing cycle">
             <button
               type="button"
               onClick={() => setBillingCycle("monthly")}
               className={cn(
-                "rounded-lg px-4 py-1.5 text-xs font-semibold transition-all",
+                "h-9 rounded-full px-4 text-[13px] font-medium transition-all",
                 billingCycle === "monthly"
-                  ? "bg-background text-foreground shadow-xs"
+                  ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -274,14 +268,14 @@ export default function PlansPage() {
               type="button"
               onClick={() => setBillingCycle("annual")}
               className={cn(
-                "inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold transition-all",
+                "inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-[13px] font-medium transition-all",
                 billingCycle === "annual"
-                  ? "bg-background text-foreground shadow-xs"
+                  ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
               <span>Annual Billing</span>
-              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+              <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-semibold text-success-foreground">
                 Save 20%
               </span>
             </button>
@@ -320,7 +314,7 @@ export default function PlansPage() {
 
         {/* Feature Comparison Matrix */}
         <div className="max-w-6xl mx-auto pt-8">
-          <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-panel">
             <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">
               Plan Comparison & Limits
             </h2>
@@ -432,7 +426,6 @@ export default function PlansPage() {
         </div>
       </div>
 
-      <FooterGradient position="absolute" height="lg" blur={false} />
     </div>
   )
 }

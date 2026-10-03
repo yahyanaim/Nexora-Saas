@@ -9,6 +9,7 @@ import { testWebhookPingApi } from "@/lib/api/developer-apis"
 import { CreateWebhookDialog } from "./create-webhook-dialog"
 import { Plus, Webhook, Eye, EyeOff, Copy, Send, CheckCircle } from "@/components/ui/carbon/icons"
 import { formatDate } from "@/lib/utils/format-date"
+import { useHasMounted } from "@/hooks/use-has-mounted"
 import { toast } from "sonner"
 
 interface WebhooksCardProps {
@@ -16,6 +17,7 @@ interface WebhooksCardProps {
 }
 
 export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
+  const hasMounted = useHasMounted()
   const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>(initialWebhooks)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [revealedSecrets, setRevealedSecrets] = useState<Record<string, boolean>>({})
@@ -54,7 +56,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
-              <Webhook className="size-4 text-emerald-600" />
+              <Webhook className="size-4 text-success-foreground" />
               <span>Webhook Endpoints</span>
               <Badge variant="outline" className="text-xs font-normal">
                 {webhooks.length} Active
@@ -114,7 +116,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
                       </span>
                       <Badge
                         variant="outline"
-                        className="text-[10px] uppercase font-mono px-2 py-0 h-4.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        className="text-xs uppercase font-mono px-2 py-0 h-4.5 bg-success-soft text-success-foreground border-success/20"
                       >
                         <CheckCircle className="size-2.5 mr-1" />
                         {endpoint.status}
@@ -124,7 +126,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
                     {/* Signing secret */}
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-muted-foreground">Signing Secret:</span>
-                      <code className="rounded bg-muted/60 px-2 py-0.5 font-mono text-[11px] text-foreground/80 border border-border/50">
+                      <code className="rounded bg-muted/60 px-2 py-0.5 font-mono text-xs text-foreground/80 border border-border/50">
                         {isRevealed ? endpoint.secretKey : "••••••••••••••••••••••••"}
                       </code>
                       <button
@@ -153,7 +155,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
                         <Badge
                           key={event}
                           variant="secondary"
-                          className="text-[10px] font-mono px-1.5 py-0 h-4.5 bg-secondary/80 text-secondary-foreground"
+                          className="text-xs font-mono px-1.5 py-0 h-4.5 bg-secondary/80 text-secondary-foreground"
                         >
                           {event}
                         </Badge>
@@ -163,7 +165,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
 
                   <div className="flex items-center justify-between md:justify-end gap-4 text-xs text-muted-foreground shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-border/40">
                     <span className="hidden lg:inline text-xs">
-                      Added {formatDate(endpoint.createdAt)}
+                      Added {hasMounted ? formatDate(endpoint.createdAt) : "…"}
                     </span>
                     <Button
                       variant="outline"

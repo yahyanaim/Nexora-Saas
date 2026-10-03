@@ -28,6 +28,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Plus, Check, Trash2, Edit3, Calculator, ShieldCheck, Landmark, Percent } from "lucide-react"
+import { PageHeader } from "@/components/shared/page-header"
 
 export default function TaxesPage() {
   const [rates, setRates] = useState<TaxRate[]>(() => getTaxRates())
@@ -182,26 +183,18 @@ export default function TaxesPage() {
   const simResult = calculateMoroccanTax(simAmount || 0, selectedSimRateId)
 
   return (
-    <div className="space-y-8 p-6 pb-16">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">Taxes &amp; Moroccan TVA Management</h1>
-            <Badge variant="outline" className="border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              🇲🇦 CGI Maroc
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Configure Moroccan Tax (TVA) rates, manage enterprise fiscal identifiers (ICE, IF, RC, Patente), and set tax rules that dynamically apply to billing, invoices, and receipts.
-          </p>
-        </div>
-
-        <Button onClick={handleOpenAddDialog} className="shadow-sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Tax Rate
-        </Button>
-      </div>
+    <div className="space-y-6 p-4 md:p-6">
+      <PageHeader
+        title="Taxes & Moroccan TVA Management"
+        badge={<Badge variant="info">🇲🇦 CGI Maroc</Badge>}
+        description="Configure Moroccan Tax (TVA) rates, manage enterprise fiscal identifiers (ICE, IF, RC, Patente), and set tax rules that dynamically apply to billing, invoices, and receipts."
+        actions={
+          <Button onClick={handleOpenAddDialog}>
+            <Plus />
+            Add Tax Rate
+          </Button>
+        }
+      />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -221,10 +214,10 @@ export default function TaxesPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Enterprise ICE</CardTitle>
-            <ShieldCheck className="h-4 w-4 text-emerald-500" />
+            <ShieldCheck className="h-4 w-4 text-success-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold font-mono tracking-tight">{fiscalConfig?.ice || "002847192000084"}</div>
+            <div className="text-xl font-bold tabular-nums tracking-tight">{fiscalConfig?.ice || "002847192000084"}</div>
             <p className="text-xs text-muted-foreground mt-1">15-digit verified fiscal code</p>
           </CardContent>
         </Card>
@@ -232,7 +225,7 @@ export default function TaxesPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Configured Regimes</CardTitle>
-            <Landmark className="h-4 w-4 text-blue-500" />
+            <Landmark className="h-4 w-4 text-info-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{rates.length}</div>
@@ -246,7 +239,7 @@ export default function TaxesPage() {
             <Calculator className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">HT / TVA / TTC</div>
+            <div className="text-xl font-bold text-success-foreground">HT / TVA / TTC</div>
             <p className="text-xs text-muted-foreground mt-1">Automated on Invoices &amp; Receipts</p>
           </CardContent>
         </Card>
@@ -285,15 +278,15 @@ export default function TaxesPage() {
                           <div className="font-semibold text-foreground flex items-center gap-2">
                             {rate.name}
                             {rate.isDefault && (
-                              <Badge variant="default" className="text-[10px] h-5 bg-blue-600">
+                              <Badge variant="default" className="text-xs h-5 bg-primary">
                                 Default
                               </Badge>
                             )}
                           </div>
-                          <div className="text-xs font-mono text-muted-foreground mt-0.5">{rate.code}</div>
+                          <div className="text-xs tabular-nums text-muted-foreground mt-0.5">{rate.code}</div>
                           <div className="text-xs text-muted-foreground line-clamp-1 mt-1">{rate.description}</div>
                         </td>
-                        <td className="px-4 py-3 font-semibold text-base font-mono">
+                        <td className="px-4 py-3 font-semibold text-base tabular-nums">
                           {rate.rate}%
                         </td>
                         <td className="px-4 py-3">
@@ -303,7 +296,7 @@ export default function TaxesPage() {
                         </td>
                         <td className="px-4 py-3">
                           {rate.isDefault ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-success-foreground">
                               <Check className="h-3.5 w-3.5" /> Active for Invoicing
                             </span>
                           ) : (
@@ -390,17 +383,17 @@ export default function TaxesPage() {
               <div className="mt-6 p-4 rounded-xl bg-muted/40 border grid grid-cols-3 gap-4 text-center">
                 <div>
                   <div className="text-xs text-muted-foreground font-medium uppercase">Montant HT</div>
-                  <div className="text-lg font-bold font-mono mt-1">${simResult.subtotalHt.toFixed(2)}</div>
+                  <div className="text-lg font-bold tabular-nums mt-1">${simResult.subtotalHt.toFixed(2)}</div>
                 </div>
                 <div>
                   <div className="text-xs text-muted-foreground font-medium uppercase">TVA ({simResult.taxRate.rate}%)</div>
-                  <div className="text-lg font-bold font-mono text-blue-600 dark:text-blue-400 mt-1">
+                  <div className="text-lg font-bold tabular-nums text-info-foreground mt-1">
                     +${simResult.taxAmount.toFixed(2)}
                   </div>
                 </div>
                 <div>
                   <div className="text-xs text-muted-foreground font-medium uppercase">Total TTC</div>
-                  <div className="text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">
+                  <div className="text-xl font-bold tabular-nums text-success-foreground mt-1">
                     ${simResult.totalTtc.toFixed(2)}
                   </div>
                 </div>
@@ -462,9 +455,9 @@ export default function TaxesPage() {
           </Card>
 
           {/* Legal Compliance Box */}
-          <div className="p-4 rounded-xl border border-blue-500/20 bg-blue-500/5 text-xs text-muted-foreground space-y-2">
+          <div className="p-4 rounded-xl border border-primary/20 bg-info-soft text-xs text-muted-foreground space-y-2">
             <div className="font-semibold text-foreground flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-blue-500" />
+              <ShieldCheck className="h-4 w-4 text-info-foreground" />
               Conformité Fiscale CGI Maroc
             </div>
             <p>

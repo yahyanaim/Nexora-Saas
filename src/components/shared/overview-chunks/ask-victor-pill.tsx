@@ -62,20 +62,20 @@ export function AskVictorPill() {
   return (
     <>
       {/* Floating Bottom Pill */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+      <div className="fixed bottom-6 end-6 z-40 sm:end-auto sm:left-1/2 sm:-translate-x-1/2">
         <button
           type="button"
           onClick={() => {
             setIsOpen(true)
             setActiveAnswer(null)
           }}
-          className="group flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:bg-neutral-800 hover:shadow-xl dark:bg-neutral-800 dark:hover:bg-neutral-700 cursor-pointer border border-white/10"
+          aria-label="Ask Victor (Nexora AI)"
+          className="group flex h-12 items-center gap-2 rounded-full bg-gray-900 p-1.5 text-[13px] font-semibold text-white shadow-lg transition-all duration-200 hover:bg-gray-800 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:pe-5 dark:bg-card dark:border dark:border-border dark:hover:bg-muted cursor-pointer"
         >
-          {/* Purple Gem Icon */}
-          <span className="flex size-4.5 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-indigo-400 text-white shadow-xs">
-            <Sparkles className="size-2.5" />
+          <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-indigo-400 text-white">
+            <Sparkles className="size-4" />
           </span>
-          <span>Ask Victor (Nexora AI)</span>
+          <span className="max-sm:sr-only">Ask Victor (Nexora AI)</span>
         </button>
       </div>
 
@@ -98,7 +98,7 @@ export function AskVictorPill() {
 
           {/* Quick Prompt Suggestions */}
           <div className="space-y-1.5 pt-1">
-            <span className="text-[11px] font-medium text-muted-foreground">
+            <span className="text-xs font-medium text-muted-foreground">
               Suggested SaaS telemetry queries:
             </span>
             <div className="flex flex-col gap-1.5">

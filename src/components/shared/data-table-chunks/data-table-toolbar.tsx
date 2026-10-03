@@ -122,7 +122,7 @@ export function DataTableToolbar<TData>({
 
   if (selectedCount > 0 && bulkActions) {
     return (
-      <div className="relative z-10 flex w-full items-center justify-between gap-3 p-4">
+      <div className="relative z-10 flex w-full items-center justify-between gap-3 px-5 pt-5 pb-2 sm:px-6">
         <span className="font-medium">
           {t("selectedCount", { count: selectedCount })}
         </span>
@@ -132,28 +132,29 @@ export function DataTableToolbar<TData>({
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-border/50 bg-card">
-      <div className={cn(dir === "rtl" ? "md:pr-1" : "md:pl-1")}>
-        <h3 className="text-base font-semibold tracking-tight text-foreground whitespace-nowrap capitalize">
+    <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-2 sm:px-6">
+      <div>
+        <h3 className="text-lg font-semibold tracking-tight text-foreground whitespace-nowrap capitalize sm:text-xl">
           {title}
         </h3>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2.5 ml-auto">
+      <div className="flex w-full flex-wrap items-center gap-2 sm:ms-auto sm:w-auto">
         {(searchColumnId || isControlledSearch) && (
-          <div className="relative w-full sm:w-60 md:w-72">
-            <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none md:w-72">
+            <Search className="absolute top-1/2 start-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder={searchPlaceholder}
               value={currentSearchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="h-9 w-full rounded-lg border border-border/60 bg-background/60 pr-8 pl-9 text-xs placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-primary md:text-sm"
+              className="h-10 w-full rounded-full pe-9 ps-10"
             />
             {currentSearchValue && (
               <button
                 type="button"
                 onClick={() => handleSearchChange("")}
-                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
+                className="absolute top-1/2 end-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="size-3.5" />
               </button>
@@ -168,10 +169,10 @@ export function DataTableToolbar<TData>({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                size="sm"
-                className="h-9 px-3 text-xs rounded-lg gap-1.5 border-border/60 hover:bg-muted/60"
+                aria-label="Export"
+                className="px-4 max-sm:size-10 max-sm:px-0"
               >
-                <Download className="h-3.5 w-3.5" />
+                <Download />
                 <span className="hidden sm:inline">Export</span>
               </Button>
             </DropdownMenuTrigger>
@@ -188,7 +189,7 @@ export function DataTableToolbar<TData>({
                   )
                 }}
               >
-                <FileSpreadsheet className="size-3.5 text-emerald-600" />
+                <FileSpreadsheet className="size-3.5 text-success-foreground" />
                 <span>Export CSV (.csv)</span>
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -203,7 +204,7 @@ export function DataTableToolbar<TData>({
                   )
                 }}
               >
-                <FileCode className="size-3.5 text-blue-600" />
+                <FileCode className="size-3.5 text-info-foreground" />
                 <span>Export JSON (.json)</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -218,21 +219,18 @@ export function DataTableToolbar<TData>({
           return (
             <Button
               key={`action-${index}`}
-              size={action.iconOnly ? "icon" : "sm"}
               variant={variant}
+              aria-label={action.label}
               className={cn(
-                action.iconOnly
-                  ? "h-9 w-9 rounded-lg"
-                  : "h-9 px-3 text-xs rounded-lg gap-1.5",
+                // Icon-only actions still show their label from sm up, so "+" is never unlabeled
+                action.iconOnly ? "max-sm:size-10 max-sm:px-0 sm:px-4" : "px-4",
                 action.className
               )}
               onClick={action.onClick}
               disabled={action.disabled}
             >
-              {Icon && (
-                <Icon className={action.iconOnly ? "size-4" : "h-3.5 w-3.5"} />
-              )}
-              {!action.iconOnly && action.label}
+              {Icon && <Icon />}
+              <span className={cn(action.iconOnly && "max-sm:sr-only")}>{action.label}</span>
             </Button>
           )
         })}

@@ -166,7 +166,10 @@ export const fetchMyAccountApi = async (): Promise<AuthUser> => {
   // Only provide demo user when demo mode is on and the backend is unreachable
   if (isDemoMode()) {
     if (typeof window !== "undefined") {
-      if (sessionStorage.getItem("saas_demo_logged_out") === "true") {
+      // Require an actual demo sign-in (demo session cookie), matching the edge
+      // guard in src/proxy.ts; otherwise the client would treat a visitor as
+      // signed in and bounce between /auth and /dashboard.
+      if (sessionStorage.getItem("saas_demo_logged_out") === "true" || !tokenStorage.get()) {
         throw new Error("Unauthenticated")
       }
       const stored = sessionStorage.getItem("saas_demo_user")

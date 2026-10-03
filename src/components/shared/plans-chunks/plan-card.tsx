@@ -3,11 +3,10 @@
 "use client"
 
 import { motion } from "motion/react"
-import { Checkmark, Trophy, Edit, TrashCan, Renew } from "@carbon/icons-react"
+import { Check as Checkmark, Trophy, Pencil as Edit, Trash2 as TrashCan, RefreshCw as Renew } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { GridPattern } from "@/components/ui/grid-pattern"
 import { useTranslations } from "next-intl"
 
 export interface PlanCardData {
@@ -58,22 +57,22 @@ export function PlanCard({
         ease: [0.22, 1, 0.36, 1],
       }}
       className={cn(
-        "group relative flex flex-col rounded-2xl border border-border/70 bg-card/90 p-3 text-card-foreground shadow-sm backdrop-blur-md transition-all duration-300 hover:border-border hover:shadow-xl",
-        plan.featured && "border-primary/50 shadow-lg shadow-primary/10 hover:border-primary/80 ring-1 ring-primary/30",
-        isCurrent && "border-emerald-500/50 shadow-lg shadow-emerald-500/5 ring-1 ring-emerald-500/30"
+        "group relative flex flex-col rounded-3xl border border-border bg-card p-6 text-card-foreground shadow-panel transition-shadow duration-200 hover:shadow-md",
+        plan.featured && "border-primary/40 ring-1 ring-primary/30",
+        isCurrent && "border-primary ring-1 ring-primary"
       )}
     >
       {/* Current Plan Badge or Popular Badge */}
       {isCurrent ? (
-        <div className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2">
-          <Badge className="h-7 border border-emerald-500/40 bg-emerald-500/20 px-3 text-xs font-semibold text-emerald-400 backdrop-blur-md shadow-xs">
+        <div className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 rounded-full bg-card">
+          <Badge variant="success" className="h-7 px-3 font-semibold shadow-xs">
             <Checkmark className="mr-1.5 h-3.5 w-3.5" />
             Current Plan
           </Badge>
         </div>
       ) : plan.featured ? (
-        <div className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2">
-          <Badge className="h-7 border border-primary/50 bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-md shadow-primary/30 backdrop-blur-md">
+        <div className="absolute -top-3.5 left-1/2 z-10 -translate-x-1/2 rounded-full bg-card">
+          <Badge className="h-7 bg-primary px-3 font-semibold text-primary-foreground shadow-sm">
             <Trophy className="mr-1.5 h-3.5 w-3.5" />
             {t("mostPopular")}
           </Badge>
@@ -81,26 +80,7 @@ export function PlanCard({
       ) : null}
 
       {/* Top Section */}
-      <div className="relative mb-5 overflow-hidden rounded-xl border border-border/50 bg-muted/30 p-5 backdrop-blur-xs">
-        <GridPattern
-          width={20}
-          height={20}
-          x={-1}
-          y={-1}
-          className="[mask-image:linear-gradient(to_bottom_right,white,transparent,transparent)] opacity-40"
-          squares={[
-            [5, 1],
-            [12, 2],
-            [4, 4],
-            [5, 3],
-            [10, 10],
-            [15, 10],
-            [10, 15],
-            [5, 5],
-            [12, 15],
-          ]}
-        />
-
+      <div className="relative mb-6 border-b border-border pb-6">
         <div className="relative mb-5">
           <h3 className="mb-1 text-xl font-bold tracking-tight text-foreground md:text-2xl">
             {plan.name}
@@ -128,7 +108,7 @@ export function PlanCard({
             <Button
               variant="outline"
               disabled
-              className="h-10 w-full gap-2 rounded-lg text-sm font-semibold border-emerald-500/40 bg-emerald-500/10 text-emerald-400 cursor-default"
+              className="h-10 w-full gap-2 rounded-lg text-sm font-semibold border-success/20 bg-success-soft text-success-foreground cursor-default"
             >
               <Checkmark className="h-4 w-4" />
               Active Subscription
@@ -186,7 +166,7 @@ export function PlanCard({
       <ul className="flex-grow space-y-3 px-3 pb-4">
         {plan.features.map((feature, i) => (
           <li key={i} className="flex items-start gap-2.5">
-            <div className="mt-0.5 flex size-4.5 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400">
+            <div className="mt-0.5 flex size-4.5 shrink-0 items-center justify-center rounded-full bg-success-soft text-success-foreground">
               <Checkmark className="size-3" />
             </div>
             <span className="text-sm leading-normal text-muted-foreground group-hover:text-foreground/90 transition-colors">

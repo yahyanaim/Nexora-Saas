@@ -50,9 +50,9 @@ const getFileIcon = (type: FileType) => {
     case FileType.VIDEO:
       return <Video className="h-16 w-16 text-pink-500" />
     case FileType.AUDIO:
-      return <Music className="h-16 w-16 text-emerald-500" />
+      return <Music className="h-16 w-16 text-success-foreground" />
     case FileType.DOCUMENT:
-      return <FileText className="h-16 w-16 text-blue-500" />
+      return <FileText className="h-16 w-16 text-info-foreground" />
     default:
       return <File className="h-16 w-16 text-muted-foreground" />
   }
@@ -510,7 +510,7 @@ export function FileDialog({
           <DialogFooter>
             <Button
               className="flex-1"
-              variant="destructive"
+              variant="outline"
               onClick={() => onOpenChange(false)}
             >
               {t("cancel")}
@@ -530,7 +530,7 @@ export function FileDialog({
         {mode === "details" && (
           <DialogFooter>
             <Button
-              variant="destructive"
+              variant="outline"
               className="flex-1"
               onClick={() => onOpenChange(false)}
             >
@@ -543,7 +543,7 @@ export function FileDialog({
           <DialogFooter>
             <Button
               className="flex-1"
-              variant="destructive"
+              variant="outline"
               onClick={() => onOpenChange(false)}
             >
               {t("close")}

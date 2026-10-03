@@ -30,7 +30,7 @@ export function getRolesColumns(
     [ActivationStatus.ACTIVE]: {
       label: t("active"),
       className:
-        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-transparent",
+        "bg-success-soft text-success-foreground border-transparent",
     },
     [ActivationStatus.INACTIVE]: {
       label: t("inactive"),

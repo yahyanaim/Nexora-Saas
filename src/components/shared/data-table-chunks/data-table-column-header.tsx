@@ -1,9 +1,13 @@
 "use client"
 
+import * as React from "react"
 import { Column } from "@tanstack/react-table"
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+
+/** When true (phone card layout), headers render as plain labels without sort buttons. */
+export const CompactHeaderContext = React.createContext(false)
 
 interface DataTableColumnHeaderProps<
   TData,
@@ -18,8 +22,11 @@ export function DataTableColumnHeader<TData, TValue>({
   title,
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
+  const compact = React.useContext(CompactHeaderContext)
+  if (compact) return <>{title}</>
+
   if (!column.getCanSort()) {
-    return <div className={cn("text-sm", className)}>{title}</div>
+    return <div className={cn("text-xs", className)}>{title}</div>
   }
 
   const sorted = column.getIsSorted()
@@ -28,7 +35,7 @@ export function DataTableColumnHeader<TData, TValue>({
     <Button
       variant="ghost"
       size="sm"
-      className={cn("-ml-3 h-8 gap-1.5 data-[state=open]:bg-accent", className)}
+      className={cn("-ms-3 h-8 gap-1.5 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:bg-muted data-[state=open]:bg-accent", className)}
       onClick={() => column.toggleSorting(sorted === "asc")}
     >
       <span>{title}</span>

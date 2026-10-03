@@ -27,7 +27,7 @@ export function SectionCards() {
         label: "+12.5%",
         icon: TrendingUp,
         variant: "outline" as const,
-        className: "gap-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+        className: "gap-1 border-success/20 bg-success-soft text-success-foreground",
       },
       footer: {
         icon: DollarSign,
@@ -41,7 +41,7 @@ export function SectionCards() {
         label: "-2.4%",
         icon: TrendingDown,
         variant: "outline" as const,
-        className: "gap-1 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+        className: "gap-1 border-warning/20 bg-warning-soft text-warning-foreground",
       },
       footer: {
         icon: UserFollow,
@@ -55,7 +55,7 @@ export function SectionCards() {
         label: "+14.8%",
         icon: TrendingUp,
         variant: "outline" as const,
-        className: "gap-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+        className: "gap-1 border-success/20 bg-success-soft text-success-foreground",
       },
       footer: {
         icon: Users,
@@ -95,7 +95,7 @@ export function SectionCards() {
                 {card.badge.label}
               </Badge>
             </div>
-            <CardTitle className="text-2xl font-bold font-mono tabular-nums @[250px]/card:text-3xl mt-2">
+            <CardTitle className="text-2xl font-bold tabular-nums @[250px]/card:text-3xl mt-2">
               {card.value}
             </CardTitle>
           </CardHeader>

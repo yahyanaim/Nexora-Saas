@@ -70,7 +70,7 @@ export function TwoStepDialog({ open, onOpenChange }: TwoStepDialogProps) {
         <DialogFooter>
           <Button
             type="button"
-            variant={"destructive"}
+            variant="outline"
             className="flex-1"
             onClick={() => onOpenChange(false)}
           >

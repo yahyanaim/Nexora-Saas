@@ -44,7 +44,7 @@ export function getProjectsColumns(
     [ProjectStatus.ACTIVE]: {
       label: t("active"),
       className:
-        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-transparent",
+        "bg-success-soft text-success-foreground border-transparent",
     },
     [ProjectStatus.ARCHIVED]: {
       label: t("archived"),
@@ -53,12 +53,12 @@ export function getProjectsColumns(
     [ProjectStatus.COMPLETED]: {
       label: t("completed"),
       className:
-        "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-transparent",
+        "bg-info-soft text-info-foreground border-transparent",
     },
     [ProjectStatus.ON_HOLD]: {
       label: t("onHold"),
       className:
-        "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-transparent",
+        "bg-warning-soft text-warning-foreground border-transparent",
     },
   }
 
@@ -137,7 +137,7 @@ export function getProjectsColumns(
             ))}
             {remaining > 0 && (
               <div
-                className="flex size-6 items-center justify-center rounded-full bg-muted text-[10px] font-medium text-muted-foreground ring-2 ring-background"
+                className="flex size-6 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground ring-2 ring-background"
                 style={{ marginLeft: "-8px", zIndex: 0 }}
               >
                 +{remaining}
@@ -167,11 +167,11 @@ export function getProjectsColumns(
         <div className="flex items-center gap-2">
           <div className="h-2 w-16 overflow-hidden rounded-full bg-muted">
             <div
-              className="h-full rounded-full bg-emerald-500 transition-all"
+              className="h-full rounded-full bg-success transition-all"
               style={{ width: `${row.original.progress}%` }}
             />
           </div>
-          <span className="font-mono text-sm tabular-nums">{row.original.progress}%</span>
+          <span className="tabular-nums text-sm">{row.original.progress}%</span>
         </div>
       ),
     },

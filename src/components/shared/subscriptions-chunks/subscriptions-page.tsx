@@ -5,14 +5,14 @@ import { useRouter } from "@/i18n/navigation"
 import { useTranslations } from "next-intl"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import {
-  Purchase,
-  Security,
+  CreditCard as Purchase,
+  Shield as Security,
   ArrowUpRight,
-  Launch,
-  Renew,
+  ExternalLink as Launch,
+  RefreshCw as Renew,
   Calendar,
-  CheckmarkFilled,
-} from "@carbon/icons-react"
+  CheckCircle as CheckmarkFilled,
+} from "@/components/ui/carbon/icons"
 import { Plus } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -49,6 +49,7 @@ import {
   SubscriptionStatus,
   CreateSubscriptionPayload,
 } from "@/types/subscriptions"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction =
   | { type: "delete"; subscription: Subscription }
@@ -316,18 +317,11 @@ export default function SubscriptionsPage() {
   }
 
   return (
-    <div className="h-full w-full space-y-6 overflow-auto p-4 pb-24 md:p-6 md:pb-28">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-            {t("subscriptions")}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Manage workspace subscription tiers, resource quotas, and customer billing accounts.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
+    <div className="w-full space-y-6 p-4 md:p-6">
+      <PageHeader
+        description="Manage workspace subscription tiers, resource quotas, and customer billing accounts."
+        actions={
+          <>
           {activeTab === "directory" ? (
             <Button
               variant="primary"
@@ -362,8 +356,10 @@ export default function SubscriptionsPage() {
               </Button>
             </>
           )}
-        </div>
-      </div>
+        
+          </>
+        }
+      />
 
       {/* Subscription Service Unavailable Banner (only if real fatal error) */}
       {isError && !subscription && (
@@ -437,8 +433,8 @@ export default function SubscriptionsPage() {
                               variant={status === "active" ? "outline" : "destructive"}
                               className={
                                 status === "active"
-                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 capitalize"
-                                  : "border-red-500/30 bg-red-500/15 text-red-700 dark:text-red-300 capitalize font-semibold"
+                                  ? "border-success/20 bg-success-soft text-success-foreground capitalize"
+                                  : "border-destructive/20 bg-danger-soft text-danger-foreground capitalize font-semibold"
                               }
                             >
                               {status}
@@ -485,7 +481,7 @@ export default function SubscriptionsPage() {
                     </CardContent>
                     <CardFooter className="flex items-center justify-between border-t pt-4">
                       <div className="text-xs text-muted-foreground flex items-center gap-1.5">
-                        <CheckmarkFilled className="size-4 text-emerald-600" />
+                        <CheckmarkFilled className="size-4 text-success-foreground" />
                         <span>
                           {hasAccess
                             ? "All plan features active and accessible"

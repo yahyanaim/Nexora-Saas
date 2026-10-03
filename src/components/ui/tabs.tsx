@@ -48,7 +48,7 @@ export function Tabs({
 
   return (
     <div className={cn("flex flex-col w-full", containerClassName)}>
-      <div className="flex items-center gap-1.5 p-1 rounded-xl bg-muted/60 border border-border/50 w-fit overflow-x-auto max-w-full">
+      <div className="flex items-center gap-1 p-1 rounded-full bg-muted w-fit overflow-x-auto max-w-full">
         {tabs.map((tab, idx) => {
           const isSelected = idx === selectedIndex
           return (
@@ -58,10 +58,10 @@ export function Tabs({
               disabled={tab.disabled}
               onClick={() => handleTabClick(tab, idx)}
               className={cn(
-                "inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all duration-150 whitespace-nowrap select-none cursor-pointer",
+                "inline-flex h-9 items-center gap-2 rounded-full px-4 text-[13px] font-medium transition-all duration-150 whitespace-nowrap select-none cursor-pointer",
                 isSelected
-                  ? "bg-card text-foreground shadow-xs border border-border/60 font-semibold"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
                 tab.disabled && "opacity-50 cursor-not-allowed",
                 tabClassName
               )}
@@ -80,15 +80,15 @@ export function Tabs({
 }
 
 export function TabList({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("inline-flex items-center gap-1 p-1 rounded-xl bg-muted/60 border border-border/50", className)} {...props} />
+  return <div className={cn("inline-flex items-center gap-1 p-1 rounded-full bg-muted", className)} {...props} />
 }
 
 export function Tab({ className, active, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
   return (
     <button
       className={cn(
-        "inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-medium transition-all select-none",
-        active ? "bg-card text-foreground shadow-xs border border-border/60" : "text-muted-foreground hover:text-foreground",
+        "inline-flex h-9 items-center gap-2 rounded-full px-4 text-[13px] font-medium transition-all select-none",
+        active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
         className
       )}
       {...props}
