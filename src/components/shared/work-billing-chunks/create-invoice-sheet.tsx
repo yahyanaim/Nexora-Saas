@@ -12,25 +12,28 @@ import { todayIso } from "@/lib/workforce/project-metrics"
 import type { Client, Employee } from "@/types/workforce"
 import type { WorkProject } from "@/types/work-projects"
 import type { TimeEntry } from "@/types/work-billing"
+import type { Expense } from "@/types/work-costs"
+import { unbilledExpenses } from "@/lib/workforce/profitability"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 import { formatHours } from "./billing-labels"
 
 interface Props {
   client: Client | null
   entries: TimeEntry[]
+  expenses: Expense[]
   projects: WorkProject[]
   employees: Employee[]
   currency: string
   isSubmitting: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (input: { clientId: string; entryIds: string[]; taxRate: number; issueDate: string; notes?: string }) => void
+  onCreate: (input: { clientId: string; entryIds: string[]; expenseIds: string[]; taxRate: number; issueDate: string; notes?: string }) => void
 }
 
 /**
  * Turns a client's approved, unbilled hours into a draft invoice: one block
  * per project and person, all selected by default.
  */
-export function CreateInvoiceSheet({ client, entries, projects, employees, currency, isSubmitting, onOpenChange, onCreate }: Props) {
+export function CreateInvoiceSheet({ client, entries, expenses, projects, employees, currency, isSubmitting, onOpenChange, onCreate }: Props) {
   const t = useTranslations()
   const locale = useLocale()
   const available = useMemo(
@@ -43,6 +46,11 @@ export function CreateInvoiceSheet({ client, entries, projects, employees, curre
     return buildInvoiceLines(available, projects, employees, client ?? undefined, () => `block_${n++}`)
   }, [available, projects, employees, client])
 
+  const rebillable = useMemo(
+    () => (client ? unbilledExpenses(expenses, projects, client.id) : []),
+    [client, expenses, projects]
+  )
+
   // Everything starts selected; the page remounts this sheet for each client
   const [unselected, setUnselected] = useState<Set<string>>(new Set())
   const selected = new Set(blocks.map((b) => b.id).filter((id) => !unselected.has(id)))
@@ -50,7 +58,11 @@ export function CreateInvoiceSheet({ client, entries, projects, employees, curre
   const [issueDate, setIssueDate] = useState(todayIso())
   const [notes, setNotes] = useState("")
 
-  const chosen = blocks.filter((b) => selected.has(b.id))
+  const chosenExpenses = rebillable.filter((x) => !unselected.has(x.id))
+  const chosen = [
+    ...blocks.filter((b) => selected.has(b.id)),
+    ...chosenExpenses.map((x) => ({ id: x.id, description: x.description, quantity: 1, unitPrice: x.amount, timeEntryIds: [] })),
+  ]
   const tax = Number(taxRate)
   const taxValid = Number.isFinite(tax) && tax >= 0 && tax <= 100
   const totals = invoiceTotals({ lines: chosen, taxRate: taxValid ? tax : 0 })
@@ -71,6 +83,7 @@ export function CreateInvoiceSheet({ client, entries, projects, employees, curre
         onCreate({
           clientId: client.id,
           entryIds: chosen.flatMap((b) => b.timeEntryIds),
+          expenseIds: chosenExpenses.map((x) => x.id),
           taxRate: tax,
           issueDate,
           notes: notes.trim() || undefined,
@@ -80,7 +93,7 @@ export function CreateInvoiceSheet({ client, entries, projects, employees, curre
       <div className="flex flex-col gap-5">
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium">{t("hoursToBill")}</legend>
-          {blocks.length === 0 && <p className="text-sm text-muted-foreground">{t("nothingToBill")}</p>}
+          {blocks.length === 0 && <p className="text-sm text-muted-foreground">{t("noHoursToBill")}</p>}
           {blocks.map((block) => (
             <label key={block.id} className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-card p-3 hover:bg-muted/50">
               <Checkbox
@@ -106,6 +119,34 @@ export function CreateInvoiceSheet({ client, entries, projects, employees, curre
             </label>
           ))}
         </fieldset>
+
+        {rebillable.length > 0 && (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1 text-sm font-medium">{t("expensesToRebill")}</legend>
+            {rebillable.map((x) => (
+              <label key={x.id} className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-card p-3 hover:bg-muted/50">
+                <Checkbox
+                  className="mt-0.5"
+                  checked={!unselected.has(x.id)}
+                  aria-label={x.description}
+                  onCheckedChange={(on) =>
+                    setUnselected((s) => {
+                      const next = new Set(s)
+                      if (on) next.delete(x.id)
+                      else next.add(x.id)
+                      return next
+                    })
+                  }
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium">{x.description}</span>
+                  <span className="block text-xs text-muted-foreground">{projects.find((p) => p.id === x.projectId)?.code} · {x.date}</span>
+                </span>
+                <span className="text-sm font-medium tabular-nums">{money(x.amount)}</span>
+              </label>
+            ))}
+          </fieldset>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">

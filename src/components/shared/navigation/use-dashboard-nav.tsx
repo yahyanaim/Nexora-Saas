@@ -32,6 +32,8 @@ import {
   CalendarDays,
   Gauge,
   TreePalm,
+  DollarSign,
+  TrendingUp,
   type LucideIcon,
 } from "@/components/ui/carbon/icons"
 import { usePathname } from "@/i18n/navigation"
@@ -126,12 +128,33 @@ export function useDashboardNav() {
             descriptionKey: "pageDescTimeApprovals",
             permission: AdminPermissionsPlatform.TIME_APPROVE,
           },
+        ],
+      },
+      {
+        id: "finance",
+        title: t("finance"),
+        icon: DollarSign,
+        items: [
           {
             title: t("clientInvoices"),
             url: "/dashboard/client-invoices",
             icon: FileText,
             descriptionKey: "pageDescClientInvoices",
             permission: AdminPermissionsPlatform.INVOICES_READ,
+          },
+          {
+            title: t("expenses"),
+            url: "/dashboard/expenses",
+            icon: Receipt,
+            descriptionKey: "pageDescExpenses",
+            permission: AdminPermissionsPlatform.TIME_TRACK,
+          },
+          {
+            title: t("profitability"),
+            url: "/dashboard/profitability",
+            icon: TrendingUp,
+            descriptionKey: "pageDescProfitability",
+            permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
           },
         ],
       },

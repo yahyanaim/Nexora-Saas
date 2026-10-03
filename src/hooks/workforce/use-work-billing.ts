@@ -39,6 +39,8 @@ function useHelpers() {
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["time-entries", workspaceId] })
     queryClient.invalidateQueries({ queryKey: ["client-invoices", workspaceId] })
+    // Invoices also re-bill (and release) expenses
+    queryClient.invalidateQueries({ queryKey: ["expenses", workspaceId] })
   }
   const onError = (err: unknown) =>
     toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))

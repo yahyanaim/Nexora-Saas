@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
-import { Ban, CheckCircle2, Plus, Send, Trash2 } from "@/components/ui/carbon/icons"
+import { Ban, CheckCircle2, DownloadIcon, Plus, Send, Trash2 } from "@/components/ui/carbon/icons"
 import { createId } from "@/lib/workforce/demo-store"
 import { displayStatus, invoiceTotals } from "@/lib/workforce/billing"
 import type { Client } from "@/types/workforce"
+import { useCurrentWorkspace } from "@/store/workspace-store"
+import { downloadClientInvoicePdf } from "@/lib/pdf/generate-client-invoice-pdf"
 import { ClientInvoiceStatus, type ClientInvoice, type InvoiceLine } from "@/types/work-billing"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 import { formatShortDate } from "../work-projects-chunks/project-labels"
@@ -34,6 +36,8 @@ interface Props {
 export function InvoiceSheet({ invoice, client, canEdit, busy, onOpenChange, onSaveDraft, onSend, onPaid, onVoid, onDelete }: Props) {
   const t = useTranslations()
   const locale = useLocale()
+  const workspace = useCurrentWorkspace()
+  const [downloading, setDownloading] = useState(false)
   const [confirm, setConfirm] = useState<"void" | "delete" | null>(null)
   const [lineDesc, setLineDesc] = useState("")
   const [lineQty, setLineQty] = useState("1")
@@ -68,7 +72,47 @@ export function InvoiceSheet({ invoice, client, canEdit, busy, onOpenChange, onS
               {t(INVOICE_STATUS_LABEL[status])}
             </Badge>
           </div>
-          <SheetDescription>{client?.name ?? "—"}</SheetDescription>
+          <div className="flex items-center justify-between gap-3">
+            <SheetDescription>{client?.name ?? "—"}</SheetDescription>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={downloading}
+              onClick={async () => {
+                setDownloading(true)
+                try {
+                  await downloadClientInvoicePdf(
+                    invoice,
+                    client,
+                    workspace,
+                    {
+                      invoice: t("invoice"),
+                      billTo: t("billTo"),
+                      issueDate: t("issueDate"),
+                      dueDate: t("dueDate"),
+                      status: t("status"),
+                      description: t("description"),
+                      quantity: t("quantity"),
+                      rate: t("rate"),
+                      amount: t("amount"),
+                      subtotal: t("subtotal"),
+                      tax: t("tax"),
+                      total: t("total"),
+                      notes: t("notes"),
+                      paymentTerms: t("paymentTermsDays"),
+                    },
+                    t(INVOICE_STATUS_LABEL[status]),
+                    locale
+                  )
+                } finally {
+                  setDownloading(false)
+                }
+              }}
+            >
+              <DownloadIcon className="size-4" />
+              {t("downloadPdf")}
+            </Button>
+          </div>
         </SheetHeader>
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
@@ -102,7 +146,7 @@ export function InvoiceSheet({ invoice, client, canEdit, busy, onOpenChange, onS
                     <td className="px-3 py-2 text-right font-medium tabular-nums">{money(line.quantity * line.unitPrice)}</td>
                     {editable && (
                       <td className="pe-1">
-                        {line.timeEntryIds.length === 0 && (
+                        {line.timeEntryIds.length === 0 && !line.expenseIds?.length && (
                           <Button variant="ghost" size="sm" aria-label={t("removeLine")} onClick={() => onSaveDraft(invoice.id, { lines: invoice.lines.filter((l) => l.id !== line.id) })}>
                             <Trash2 className="size-4" />
                           </Button>

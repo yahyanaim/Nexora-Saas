@@ -17,6 +17,8 @@ import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects } from "@/hooks/workforce/use-work-projects"
 import { useClientInvoices, useInvoiceMutations, useTimeEntries } from "@/hooks/workforce/use-work-billing"
+import { useExpenses } from "@/hooks/workforce/use-expenses"
+import { unbilledExpenses } from "@/lib/workforce/profitability"
 import { addDays, displayStatus, invoiceTotals, unbilledValueByClient } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { ClientInvoiceStatus, type ClientInvoice, type ClientInvoiceDisplayStatus } from "@/types/work-billing"
@@ -42,6 +44,7 @@ export default function ClientInvoicesPage() {
   const workspace = useCurrentWorkspace()
   const { data: invoices = [], isLoading } = useClientInvoices()
   const { data: entries = [] } = useTimeEntries()
+  const { data: expenses = [] } = useExpenses()
   const { data: clients = [] } = useClients()
   const { data: employees = [] } = useEmployees()
   const { data: projects = [] } = useProjects()
@@ -54,7 +57,18 @@ export default function ClientInvoicesPage() {
   const opened = invoices.find((i) => i.id === openId) ?? null
 
   const money = (n: number) => formatMoney(n, workspace.currency, locale)
-  const unbilled = useMemo(() => unbilledValueByClient(entries, projects, employees, clients), [entries, projects, employees, clients])
+  // Approved hours plus billable expenses that aren't on an invoice yet, per client
+  const unbilled = useMemo(() => {
+    const totals = unbilledValueByClient(entries, projects, employees, clients)
+    for (const client of clients) {
+      const extra = unbilledExpenses(expenses, projects, client.id).reduce((s, x) => s + x.amount, 0)
+      if (extra > 0) {
+        const current = totals.get(client.id) ?? { hours: 0, amount: 0 }
+        totals.set(client.id, { hours: current.hours, amount: current.amount + extra })
+      }
+    }
+    return totals
+  }, [entries, expenses, projects, employees, clients])
 
   const cards = useMemo<MetricCardItem[]>(() => {
     const money = (n: number) => formatMoney(n, workspace.currency, locale)
@@ -187,6 +201,7 @@ export default function ClientInvoicesPage() {
         key={`create:${billing?.id ?? ""}`}
         client={billing}
         entries={entries}
+        expenses={expenses}
         projects={projects}
         employees={employees}
         currency={workspace.currency}
