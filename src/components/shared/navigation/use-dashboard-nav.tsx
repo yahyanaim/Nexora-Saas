@@ -28,6 +28,10 @@ import {
   Clock,
   ClipboardCheck,
   FileText,
+  ChartGantt,
+  CalendarDays,
+  Gauge,
+  TreePalm,
   type LucideIcon,
 } from "@/components/ui/carbon/icons"
 import { usePathname } from "@/i18n/navigation"
@@ -128,6 +132,41 @@ export function useDashboardNav() {
             icon: FileText,
             descriptionKey: "pageDescClientInvoices",
             permission: AdminPermissionsPlatform.INVOICES_READ,
+          },
+        ],
+      },
+      {
+        id: "planning",
+        title: t("planningSection"),
+        icon: ChartGantt,
+        items: [
+          {
+            title: t("timeline"),
+            url: "/dashboard/timeline",
+            icon: ChartGantt,
+            descriptionKey: "pageDescTimeline",
+            permission: AdminPermissionsPlatform.PROJECTS_READ,
+          },
+          {
+            title: t("calendar"),
+            url: "/dashboard/calendar",
+            icon: CalendarDays,
+            descriptionKey: "pageDescCalendar",
+            permission: AdminPermissionsPlatform.PROJECTS_READ,
+          },
+          {
+            title: t("workload"),
+            url: "/dashboard/workload",
+            icon: Gauge,
+            descriptionKey: "pageDescWorkload",
+            permission: AdminPermissionsPlatform.EMPLOYEES_READ,
+          },
+          {
+            title: t("leave"),
+            url: "/dashboard/leave",
+            icon: TreePalm,
+            descriptionKey: "pageDescLeave",
+            permission: AdminPermissionsPlatform.EMPLOYEES_READ,
           },
         ],
       },

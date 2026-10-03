@@ -23,6 +23,9 @@ import {
   BrushCleaning as LBrushCleaning,
   Bug as LBug,
   Briefcase as LBriefcase,
+  CalendarDays as LCalendarDays,
+  ChartGantt as LChartGantt,
+  Gauge as LGauge,
   Building2 as LBuilding2,
   Handshake as LHandshake,
   Calendar as LCalendar,
@@ -295,6 +298,9 @@ export const ArrowUp = icon(LArrowUp, "ArrowUp")
 export const ArrowUpRight = icon(LArrowUpRight, "ArrowUpRight")
 export const Building = icon(LBuilding2, "Building")
 export const Briefcase = icon(LBriefcase, "Briefcase")
+export const CalendarDays = icon(LCalendarDays, "CalendarDays")
+export const ChartGantt = icon(LChartGantt, "ChartGantt")
+export const Gauge = icon(LGauge, "Gauge")
 export const Handshake = icon(LHandshake, "Handshake")
 export const Calendar = icon(LCalendar, "Calendar")
 export const ChartLine = icon(LChartLine, "ChartLine")
