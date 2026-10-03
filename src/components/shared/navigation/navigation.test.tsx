@@ -60,7 +60,8 @@ describe("useDashboardNav", () => {
       permissions: [AdminPermissionsPlatform.USERS_READ, AdminPermissionsPlatform.INVOICES_READ],
     }
     renderIntl(<NavProbe />)
-    expect(screen.getByTestId("groups").textContent).toBe("users,billing")
+    // Invoice readers also see client invoices under Organization
+    expect(screen.getByTestId("groups").textContent).toBe("organization,users,billing")
   })
 })
 

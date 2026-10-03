@@ -25,6 +25,9 @@ import {
   Building,
   Briefcase,
   Handshake,
+  Clock,
+  ClipboardCheck,
+  FileText,
   type LucideIcon,
 } from "@/components/ui/carbon/icons"
 import { usePathname } from "@/i18n/navigation"
@@ -97,6 +100,34 @@ export function useDashboardNav() {
             icon: Handshake,
             descriptionKey: "pageDescClients",
             permission: AdminPermissionsPlatform.CLIENTS_READ,
+          },
+          {
+            title: t("projects"),
+            url: "/dashboard/projects",
+            icon: FolderKanban,
+            descriptionKey: "pageDescProjects",
+            permission: AdminPermissionsPlatform.PROJECTS_READ,
+          },
+          {
+            title: t("timesheets"),
+            url: "/dashboard/timesheets",
+            icon: Clock,
+            descriptionKey: "pageDescTimesheets",
+            permission: AdminPermissionsPlatform.TIME_TRACK,
+          },
+          {
+            title: t("timeApprovals"),
+            url: "/dashboard/time-approvals",
+            icon: ClipboardCheck,
+            descriptionKey: "pageDescTimeApprovals",
+            permission: AdminPermissionsPlatform.TIME_APPROVE,
+          },
+          {
+            title: t("clientInvoices"),
+            url: "/dashboard/client-invoices",
+            icon: FileText,
+            descriptionKey: "pageDescClientInvoices",
+            permission: AdminPermissionsPlatform.INVOICES_READ,
           },
         ],
       },
@@ -175,13 +206,6 @@ export function useDashboardNav() {
         title: t("management"),
         icon: FolderKanban,
         items: [
-          {
-            title: t("projects"),
-            url: "/dashboard/projects",
-            icon: FolderKanban,
-            descriptionKey: "pageDescProjects",
-            permission: AdminPermissionsPlatform.PROJECTS_READ,
-          },
           {
             title: t("files"),
             url: "/dashboard/files",
