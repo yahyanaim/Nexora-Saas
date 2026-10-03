@@ -1073,5 +1073,9 @@
   "invoiceMarkedSent": "انوائس بھیجی گئی نشان زد",
   "invoiceMarkedPaid": "انوائس ادا شدہ نشان زد",
   "invoiceVoided": "انوائس منسوخ",
-  "invoiceDeleted": "مسودہ حذف ہو گیا"
+  "invoiceDeleted": "مسودہ حذف ہو گیا",
+  "logTime": "وقت درج کریں",
+  "needsAttention": "توجہ درکار",
+  "expandSidebar": "سائڈبار پھیلائیں",
+  "collapseSidebar": "سائڈبار سمیٹیں"
 }

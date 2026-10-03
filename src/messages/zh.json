@@ -1073,5 +1073,9 @@
   "invoiceMarkedSent": "发票已标记为已发送",
   "invoiceMarkedPaid": "发票已标记为已付款",
   "invoiceVoided": "发票已作废",
-  "invoiceDeleted": "草稿已删除"
+  "invoiceDeleted": "草稿已删除",
+  "logTime": "记录工时",
+  "needsAttention": "需要关注",
+  "expandSidebar": "展开侧边栏",
+  "collapseSidebar": "收起侧边栏"
 }

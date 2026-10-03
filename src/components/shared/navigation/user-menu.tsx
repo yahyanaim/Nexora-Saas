@@ -64,8 +64,11 @@ export function LogoutDialog({
   )
 }
 
-/** Profile pill in the top bar: avatar, name and role (name hidden below 2xl). */
-export function UserMenu() {
+/**
+ * Profile menu. `pill`: top-bar pill with name and role (name hidden below
+ * 2xl). `avatar` / `expanded`: the sidebar's avatar, alone or with the name.
+ */
+export function UserMenu({ variant = "pill" }: { variant?: "pill" | "avatar" | "expanded" }) {
   const t = useTranslations()
   const { authedUser, myEmail } = useAuthGuard()
   const { isDark, setTheme } = useTheme()
@@ -81,7 +84,13 @@ export function UserMenu() {
           <button
             type="button"
             aria-label={t("profile")}
-            className="flex h-12 items-center gap-3 rounded-full border border-border bg-card p-1 shadow-panel transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:h-14 lg:p-1.5 2xl:pr-4"
+            className={
+              variant === "pill"
+                ? "flex h-12 items-center gap-3 rounded-full border border-border bg-card p-1 shadow-panel transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:h-14 lg:p-1.5 2xl:pr-4"
+                : variant === "expanded"
+                  ? "flex w-full items-center gap-3 rounded-xl p-1.5 text-left transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  : "flex rounded-full transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            }
           >
             <SpaceAvatar
               name={name}
@@ -89,7 +98,15 @@ export function UserMenu() {
               profileColor={authedUser?.profileColor}
               size="md"
             />
-            <span className="hidden min-w-0 max-w-44 flex-col text-left 2xl:flex">
+            <span
+              className={
+                variant === "pill"
+                  ? "hidden min-w-0 max-w-44 flex-col text-left 2xl:flex"
+                  : variant === "expanded"
+                    ? "flex min-w-0 flex-1 flex-col"
+                    : "hidden"
+              }
+            >
               <span className="truncate text-sm font-semibold text-foreground">{name}</span>
               <span className="truncate text-xs text-muted-foreground">
                 <span className="capitalize">{authedUser?.role}</span>
@@ -97,10 +114,14 @@ export function UserMenu() {
                 {myEmail}
               </span>
             </span>
-            <ChevronDown className="hidden text-muted-foreground 2xl:block" />
+            {variant === "pill" && <ChevronDown className="hidden text-muted-foreground 2xl:block" />}
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64 rounded-2xl p-1.5">
+        <DropdownMenuContent
+          align="end"
+          side={variant === "pill" ? "bottom" : "right"}
+          className="w-64 rounded-2xl p-1.5"
+        >
           <div className="px-2.5 py-2">
             <p className="truncate text-sm font-semibold text-foreground">{name}</p>
             <p className="truncate text-xs text-muted-foreground">{myEmail}</p>

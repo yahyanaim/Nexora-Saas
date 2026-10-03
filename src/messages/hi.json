@@ -1073,5 +1073,9 @@
   "invoiceMarkedSent": "चालान भेजा गया चिह्नित",
   "invoiceMarkedPaid": "चालान भुगतान हुआ चिह्नित",
   "invoiceVoided": "चालान रद्द",
-  "invoiceDeleted": "ड्राफ़्ट हटाया गया"
+  "invoiceDeleted": "ड्राफ़्ट हटाया गया",
+  "logTime": "समय दर्ज करें",
+  "needsAttention": "ध्यान चाहिए",
+  "expandSidebar": "साइडबार फैलाएँ",
+  "collapseSidebar": "साइडबार समेटें"
 }

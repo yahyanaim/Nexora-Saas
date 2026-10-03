@@ -1073,5 +1073,9 @@
   "invoiceMarkedSent": "Rechnung als versendet markiert",
   "invoiceMarkedPaid": "Rechnung als bezahlt markiert",
   "invoiceVoided": "Rechnung storniert",
-  "invoiceDeleted": "Entwurf gelöscht"
+  "invoiceDeleted": "Entwurf gelöscht",
+  "logTime": "Zeit erfassen",
+  "needsAttention": "Braucht Aufmerksamkeit",
+  "expandSidebar": "Seitenleiste erweitern",
+  "collapseSidebar": "Seitenleiste einklappen"
 }
