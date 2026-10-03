@@ -1073,5 +1073,9 @@
   "invoiceMarkedSent": "Facture marquée envoyée",
   "invoiceMarkedPaid": "Facture marquée payée",
   "invoiceVoided": "Facture annulée",
-  "invoiceDeleted": "Brouillon supprimé"
+  "invoiceDeleted": "Brouillon supprimé",
+  "logTime": "Saisir du temps",
+  "needsAttention": "Demande votre attention",
+  "expandSidebar": "Agrandir le menu",
+  "collapseSidebar": "Réduire le menu"
 }

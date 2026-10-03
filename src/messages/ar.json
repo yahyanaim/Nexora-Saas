@@ -1073,5 +1073,9 @@
   "invoiceMarkedSent": "تم تعليم الفاتورة كمرسلة",
   "invoiceMarkedPaid": "تم تعليم الفاتورة كمدفوعة",
   "invoiceVoided": "تم إلغاء الفاتورة",
-  "invoiceDeleted": "تم حذف المسودة"
+  "invoiceDeleted": "تم حذف المسودة",
+  "logTime": "تسجيل الوقت",
+  "needsAttention": "يحتاج إلى متابعة",
+  "expandSidebar": "توسيع الشريط الجانبي",
+  "collapseSidebar": "طي الشريط الجانبي"
 }

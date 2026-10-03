@@ -1073,5 +1073,9 @@
   "invoiceMarkedSent": "Invoice marked as sent",
   "invoiceMarkedPaid": "Invoice marked as paid",
   "invoiceVoided": "Invoice voided",
-  "invoiceDeleted": "Draft deleted"
+  "invoiceDeleted": "Draft deleted",
+  "logTime": "Log time",
+  "needsAttention": "Needs attention",
+  "expandSidebar": "Expand sidebar",
+  "collapseSidebar": "Collapse sidebar"
 }

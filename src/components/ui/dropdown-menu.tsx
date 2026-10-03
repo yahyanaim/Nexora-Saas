@@ -110,8 +110,12 @@ export function DropdownMenuContent({
       role="menu"
       className={cn(
         "absolute z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 duration-150",
-        align === "end" ? "right-0" : align === "center" ? "left-1/2 -translate-x-1/2" : "left-0",
-        side === "top" ? "bottom-full mb-1" : "top-full mt-1",
+        side === "right"
+          ? cn("left-full ms-2", align === "end" ? "bottom-0" : "top-0")
+          : cn(
+              align === "end" ? "right-0" : align === "center" ? "left-1/2 -translate-x-1/2" : "left-0",
+              side === "top" ? "bottom-full mb-1" : "top-full mt-1"
+            ),
         className
       )}
     >

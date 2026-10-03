@@ -1073,5 +1073,9 @@
   "invoiceMarkedSent": "Factura marcada como enviada",
   "invoiceMarkedPaid": "Factura marcada como pagada",
   "invoiceVoided": "Factura anulada",
-  "invoiceDeleted": "Borrador eliminado"
+  "invoiceDeleted": "Borrador eliminado",
+  "logTime": "Registrar horas",
+  "needsAttention": "Requiere atención",
+  "expandSidebar": "Expandir barra lateral",
+  "collapseSidebar": "Contraer barra lateral"
 }
