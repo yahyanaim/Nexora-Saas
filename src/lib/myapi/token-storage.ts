@@ -15,6 +15,9 @@ import { isDemoMode } from "@/lib/auth/demo-mode"
 
 const TOKEN_KEY = "token"
 
+/** Token set by the demo sign-in; no real backend ever accepts it. */
+export const DEMO_SESSION_TOKEN = "demo-session-token"
+
 export const tokenStorage = {
   /**
    * Reads the token from document.cookie.
@@ -52,4 +55,9 @@ export const tokenStorage = {
     const secure = window.location.protocol === "https:" ? "; Secure" : ""
     document.cookie = `${TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax${secure}`
   },
+}
+
+/** True when the browser holds the demo sign-in session (demo mode only). */
+export function hasDemoSession(): boolean {
+  return tokenStorage.get() === DEMO_SESSION_TOKEN
 }

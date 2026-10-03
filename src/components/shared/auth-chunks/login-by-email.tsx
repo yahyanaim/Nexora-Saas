@@ -12,7 +12,7 @@ import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useTranslations, useLocale } from "next-intl"
 import { useMutation } from "@tanstack/react-query"
 import { loginApi, isDemoMode } from "@/lib/api/auth-apis"
-import { tokenStorage } from "@/lib/myapi/token-storage"
+import { DEMO_SESSION_TOKEN, tokenStorage } from "@/lib/myapi/token-storage"
 import { toast } from "sonner"
 import { apiErrorMessage } from "@/lib/myapi/client"
 
@@ -147,7 +147,7 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
             onClick={async () => {
               if (typeof window !== "undefined") {
                 sessionStorage.removeItem("saas_demo_logged_out")
-                tokenStorage.set("demo-session-token")
+                tokenStorage.set(DEMO_SESSION_TOKEN)
               }
               toast.success("Welcome! Exploring SaaS as Demo Administrator.")
               // Full page load so the edge guard sees the new demo session cookie
