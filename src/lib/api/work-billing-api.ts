@@ -14,6 +14,8 @@ import { listProjectsApi } from "./work-projects-api"
 import { listEmployeesApi } from "./employees-api"
 import { listClientsApi } from "./clients-api"
 import { DEMO_WORKSPACES } from "@/lib/workforce/demo-seed"
+import { unbilledExpenses } from "@/lib/workforce/profitability"
+import { listExpensesApi, releaseInvoiceExpenses, setExpensesInvoice } from "./expenses-api"
 
 /**
  * Timesheets, approvals and client invoices. Backed by the browser demo store
@@ -169,7 +171,7 @@ export async function listClientInvoicesApi(workspaceId: string): Promise<Client
  */
 export async function createInvoiceFromHoursApi(
   workspaceId: string,
-  input: { clientId: string; entryIds: string[]; issueDate?: string; taxRate: number; notes?: string }
+  input: { clientId: string; entryIds: string[]; expenseIds?: string[]; issueDate?: string; taxRate: number; notes?: string }
 ): Promise<ClientInvoice> {
   if (input.taxRate < 0 || input.taxRate > 100) throw new Error("Tax must be between 0 and 100%")
   const [projects, employees, clients] = await Promise.all([
@@ -182,8 +184,13 @@ export async function createInvoiceFromHoursApi(
 
   const billable = unbilledEntries(entries.list(workspaceId), projects, client.id)
   const selected = billable.filter((e) => input.entryIds.includes(e.id))
-  if (input.entryIds.length === 0) throw new Error("Select at least one block of approved hours")
+  const expenseIds = input.expenseIds ?? []
+  const rebill = unbilledExpenses(await listExpensesApi(workspaceId), projects, client.id).filter((x) =>
+    expenseIds.includes(x.id)
+  )
+  if (input.entryIds.length === 0 && expenseIds.length === 0) throw new Error("Select at least one block of approved hours")
   if (selected.length !== input.entryIds.length) throw new Error("Some hours are no longer available to invoice")
+  if (rebill.length !== expenseIds.length) throw new Error("Some expenses are no longer available to invoice")
 
   const issueDate = input.issueDate ?? todayIso()
   const invoice = invoices.create(workspaceId, {
@@ -193,11 +200,23 @@ export async function createInvoiceFromHoursApi(
     issueDate,
     dueDate: addDays(issueDate, client.paymentTermsDays),
     status: ClientInvoiceStatus.DRAFT,
-    lines: buildInvoiceLines(selected, projects, employees, client, () => createId("ln")),
+    lines: [
+      ...buildInvoiceLines(selected, projects, employees, client, () => createId("ln")),
+      ...rebill.map((x) => ({
+        id: createId("ln"),
+        description: `${projects.find((p) => p.id === x.projectId)?.code ?? ""} · ${x.description}`,
+        quantity: 1,
+        unitPrice: x.amount,
+        projectId: x.projectId,
+        timeEntryIds: [],
+        expenseIds: [x.id],
+      })),
+    ],
     taxRate: input.taxRate,
     notes: input.notes || undefined,
   })
   for (const e of selected) entries.update(workspaceId, e.id, { invoiceId: invoice.id })
+  setExpensesInvoice(workspaceId, rebill.map((x) => x.id), invoice.id)
   return invoice
 }
 
@@ -218,10 +237,16 @@ export async function updateInvoiceDraftApi(
 }
 
 function assertLinesKeepHours(before: InvoiceLine[], after: InvoiceLine[]) {
-  for (const line of before.filter((l) => l.timeEntryIds.length > 0)) {
+  for (const line of before.filter((l) => l.timeEntryIds.length > 0 || l.expenseIds?.length)) {
     const kept = after.find((l) => l.id === line.id)
-    if (!kept || kept.quantity !== line.quantity || kept.timeEntryIds.join() !== line.timeEntryIds.join()) {
-      throw new Error("Lines billed from hours can't change their hours; remove the invoice to re-bill them")
+    if (
+      !kept ||
+      kept.quantity !== line.quantity ||
+      kept.unitPrice !== line.unitPrice ||
+      kept.timeEntryIds.join() !== line.timeEntryIds.join() ||
+      (kept.expenseIds ?? []).join() !== (line.expenseIds ?? []).join()
+    ) {
+      throw new Error("Lines billed from hours or expenses can't change; remove the invoice to re-bill them")
     }
   }
 }
@@ -273,4 +298,5 @@ function releaseHours(workspaceId: string, invoiceId: string) {
   for (const e of entries.list(workspaceId).filter((x) => x.invoiceId === invoiceId)) {
     entries.update(workspaceId, e.id, { invoiceId: undefined })
   }
+  releaseInvoiceExpenses(workspaceId, invoiceId)
 }

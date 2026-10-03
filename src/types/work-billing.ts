@@ -50,6 +50,8 @@ export interface InvoiceLine {
   projectId?: string
   /** Time entries billed by this line; freed again if the invoice is voided or deleted */
   timeEntryIds: string[]
+  /** Expenses re-billed by this line; freed the same way */
+  expenseIds?: string[]
 }
 
 export interface ClientInvoice {

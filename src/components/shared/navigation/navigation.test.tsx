@@ -40,7 +40,7 @@ describe("useDashboardNav", () => {
   it("shows every section to an admin and resolves the active page", () => {
     renderIntl(<NavProbe />)
     expect(screen.getByTestId("groups").textContent).toBe(
-      "dashboard,organization,planning,users,billing,management,support,system"
+      "dashboard,organization,finance,planning,users,billing,management,support,system"
     )
     expect(screen.getByTestId("active-group").textContent).toBe("billing")
     expect(screen.getByTestId("active-item").textContent).toBe("/dashboard/invoices")
@@ -60,8 +60,8 @@ describe("useDashboardNav", () => {
       permissions: [AdminPermissionsPlatform.USERS_READ, AdminPermissionsPlatform.INVOICES_READ],
     }
     renderIntl(<NavProbe />)
-    // Invoice readers also see client invoices under Organization
-    expect(screen.getByTestId("groups").textContent).toBe("organization,users,billing")
+    // Invoice readers also see client invoices under Finance
+    expect(screen.getByTestId("groups").textContent).toBe("finance,users,billing")
   })
 })
 
