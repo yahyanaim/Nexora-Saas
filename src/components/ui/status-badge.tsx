@@ -19,12 +19,12 @@ export function StatusBadge<T extends string = string>({
 }: StatusBadgeProps<T>) {
   const item = config?.[value]
   const label = item?.label ?? String(value)
-  const itemClassName = item?.className ?? "bg-muted/60 text-muted-foreground border-border"
+  const itemClassName = item?.className ?? "bg-muted text-muted-foreground"
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize select-none",
+        "inline-flex items-center gap-1.5 rounded-full border border-transparent px-2.5 py-0.5 text-xs font-medium whitespace-nowrap capitalize select-none",
         itemClassName,
         className
       )}

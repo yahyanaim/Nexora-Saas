@@ -85,7 +85,7 @@ function ChartRadarLinesOnly() {
       <CardFooter className="flex-col items-start gap-2 border-t px-6 py-4 text-xs text-muted-foreground leading-relaxed">
         <div className="flex items-center gap-2 leading-none font-medium text-foreground">
           {t("trendingUpByPercent", { percent: "5.2%" })}{" "}
-          <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <TrendingUp className="h-4 w-4 text-success-foreground" />
         </div>
         <p>
           <span className="font-semibold text-foreground">Multi-Axis Balance:</span> Maps concurrent desktop vs. mobile engagement across circular 6-month axes. Visual symmetry indicates uniform omni-channel growth, while outer points highlight breakthrough adoption periods.

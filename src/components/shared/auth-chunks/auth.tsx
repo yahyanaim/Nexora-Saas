@@ -12,6 +12,8 @@ import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
 import { CitySkyline } from "@/components/shared/auth-chunks/city-skyline"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import Image from "next/image"
+import { useTranslations } from "next-intl"
 
 export type AuthSections =
   | "login-by-email"
@@ -24,8 +26,9 @@ export type AuthSections =
   | "accept-invite"
 
 export const AuthPage = () => {
+  const t = useTranslations()
   const searchParams = useSearchParams()
-  const initialSection = (searchParams?.get("section") as AuthSections) || "register"
+  const initialSection = (searchParams?.get("section") as AuthSections) || "login-by-email"
   const urlToken = searchParams?.get("token") || ""
 
   const [authSections, setAuthSections] = useState<AuthSections>(initialSection)
@@ -67,8 +70,14 @@ export const AuthPage = () => {
       </div>
 
       {/* Main Centered Auth Card Container */}
-      <div className="my-auto flex w-full flex-col items-center justify-center py-8">
-        <div className="w-full max-w-sm">
+      <div className="my-auto flex w-full flex-col items-center justify-center gap-6 py-8">
+        <div className="flex items-center gap-2.5 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-5 shadow-panel">
+          <span className="flex size-9 items-center justify-center rounded-full bg-info-soft">
+            <Image src="/app-logo.png" alt="" width={28} height={28} className="size-6 object-contain" />
+          </span>
+          <span className="text-[15px] font-semibold tracking-tight text-foreground">{t("appName")}</span>
+        </div>
+        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-panel sm:p-8">
           {authSections === "login-by-qrCode" ? (
             <LoginByQrCode setAuthSections={setAuthSections} />
           ) : authSections === "login-by-email" ? (

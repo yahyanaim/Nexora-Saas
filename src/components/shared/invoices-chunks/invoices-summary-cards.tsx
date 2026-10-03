@@ -75,37 +75,37 @@ export function InvoicesSummaryCards({ invoices }: InvoicesSummaryCardsProps) {
       key: "paid",
       title: t("paidInvoices"),
       value: summary.paid.toString(),
-      valueClassName: "text-emerald-600",
+      valueClassName: "text-success-foreground",
       badge: {
         label: t("paid"),
         icon: CheckCircle,
         variant: "outline" as const,
         className:
-          "gap-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-600",
+          "gap-1 border-success/20 bg-success-soft text-success-foreground",
       },
       footer: {
         icon: FileText,
         text: t("paidInvoices"),
         subtext: t("paidInvoicesSubtext"),
-        className: "text-emerald-600",
+        className: "text-success-foreground",
       },
     },
     {
       key: "pending",
       title: t("pendingInvoices"),
       value: summary.pending.toString(),
-      valueClassName: "text-amber-600",
+      valueClassName: "text-warning-foreground",
       badge: {
         label: t("pending"),
         icon: Clock,
         variant: "outline" as const,
-        className: "gap-1 border-amber-500/20 bg-amber-500/10 text-amber-600",
+        className: "gap-1 border-warning/20 bg-warning-soft text-warning-foreground",
       },
       footer: {
         icon: Clock,
         text: t("pendingInvoices"),
         subtext: t("pendingInvoicesSubtext"),
-        className: "text-amber-600",
+        className: "text-warning-foreground",
       },
     },
     {
@@ -145,7 +145,7 @@ export function InvoicesSummaryCards({ invoices }: InvoicesSummaryCardsProps) {
               </Badge>
             </div>
             <CardTitle
-              className={`text-2xl font-bold font-mono tabular-nums @[250px]/card:text-3xl mt-2 ${card.valueClassName}`}
+              className={`text-2xl font-bold tabular-nums @[250px]/card:text-3xl mt-2 ${card.valueClassName}`}
             >
               {card.value}
             </CardTitle>

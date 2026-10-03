@@ -74,13 +74,13 @@ export function UsersSummaryCards({
       key: "activeUsers",
       title: t("activeUsers") || "Active Users",
       value: summary.active,
-      valueClassName: "text-emerald-600 dark:text-emerald-400",
+      valueClassName: "text-success-foreground",
       badge: {
         label: t("active") || "Active",
         icon: CheckCircle,
         variant: "outline",
         className:
-          "gap-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+          "gap-1 border-success/20 bg-success-soft text-success-foreground",
       },
       footer: {
         icon: CheckCircle,
@@ -91,13 +91,13 @@ export function UsersSummaryCards({
       key: "pendingUsers",
       title: t("pendingUsers") || "Pending / Inactive",
       value: summary.pending,
-      valueClassName: "text-amber-600 dark:text-amber-400",
+      valueClassName: "text-warning-foreground",
       badge: {
         label: t("pending") || "Pending",
         icon: Clock,
         variant: "outline",
         className:
-          "gap-1 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400",
+          "gap-1 border-warning/20 bg-warning-soft text-warning-foreground",
       },
       footer: {
         icon: Clock,

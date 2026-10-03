@@ -10,6 +10,7 @@ import { AuditLogEntry } from "@/lib/demo-data/audit-logs"
 import { Shield } from "@/components/ui/carbon/icons"
 import { Badge } from "@/components/ui/badge"
 import { FacetedFilterConfig } from "../data-table-chunks/data-table-toolbar"
+import { PageHeader } from "@/components/shared/page-header"
 
 export default function AuditLogsPage() {
   const t = useTranslations()
@@ -67,26 +68,15 @@ export default function AuditLogsPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              {t("auditLogs") || "Audit Logs"}
-            </h1>
-            <Badge
-              variant="outline"
-              className="hidden sm:inline-flex gap-1 text-xs font-normal border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-            >
-              <Shield className="size-3" />
-              SOC 2 Compliant
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Immutable, real-time audit trail of all security incidents, privileged role modifications, billing cycles, and API dispatches.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        badge={
+          <Badge variant="success" className="hidden sm:inline-flex">
+            <Shield />
+            SOC 2 Compliant
+          </Badge>
+        }
+        description="Immutable, real-time audit trail of all security incidents, privileged role modifications, billing cycles, and API dispatches."
+      />
 
       {/* KPI Metric Summary Cards */}
       <AuditLogsSummaryCards logs={logs} isLoading={isLoading} />

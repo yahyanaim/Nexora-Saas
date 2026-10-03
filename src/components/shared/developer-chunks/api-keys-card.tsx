@@ -9,6 +9,7 @@ import { revokeApiKeyApi } from "@/lib/api/developer-apis"
 import { CreateApiKeyDialog } from "./create-api-key-dialog"
 import { Plus, Key, Copy, Check, Trash2, Clock } from "@/components/ui/carbon/icons"
 import { formatDate } from "@/lib/utils/format-date"
+import { useHasMounted } from "@/hooks/use-has-mounted"
 import { toast } from "sonner"
 
 interface ApiKeysCardProps {
@@ -16,6 +17,7 @@ interface ApiKeysCardProps {
 }
 
 export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
+  const hasMounted = useHasMounted()
   const [keys, setKeys] = useState<ApiKey[]>(initialKeys)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -112,10 +114,10 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
                       <span className="font-semibold text-sm text-foreground">{key.name}</span>
                       <Badge
                         variant="outline"
-                        className={`text-[10px] uppercase font-mono px-2 py-0 h-4.5 ${
+                        className={`text-xs uppercase font-mono px-2 py-0 h-4.5 ${
                           isRevoked
                             ? "bg-destructive/10 text-destructive border-destructive/20"
-                            : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                            : "bg-success-soft text-success-foreground border-success/20"
                         }`}
                       >
                         {key.status}
@@ -134,7 +136,7 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
                           title="Copy token prefix"
                         >
                           {isCopied ? (
-                            <Check className="size-3.5 text-emerald-600" />
+                            <Check className="size-3.5 text-success-foreground" />
                           ) : (
                             <Copy className="size-3.5" />
                           )}
@@ -147,7 +149,7 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
                       {key.scopes.map((scope) => (
                         <span
                           key={scope}
-                          className="inline-flex items-center rounded-md bg-secondary/80 px-1.5 py-0.5 text-[10px] font-mono text-secondary-foreground"
+                          className="inline-flex items-center rounded-md bg-secondary/80 px-1.5 py-0.5 text-xs font-mono text-secondary-foreground"
                         >
                           {scope}
                         </span>
@@ -157,10 +159,10 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
 
                   <div className="flex items-center justify-between md:justify-end gap-6 text-xs text-muted-foreground shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-border/40">
                     <div className="flex flex-col items-start md:items-end">
-                      <span>Created: {formatDate(key.createdAt)}</span>
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <span>Created: {hasMounted ? formatDate(key.createdAt) : "…"}</span>
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="size-3" />
-                        {key.lastUsedAt ? `Last used: ${formatDate(key.lastUsedAt)}` : "Never used"}
+                        {key.lastUsedAt ? `Last used: ${hasMounted ? formatDate(key.lastUsedAt) : "…"}` : "Never used"}
                       </span>
                     </div>
 

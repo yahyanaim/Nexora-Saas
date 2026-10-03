@@ -28,6 +28,7 @@ import { TransactionsSummaryCards } from "./transactions-summary-cards"
 import { toast } from "@/lib/utils/toast"
 import { Plus } from "@/components/ui/carbon/icons"
 import { generateReceiptPdf, printReceipt } from "@/lib/pdf/generate-receipt-pdf"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction =
   | { type: "delete"; transaction: Transaction }
@@ -267,6 +268,7 @@ export default function TransactionsPage() {
   return (
     <>
       <div className="p-4 md:p-6 space-y-6">
+        <PageHeader />
         <TransactionsSummaryCards transactions={transactions} />
         <DataTable
           manual

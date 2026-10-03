@@ -5,77 +5,100 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f4f4f4;
-  --foreground: #161616;
+  /* Canvas + surfaces: light grey canvas with white floating panels */
+  --background: #f4f5f7;
+  --foreground: #111827;
   --card: #ffffff;
-  --card-foreground: #161616;
+  --card-foreground: #111827;
   --popover: #ffffff;
-  --popover-foreground: #161616;
-  --primary: #0f62fe;
+  --popover-foreground: #111827;
+  --primary: #2563eb;
   --primary-foreground: #ffffff;
-  --primary-hover: #0353e9;
-  --secondary: #e0e0e0;
-  --secondary-foreground: #161616;
-  --muted: #f4f4f4;
-  --muted-foreground: #525252;
-  --accent: #e8e8e8;
-  --accent-foreground: #161616;
-  --destructive: #da1e28;
+  --primary-hover: #1d4ed8;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #111827;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #f3f4f6;
+  --accent-foreground: #111827;
+  --destructive: #dc2626;
   --destructive-foreground: #ffffff;
-  --border: #e0e0e0;
+  --border: #e8eaee;
   --input: #ffffff;
-  --ring: #0f62fe;
-  --radius: 0.625rem;
+  --ring: #2563eb;
+  --radius: 0.75rem;
+
+  /* Status colors: soft background + strong foreground */
+  --success: #16a34a;
+  --success-soft: #ecfdf3;
+  --success-foreground: #15803d;
+  --warning: #d97706;
+  --warning-soft: #fffbeb;
+  --warning-foreground: #b45309;
+  --danger-soft: #fef2f2;
+  --danger-foreground: #b91c1c;
+  --info-soft: #eff6ff;
+  --info-foreground: #1d4ed8;
 
   --sidebar: #ffffff;
-  --sidebar-foreground: #161616;
-  --sidebar-primary: #0f62fe;
+  --sidebar-foreground: #111827;
+  --sidebar-primary: #2563eb;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f4f4;
-  --sidebar-accent-foreground: #161616;
-  --sidebar-border: #e0e0e0;
-  --sidebar-ring: #0f62fe;
+  --sidebar-accent: #f3f4f6;
+  --sidebar-accent-foreground: #111827;
+  --sidebar-border: #e8eaee;
+  --sidebar-ring: #2563eb;
 
-  /* IBM Carbon Blue Data Visualization Palette (Light) */
-  --chart-1: #0f62fe;
-  --chart-2: #0043ce;
-  --chart-3: #1192e8;
-  --chart-4: #6929c4;
-  --chart-5: #007d79;
+  --chart-1: #2563eb;
+  --chart-2: #60a5fa;
+  --chart-3: #16a34a;
+  --chart-4: #f59e0b;
+  --chart-5: #8b5cf6;
 }
 
 .dark,
 .cds--g100 {
-  --background: #121212;
-  --foreground: #f4f4f4;
-  --card: #1c1c1c;
-  --card-foreground: #f4f4f4;
-  --popover: #222222;
-  --popover-foreground: #f4f4f4;
-  --primary: #0f62fe;
+  --background: #0b0d12;
+  --foreground: #f3f4f6;
+  --card: #14171e;
+  --card-foreground: #f3f4f6;
+  --popover: #181b23;
+  --popover-foreground: #f3f4f6;
+  --primary: #3b82f6;
   --primary-foreground: #ffffff;
-  --primary-hover: #0353e9;
-  --secondary: #262626;
-  --secondary-foreground: #f4f4f4;
-  --muted: #1e1e1e;
-  --muted-foreground: #a8a8a8;
-  --accent: #262626;
-  --accent-foreground: #f4f4f4;
-  --destructive: #da1e28;
+  --primary-hover: #2563eb;
+  --secondary: #1d212a;
+  --secondary-foreground: #f3f4f6;
+  --muted: #1b1f27;
+  --muted-foreground: #9ca3af;
+  --accent: #1d212a;
+  --accent-foreground: #f3f4f6;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: rgba(255, 255, 255, 0.1);
-  --input: #1a1a1a;
-  --ring: #0f62fe;
-  --radius: 0.625rem;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: #14171e;
+  --ring: #3b82f6;
+  --radius: 0.75rem;
 
-  --sidebar: #161616;
-  --sidebar-foreground: #f4f4f4;
-  --sidebar-primary: #0f62fe;
+  --success: #22c55e;
+  --success-soft: rgba(34, 197, 94, 0.12);
+  --success-foreground: #4ade80;
+  --warning: #f59e0b;
+  --warning-soft: rgba(245, 158, 11, 0.12);
+  --warning-foreground: #fbbf24;
+  --danger-soft: rgba(239, 68, 68, 0.12);
+  --danger-foreground: #f87171;
+  --info-soft: rgba(59, 130, 246, 0.14);
+  --info-foreground: #60a5fa;
+
+  --sidebar: #14171e;
+  --sidebar-foreground: #f3f4f6;
+  --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #262626;
-  --sidebar-accent-foreground: #f4f4f4;
+  --sidebar-accent: #1d212a;
+  --sidebar-accent-foreground: #f3f4f6;
   --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #0f62fe;
+  --sidebar-ring: #3b82f6;
   --bg-wallpaper: linear-gradient(
     135deg,
     lab(29% 26.64 -45.47) 0%,
@@ -83,12 +106,11 @@
     lab(28% 55 -67.98) 100%
   );
 
-  /* IBM Carbon Blue Data Visualization Palette (Dark) */
-  --chart-1: #0f62fe;
-  --chart-2: #4589ff;
-  --chart-3: #0043ce;
-  --chart-4: #1192e8;
-  --chart-5: #007d79;
+  --chart-1: #3b82f6;
+  --chart-2: #93c5fd;
+  --chart-3: #22c55e;
+  --chart-4: #fbbf24;
+  --chart-5: #a78bfa;
 }
 
 .purple {
@@ -285,6 +307,20 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-info-foreground: var(--info-foreground);
+  --shadow-xs: 0 1px 2px 0 rgb(16 24 40 / 0.04);
+  --shadow-sm: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.04);
+  --shadow-md: 0 2px 4px -1px rgb(16 24 40 / 0.04), 0 6px 16px -4px rgb(16 24 40 / 0.08);
+  --shadow-panel: 0 1px 2px 0 rgb(16 24 40 / 0.03), 0 4px 20px -6px rgb(16 24 40 / 0.06);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -309,10 +345,16 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
   html {
     @apply font-sans;
+    /* Inter: open digits, single-storey a off, straight-sided l */
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+  .tabular-nums,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
   }
   ::view-transition-old(root),
   ::view-transition-new(root) {

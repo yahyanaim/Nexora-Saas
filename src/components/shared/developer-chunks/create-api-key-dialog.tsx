@@ -90,7 +90,7 @@ export function CreateApiKeyDialog({
         {revealedToken ? (
           <div className="space-y-4">
             <DialogHeader>
-              <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <div className="flex items-center gap-2 text-success-foreground">
                 <Key className="size-5" />
                 <DialogTitle>API Key Generated</DialogTitle>
               </div>
@@ -99,9 +99,9 @@ export function CreateApiKeyDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex items-start gap-3">
-              <Warning className="size-4.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+            <div className="rounded-xl border border-warning/20 bg-warning-soft p-3.5 flex items-start gap-3">
+              <Warning className="size-4.5 text-warning-foreground shrink-0 mt-0.5" />
+              <p className="text-xs text-warning-foreground leading-relaxed">
                 Treat this key like a password. Do not commit it to public repositories or expose it in client-side code.
               </p>
             </div>
@@ -171,11 +171,11 @@ export function CreateApiKeyDialog({
                       <div className="flex flex-col">
                         <span className="text-xs font-semibold text-foreground">
                           {scope.label}{" "}
-                          <span className="text-[11px] font-mono text-muted-foreground font-normal">
+                          <span className="text-xs font-mono text-muted-foreground font-normal">
                             ({scope.id})
                           </span>
                         </span>
-                        <span className="text-[11px] text-muted-foreground">
+                        <span className="text-xs text-muted-foreground">
                           {scope.description}
                         </span>
                       </div>

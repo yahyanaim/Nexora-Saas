@@ -149,7 +149,7 @@ export function SalesBreakdownCard() {
             <Information className="size-3.5 text-muted-foreground/70" />
             <span className="font-medium">SaaS Revenue Breakdown</span>
           </div>
-          <span className="font-mono text-[11px] font-semibold text-primary">
+          <span className="tabular-nums text-xs font-semibold text-primary">
             {totalAmount} ({badgeText})
           </span>
         </div>
@@ -165,7 +165,7 @@ export function SalesBreakdownCard() {
                 {item.label}
               </span>
               <div className="flex items-center gap-3 shrink-0">
-                <span className="font-mono font-medium text-foreground">
+                <span className="tabular-nums font-medium text-foreground">
                   {item.amount}
                 </span>
                 <div className="w-7 flex justify-end">
@@ -178,7 +178,7 @@ export function SalesBreakdownCard() {
       </div>
 
       {/* Operational Explanation Paragraph */}
-      <div className="mt-4 border-t border-border/40 pt-3 text-[11px] leading-relaxed text-muted-foreground">
+      <div className="mt-4 border-t border-border/40 pt-3 text-xs leading-relaxed text-muted-foreground">
         <span className="font-semibold text-foreground">Ledger Analysis: </span>
         {explanation}
       </div>

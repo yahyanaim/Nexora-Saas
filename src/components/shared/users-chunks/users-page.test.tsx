@@ -10,6 +10,14 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   usePathname: () => "/en/dashboard/users",
   useSearchParams: () => new URLSearchParams(),
+  redirect: vi.fn(),
+  permanentRedirect: vi.fn(),
+  notFound: vi.fn(),
+}))
+
+// The page header reads the signed-in user's permissions for its breadcrumb
+vi.mock("@/hooks/auth/use-auth-guard", () => ({
+  useAuthGuard: () => ({ authedUser: { id: "u1", name: "Admin", role: "admin" } }),
 }))
 
 const page = (data: User[]) => ({
@@ -59,6 +67,7 @@ describe("UsersPage", () => {
 
     renderPage()
 
-    expect(await screen.findByText(/no results/i)).toBeInTheDocument()
+    // Rendered by both the phone card list and the desktop table (CSS shows one)
+    expect((await screen.findAllByText(/no results/i)).length).toBeGreaterThan(0)
   })
 })

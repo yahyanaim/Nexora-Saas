@@ -48,19 +48,19 @@ export function getTransactionsColumns(
     [TransactionStatus.PAID]: {
       label: t("paid"),
       className:
-        "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-transparent",
+        "bg-success-soft text-success-foreground border-transparent",
     },
 
     [TransactionStatus.PENDING]: {
       label: t("pending"),
       className:
-        "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-transparent",
+        "bg-warning-soft text-warning-foreground border-transparent",
     },
 
     [TransactionStatus.FAILED]: {
       label: t("failed"),
       className:
-        "bg-red-500/10 text-red-700 dark:text-red-400 border-transparent",
+        "bg-danger-soft text-danger-foreground border-transparent",
     },
 
     [TransactionStatus.CANCELED]: {
@@ -72,7 +72,7 @@ export function getTransactionsColumns(
     [TransactionStatus.REFUNDED]: {
       label: t("refunded"),
       className:
-        "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-transparent",
+        "bg-info-soft text-info-foreground border-transparent",
     },
   }
 
@@ -80,11 +80,11 @@ export function getTransactionsColumns(
     [TransactionMethod.STRIPE]:
       "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
     [TransactionMethod.PAYPAL]:
-      "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+      "bg-info-soft text-info-foreground",
     [TransactionMethod.CARD]:
       "bg-purple-500/10 text-purple-600 dark:text-purple-400",
     [TransactionMethod.BANK_TRANSFER]:
-      "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+      "bg-success-soft text-success-foreground",
   }
 
   return [

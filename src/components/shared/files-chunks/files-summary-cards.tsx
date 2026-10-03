@@ -145,18 +145,18 @@ export function FilesSummaryCards({
       key: "documents",
       title: t("documents"),
       value: summary.documents.toString(),
-      valueClassName: "text-blue-600",
+      valueClassName: "text-info-foreground",
       badge: {
         label: t("documents"),
         icon: FileText,
         variant: "outline" as const,
-        className: "gap-1 border-blue-500/20 bg-blue-500/10 text-blue-600",
+        className: "gap-1 border-primary/20 bg-info-soft text-info-foreground",
       },
       footer: {
         icon: FileText,
         text: t("documentsDescription"),
         subtext: t("documentsSubtext"),
-        className: "text-blue-600",
+        className: "text-info-foreground",
       },
     },
     {
@@ -182,19 +182,19 @@ export function FilesSummaryCards({
       key: "media",
       title: t("mediaArchives"),
       value: (summary.videos + summary.archives).toString(),
-      valueClassName: "text-orange-600",
+      valueClassName: "text-warning-foreground",
       badge: {
         label: t("media"),
         icon: Video,
         variant: "outline" as const,
         className:
-          "gap-1 border-orange-500/20 bg-orange-500/10 text-orange-600",
+          "gap-1 border-warning/20 bg-warning-soft text-warning-foreground",
       },
       footer: {
         icon: Archive,
         text: t("mediaDescription"),
         subtext: t("mediaSubtext"),
-        className: "text-orange-600",
+        className: "text-warning-foreground",
       },
     },
   ]
@@ -215,7 +215,7 @@ export function FilesSummaryCards({
               </Badge>
             </div>
             <CardTitle
-              className={`text-2xl font-bold font-mono tabular-nums @[250px]/card:text-3xl mt-2 ${card.valueClassName}`}
+              className={`text-2xl font-bold tabular-nums @[250px]/card:text-3xl mt-2 ${card.valueClassName}`}
             >
               {card.value}
             </CardTitle>

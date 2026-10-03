@@ -109,11 +109,11 @@ export function CreateWebhookDialog({
                     <div className="flex flex-col">
                       <span className="text-xs font-semibold text-foreground">
                         {event.label}{" "}
-                        <span className="text-[11px] font-mono text-muted-foreground font-normal">
+                        <span className="text-xs font-mono text-muted-foreground font-normal">
                           ({event.id})
                         </span>
                       </span>
-                      <span className="text-[11px] text-muted-foreground">
+                      <span className="text-xs text-muted-foreground">
                         {event.description}
                       </span>
                     </div>

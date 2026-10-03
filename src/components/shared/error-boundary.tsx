@@ -141,7 +141,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </button>
 
                 {this.state.showDetails && (
-                  <pre className="mt-2 max-h-48 overflow-auto rounded bg-muted/60 p-2.5 font-mono text-[11px] leading-relaxed text-muted-foreground">
+                  <pre className="mt-2 max-h-48 overflow-auto rounded bg-muted/60 p-2.5 font-mono text-xs leading-relaxed text-muted-foreground">
                     {this.state.error.toString()}
                     {"\n"}
                     {this.state.errorInfo?.componentStack}

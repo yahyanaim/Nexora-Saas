@@ -267,7 +267,7 @@ export function AnalyticsKpiCards() {
                 <Information className="size-3.5 shrink-0 text-muted-foreground/70" />
                 <span className="truncate font-medium">{kpi.title}</span>
               </div>
-              <span className="text-[10px] font-mono text-muted-foreground/70 shrink-0">
+              <span className="text-xs tabular-nums text-muted-foreground/70 shrink-0">
                 {dateRange === "Last 7 days" ? "7d" : dateRange === "Last 90 days" ? "90d" : dateRange === "Year to date" ? "YTD" : "30d"}
               </span>
             </div>
@@ -275,15 +275,15 @@ export function AnalyticsKpiCards() {
             {/* Card Middle: Big value, percentage pill, and mini bar sparkline */}
             <div className="mt-3 flex items-end justify-between gap-2">
               <div className="space-y-1">
-                <div className="text-2xl font-bold tracking-tight text-foreground font-mono">
+                <div className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
                   {kpi.value}
                 </div>
                 <div
                   className={cn(
-                    "inline-flex items-center rounded-full px-1.5 py-0.5 text-[11px] font-semibold",
+                    "inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-semibold",
                     kpi.isPositive
-                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                      ? "bg-success-soft text-success-foreground"
+                      : "bg-danger-soft text-danger-foreground"
                   )}
                 >
                   {kpi.change}
@@ -299,7 +299,7 @@ export function AnalyticsKpiCards() {
           </div>
 
           {/* Operational Explanation Paragraph */}
-          <div className="mt-3 border-t border-border/40 pt-2 text-[11px] leading-relaxed text-muted-foreground">
+          <div className="mt-3 border-t border-border/40 pt-2 text-xs leading-relaxed text-muted-foreground">
             <span className="font-semibold text-foreground">Operational Note: </span>
             {kpi.explanation}
           </div>

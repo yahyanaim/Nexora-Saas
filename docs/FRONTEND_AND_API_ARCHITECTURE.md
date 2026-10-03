@@ -33,18 +33,21 @@ graph TB
     end
 ```
 
-### 1.1 The IBM Carbon Design System Integration
-The visual language is rooted in **IBM Carbon Design v11**:
-- **Palette Architecture**:
-  - **Brand Primary**: Carbon Blue 60 (`#0f62fe`) — used for active tabs, primary buttons, focus indicators, and key metric accents.
-  - **Light Mode Canvas**: Carbon Gray 10 (`#f4f4f4`) — provides a calm, glare-free background that reduces eye strain in high-density enterprise environments.
-  - **Card Surfaces**: Carbon White (`#ffffff`) with subtle 1px border delineation (`#e0e0e0`).
-  - **Dark Mode Surfaces**: Carbon Gray 100 (`#121212` canvas, `#1c1c1c` elevated cards, `#262626` borders).
-- **Typography**:
-  - Primary font: **IBM Plex Sans** paired with **Inter** for clean readability across data tables and labels.
-  - Monospace font: Tabular figures for financial sums, timestamps, and metric counts to prevent layout shifts.
-- **Micro-Interactions**:
-  - Precision 150ms transitions, subtle scale shifts on buttons, and clear 2px focus rings (`focus-visible:ring-2 focus-visible:ring-primary`).
+### 1.1 Design System ("floating panels")
+Calm, enterprise look: white floating panels on a light grey canvas, pill-shaped controls, one strong accent color.
+- **Tokens** (`src/app/[locale]/globals.css`, light + dark):
+  - Canvas `--background` `#f4f5f7`, panels `--card` `#ffffff`, borders `--border` `#e8eaee`, text `--foreground` `#111827` / `--muted-foreground` `#6b7280`.
+  - Primary `--primary` `#2563eb` for the main action and the active tab.
+  - Status pairs, soft background + strong text: `success`, `warning`, `danger`, `info` (e.g. `bg-success-soft text-success-foreground`). Use these instead of fixed Tailwind palette colors.
+  - Radius base `0.75rem` (panels `rounded-3xl`, tiles `rounded-2xl`, controls `rounded-full`); soft shadows `shadow-panel`, `shadow-sm`, `shadow-md`.
+- **Typography**: Inter (tabular figures via `tabular-nums` for numbers). JetBrains Mono only for code (API keys, snippets, IDs). Minimum text size 12px.
+- **Icons**: lucide line icons via `@/components/ui/carbon/icons` (16px default, 1.75 stroke).
+- **App shell** (`src/components/shared/navigation/`):
+  - Floating top bar with brand, section tabs (from `lg`), search, notifications, language and profile.
+  - Floating icon rail (from `md`) with the active section's pages, light/dark switch and logout.
+  - Drawer with every page below `lg`.
+  - Navigation, permissions and page descriptions live in `use-dashboard-nav.tsx`.
+- **Pages** start with `<PageHeader />` (breadcrumb, title, description and actions, defaulting from the navigation). Data tables become labelled cards below `lg`.
 
 ### 1.2 The Feature-Chunk Component Pattern
 To avoid monolithic components that hinder performance and maintainability, every major domain feature is engineered into isolated "chunks":

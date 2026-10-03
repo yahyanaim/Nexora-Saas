@@ -71,15 +71,15 @@ export function AuditLogsSummaryCards({
       key: "securityIncidents",
       title: t("securityIncidents") || "Security Sanctions",
       value: summary.security,
-      valueClassName: summary.security > 0 ? "text-amber-600 dark:text-amber-400" : undefined,
+      valueClassName: summary.security > 0 ? "text-warning-foreground" : undefined,
       badge: {
         label: summary.security > 0 ? "Flagged" : "Clear",
         icon: AlertTriangle,
         variant: "outline",
         className:
           summary.security > 0
-            ? "gap-1 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-            : "gap-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+            ? "gap-1 border-warning/20 bg-warning-soft text-warning-foreground"
+            : "gap-1 border-success/20 bg-success-soft text-success-foreground",
       },
       footer: {
         icon: Shield,
@@ -90,13 +90,13 @@ export function AuditLogsSummaryCards({
       key: "apiDispatches",
       title: t("apiDispatches") || "API & Webhooks",
       value: summary.api,
-      valueClassName: "text-blue-600 dark:text-blue-400",
+      valueClassName: "text-info-foreground",
       badge: {
         label: "Live",
         icon: Terminal,
         variant: "outline",
         className:
-          "gap-1 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+          "gap-1 border-primary/20 bg-info-soft text-info-foreground",
       },
       footer: {
         icon: Terminal,

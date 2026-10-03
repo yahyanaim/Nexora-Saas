@@ -9,6 +9,7 @@ import { useUsersTable } from "@/hooks/users/use-users-table"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { useTranslations } from "next-intl"
 import { BannedUsersSummaryCards } from "./banned-users-summary-cards"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction =
   | { type: "delete"; user: User }
@@ -92,6 +93,7 @@ export default function BannedUsersPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
+      <PageHeader />
       <BannedUsersSummaryCards
         users={users}
         totalCount={totalItems}

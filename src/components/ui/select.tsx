@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDown, Checkmark } from "@carbon/icons-react"
+import { ChevronDown, Check as Checkmark } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 
 interface SelectContextType {
@@ -74,7 +74,7 @@ export function SelectTrigger({
       onClick={() => context.setOpen(!context.open)}
       aria-expanded={context.open}
       className={cn(
-        "flex w-full items-center justify-between gap-2 rounded-lg border border-border/70 bg-background/80 px-3 py-2 text-sm text-foreground shadow-xs transition-colors hover:border-border focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-border bg-input px-3.5 py-2 text-sm text-foreground shadow-xs transition-colors hover:bg-muted/40 focus:outline-none focus:ring-4 focus:ring-primary/15 focus:border-primary disabled:cursor-not-allowed disabled:opacity-50",
         size === "sm" ? "h-8 text-xs" : "h-9",
         className
       )}
@@ -130,7 +130,7 @@ export function SelectContent({
       />
       <div
         className={cn(
-          "absolute z-50 max-h-60 min-w-[8rem] w-full overflow-auto rounded-xl border border-border/70 bg-popover/95 p-1 text-popover-foreground shadow-xl backdrop-blur-md animate-in fade-in-0 zoom-in-95",
+          "absolute z-50 max-h-60 min-w-[8rem] w-full overflow-auto rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
           side === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5",
           className
         )}
@@ -165,7 +165,7 @@ export function SelectItem({
         context?.onValueChange?.(value)
       }}
       className={cn(
-        "relative flex cursor-pointer select-none items-center justify-between rounded-lg px-2.5 py-1.5 text-sm outline-none transition-colors hover:bg-muted/70 focus:bg-muted/70",
+        "relative flex min-h-9 cursor-pointer select-none items-center justify-between rounded-xl px-2.5 py-1.5 text-sm outline-none transition-colors hover:bg-muted focus:bg-muted",
         isSelected && "bg-primary/10 font-medium text-primary hover:bg-primary/15",
         className
       )}

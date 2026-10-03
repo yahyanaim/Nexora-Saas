@@ -40,7 +40,7 @@ export function getSubscriptionsColumns(
     [SubscriptionStatus.ACTIVE]: {
       label: t("active"),
       className:
-        "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-transparent",
+        "bg-success-soft text-success-foreground border-transparent",
     },
 
     [SubscriptionStatus.INACTIVE]: {
@@ -52,19 +52,19 @@ export function getSubscriptionsColumns(
     [SubscriptionStatus.CANCELED]: {
       label: t("canceled"),
       className:
-        "bg-red-500/10 text-red-700 dark:text-red-400 border-transparent",
+        "bg-danger-soft text-danger-foreground border-transparent",
     },
 
     [SubscriptionStatus.EXPIRED]: {
       label: t("expired"),
       className:
-        "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-transparent",
+        "bg-warning-soft text-warning-foreground border-transparent",
     },
 
     [SubscriptionStatus.PAST_DUE]: {
       label: t("pastDue"),
       className:
-        "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-transparent",
+        "bg-danger-soft text-danger-foreground border-transparent",
     },
   }
 

@@ -9,8 +9,8 @@ describe("NotificationCenter", () => {
     const button = screen.getByRole("button", { name: /open notifications/i })
     expect(button).toBeInTheDocument()
 
-    // Expect initial unread count of 3 to be visible
-    expect(screen.getByText("3")).toBeInTheDocument()
+    // Unread count is shown as a dot, with the count announced to screen readers
+    expect(screen.getByText("3 unread")).toBeInTheDocument()
     // Popover content should not be visible initially
     expect(screen.queryByText("Security Sanction Enforced")).not.toBeInTheDocument()
   })

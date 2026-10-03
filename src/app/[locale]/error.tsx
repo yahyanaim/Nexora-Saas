@@ -72,13 +72,13 @@ export default function ErrorBoundaryPage({ error, reset }: ErrorProps) {
             </button>
 
             {showDetails && (
-              <div className="mt-2 max-h-48 overflow-auto rounded bg-muted p-2 font-mono text-xs text-foreground">
+              <div className="mt-2 max-h-48 overflow-auto rounded bg-muted p-2 tabular-nums text-xs text-foreground">
                 <p className="font-semibold text-destructive">{error.message}</p>
                 {error.digest && (
                   <p className="mt-1 text-muted-foreground">Digest: {error.digest}</p>
                 )}
                 {error.stack && (
-                  <pre className="mt-2 whitespace-pre-wrap text-[10px] text-muted-foreground">
+                  <pre className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
                     {error.stack}
                   </pre>
                 )}

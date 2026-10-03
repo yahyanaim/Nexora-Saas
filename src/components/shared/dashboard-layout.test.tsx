@@ -6,8 +6,9 @@ import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 const authState = { isPasscodeLocked: false }
 vi.mock("@/hooks/auth/use-auth-guard", () => ({ useAuthGuard: () => authState }))
 vi.mock("./lock-screen", () => ({ LockScreen: () => <div>lock-screen</div> }))
-vi.mock("./sidebar-chunks/dashboard-sidebar", () => ({ DashboardSidebar: () => <nav>sidebar</nav> }))
-vi.mock("./header-chunks/dashboard-header", () => ({ DashboardHeader: () => <header>header</header> }))
+vi.mock("./navigation/dashboard-rail", () => ({ DashboardRail: () => <nav>rail</nav> }))
+vi.mock("./navigation/dashboard-topbar", () => ({ DashboardTopbar: () => <header>topbar</header> }))
+vi.mock("./navigation/mobile-nav-drawer", () => ({ MobileNavDrawer: () => null }))
 
 describe("DashboardLayout", () => {
   beforeEach(() => {

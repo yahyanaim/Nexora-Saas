@@ -15,7 +15,7 @@ export function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "rounded-xl border border-border/60 bg-card text-card-foreground shadow-sm transition-all duration-200 hover:border-border/90",
+        "rounded-3xl border border-border bg-card text-card-foreground shadow-panel transition-colors duration-200",
         size === "sm" && "text-sm",
         className
       )}
@@ -45,7 +45,7 @@ export function CardTitle({
     <h3
       data-slot="card-title"
       className={cn(
-        "text-lg font-semibold leading-none tracking-tight text-foreground",
+        "text-lg font-semibold leading-snug tracking-tight text-foreground",
         className
       )}
       {...props}
@@ -92,7 +92,7 @@ export function CardFooter({
   return (
     <div
       data-slot="card-footer"
-      className={cn("flex items-center p-6 pt-0 border-t border-border/40 mt-auto", className)}
+      className={cn("flex items-center p-6 pt-0 mt-auto", className)}
       {...props}
     />
   )

@@ -61,31 +61,31 @@ const formatFileSize = (bytes: number): string => {
 }
 
 const FILE_ICONS: Record<FileType, React.ReactNode> = {
-  [FileType.FOLDER]: <Folder className="h-5 w-5 text-amber-500" />,
-  [FileType.DOCUMENT]: <FileText className="h-5 w-5 text-blue-500" />,
+  [FileType.FOLDER]: <Folder className="h-5 w-5 text-warning-foreground" />,
+  [FileType.DOCUMENT]: <FileText className="h-5 w-5 text-info-foreground" />,
   [FileType.IMAGE]: <ImageIcon className="h-5 w-5 text-purple-500" />,
   [FileType.VIDEO]: <Video className="h-5 w-5 text-pink-500" />,
-  [FileType.AUDIO]: <Music className="h-5 w-5 text-emerald-500" />,
-  [FileType.ARCHIVE]: <Archive className="h-5 w-5 text-orange-500" />,
+  [FileType.AUDIO]: <Music className="h-5 w-5 text-success-foreground" />,
+  [FileType.ARCHIVE]: <Archive className="h-5 w-5 text-warning-foreground" />,
   [FileType.OTHER]: <File className="h-5 w-5 text-muted-foreground" />,
 }
 
 const FILE_BADGE_COLORS: Record<FileType, string> = {
-  [FileType.FOLDER]: "bg-amber-500/10 text-amber-600",
-  [FileType.DOCUMENT]: "bg-blue-500/10 text-blue-600",
+  [FileType.FOLDER]: "bg-warning-soft text-warning-foreground",
+  [FileType.DOCUMENT]: "bg-info-soft text-info-foreground",
   [FileType.IMAGE]: "bg-purple-500/10 text-purple-600",
   [FileType.VIDEO]: "bg-pink-500/10 text-pink-600",
-  [FileType.AUDIO]: "bg-emerald-500/10 text-emerald-600",
-  [FileType.ARCHIVE]: "bg-orange-500/10 text-orange-600",
+  [FileType.AUDIO]: "bg-success-soft text-success-foreground",
+  [FileType.ARCHIVE]: "bg-warning-soft text-warning-foreground",
   [FileType.OTHER]: "bg-muted text-muted-foreground",
 }
 
 export const VISIBILITY_COLORS: Record<FileVisibility, string> = {
   [FileVisibility.PRIVATE]:
     "bg-slate-500/10 text-slate-700 dark:text-slate-300",
-  [FileVisibility.TEAM]: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  [FileVisibility.TEAM]: "bg-info-soft text-info-foreground",
   [FileVisibility.PUBLIC]:
-    "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    "bg-success-soft text-success-foreground",
 }
 
 export const VISIBILITY_ICONS: Record<FileVisibility, React.ReactNode> = {
@@ -118,7 +118,7 @@ export function getFilesColumns(
                       {file.name}
                     </span>
                     {file.starred && (
-                      <Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400" />
+                      <Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-warning-foreground" />
                     )}
                   </div>
                 </TooltipTrigger>

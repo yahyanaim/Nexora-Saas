@@ -94,7 +94,7 @@ export function RegisterForm({ setAuthSections }: Props) {
             {...register("name")}
           />
           {errors.name && (
-            <p className="text-[11px] text-destructive">{errors.name.message}</p>
+            <p className="text-xs text-destructive">{errors.name.message}</p>
           )}
         </div>
 
@@ -114,7 +114,7 @@ export function RegisterForm({ setAuthSections }: Props) {
             {...register("email")}
           />
           {errors.email && (
-            <p className="text-[11px] text-destructive">{errors.email.message}</p>
+            <p className="text-xs text-destructive">{errors.email.message}</p>
           )}
         </div>
 
@@ -134,14 +134,14 @@ export function RegisterForm({ setAuthSections }: Props) {
             {...register("password")}
           />
           {errors.password && (
-            <p className="text-[11px] text-destructive">{errors.password.message}</p>
+            <p className="text-xs text-destructive">{errors.password.message}</p>
           )}
         </div>
 
         <button
           type="submit"
           disabled={isPending}
-          className="mt-2 flex h-10 w-full items-center justify-center rounded-lg bg-neutral-900 px-4 text-xs font-semibold text-white shadow-xs transition-all hover:bg-neutral-800 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200 cursor-pointer"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 cursor-pointer mt-2"
         >
           {isPending && <Loader2 className="mr-2 size-3.5 animate-spin" />}
           Continue
@@ -152,7 +152,7 @@ export function RegisterForm({ setAuthSections }: Props) {
           <button
             type="button"
             onClick={() => setAuthSections("login-by-email")}
-            className="font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+            className="font-medium text-info-foreground hover:underline cursor-pointer"
           >
             Login
           </button>

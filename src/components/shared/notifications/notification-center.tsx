@@ -18,6 +18,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { navIconButton } from "@/components/shared/navigation/nav-styles"
 
 export interface NotificationItem {
   id: string
@@ -104,7 +105,7 @@ export function NotificationCenter() {
       case "security":
         return <ShieldAlert className="size-4 text-destructive shrink-0" />
       case "billing":
-        return <CreditCard className="size-4 text-emerald-500 shrink-0" />
+        return <CreditCard className="size-4 text-success-foreground shrink-0" />
       case "team":
         return <CheckCircle className="size-4 text-primary shrink-0" />
       case "system":
@@ -117,15 +118,16 @@ export function NotificationCenter() {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="relative inline-flex size-9 items-center justify-center rounded-md border border-border/60 bg-card text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+          className={cn(navIconButton, "relative")}
           aria-label="Open notifications"
           type="button"
         >
-          <Bell className="size-4 pointer-events-none" />
+          <Bell className="size-[18px] pointer-events-none" />
           {unreadCount > 0 && (
-            <span className="pointer-events-none absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white shadow-xs animate-in zoom-in-50">
-              {unreadCount}
-            </span>
+            <>
+              <span className="pointer-events-none absolute top-2.5 right-2.5 size-2 rounded-full bg-destructive ring-2 ring-card animate-in zoom-in-50" />
+              <span className="sr-only">{unreadCount} unread</span>
+            </>
           )}
         </button>
       </PopoverTrigger>
@@ -141,7 +143,7 @@ export function NotificationCenter() {
               Notifications
             </h4>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-mono">
+              <Badge variant="secondary" className="text-xs h-5 px-1.5 tabular-nums">
                 {unreadCount} new
               </Badge>
             )}
@@ -208,7 +210,7 @@ export function NotificationCenter() {
                     <p className="text-xs font-semibold text-foreground truncate">
                       {n.title}
                     </p>
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {n.timestamp}
                     </span>
                   </div>

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Close } from "@carbon/icons-react"
+import { X as Close } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 
 interface SheetContextType {
@@ -93,14 +93,14 @@ export function SheetContent({
     <div className="fixed inset-0 z-50 flex">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-200 animate-in fade-in-0"
+        className="fixed inset-0 bg-gray-950/40 backdrop-blur-[2px] transition-opacity duration-200 animate-in fade-in-0"
         onClick={() => context.setOpen(false)}
       />
 
       {/* Sheet panel */}
       <div
         className={cn(
-          "fixed z-50 flex flex-col bg-card/95 border-border/70 p-6 shadow-2xl backdrop-blur-md overflow-y-auto duration-200 animate-in",
+          "fixed z-50 flex flex-col bg-card border-border p-6 shadow-2xl overflow-y-auto duration-200 animate-in",
           side === "left" && "slide-in-from-left",
           side === "right" && "slide-in-from-right",
           side === "top" && "slide-in-from-top",
@@ -113,7 +113,7 @@ export function SheetContent({
           <button
             type="button"
             onClick={() => context.setOpen(false)}
-            className="absolute top-4 right-4 rounded-lg p-1.5 text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-colors"
+            className="absolute top-4 end-4 rounded-full p-2 text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-colors"
             aria-label="Close panel"
           >
             <Close className="size-4" />

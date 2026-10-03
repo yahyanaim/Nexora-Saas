@@ -17,8 +17,8 @@ import { AskVictorPill } from "./ask-victor-pill"
 export default function OverviewPage() {
   return (
     <AnalyticsFilterProvider>
-      <div className="relative h-full w-full overflow-hidden">
-        <div className="h-full w-full space-y-5 overflow-auto p-4 pb-24 md:p-6 md:pb-28">
+      <div className="relative w-full">
+        <div className="w-full space-y-5 p-4 pb-24 md:p-6 md:pb-28">
           {/* Top Analytics Toolbar with Filters & Actions */}
           <AnalyticsToolbar />
 

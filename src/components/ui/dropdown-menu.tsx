@@ -109,7 +109,7 @@ export function DropdownMenuContent({
     <div
       role="menu"
       className={cn(
-        "absolute z-50 min-w-[12rem] overflow-hidden rounded-xl border border-border/70 bg-popover/95 p-1 text-popover-foreground shadow-xl backdrop-blur-md animate-in fade-in-0 zoom-in-95 duration-150",
+        "absolute z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 duration-150",
         align === "end" ? "right-0" : align === "center" ? "left-1/2 -translate-x-1/2" : "left-0",
         side === "top" ? "bottom-full mb-1" : "top-full mt-1",
         className
@@ -139,7 +139,7 @@ export function DropdownMenuItem({
         context?.setOpen(false)
       }}
       className={cn(
-        "relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium outline-none transition-colors duration-100",
+        "relative flex min-h-9 cursor-pointer select-none items-center gap-2 rounded-xl px-2.5 py-1.5 text-[13px] font-medium outline-none transition-colors duration-100 focus-visible:ring-2 focus-visible:ring-ring",
         variant === "destructive"
           ? "text-destructive hover:bg-destructive/15 focus:bg-destructive/15"
           : "text-foreground hover:bg-muted/80 focus:bg-muted/80",

@@ -20,6 +20,7 @@ import { ProjectForm, ProjectFormHandle } from "./project-form"
 import { getProjectsColumns } from "./projects-columns"
 import { ProjectsSummaryCards } from "./projects-summary-cards"
 import { ProjectDialog } from "./project-dialog"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction =
   | { type: "delete"; project: Project }
@@ -253,6 +254,7 @@ export default function ProjectsPage() {
   return (
     <>
       <div className="p-4 md:p-6 space-y-6">
+        <PageHeader />
         <ProjectsSummaryCards />
 
         <DataTable

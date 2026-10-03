@@ -98,7 +98,7 @@ export function UsageMeteringCard({
           <div>
             <CardTitle className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
               <span>Resource Quotas & Usage Metering</span>
-              <Badge variant="outline" className="text-xs font-normal text-amber-600 bg-amber-500/10 border-amber-500/20">
+              <Badge variant="outline" className="text-xs font-normal text-warning-foreground bg-warning-soft border-warning/20">
                 <WarningAlt className="mr-1 size-3" />
                 Capacity Notice
               </Badge>
@@ -143,11 +143,11 @@ export function UsageMeteringCard({
                   </div>
                   <span
                     className={cn(
-                      "text-xs font-bold font-mono",
+                      "text-xs font-bold tabular-nums",
                       isCritical
                         ? "text-destructive"
                         : isNearLimit
-                        ? "text-amber-600 dark:text-amber-400"
+                        ? "text-warning-foreground"
                         : "text-foreground"
                     )}
                   >
@@ -163,16 +163,16 @@ export function UsageMeteringCard({
                       isCritical
                         ? "bg-destructive"
                         : isNearLimit
-                        ? "bg-amber-500"
+                        ? "bg-warning"
                         : "bg-primary"
                     )}
                     style={{ width: `${percentage}%` }}
                   />
                 </div>
 
-                <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground">
+                <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                   <span>Used: {metric.formattedUsed}</span>
-                  <span className="font-mono">Quota: {metric.formattedLimit}</span>
+                  <span className="tabular-nums">Quota: {metric.formattedLimit}</span>
                 </div>
               </div>
             )
@@ -185,7 +185,7 @@ export function UsageMeteringCard({
           <Clock className="size-3.5 text-muted-foreground shrink-0" />
           <span>Usage counters automatically reset in 12 days (October 1, 2026).</span>
         </div>
-        <span className="text-[11px] text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           Overages are billed at $0.002 per additional request.
         </span>
       </CardFooter>

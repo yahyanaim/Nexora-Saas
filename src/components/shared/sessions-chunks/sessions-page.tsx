@@ -16,6 +16,7 @@ import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
 import { useLocale, useTranslations } from "next-intl"
 import { useQueryClient } from "@tanstack/react-query"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction =
   | { type: "activate"; session: Session }
@@ -132,6 +133,7 @@ export default function SessionsPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
+      <PageHeader />
       <DataTable
         manual
         title={t("sessions")}

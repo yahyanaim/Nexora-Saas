@@ -8,7 +8,7 @@ export function Table({
   return (
     <div className="relative w-full overflow-auto">
       <table
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn("w-full caption-bottom border-separate border-spacing-x-0 border-spacing-y-1.5 text-sm", className)}
         {...props}
       />
     </div>
@@ -21,7 +21,7 @@ export function TableContainer({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("w-full rounded-xl border border-border/60 bg-card overflow-hidden shadow-xs", className)}
+      className={cn("w-full rounded-3xl border border-border bg-card overflow-hidden shadow-panel", className)}
       {...props}
     />
   )
@@ -32,7 +32,7 @@ export function TableHeader({
   ...props
 }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return (
-    <thead className={cn("[&_tr]:border-b border-border/60 bg-muted/40", className)} {...props} />
+    <thead className={cn(className)} {...props} />
   )
 }
 
@@ -42,7 +42,7 @@ export function TableBody({
 }: React.HTMLAttributes<HTMLTableSectionElement>) {
   return (
     <tbody
-      className={cn("[&_tr:last-child]:border-0", className)}
+      className={cn(className)}
       {...props}
     />
   )
@@ -70,7 +70,7 @@ export function TableRow({
   return (
     <tr
       className={cn(
-        "border-b border-border/40 transition-colors hover:bg-muted/30 data-[state=selected]:bg-primary/10 data-[state=selected]:border-primary/20",
+        "group/row transition-colors",
         className
       )}
       {...props}
@@ -85,7 +85,7 @@ export function TableHead({
   return (
     <th
       className={cn(
-        "h-10 px-4 text-left align-middle text-xs font-semibold uppercase tracking-wider text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "h-8 px-4 text-start align-middle text-xs font-medium uppercase tracking-wider text-muted-foreground [&:has([role=checkbox])]:pe-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
@@ -100,7 +100,7 @@ export function TableCell({
   return (
     <td
       className={cn(
-        "px-4 py-3 align-middle [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] text-foreground text-sm",
+        "border-y border-border bg-card px-4 py-3 align-middle text-sm text-foreground transition-colors first:rounded-s-xl first:border-s last:rounded-e-xl last:border-e group-hover/row:bg-muted/50 group-data-[state=selected]/row:border-primary/25 group-data-[state=selected]/row:bg-info-soft [&:has([role=checkbox])]:pe-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}

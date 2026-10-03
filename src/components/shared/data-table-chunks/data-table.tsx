@@ -33,6 +33,7 @@ import {
 } from "./data-table-toolbar"
 import { Plus } from "@/components/ui/carbon/icons"
 import { DataTablePagination } from "./data-table-pagination"
+import { CompactHeaderContext } from "./data-table-column-header"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 
@@ -185,6 +186,8 @@ export function DataTable<TData, TValue>({
     return mergedActions
   }, [actions, onAddClick, t])
 
+  const headerById = new Map(table.getFlatHeaders().map((h) => [h.column.id, h]))
+
   return (
     <div
       className={cn(
@@ -192,7 +195,7 @@ export function DataTable<TData, TValue>({
         className
       )}
     >
-      <div className="flex w-full flex-col rounded-xl border border-border/60 bg-card shadow-xs overflow-hidden">
+      <div className="flex w-full flex-col rounded-3xl border border-border bg-card shadow-panel overflow-hidden">
         {renderBeforeJsxToolbar && renderBeforeJsxToolbar()}
         <DataTableToolbar
           table={table}
@@ -209,7 +212,69 @@ export function DataTable<TData, TValue>({
           enableExport={enableExport}
         />
         {renderAfterJsxToolbar && renderAfterJsxToolbar()}
-        <div className="w-full overflow-auto">
+        {/* Phones and tablets: each row becomes a card with labelled fields */}
+        <div className="grid gap-2 px-3 pb-2 pt-1 sm:px-5 md:grid-cols-2 lg:hidden">
+          {isLoading ? (
+            Array.from({ length: Math.min(skeletonRowCount, 4) }).map((_, i) => (
+              <div key={`skeleton-card-${i}`} className="rounded-2xl border border-border p-4">
+                <Skeleton className="h-5 w-2/3 rounded-full bg-muted" />
+                <Skeleton className="mt-3 h-4 w-1/2 rounded-full bg-muted" />
+              </div>
+            ))
+          ) : table.getRowModel().rows.length ? (
+            <CompactHeaderContext.Provider value={true}>
+              {table.getRowModel().rows.map((row) => {
+                const cells = row.getVisibleCells()
+                const actionCell = cells.find((c) => c.column.id === "actions")
+                const selectCell = cells.find((c) => c.column.id === "select")
+                const [primary, ...rest] = cells.filter((c) => c !== actionCell && c !== selectCell)
+                return (
+                  <div
+                    key={row.id}
+                    data-state={row.getIsSelected() ? "selected" : undefined}
+                    className="rounded-2xl border border-border bg-card p-4 data-[state=selected]:border-primary/25 data-[state=selected]:bg-info-soft"
+                  >
+                    <div className="flex items-start gap-3">
+                      {selectCell && flexRender(selectCell.column.columnDef.cell, selectCell.getContext())}
+                      <div className="min-w-0 flex-1">
+                        {primary && flexRender(primary.column.columnDef.cell, primary.getContext())}
+                      </div>
+                      {actionCell && (
+                        <div className="-me-2 -mt-1 shrink-0">
+                          {flexRender(actionCell.column.columnDef.cell, actionCell.getContext())}
+                        </div>
+                      )}
+                    </div>
+                    {rest.length > 0 && (
+                      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-border pt-3">
+                        {rest.map((cell) => {
+                          const header = headerById.get(cell.column.id)
+                          return (
+                            <div key={cell.id} className="min-w-0">
+                              <dt className="truncate text-xs text-muted-foreground">
+                                {header && !header.isPlaceholder
+                                  ? flexRender(header.column.columnDef.header, header.getContext())
+                                  : cell.column.id}
+                              </dt>
+                              <dd className="mt-1 min-w-0 text-sm [overflow-wrap:anywhere]">
+                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              </dd>
+                            </div>
+                          )
+                        })}
+                      </dl>
+                    )}
+                  </div>
+                )
+              })}
+            </CompactHeaderContext.Provider>
+          ) : (
+            <p className="rounded-2xl border border-dashed border-border py-10 text-center text-sm text-muted-foreground md:col-span-2">
+              {emptyMessage}
+            </p>
+          )}
+        </div>
+        <div className="hidden w-full overflow-auto px-3 sm:px-5 lg:block">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -240,7 +305,7 @@ export function DataTable<TData, TValue>({
                     {Array.from({ length: visibleColumnsCount }).map(
                       (_, colIndex) => (
                         <TableCell key={`skeleton-cell-${colIndex}`}>
-                          <Skeleton className="h-9 w-full max-w-[140px] bg-background" />
+                          <Skeleton className="h-6 w-full max-w-[140px] rounded-full bg-muted" />
                         </TableCell>
                       )
                     )}

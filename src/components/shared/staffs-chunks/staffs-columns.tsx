@@ -42,7 +42,7 @@ export function getStaffsColumns(
     [UserStatus.ACTIVE]: {
       label: t("active"),
       className:
-        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-transparent",
+        "bg-success-soft text-success-foreground border-transparent",
     },
     [UserStatus.INACTIVE]: {
       label: t("inactive"),
@@ -51,7 +51,7 @@ export function getStaffsColumns(
     [UserStatus.NOT_VERIFIED]: {
       label: t("notVerified"),
       className:
-        "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-transparent",
+        "bg-warning-soft text-warning-foreground border-transparent",
     },
     [UserStatus.BANNED]: {
       label: t("banned"),
@@ -86,7 +86,7 @@ export function getStaffsColumns(
                 {user.userType && (
                   <Badge
                     variant="outline"
-                    className="border-transparent px-1.5 py-0 text-[10px] capitalize md:text-xs"
+                    className="border-transparent px-1.5 py-0 text-xs capitalize md:text-xs"
                     style={{
                       backgroundColor: `${user.profileColor}1A`,
                       color: user.profileColor,

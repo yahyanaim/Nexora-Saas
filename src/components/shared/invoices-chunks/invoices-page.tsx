@@ -22,6 +22,7 @@ import { InvoicesSummaryCards } from "./invoices-summary-cards"
 import { InvoiceDialog } from "./invoice-dialog"
 import { Plus } from "@/components/ui/carbon/icons"
 import { generateInvoicePdf, printInvoice } from "@/lib/pdf/generate-invoice-pdf"
+import { PageHeader } from "@/components/shared/page-header"
 
 type PendingAction =
   | { type: "delete"; invoice: Invoice }
@@ -266,6 +267,7 @@ export default function InvoicesPage() {
   return (
     <>
       <div className="p-4 md:p-6 space-y-6">
+        <PageHeader />
         <InvoicesSummaryCards invoices={invoices} />
 
         <DataTable

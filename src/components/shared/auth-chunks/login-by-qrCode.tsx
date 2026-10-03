@@ -98,17 +98,17 @@ export const LoginByQrCode = ({ setAuthSections }: Props) => {
       label: t("active"),
       variant: "default" as const,
       icon: (
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
       ),
       className:
-        "border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400 hover:bg-green-500/20",
+        "border-success/20 bg-success-soft text-success-foreground hover:bg-success-soft",
     },
     scanned: {
       label: t("confirmed"),
       variant: "secondary" as const,
       icon: <CheckCircle2 className="h-3 w-3" />,
       className:
-        "border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20",
+        "border-primary/20 bg-info-soft text-info-foreground hover:bg-info-soft",
     },
     expired: {
       label: t("expired"),
@@ -177,10 +177,10 @@ export const LoginByQrCode = ({ setAuthSections }: Props) => {
                       {qrState === "scanned" && (
                         <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
                           <div className="flex animate-in flex-col items-center gap-3 duration-300 zoom-in">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
-                              <CheckCircle2 className="h-8 w-8 text-green-500" />
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success-soft">
+                              <CheckCircle2 className="h-8 w-8 text-success-foreground" />
                             </div>
-                            <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                            <span className="text-sm font-medium text-success-foreground">
                               {t("authorized")}
                             </span>
                           </div>

@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useTranslations } from "next-intl"
 import { Tabs, TabItem } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { ApiKeysCard } from "./api-keys-card"
@@ -11,9 +10,9 @@ import { getApiKeysApi, getWebhooksApi } from "@/lib/api/developer-apis"
 import { ApiKey, WebhookEndpoint, initialApiKeys, initialWebhooks } from "@/lib/demo-data/developer"
 import { Terminal, Key, Webhook, Code, Activity, ShieldCheck } from "@/components/ui/carbon/icons"
 import { MetricCardGrid, MetricCardItem } from "@/components/ui/metric-card-grid"
+import { PageHeader } from "@/components/shared/page-header"
 
 export default function DeveloperPage() {
-  const t = useTranslations()
   const [keys, setKeys] = useState<ApiKey[]>(initialApiKeys)
   const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>(initialWebhooks)
   const [isLoading, setIsLoading] = useState(true)
@@ -70,7 +69,7 @@ export default function DeveloperPage() {
           icon: Webhook,
           variant: "outline",
           className:
-            "gap-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+            "gap-1 border-success/20 bg-success-soft text-success-foreground",
         },
         footer: {
           icon: Webhook,
@@ -81,13 +80,13 @@ export default function DeveloperPage() {
         key: "gatewayStatus",
         title: "API Gateway Status",
         value: "99.98%",
-        valueClassName: "text-emerald-600 dark:text-emerald-400",
+        valueClassName: "text-success-foreground",
         badge: {
           label: "Operational",
           icon: Activity,
           variant: "outline",
           className:
-            "gap-1 border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+            "gap-1 border-success/20 bg-success-soft text-success-foreground",
         },
         footer: {
           icon: Activity,
@@ -103,7 +102,7 @@ export default function DeveloperPage() {
           icon: Terminal,
           variant: "outline",
           className:
-            "gap-1 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400",
+            "gap-1 border-primary/20 bg-info-soft text-info-foreground",
         },
         footer: {
           icon: Terminal,
@@ -140,26 +139,15 @@ export default function DeveloperPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
-              {t("developer") || "Developer & API"}
-            </h1>
-            <Badge
-              variant="outline"
-              className="hidden sm:inline-flex gap-1 text-xs font-normal border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-            >
-              <ShieldCheck className="size-3" />
-              REST API v1
-            </Badge>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Generate scoped personal access tokens, configure webhook subscribers, and inspect integration documentation.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        badge={
+          <Badge variant="info" className="hidden sm:inline-flex">
+            <ShieldCheck />
+            REST API v1
+          </Badge>
+        }
+        description="Generate scoped personal access tokens, configure webhook subscribers, and inspect integration documentation."
+      />
 
       {/* KPI Metric Summary Cards */}
       <MetricCardGrid cards={metricCards} isLoading={isLoading} />

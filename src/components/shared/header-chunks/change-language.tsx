@@ -12,8 +12,10 @@ import {
 import { Check, Languages } from "@/components/ui/carbon/icons"
 import { useLocale, useTranslations } from "next-intl"
 import { usePathname, useRouter } from "@/i18n/navigation"
+import { cn } from "@/lib/utils"
+import { navIconButton } from "@/components/shared/navigation/nav-styles"
 
-export const ChangeLanguage = () => {
+export const ChangeLanguage = ({ className }: { className?: string }) => {
   const t = useTranslations()
   const currentLocale = useLocale()
   const pathname = usePathname()
@@ -41,8 +43,8 @@ export const ChangeLanguage = () => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Languages />
+      <DialogTrigger aria-label={t("changeLanguage")} className={cn(navIconButton, className)}>
+        <Languages className="size-[18px]" />
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

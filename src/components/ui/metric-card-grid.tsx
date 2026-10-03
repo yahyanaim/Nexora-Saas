@@ -38,22 +38,22 @@ export interface MetricCardGridProps {
 }
 
 /**
- * Enterprise Metric Card Grid adhering to IBM Carbon Design standards.
- * Provides uniform typography, monospace tabular figures, badge chips,
+ * Metric tile grid: grey label above a large value (tabular figures), a
+ * soft status pill,
  * and automated skeleton loading states.
  */
 export function MetricCardGrid({
   cards,
   isLoading = false,
   skeletonCount = 4,
-  columnsClassName = "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
+  columnsClassName = "grid-cols-2 lg:grid-cols-4",
   className,
 }: MetricCardGridProps) {
   if (isLoading) {
     return (
-      <div className={cn("grid gap-4 w-full", columnsClassName, className)}>
+      <div className={cn("grid gap-3 sm:gap-4 w-full", columnsClassName, className)}>
         {Array.from({ length: skeletonCount }).map((_, i) => (
-          <Card key={i} className="animate-pulse h-full flex flex-col justify-between">
+          <Card key={i} className="animate-pulse h-full flex flex-col justify-between rounded-2xl">
             <CardHeader className="p-5 pb-3">
               <div className="h-4 w-24 rounded bg-muted" />
               <div className="mt-2 h-8 w-16 rounded bg-muted" />
@@ -68,7 +68,7 @@ export function MetricCardGrid({
   }
 
   return (
-    <div className={cn("grid gap-4 w-full", columnsClassName, className)}>
+    <div className={cn("grid gap-3 sm:gap-4 w-full", columnsClassName, className)}>
       {cards.map((card) => {
         const BadgeIcon = card.badge?.icon
         const FooterIcon = card.footer?.icon
@@ -76,17 +76,17 @@ export function MetricCardGrid({
         return (
           <Card
             key={card.key}
-            className="flex flex-col justify-between border-border/80 transition-shadow hover:shadow-xs"
+            className="flex flex-col justify-between rounded-2xl"
           >
-            <CardHeader className="p-5 pb-2">
+            <CardHeader className="p-4 pb-2 sm:p-5 sm:pb-2">
               <div className="flex items-center justify-between gap-2">
-                <CardDescription className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <CardDescription className="text-[13px] font-medium leading-snug text-muted-foreground">
                   {card.title}
                 </CardDescription>
                 {card.badge && (
                   <Badge
                     variant={card.badge.variant || "outline"}
-                    className={cn("text-xs font-normal", card.badge.className)}
+                    className={cn("shrink-0 text-xs max-sm:hidden", card.badge.className)}
                   >
                     {BadgeIcon && <BadgeIcon className="size-3.5" />}
                     {card.badge.label}
@@ -95,7 +95,7 @@ export function MetricCardGrid({
               </div>
               <CardTitle
                 className={cn(
-                  "text-2xl font-bold font-mono tracking-tight pt-1",
+                  "text-2xl sm:text-[28px] sm:leading-9 font-semibold tracking-tight tabular-nums pt-1",
                   card.valueClassName
                 )}
               >
@@ -105,7 +105,7 @@ export function MetricCardGrid({
             {card.footer && (
               <CardFooter
                 className={cn(
-                  "px-5 py-3 pt-0 text-xs text-muted-foreground border-t-0 mt-auto flex items-center gap-1.5",
+                  "px-4 pb-4 pt-0 sm:px-5 sm:pb-5 text-xs text-muted-foreground border-t-0 mt-auto flex items-center gap-1.5",
                   card.footer.className
                 )}
               >

@@ -46,12 +46,12 @@ export function getInvoicesColumns(
     [InvoiceStatus.PAID]: {
       label: t("paid"),
       className:
-        "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-transparent",
+        "bg-success-soft text-success-foreground border-transparent",
     },
     [InvoiceStatus.PENDING]: {
       label: t("pending"),
       className:
-        "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-transparent",
+        "bg-warning-soft text-warning-foreground border-transparent",
     },
     [InvoiceStatus.OVERDUE]: {
       label: t("overdue"),
@@ -103,7 +103,7 @@ export function getInvoicesColumns(
         <DataTableColumnHeader column={column} title={t("invoice")} />
       ),
       cell: ({ row }) => (
-        <span className="font-mono text-sm font-medium">
+        <span className="tabular-nums text-sm font-medium">
           {row.original.invoiceNumber}
         </span>
       ),
@@ -115,7 +115,7 @@ export function getInvoicesColumns(
         <DataTableColumnHeader column={column} title={t("amount")} />
       ),
       cell: ({ row }) => (
-        <span className="font-mono text-sm font-medium tabular-nums">
+        <span className="tabular-nums text-sm font-medium">
           ${row.original.total.toFixed(2)}
         </span>
       ),
@@ -132,9 +132,9 @@ export function getInvoicesColumns(
           [InvoiceMethod.STRIPE]:
             "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400",
           [InvoiceMethod.PAYPAL]:
-            "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+            "bg-info-soft text-info-foreground",
           [InvoiceMethod.BANK_TRANSFER]:
-            "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+            "bg-success-soft text-success-foreground",
           [InvoiceMethod.CARD]:
             "bg-purple-500/10 text-purple-600 dark:text-purple-400",
         }
@@ -166,7 +166,7 @@ export function getInvoicesColumns(
       cell: ({ row }) => {
         const date = row.original.date
         return (
-          <span className="font-mono text-sm tabular-nums">
+          <span className="tabular-nums text-sm">
             {new Date(date).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",

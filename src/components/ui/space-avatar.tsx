@@ -20,7 +20,7 @@ export function SpaceAvatar({
 }: SpaceAvatarProps) {
   const sizeClasses =
     size === "xs"
-      ? "size-6 text-[10px]"
+      ? "size-6 text-xs"
       : size === "sm"
       ? "size-8 text-xs"
       : size === "lg"

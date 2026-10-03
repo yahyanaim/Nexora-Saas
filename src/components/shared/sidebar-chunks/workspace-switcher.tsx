@@ -85,7 +85,7 @@ export function WorkspaceSwitcher({ className }: { className?: string }) {
               <span className="font-semibold text-foreground truncate">
                 {activeWorkspace.name}
               </span>
-              <span className="text-[10px] text-muted-foreground font-mono">
+              <span className="text-xs text-muted-foreground tabular-nums">
                 {activeWorkspace.plan} · {activeWorkspace.membersCount} seats
               </span>
             </div>
@@ -99,7 +99,7 @@ export function WorkspaceSwitcher({ className }: { className?: string }) {
         sideOffset={6}
         className="w-64 p-1.5 shadow-md border-border/80"
       >
-        <DropdownMenuLabel className="px-2 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+        <DropdownMenuLabel className="px-2 py-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Workspaces ({workspaces.length})
         </DropdownMenuLabel>
 
@@ -121,7 +121,7 @@ export function WorkspaceSwitcher({ className }: { className?: string }) {
                   <span className="truncate text-foreground font-medium">
                     {ws.name}
                   </span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-xs text-muted-foreground">
                     {ws.membersCount} team members
                   </span>
                 </div>
@@ -130,11 +130,11 @@ export function WorkspaceSwitcher({ className }: { className?: string }) {
                 <Badge
                   variant="outline"
                   className={cn(
-                    "text-[10px] px-1 py-0 font-mono",
+                    "text-xs px-1 py-0 tabular-nums",
                     ws.plan === "Enterprise"
                       ? "border-primary/30 text-primary bg-primary/5"
                       : ws.plan === "Pro"
-                      ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/5"
+                      ? "border-success/20 text-success-foreground bg-success-soft"
                       : "border-muted text-muted-foreground"
                   )}
                 >
