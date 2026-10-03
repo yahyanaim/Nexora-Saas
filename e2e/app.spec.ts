@@ -64,7 +64,7 @@ test("phone layout: drawer navigation and no horizontal overflow", async ({ brow
 
   // The desktop rail is hidden on phones; navigation lives in the drawer
   await page.getByRole("button", { name: "Open menu" }).click()
-  await page.getByRole("link", { name: "Invoices" }).click()
+  await page.getByRole("link", { name: "Invoices", exact: true }).click()
   await expect(page).toHaveURL(/\/en\/dashboard\/invoices$/)
   await expect(page.getByRole("heading", { level: 1, name: "Invoices" })).toBeVisible()
 

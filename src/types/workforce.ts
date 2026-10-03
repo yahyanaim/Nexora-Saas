@@ -35,6 +35,8 @@ export const WORK_ROLE_PERMISSIONS: Record<WorkRole, AdminPermissionsPlatform[]>
     P.PROJECTS_UPDATE,
     P.FILES_READ,
     P.FILES_CREATE,
+    P.TIME_TRACK,
+    P.TIME_APPROVE,
     P.VIEW_ANALYTICS,
   ],
   [WorkRole.ACCOUNTANT]: [
@@ -47,7 +49,7 @@ export const WORK_ROLE_PERMISSIONS: Record<WorkRole, AdminPermissionsPlatform[]>
     P.TRANSACTIONS_READ,
     P.VIEW_ANALYTICS,
   ],
-  [WorkRole.EMPLOYEE]: [P.PROJECTS_READ, P.FILES_READ, P.FILES_CREATE],
+  [WorkRole.EMPLOYEE]: [P.PROJECTS_READ, P.FILES_READ, P.FILES_CREATE, P.TIME_TRACK],
   [WorkRole.CLIENT]: [P.PROJECTS_READ, P.INVOICES_READ],
 }
 

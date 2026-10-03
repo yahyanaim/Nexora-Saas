@@ -128,6 +128,10 @@ export enum AdminPermissionsPlatform {
   CLIENTS_UPDATE = "clients:update",
   CLIENTS_DELETE = "clients:delete",
 
+  // Time tracking
+  TIME_TRACK = "time:track",
+  TIME_APPROVE = "time:approve",
+
   // Analytics
   VIEW_ANALYTICS = "analytics:view",
 
@@ -135,6 +139,14 @@ export enum AdminPermissionsPlatform {
   ALL = "*",
 }
 export const PERMISSION_GROUPS: PermissionGroup[] = [
+  {
+    resource: "time",
+    label: "Time tracking",
+    permissions: [
+      { value: AdminPermissionsPlatform.TIME_TRACK, label: "Log time" },
+      { value: AdminPermissionsPlatform.TIME_APPROVE, label: "Approve" },
+    ],
+  },
   {
     resource: "employees",
     label: "Employees",
