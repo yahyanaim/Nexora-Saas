@@ -59,7 +59,7 @@ export function DataTableEntityFormDialog({
         <DialogFooter>
           <Button
             type="button"
-            variant="destructive"
+            variant="outline"
             className="flex-1"
             disabled={isSubmitting}
             onClick={() => onOpenChange(false)}

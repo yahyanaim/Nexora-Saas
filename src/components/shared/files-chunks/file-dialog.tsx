@@ -510,7 +510,7 @@ export function FileDialog({
           <DialogFooter>
             <Button
               className="flex-1"
-              variant="destructive"
+              variant="outline"
               onClick={() => onOpenChange(false)}
             >
               {t("cancel")}
@@ -530,7 +530,7 @@ export function FileDialog({
         {mode === "details" && (
           <DialogFooter>
             <Button
-              variant="destructive"
+              variant="outline"
               className="flex-1"
               onClick={() => onOpenChange(false)}
             >
@@ -543,7 +543,7 @@ export function FileDialog({
           <DialogFooter>
             <Button
               className="flex-1"
-              variant="destructive"
+              variant="outline"
               onClick={() => onOpenChange(false)}
             >
               {t("close")}

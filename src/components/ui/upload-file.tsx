@@ -286,7 +286,7 @@ export function FileUploadDialog({
         <DialogFooter className="border-t pt-4">
           <Button
             className="flex-1"
-            variant="destructive"
+            variant="outline"
             onClick={() => handleOpenChange(false)}
           >
             {t("cancel")}

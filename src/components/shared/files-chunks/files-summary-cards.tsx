@@ -205,7 +205,7 @@ export function FilesSummaryCards({
         <Card key={card.key} className="h-full flex flex-col justify-between">
           <CardHeader className="p-5 pb-3">
             <div className="flex items-center justify-between gap-2">
-              <CardDescription className="text-xs font-medium uppercase tracking-wider">{card.title}</CardDescription>
+              <CardDescription className="text-[13px] font-medium text-muted-foreground">{card.title}</CardDescription>
               <Badge
                 variant={card.badge.variant}
                 className={card.badge.className}

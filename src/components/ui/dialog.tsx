@@ -11,6 +11,18 @@ interface DialogContextType {
 
 const DialogContext = React.createContext<DialogContextType | null>(null)
 
+/** Closes an open overlay when Escape is pressed (keyboard accessibility). */
+function useEscapeToClose(open: boolean, close: () => void) {
+  React.useEffect(() => {
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close()
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [open, close])
+}
+
 export function Dialog({
   children,
   open: controlledOpen,
@@ -34,6 +46,9 @@ export function Dialog({
     },
     [controlledOpen, onOpenChange]
   )
+
+  const close = React.useCallback(() => setOpen(false), [setOpen])
+  useEscapeToClose(open, close)
 
   return (
     <DialogContext.Provider value={{ open, setOpen }}>

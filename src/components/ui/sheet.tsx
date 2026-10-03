@@ -11,6 +11,18 @@ interface SheetContextType {
 
 const SheetContext = React.createContext<SheetContextType | undefined>(undefined)
 
+/** Closes an open overlay when Escape is pressed (keyboard accessibility). */
+function useEscapeToClose(open: boolean, close: () => void) {
+  React.useEffect(() => {
+    if (!open) return
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close()
+    }
+    document.addEventListener("keydown", onKeyDown)
+    return () => document.removeEventListener("keydown", onKeyDown)
+  }, [open, close])
+}
+
 export function Sheet({
   open: controlledOpen,
   onOpenChange,
@@ -31,6 +43,9 @@ export function Sheet({
     },
     [isControlled, onOpenChange]
   )
+
+  const close = React.useCallback(() => setOpen(false), [setOpen])
+  useEscapeToClose(open, close)
 
   return (
     <SheetContext.Provider value={{ open, setOpen }}>
@@ -99,6 +114,8 @@ export function SheetContent({
 
       {/* Sheet panel */}
       <div
+        role="dialog"
+        aria-modal="true"
         className={cn(
           "fixed z-50 flex flex-col bg-card border-border p-6 shadow-2xl overflow-y-auto duration-200 animate-in",
           side === "left" && "slide-in-from-left",

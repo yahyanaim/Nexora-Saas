@@ -374,6 +374,7 @@ describe("auth-apis", () => {
       process.env.NEXT_PUBLIC_DEMO_MODE = "true"
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
       vi.spyOn(apiClient, "get").mockRejectedValueOnce(new AxiosError("Network Error", "ERR_NETWORK"))
+      tokenStorage.set("demo-session-token")
 
       const user = await fetchMyAccountApi()
 
@@ -381,6 +382,15 @@ describe("auth-apis", () => {
         expect.stringContaining("[AUTH WARNING] Demo mode fallback used in fetchMyAccountApi")
       )
       expect(user).toEqual(DEMO_ADMIN_USER)
+      tokenStorage.clear()
+    })
+
+    it("fetchMyAccountApi does not sign in a visitor without a demo session in demo mode", async () => {
+      process.env.NEXT_PUBLIC_DEMO_MODE = "true"
+      tokenStorage.clear()
+      vi.spyOn(apiClient, "get").mockRejectedValueOnce(new AxiosError("Network Error", "ERR_NETWORK"))
+
+      await expect(fetchMyAccountApi()).rejects.toThrow("Unauthenticated")
     })
 
     it("logoutApi clears token via tokenStorage.clear()", async () => {
