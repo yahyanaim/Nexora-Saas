@@ -116,6 +116,18 @@ export enum AdminPermissionsPlatform {
   REPORTS_UPDATE = "reports:update",
   REPORTS_DELETE = "reports:delete",
 
+  // Employees (workforce)
+  EMPLOYEES_CREATE = "employees:create",
+  EMPLOYEES_READ = "employees:read",
+  EMPLOYEES_UPDATE = "employees:update",
+  EMPLOYEES_DELETE = "employees:delete",
+
+  // Clients (customers the workspace bills)
+  CLIENTS_CREATE = "clients:create",
+  CLIENTS_READ = "clients:read",
+  CLIENTS_UPDATE = "clients:update",
+  CLIENTS_DELETE = "clients:delete",
+
   // Analytics
   VIEW_ANALYTICS = "analytics:view",
 
@@ -123,6 +135,26 @@ export enum AdminPermissionsPlatform {
   ALL = "*",
 }
 export const PERMISSION_GROUPS: PermissionGroup[] = [
+  {
+    resource: "employees",
+    label: "Employees",
+    permissions: [
+      { value: AdminPermissionsPlatform.EMPLOYEES_CREATE, label: "Create" },
+      { value: AdminPermissionsPlatform.EMPLOYEES_READ, label: "Read" },
+      { value: AdminPermissionsPlatform.EMPLOYEES_UPDATE, label: "Update" },
+      { value: AdminPermissionsPlatform.EMPLOYEES_DELETE, label: "Delete" },
+    ],
+  },
+  {
+    resource: "clients",
+    label: "Clients",
+    permissions: [
+      { value: AdminPermissionsPlatform.CLIENTS_CREATE, label: "Create" },
+      { value: AdminPermissionsPlatform.CLIENTS_READ, label: "Read" },
+      { value: AdminPermissionsPlatform.CLIENTS_UPDATE, label: "Update" },
+      { value: AdminPermissionsPlatform.CLIENTS_DELETE, label: "Delete" },
+    ],
+  },
   {
     resource: "users",
     label: "Users",

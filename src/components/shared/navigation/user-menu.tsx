@@ -64,7 +64,7 @@ export function LogoutDialog({
   )
 }
 
-/** Profile pill in the top bar: avatar, name and role (name hidden below xl). */
+/** Profile pill in the top bar: avatar, name and role (name hidden below 2xl). */
 export function UserMenu() {
   const t = useTranslations()
   const { authedUser, myEmail } = useAuthGuard()
@@ -81,7 +81,7 @@ export function UserMenu() {
           <button
             type="button"
             aria-label={t("profile")}
-            className="flex h-12 items-center gap-3 rounded-full border border-border bg-card p-1 shadow-panel transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:h-14 lg:p-1.5 xl:pr-4"
+            className="flex h-12 items-center gap-3 rounded-full border border-border bg-card p-1 shadow-panel transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:h-14 lg:p-1.5 2xl:pr-4"
           >
             <SpaceAvatar
               name={name}
@@ -89,7 +89,7 @@ export function UserMenu() {
               profileColor={authedUser?.profileColor}
               size="md"
             />
-            <span className="hidden min-w-0 max-w-44 flex-col text-left xl:flex">
+            <span className="hidden min-w-0 max-w-44 flex-col text-left 2xl:flex">
               <span className="truncate text-sm font-semibold text-foreground">{name}</span>
               <span className="truncate text-xs text-muted-foreground">
                 <span className="capitalize">{authedUser?.role}</span>
@@ -97,7 +97,7 @@ export function UserMenu() {
                 {myEmail}
               </span>
             </span>
-            <ChevronDown className="hidden text-muted-foreground xl:block" />
+            <ChevronDown className="hidden text-muted-foreground 2xl:block" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64 rounded-2xl p-1.5">

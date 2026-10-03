@@ -13,11 +13,12 @@ import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 import { cn } from "@/lib/utils"
 import { useDashboardNav } from "./use-dashboard-nav"
 import { UserMenu } from "./user-menu"
+import { WorkspaceSwitcher } from "./workspace-switcher"
 import { navIconButton, navSurface } from "./nav-styles"
 
 /**
  * Floating top bar: brand, section tabs (desktop), search, notifications,
- * language and the profile pill. Below `lg` the tabs move into the drawer.
+ * language and the profile pill. Below `xl` the tabs move into the drawer.
  */
 export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations()
@@ -33,7 +34,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           type="button"
           onClick={onOpenMenu}
           aria-label={t("openMenu")}
-          className={cn(navIconButton, navSurface, "size-12 text-foreground lg:hidden")}
+          className={cn(navIconButton, navSurface, "size-12 text-foreground xl:hidden")}
         >
           <Menu className="size-5" />
         </button>
@@ -55,7 +56,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
         <nav
           aria-label={t("mainNavigation")}
-          className={cn(navSurface, "hidden h-14 items-center gap-1 p-1.5 lg:flex")}
+          className={cn(navSurface, "hidden h-14 items-center gap-1 p-1.5 xl:flex")}
         >
           {groups.map((group) => {
             const active = group.id === activeGroup?.id
@@ -65,7 +66,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
                 href={group.items[0]!.url}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-11 items-center rounded-full px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "flex h-11 items-center rounded-full px-3 2xl:px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   active
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-foreground/80 hover:bg-muted hover:text-foreground"
@@ -76,6 +77,8 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
             )
           })}
         </nav>
+
+        <WorkspaceSwitcher className="hidden md:flex" />
 
         <div className="flex-1" />
 

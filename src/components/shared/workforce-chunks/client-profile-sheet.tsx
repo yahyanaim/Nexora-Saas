@@ -1,0 +1,116 @@
+"use client"
+
+import { useTranslations } from "next-intl"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Badge } from "@/components/ui/badge"
+import { SpaceAvatar } from "@/components/ui/space-avatar"
+import { Star } from "@/components/ui/carbon/icons"
+import type { Client, Employee } from "@/types/workforce"
+import { CLIENT_STATUS_CLASS, CLIENT_STATUS_LABEL, formatMoney } from "./workforce-labels"
+
+interface Props {
+  client: Client | null
+  employees: Employee[]
+  currency: string
+  onOpenChange: (open: boolean) => void
+}
+
+/** Read-only client profile: billing details, terms and contacts. */
+export function ClientProfileSheet({ client, employees, currency, onOpenChange }: Props) {
+  const t = useTranslations()
+  const manager = employees.find((e) => e.id === client?.accountManagerId)
+
+  return (
+    <Sheet open={!!client} onOpenChange={onOpenChange}>
+      <SheetContent className="overflow-y-auto">
+        {client && (
+          <>
+            <SheetHeader>
+              <div className="flex items-center gap-4">
+                <SpaceAvatar name={client.name} size="lg" />
+                <div className="min-w-0">
+                  <SheetTitle className="truncate">{client.name}</SheetTitle>
+                  <SheetDescription className="truncate">{client.industry || client.email}</SheetDescription>
+                </div>
+              </div>
+              <div className="pt-2">
+                <Badge variant="outline" className={CLIENT_STATUS_CLASS[client.status]}>
+                  {t(CLIENT_STATUS_LABEL[client.status])}
+                </Badge>
+              </div>
+            </SheetHeader>
+
+            <div className="flex flex-col gap-6 px-4 pb-6">
+              <Section title={t("billing")}>
+                <Row label={t("billingEmail")} value={client.email} />
+                <Row label={t("taxId")} value={client.taxId || "—"} />
+                <Row label={t("address")} value={client.address || "—"} />
+                <Row
+                  label={t("rate")}
+                  value={client.hourlyRate ? `${formatMoney(client.hourlyRate, currency)}/h` : t("standardRates")}
+                />
+                <Row label={t("paymentTerms")} value={t("netDays", { days: client.paymentTermsDays })} />
+                <Row label={t("accountManager")} value={manager?.name ?? "—"} />
+                {client.website && (
+                  <Row
+                    label={t("website")}
+                    value={
+                      <a href={client.website} target="_blank" rel="noopener noreferrer" className="text-info-foreground hover:underline">
+                        {client.website.replace(/^https?:\/\//, "")}
+                      </a>
+                    }
+                  />
+                )}
+              </Section>
+
+              <Section title={t("contacts")}>
+                {client.contacts.length === 0 && <p className="text-sm text-muted-foreground">{t("noContactsYet")}</p>}
+                {client.contacts.map((contact) => (
+                  <div key={contact.id} className="flex items-start justify-between gap-4 text-sm">
+                    <span className="flex flex-col">
+                      <span className="flex items-center gap-1.5 font-medium text-foreground">
+                        {contact.name}
+                        {contact.isPrimary && <Star className="size-3.5 text-info-foreground" aria-label={t("primaryContact")} />}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{contact.position || "—"}</span>
+                    </span>
+                    <span className="flex flex-col items-end text-xs">
+                      <a href={`mailto:${contact.email}`} className="text-info-foreground hover:underline">
+                        {contact.email}
+                      </a>
+                      {contact.phone && <span className="text-muted-foreground">{contact.phone}</span>}
+                    </span>
+                  </div>
+                ))}
+              </Section>
+
+              {client.notes && (
+                <Section title={t("notes")}>
+                  <p className="whitespace-pre-line text-sm">{client.notes}</p>
+                </Section>
+              )}
+            </div>
+          </>
+        )}
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{title}</h3>
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">{children}</div>
+    </section>
+  )
+}
+
+function Row({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-right font-medium text-foreground">{value}</span>
+    </div>
+  )
+}

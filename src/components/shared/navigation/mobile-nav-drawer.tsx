@@ -11,7 +11,7 @@ import { ChangeLanguage } from "@/components/shared/header-chunks/change-languag
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useGetDirection } from "@/hooks/use-get-direction"
 import { cn } from "@/lib/utils"
-import { WorkspaceSwitcher } from "../sidebar-chunks/workspace-switcher"
+import { WorkspaceSwitcher } from "./workspace-switcher"
 import { useDashboardNav } from "./use-dashboard-nav"
 import { LogoutDialog } from "./user-menu"
 import { navIconButton } from "./nav-styles"
@@ -44,7 +44,7 @@ export function MobileNavDrawer({
             <span className="text-[15px] font-semibold tracking-tight text-foreground">{t("appName")}</span>
           </div>
 
-          <WorkspaceSwitcher />
+          <WorkspaceSwitcher className="w-full justify-start" showName />
 
           <nav aria-label={t("mainNavigation")} className="flex flex-col gap-5">
             {groups.map((group) => (
