@@ -2,7 +2,7 @@
  * @fileoverview Resilient In-Memory Demo Data Store & Query Engine for Nexora SaaS.
  * 
  * Provides production-quality mock fixtures for Users, Staff, Banned Accounts,
- * Invoices, Projects, Roles, and Transactions. Each user record is paired with
+ * Invoices, Roles, and Transactions. Each user record is paired with
  * a locally hosted AI-generated portrait headshot in `/avatars/*.jpg`.
  * 
  * Features:
@@ -16,28 +16,10 @@
 import { User, UserStatus, UserType, ActivationStatus } from "@/types/users"
 import { Invoice, InvoiceStatus, InvoiceMethod, InvoicesSummary } from "@/types/invoices"
 import { Transaction, TransactionStatus, TransactionMethod, TransactionsSummary } from "@/types/transactions"
-import { Project, ProjectStatus, ProjectMember } from "@/types/projects"
 import { Role, AdminPermissionsPlatform } from "@/types/roles"
 import { FileItem, FileType, FileVisibility, FileSummary } from "@/types/files"
 import { OverviewStats, ActivityPoint, PendingAction, ActivityItem, LiveCall } from "@/types/overview"
 import { ApiPaginatedResponse, ServerTableParams } from "@/types/tables"
-
-// Helper owner reference for projects
-const DEMO_OWNER_1 = {
-  id: "usr-demo-1",
-  name: "Alex Morgan",
-  email: "alex.morgan@company.io",
-  avatar: "/avatars/alex-morgan.jpg",
-  profileColor: "#0f62fe",
-}
-
-const DEMO_OWNER_2 = {
-  id: "usr-demo-2",
-  name: "Sarah Chen",
-  email: "sarah.chen@techcorp.com",
-  avatar: "/avatars/sarah-chen.jpg",
-  profileColor: "#24a148",
-}
 
 // ==========================================
 // 1. DEMO USERS
@@ -1154,138 +1136,6 @@ export function getDemoTransactionsSummary(): TransactionsSummary {
     totalTransactions: total,
     successRate,
   }
-}
-
-// ==========================================
-// 4. DEMO PROJECTS
-// ==========================================
-export const INITIAL_DEMO_PROJECTS: Project[] = [
-  {
-    id: "prj-demo-1",
-    name: "Cloud Infrastructure Migration",
-    description: "Modernizing core Kubernetes clusters and multi-region failover pods for 99.99% uptime.",
-    status: ProjectStatus.ACTIVE,
-    owner: DEMO_OWNER_1,
-    members: [
-      { id: "m1", user: DEMO_OWNER_1, role: "OWNER" },
-      { id: "m2", user: DEMO_OWNER_2, role: "MEMBER" },
-    ],
-    tasks: [],
-    files: [],
-    activities: [],
-    progress: 85,
-    startDate: "2024-02-01T00:00:00Z",
-    endDate: "2024-07-30T00:00:00Z",
-    createdAt: "2024-02-01T00:00:00Z",
-    updatedAt: "2024-06-14T00:00:00Z",
-  },
-  {
-    id: "prj-demo-2",
-    name: "AI Copilot Integration",
-    description: "Building automated LLM workflow assistant into customer support and ticket routing.",
-    status: ProjectStatus.ACTIVE,
-    owner: DEMO_OWNER_2,
-    members: [
-      { id: "m3", user: DEMO_OWNER_2, role: "OWNER" },
-    ],
-    tasks: [],
-    files: [],
-    activities: [],
-    progress: 55,
-    startDate: "2024-03-10T00:00:00Z",
-    endDate: "2024-08-15T00:00:00Z",
-    createdAt: "2024-03-10T00:00:00Z",
-    updatedAt: "2024-06-15T00:00:00Z",
-  },
-  {
-    id: "prj-demo-3",
-    name: "SOC 2 Type II Security Compliance",
-    description: "Completing annual security audit, automated penetration testing, and evidence collection.",
-    status: ProjectStatus.COMPLETED,
-    owner: DEMO_OWNER_1,
-    members: [
-      { id: "m5", user: DEMO_OWNER_1, role: "OWNER" },
-    ],
-    tasks: [],
-    files: [],
-    activities: [],
-    progress: 100,
-    startDate: "2024-01-10T00:00:00Z",
-    endDate: "2024-05-30T00:00:00Z",
-    createdAt: "2024-01-10T00:00:00Z",
-    updatedAt: "2024-05-30T00:00:00Z",
-  },
-  {
-    id: "prj-demo-4",
-    name: "Mobile App V2.0 Overhaul",
-    description: "Native iOS and Android client refresh using unified React Native architecture.",
-    status: ProjectStatus.ACTIVE,
-    owner: DEMO_OWNER_2,
-    members: [
-      { id: "m6", user: DEMO_OWNER_2, role: "OWNER" },
-    ],
-    tasks: [],
-    files: [],
-    activities: [],
-    progress: 40,
-    startDate: "2024-04-01T00:00:00Z",
-    endDate: "2024-09-30T00:00:00Z",
-    createdAt: "2024-04-01T00:00:00Z",
-    updatedAt: "2024-06-12T00:00:00Z",
-  },
-  {
-    id: "prj-demo-5",
-    name: "Customer Analytics Engine",
-    description: "Event ingestion pipeline for user behavioral funnels and automated churn alerts.",
-    status: ProjectStatus.ON_HOLD,
-    owner: DEMO_OWNER_1,
-    members: [
-      { id: "m8", user: DEMO_OWNER_1, role: "OWNER" },
-    ],
-    tasks: [],
-    files: [],
-    activities: [],
-    progress: 25,
-    startDate: "2024-04-20T00:00:00Z",
-    endDate: "2024-10-15T00:00:00Z",
-    createdAt: "2024-04-20T00:00:00Z",
-    updatedAt: "2024-05-20T00:00:00Z",
-  },
-]
-
-let demoProjectsState: Project[] = [...INITIAL_DEMO_PROJECTS]
-
-export function getDemoProjects(): Project[] {
-  return demoProjectsState
-}
-
-export function addDemoProject(
-  payload: Partial<Omit<Project, "owner" | "members">> & {
-    owner?: string | Project["owner"]
-    members?: string[] | ProjectMember[]
-  }
-): Project {
-  const newProject: Project = {
-    id: `prj-demo-${Date.now()}`,
-    name: payload.name || "New Workspace Project",
-    description: payload.description || "Workspace initiative created via demo preview.",
-    status: payload.status || ProjectStatus.ACTIVE,
-    owner: DEMO_OWNER_1,
-    members: [{ id: "m-owner", user: DEMO_OWNER_1, role: "OWNER" }],
-    tasks: [],
-    files: [],
-    activities: [],
-    progress: 0,
-    startDate: payload.startDate || new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-  demoProjectsState = [newProject, ...demoProjectsState]
-  return newProject
-}
-
-export function deleteDemoProject(id: string): void {
-  demoProjectsState = demoProjectsState.filter((p) => p.id !== id)
 }
 
 // ==========================================

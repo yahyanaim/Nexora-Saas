@@ -1,26 +1,12 @@
 "use client"
 
 import { forwardRef, useEffect, useImperativeHandle } from "react"
-import { useForm, type Control, type FieldPath } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useTranslations } from "next-intl"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Form } from "@/components/ui/form"
+import { NumberField, SelectField, TextField } from "./form-fields"
 import {
   EmployeeStatus,
   EmploymentType,
@@ -197,94 +183,3 @@ export const EmployeeForm = forwardRef<EmployeeFormHandle, Props>(function Emplo
     </Form>
   )
 })
-
-interface FieldProps {
-  control: Control<FormValues>
-  name: FieldPath<FormValues>
-  label: string
-}
-
-function TextField({
-  control,
-  name,
-  label,
-  type = "text",
-  placeholder,
-}: FieldProps & { type?: string; placeholder?: string }) {
-  return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <FormControl>
-            <Input type={type} placeholder={placeholder ?? label} {...field} value={String(field.value ?? "")} />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  )
-}
-
-function NumberField({ control, name, label }: FieldProps) {
-  return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel className="truncate">{label}</FormLabel>
-          <FormControl>
-            <Input
-              type="number"
-              inputMode="decimal"
-              min={0}
-              name={field.name}
-              ref={field.ref}
-              onBlur={field.onBlur}
-              value={Number.isFinite(field.value) ? String(field.value) : ""}
-              onChange={(e) => field.onChange(e.target.value === "" ? Number.NaN : Number(e.target.value))}
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  )
-}
-
-function SelectField({
-  control,
-  name,
-  label,
-  options,
-}: FieldProps & { options: { value: string; label: string }[] }) {
-  return (
-    <FormField
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>{label}</FormLabel>
-          <Select onValueChange={field.onChange} value={String(field.value)}>
-            <FormControl>
-              <SelectTrigger className="w-full bg-card">
-                <SelectValue>{options.find((o) => o.value === field.value)?.label}</SelectValue>
-              </SelectTrigger>
-            </FormControl>
-            <SelectContent>
-              {options.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  )
-}
