@@ -80,6 +80,20 @@ export function useDashboardNav() {
         icon: LayoutDashboard,
         items: [
           {
+            title: t("executiveOverview"),
+            url: "/dashboard/executive",
+            icon: LayoutDashboard,
+            descriptionKey: "pageDescExecutive",
+            permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
+          },
+          {
+            title: t("teamKpis"),
+            url: "/dashboard/team-kpis",
+            icon: Gauge,
+            descriptionKey: "pageDescTeamKpis",
+            permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
+          },
+          {
             title: t("analytics"),
             url: "/dashboard/overview",
             icon: ChartNoAxesCombined,

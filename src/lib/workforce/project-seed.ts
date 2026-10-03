@@ -81,11 +81,20 @@ export function seedMilestones(workspaceId: string): Milestone[] {
   return stamp(MILESTONES[workspaceId] ?? [], workspaceId)
 }
 
+/** Finished sample tasks land on their due date; one was two days late, so on-time KPIs have something to show. */
+function completedAt(task: TaskSeed) {
+  if (!task.dueDate) return STAMP
+  const late = task.id === "tsk_2" ? 2 : 0
+  const d = new Date(`${task.dueDate}T15:00:00.000Z`)
+  d.setUTCDate(d.getUTCDate() + late)
+  return d.toISOString()
+}
+
 export function seedTasks(workspaceId: string): WorkTask[] {
   return stamp(TASKS[workspaceId] ?? [], workspaceId).map((task, index) => ({
     ...task,
     subtasks: task.subtasks ?? [],
     order: index,
-    completedAt: task.status === TaskStatus.DONE ? STAMP : undefined,
+    completedAt: task.status === TaskStatus.DONE ? completedAt(task) : undefined,
   }))
 }
