@@ -12,6 +12,7 @@ import {
   forgotPasswordApi,
   verifyForgotPasswordApi,
   verifyPasscodeApi,
+  fetchSocketTokenApi,
   resetPasswordApi,
   changePasswordApi,
   isDemoMode,
@@ -220,6 +221,50 @@ describe("auth-apis", () => {
       await expect(verifyPasscodeApi("0000")).rejects.toThrow(
         "Passcode verification failed"
       )
+    })
+  })
+
+  describe("fetchSocketTokenApi", () => {
+    const failWith = (status?: number) =>
+      vi.spyOn(apiClient, "post").mockRejectedValueOnce(
+        status === undefined
+          ? new AxiosError("Network Error", "ERR_NETWORK")
+          : new AxiosError(`HTTP ${status}`, "ERR_BAD_RESPONSE", undefined, undefined, {
+              status,
+              data: {},
+            } as never)
+      )
+
+    beforeEach(() => {
+      vi.spyOn(console, "error").mockImplementation(() => {})
+    })
+
+    it("returns the token, or null when the response has none", async () => {
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({ data: { token: "ticket-1" } })
+      await expect(fetchSocketTokenApi()).resolves.toBe("ticket-1")
+
+      vi.spyOn(apiClient, "post").mockResolvedValueOnce({ data: {} })
+      await expect(fetchSocketTokenApi()).resolves.toBeNull()
+    })
+
+    it.each([404, 501, 403])("returns null when the endpoint answers %i", async (status) => {
+      failWith(status)
+      await expect(fetchSocketTokenApi()).resolves.toBeNull()
+    })
+
+    it.each([500, 503, 429])("rethrows transient %i errors", async (status) => {
+      failWith(status)
+      await expect(fetchSocketTokenApi()).rejects.toThrow(`HTTP ${status}`)
+    })
+
+    it("rethrows network errors without a response", async () => {
+      failWith(undefined)
+      await expect(fetchSocketTokenApi()).rejects.toThrow("Network Error")
+    })
+
+    it("rethrows 401 so the socket client can stop reconnecting", async () => {
+      failWith(401)
+      await expect(fetchSocketTokenApi()).rejects.toThrow("HTTP 401")
     })
   })
 

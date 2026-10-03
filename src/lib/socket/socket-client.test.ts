@@ -5,8 +5,13 @@ import {
   getSocket,
   getSocketAsync,
   getSocketUrl,
+  createSocketAuth,
+  TOKEN_FETCH_RETRY_DELAYS_MS,
+  AUTH_RECONNECT_DELAYS_MS,
+  __resetSocketAuthStateForTests,
 } from "./socket-client"
 import { io, Socket } from "socket.io-client"
+import { AxiosError } from "axios"
 
 vi.mock("socket.io-client", () => {
   return {
@@ -19,6 +24,7 @@ type MockSocket = {
   on: ReturnType<typeof vi.fn>
   off: ReturnType<typeof vi.fn>
   disconnect: ReturnType<typeof vi.fn>
+  connect: ReturnType<typeof vi.fn>
   emit: ReturnType<typeof vi.fn>
 }
 
@@ -51,11 +57,13 @@ describe("socket-client", () => {
       disconnect: vi.fn(() => {
         mockSocket.connected = false
       }),
+      connect: vi.fn(),
       emit: vi.fn(),
     }
 
     vi.mocked(io).mockReturnValue(mockSocket as unknown as Socket)
     disconnectSocket()
+    __resetSocketAuthStateForTests()
   })
 
   afterEach(() => {
@@ -150,6 +158,291 @@ describe("socket-client", () => {
           auth: { token: "short-lived-ticket-token-123" },
         })
       )
+    })
+  })
+
+  describe("connectSocket - Short-Lived Token Provider", () => {
+    type AuthFn = (cb: (data: Record<string, unknown>) => void) => void
+
+    const getAuthFn = (): AuthFn => {
+      const options = vi.mocked(io).mock.calls[0]![1] as Record<string, unknown>
+      expect(typeof options.auth).toBe("function")
+      return options.auth as AuthFn
+    }
+
+    const runHandshake = (auth: AuthFn) =>
+      new Promise<Record<string, unknown>>((resolve) => auth(resolve))
+
+    beforeEach(() => {
+      process.env.NEXT_PUBLIC_DEMO_MODE = "false"
+    })
+
+    it("uses the function form of auth and returns { token } when the provider resolves one", async () => {
+      connectSocket(() => Promise.resolve("ticket-abc"))
+
+      await expect(runHandshake(getAuthFn())).resolves.toEqual({ token: "ticket-abc" })
+    })
+
+    it("falls back to {} (cookie auth) when the provider returns null or empty", async () => {
+      const provider = vi.fn().mockResolvedValueOnce(null).mockResolvedValueOnce("  ")
+      connectSocket(provider)
+      const auth = getAuthFn()
+
+      await expect(runHandshake(auth)).resolves.toEqual({})
+      await expect(runHandshake(auth)).resolves.toEqual({})
+    })
+
+    it("fetches a fresh token on every handshake, including reconnects", async () => {
+      const provider = vi
+        .fn<() => Promise<string | null>>()
+        .mockResolvedValueOnce("ticket-1")
+        .mockResolvedValueOnce("ticket-2")
+      connectSocket(provider)
+      const auth = getAuthFn()
+
+      await expect(runHandshake(auth)).resolves.toEqual({ token: "ticket-1" })
+      await expect(runHandshake(auth)).resolves.toEqual({ token: "ticket-2" })
+      expect(provider).toHaveBeenCalledTimes(2)
+    })
+
+    it("does not add an auth function or call the provider in demo mode", () => {
+      process.env.NEXT_PUBLIC_DEMO_MODE = "true"
+      const provider = vi.fn()
+
+      connectSocket(provider)
+
+      const options = vi.mocked(io).mock.calls[0]![1] as Record<string, unknown>
+      expect(options.auth).toBeUndefined()
+      expect(provider).not.toHaveBeenCalled()
+    })
+  })
+
+  describe("createSocketAuth - retries and failure handling", () => {
+    const status = (code: number) =>
+      new AxiosError(`HTTP ${code}`, "ERR_BAD_RESPONSE", undefined, undefined, {
+        status: code,
+        data: {},
+      } as never)
+
+    beforeEach(() => {
+      process.env.NEXT_PUBLIC_DEMO_MODE = "false"
+      vi.useFakeTimers()
+      vi.spyOn(console, "warn").mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it("uses backoff delays of 300 ms then 900 ms (3 attempts in total)", () => {
+      expect(TOKEN_FETCH_RETRY_DELAYS_MS).toEqual([300, 900])
+    })
+
+    it("succeeds on the 2nd attempt after one 500", async () => {
+      const provider = vi
+        .fn<() => Promise<string | null>>()
+        .mockRejectedValueOnce(status(500))
+        .mockResolvedValueOnce("ticket-ok")
+      const cb = vi.fn()
+
+      createSocketAuth(provider)(cb)
+      await vi.advanceTimersByTimeAsync(0)
+      expect(cb).not.toHaveBeenCalled()
+
+      await vi.advanceTimersByTimeAsync(300)
+      expect(provider).toHaveBeenCalledTimes(2)
+      expect(cb).toHaveBeenCalledWith({ token: "ticket-ok" })
+    })
+
+    it("gives up after 3 failed attempts and falls back to {}", async () => {
+      const provider = vi.fn<() => Promise<string | null>>().mockRejectedValue(status(503))
+      const cb = vi.fn()
+
+      createSocketAuth(provider)(cb)
+      await vi.advanceTimersByTimeAsync(300)
+      expect(cb).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(900)
+
+      expect(provider).toHaveBeenCalledTimes(3)
+      expect(cb).toHaveBeenCalledTimes(1)
+      expect(cb).toHaveBeenCalledWith({})
+      expect(mockSocket.disconnect).not.toHaveBeenCalled()
+    })
+
+    it("never retries a 401, does not call cb and disconnects the socket", async () => {
+      connectSocket(() => Promise.resolve(null))
+      const provider = vi.fn<() => Promise<string | null>>().mockRejectedValue(status(401))
+      const cb = vi.fn()
+
+      createSocketAuth(provider)(cb)
+      await vi.advanceTimersByTimeAsync(5000)
+
+      expect(provider).toHaveBeenCalledTimes(1)
+      expect(cb).not.toHaveBeenCalled()
+      expect(mockSocket.disconnect).toHaveBeenCalledTimes(1)
+    })
+
+    it("keeps the socket up on an auth rejection when the last token fetch failed", async () => {
+      connectSocket(() => Promise.reject(status(500)))
+      const auth = (vi.mocked(io).mock.calls[0]![1] as { auth: (cb: () => void) => void }).auth
+      auth(() => {})
+      await vi.advanceTimersByTimeAsync(1200)
+
+      eventListeners["connect_error"]![0]!(new Error("Unauthorized: missing token"))
+
+      expect(mockSocket.disconnect).not.toHaveBeenCalled()
+    })
+
+    it("disconnects on an auth rejection when the token was fetched successfully", async () => {
+      connectSocket(() => Promise.resolve("ticket-ok"))
+      const auth = (vi.mocked(io).mock.calls[0]![1] as { auth: (cb: () => void) => void }).auth
+      auth(() => {})
+      await vi.advanceTimersByTimeAsync(0)
+
+      eventListeners["connect_error"]![0]!(new Error("Unauthorized: invalid token"))
+
+      expect(mockSocket.disconnect).toHaveBeenCalledTimes(1)
+    })
+
+    it("clears the failure flag once a later fetch succeeds", async () => {
+      const provider = vi
+        .fn<() => Promise<string | null>>()
+        .mockRejectedValueOnce(status(500))
+        .mockRejectedValueOnce(status(500))
+        .mockRejectedValueOnce(status(500))
+        .mockResolvedValueOnce(null)
+      connectSocket(provider)
+      const auth = (vi.mocked(io).mock.calls[0]![1] as { auth: (cb: () => void) => void }).auth
+
+      auth(() => {})
+      await vi.advanceTimersByTimeAsync(1200)
+      auth(() => {})
+      await vi.advanceTimersByTimeAsync(0)
+
+      eventListeners["connect_error"]![0]!(new Error("jwt malformed"))
+      expect(mockSocket.disconnect).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe("manual reconnect after an auth rejection", () => {
+    const serverError = () =>
+      new AxiosError("HTTP 500", "ERR_BAD_RESPONSE", undefined, undefined, {
+        status: 500,
+        data: {},
+      } as never)
+    const authRejection = () => new Error("Unauthorized: missing token")
+    const fire = (event: string, ...args: unknown[]) =>
+      eventListeners[event]!.forEach((cb) => cb(...args))
+
+    /** Connects with a token endpoint that is down, so lastTokenFetchFailed is set. */
+    async function connectWithFailedTokenFetch() {
+      connectSocket(() => Promise.reject(serverError()))
+      const auth = (vi.mocked(io).mock.calls[0]![1] as { auth: (cb: () => void) => void }).auth
+      auth(() => {})
+      await vi.advanceTimersByTimeAsync(1200)
+    }
+
+    beforeEach(() => {
+      process.env.NEXT_PUBLIC_DEMO_MODE = "false"
+      vi.useFakeTimers()
+      vi.spyOn(console, "warn").mockImplementation(() => {})
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it("uses delays of 2s, 5s, 15s, 30s and 60s", () => {
+      expect(AUTH_RECONNECT_DELAYS_MS).toEqual([2000, 5000, 15000, 30000, 60000])
+    })
+
+    it("does not disconnect and reconnects after 2000 ms, then 5000 ms", async () => {
+      await connectWithFailedTokenFetch()
+
+      fire("connect_error", authRejection())
+      expect(mockSocket.disconnect).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(1999)
+      expect(mockSocket.connect).not.toHaveBeenCalled()
+      await vi.advanceTimersByTimeAsync(1)
+      expect(mockSocket.connect).toHaveBeenCalledTimes(1)
+
+      fire("connect_error", authRejection())
+      await vi.advanceTimersByTimeAsync(4999)
+      expect(mockSocket.connect).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(1)
+      expect(mockSocket.connect).toHaveBeenCalledTimes(2)
+      expect(mockSocket.disconnect).not.toHaveBeenCalled()
+    })
+
+    it("stops and disconnects after 5 attempts", async () => {
+      await connectWithFailedTokenFetch()
+
+      for (const delay of AUTH_RECONNECT_DELAYS_MS) {
+        fire("connect_error", authRejection())
+        await vi.advanceTimersByTimeAsync(delay)
+      }
+      expect(mockSocket.connect).toHaveBeenCalledTimes(5)
+      expect(mockSocket.disconnect).not.toHaveBeenCalled()
+
+      fire("connect_error", authRejection())
+      expect(mockSocket.disconnect).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(120_000)
+      expect(mockSocket.connect).toHaveBeenCalledTimes(5)
+    })
+
+    it("a successful connect clears the pending retry and resets the counter", async () => {
+      await connectWithFailedTokenFetch()
+
+      fire("connect_error", authRejection())
+      await vi.advanceTimersByTimeAsync(2000)
+      fire("connect_error", authRejection())
+      fire("connect")
+      await vi.advanceTimersByTimeAsync(10_000)
+      expect(mockSocket.connect).toHaveBeenCalledTimes(1)
+
+      // Counter was reset: the next outage starts again at 2000 ms
+      fire("connect_error", authRejection())
+      await vi.advanceTimersByTimeAsync(2000)
+      expect(mockSocket.connect).toHaveBeenCalledTimes(2)
+    })
+
+    it("disconnectSocket() cancels a pending retry", async () => {
+      await connectWithFailedTokenFetch()
+
+      fire("connect_error", authRejection())
+      disconnectSocket()
+      await vi.advanceTimersByTimeAsync(10_000)
+
+      expect(mockSocket.connect).not.toHaveBeenCalled()
+    })
+
+    it("still disconnects immediately when the token was fetched", async () => {
+      connectSocket(() => Promise.resolve("ticket-ok"))
+      const auth = (vi.mocked(io).mock.calls[0]![1] as { auth: (cb: () => void) => void }).auth
+      auth(() => {})
+      await vi.advanceTimersByTimeAsync(0)
+
+      fire("connect_error", authRejection())
+
+      expect(mockSocket.disconnect).toHaveBeenCalledTimes(1)
+      await vi.advanceTimersByTimeAsync(10_000)
+      expect(mockSocket.connect).not.toHaveBeenCalled()
+    })
+
+    it("an exception thrown by cb does not trigger a token retry", async () => {
+      const provider = vi.fn<() => Promise<string | null>>().mockResolvedValue("ticket-ok")
+      const unhandled: unknown[] = []
+      const onUnhandled = (reason: unknown) => unhandled.push(reason)
+      process.on("unhandledRejection", onUnhandled)
+
+      createSocketAuth(provider)(() => {
+        throw new Error("cb exploded")
+      })
+      await vi.advanceTimersByTimeAsync(5000)
+
+      process.off("unhandledRejection", onUnhandled)
+      expect(provider).toHaveBeenCalledTimes(1)
+      expect(unhandled).toHaveLength(1)
     })
   })
 

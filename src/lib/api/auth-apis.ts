@@ -1,3 +1,4 @@
+import axios from "axios"
 import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
 import { tokenStorage } from "@/lib/myapi/token-storage"
 import {
@@ -300,14 +301,25 @@ export const deleteAccountApi = async (): Promise<{ message: string }> => {
 
 /**
  * Fetches a short-lived socket ticket token if supported by backend.
- * For backends using HttpOnly cookie authentication, this returns null
- * and the client relies on `withCredentials: true` during socket handshake.
+ *
+ * - Returns null when there is no token by design: the endpoint is unavailable
+ *   (404/501), another non-transient 4xx, or the response has no token. The
+ *   client then falls back to cookie auth during the socket handshake.
+ * - Rethrows 401 so the socket client stops when the session is gone.
+ * - Rethrows transient failures (no response, 5xx, 429) so the socket client
+ *   can retry instead of falling back to a cookie-only handshake.
  */
 export const fetchSocketTokenApi = async (): Promise<string | null> => {
   try {
     const { data } = await apiClient.post<{ token: string }>("/auth/socket-token")
     return data?.token ?? null
   } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status
+      const isTransient = status === undefined || status >= 500 || status === 429
+      // 501 Not Implemented means "no socket tokens here", not a transient failure
+      if (status === 401 || (isTransient && status !== 501)) throw error
+    }
     logger.error("fetchSocketTokenApi error:", apiErrorMessage(error, "Failed to fetch socket token"))
     return null
   }
