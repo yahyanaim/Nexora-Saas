@@ -24,7 +24,7 @@ export function CitySkyline({ className }: CitySkylineProps) {
         viewBox="0 0 1000 360"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="w-full h-auto text-neutral-800 dark:text-neutral-300 opacity-90 transition-opacity"
+        className="w-full h-auto text-primary opacity-90 transition-opacity"
       >
         <defs>
           {/* Subtle top & edge fade mask */}
