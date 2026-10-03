@@ -2,6 +2,7 @@ import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from "axio
 import type { AuthResponse } from "@/types/auth"
 import { env } from "@/env"
 import { isDemoMode } from "@/lib/auth/demo-mode"
+import { hasDemoSession } from "./token-storage"
 
 /**
  * Central Axios HTTP client singleton for Nexora SaaS.
@@ -90,7 +91,9 @@ apiClient.interceptors.response.use(
       status === 401 &&
       originalRequest &&
       !originalRequest._retry &&
-      !isAuthRoute
+      !isAuthRoute &&
+      // A demo session can't be refreshed; its callers fall back to demo data
+      !(isDemoMode() && hasDemoSession())
     ) {
       originalRequest._retry = true
 
@@ -187,10 +190,11 @@ export function isBackendUnreachable(error: unknown): boolean {
 
 /**
  * True when an API helper should fall back to local demo data:
- * demo mode is enabled AND the backend could not be reached.
+ * demo mode is enabled AND either the backend could not be reached or the
+ * user signed in with the demo session, which a real backend always rejects.
  */
 export function shouldUseDemoFallback(error: unknown): boolean {
-  return isDemoMode() && isBackendUnreachable(error)
+  return isDemoMode() && (isBackendUnreachable(error) || hasDemoSession())
 }
 
 export default apiClient

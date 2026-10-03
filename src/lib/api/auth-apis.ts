@@ -1,6 +1,6 @@
 import axios from "axios"
 import apiClient, { apiErrorMessage, shouldUseDemoFallback } from "@/lib/myapi/client"
-import { tokenStorage } from "@/lib/myapi/token-storage"
+import { DEMO_SESSION_TOKEN, tokenStorage } from "@/lib/myapi/token-storage"
 import {
   LoginPayload,
   LoginResponse,
@@ -76,7 +76,7 @@ export const loginApi = async (
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("saas_demo_logged_out")
         sessionStorage.setItem("saas_demo_user", JSON.stringify(demoUser))
-        tokenStorage.set("demo-session-token")
+        tokenStorage.set(DEMO_SESSION_TOKEN)
       }
       return {
         success: true,
@@ -108,7 +108,7 @@ export const registerApi = async (
       )
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("saas_demo_logged_out")
-        tokenStorage.set("demo-session-token")
+        tokenStorage.set(DEMO_SESSION_TOKEN)
       }
       const demoUser: AuthUser = {
         id: `usr-demo-${Date.now()}`,
