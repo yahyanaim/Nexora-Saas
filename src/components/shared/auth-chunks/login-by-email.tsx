@@ -1,6 +1,7 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
+import { resolveAfterLoginPath } from "@/lib/auth/safe-redirect"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "@/components/ui/carbon/icons"
 import { Dispatch, SetStateAction } from "react"
@@ -8,7 +9,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { AuthSections } from "./auth"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
 import { useMutation } from "@tanstack/react-query"
 import { loginApi, isDemoMode } from "@/lib/api/auth-apis"
 import { tokenStorage } from "@/lib/myapi/token-storage"
@@ -30,6 +31,7 @@ type LoginFormValues = z.infer<ReturnType<typeof loginSchema>>
 
 export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
   const t = useTranslations()
+  const locale = useLocale()
   const { initializeAuth } = useAuthGuard()
 
   const {
@@ -148,7 +150,13 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
                 tokenStorage.set("demo-session-token")
               }
               toast.success("Welcome! Exploring SaaS as Demo Administrator.")
-              await initializeAuth(true)
+              // Full page load so the edge guard sees the new demo session cookie
+              // and no stale client redirect can keep the user on /auth.
+              const target = new URL(
+                `/${locale}${resolveAfterLoginPath(window.location.search)}`,
+                window.location.origin
+              )
+              window.location.replace(target.toString())
             }}
             className="w-full text-center text-xs text-muted-foreground hover:text-foreground py-1 cursor-pointer transition-colors"
           >
