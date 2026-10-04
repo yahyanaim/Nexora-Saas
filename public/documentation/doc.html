@@ -55,6 +55,24 @@
       <a href="#faq">25. Frequently asked questions</a>
       <a href="#trouble">26. Troubleshooting</a>
       <a href="#glossary">27. Glossary</a>
+      <div class="grp">Analysis &amp; design</div>
+      <a href="#d-process">D1. Business process map (time to cash)</a>
+      <a href="#d-usecase">D2. Use-case diagram</a>
+      <a href="#d-sitemap">D3. Site map</a>
+      <a href="#d-seq-time">D4. Sequence: submit and approve a week</a>
+      <a href="#d-seq-invoice">D5. Sequence: invoice from hours to payment</a>
+      <a href="#d-seq-credit">D6. Sequence: correct an issued invoice</a>
+      <a href="#d-flow-rate">D7. Flowchart: which rate is billed</a>
+      <a href="#d-flow-billing">D8. Flowchart: choosing the invoice type</a>
+      <a href="#d-flow-approvals">D9. Flowchart: leave and expense approval</a>
+      <a href="#d-states">D10. State diagrams: time, expense, leave</a>
+      <a href="#d-erd">D11. Entity-relationship diagram</a>
+      <a href="#d-dictionary">D12. Data dictionary (main fields)</a>
+      <a href="#d-api">D13. System interface specification (API)</a>
+      <a href="#d-backlog">D14. Product backlog (epics)</a>
+      <a href="#d-ac">D15. Acceptance criteria</a>
+      <a href="#d-trace">D16. Traceability matrix</a>
+      <a href="#d-nfr">D17. Non-functional requirements and tests</a>
       <div class="grp">Technical</div>
       <a href="#install">28. Installation</a>
       <a href="#arch">29. Architecture</a>
@@ -284,6 +302,290 @@ stateDiagram-v2
 <section id="trouble"><h2><span class="n">26</span>Troubleshooting</h2><table><thead><tr><th>Problem</th><th>Solution</th></tr></thead><tbody><tr><td>A page shows <i>404 – This page could not be found</i></td><td>You are on an old version. Run <code>git checkout main &amp;&amp; git pull</code>, stop the server, delete <code>.next</code>, start again.</td></tr><tr><td>The screens look old after an update</td><td>Hard-refresh the browser (Ctrl/Cmd + Shift + R).</td></tr><tr><td>Numbers look strange after an update</td><td>Old demo data is still in the browser. Delete the <code>nexora:</code> keys in Local Storage and reload.</td></tr><tr><td>The app does not start: <i>NEXT_PUBLIC_API_URL</i> missing</td><td>Create <code>.env.local</code> (see <a href='#install'>Installation</a>).</td></tr><tr><td>Build fails with a demo-mode error</td><td>Intended: production builds must not use demo mode. Use <code>npm run dev</code> for the demo.</td></tr></tbody></table></section>
 
 <section id="glossary"><h2><span class="n">27</span>Glossary</h2><table><thead><tr><th>Term</th><th>Meaning</th></tr></thead><tbody><tr><td>Workspace</td><td>One company in Nexora, with its own data and settings</td></tr><tr><td>Rate card</td><td>Special rates agreed with a client for a person or job title</td></tr><tr><td>Billable</td><td>Work or expense the client pays for</td></tr><tr><td>Utilization</td><td>Share of available time spent on billable work</td></tr><tr><td>Retainer</td><td>A monthly fee that includes a number of hours</td></tr><tr><td>Deposit (advance)</td><td>Money invoiced before the work, deducted later</td></tr><tr><td>Credit note</td><td>A negative invoice that cancels all or part of an issued one</td></tr><tr><td>Withholding</td><td>Tax deducted by the client from the amount paid</td></tr><tr><td>ICE</td><td>Moroccan company identifier (15 digits) required on invoices</td></tr><tr><td>Period lock</td><td>Date before which the accounts are closed and nothing can change</td></tr><tr><td>Receivables</td><td>Money clients owe you</td></tr><tr><td>Revenue bridge</td><td>Chart explaining the change in revenue between two periods</td></tr></tbody></table></section>
+
+<section id="d-process"><h2><span class="n">D1</span>Business process map (time to cash)</h2><p>The core process of a service company, by who does what.</p><div class="mermaid">
+flowchart LR
+  subgraph EMP[Employee]
+    e1[Log hours<br/>timer or timesheet] --> e2[Submit week]
+    e5[Correct and resubmit]
+  end
+  subgraph MGR[Manager]
+    m1{Review hours}
+  end
+  subgraph ACC[Accountant]
+    a1[Ready to bill] --> a2[Draft invoice] --> a3[Issue - number] --> a4[Send] --> a5[Record payments]
+    a6[Follow up receivables]
+    a7[Credit note]
+  end
+  subgraph CLI[Client]
+    c1[Receives invoice] --> c2[Pays]
+  end
+  e2 --> m1
+  m1 -- sent back --> e5 --> e2
+  m1 -- approved, rate frozen --> a1
+  a4 --> c1
+  c2 --> a5
+  a4 -. overdue .-> a6
+  a3 -. error .-> a7
+</div></section>
+
+<section id="d-usecase"><h2><span class="n">D2</span>Use-case diagram</h2><div class="mermaid">
+flowchart LR
+  ADM([Admin]):::actor
+  MGR([Manager]):::actor
+  EMP([Employee]):::actor
+  ACC([Accountant]):::actor
+  DIR([Director]):::actor
+  U1((Configure workspace))
+  U2((Manage employees and rates))
+  U3((Manage clients and rate cards))
+  U4((Plan projects and tasks))
+  U5((Log time / timer))
+  U6((Approve time, leave, expenses))
+  U7((Request leave / expenses))
+  U8((Invoice and credit))
+  U9((Record payments))
+  U10((Follow receivables))
+  U11((Read analytics and reports))
+  ADM --- U1
+  ADM --- U2
+  ADM --- U3
+  MGR --- U4
+  MGR --- U6
+  EMP --- U5
+  EMP --- U7
+  ACC --- U8
+  ACC --- U9
+  ACC --- U10
+  DIR --- U11
+  MGR --- U11
+  classDef actor fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#0f172a;
+</div></section>
+
+<section id="d-sitemap"><h2><span class="n">D3</span>Site map</h2><div class="mermaid">
+flowchart TB
+  A[Sign in] --> D[Dashboard]
+  D --> D1[Analytics]
+  A --> O[Organization]
+  O --> O1[Employees] --> O1a[Profile and rate history]
+  O --> O2[Clients] --> O2a[Client panel and rate card]
+  O --> O3[Projects] --> O3a[Board / List / Milestones / Team] --> O3b[Task panel: comments, activity]
+  O --> O4[Timesheets]
+  O --> O5[Time approvals]
+  A --> F[Finance]
+  F --> F1[Client invoices] --> F1a[Invoice panel: payments, credit note, PDF]
+  F --> F2[Receivables]
+  F --> F3[Expenses]
+  F --> F4[Profitability]
+  A --> PL[Planning]
+  PL --> P1[Timeline]
+  PL --> P2[Calendar]
+  PL --> P3[Workload]
+  PL --> P4[Leave]
+  A --> S[System]
+  S --> S1[Workspace settings: Company / Lists / Approvals]
+  S --> S2[Roles]
+  S --> S3[Sessions]
+  S --> S4[Audit logs]
+</div></section>
+
+<section id="d-seq-time"><h2><span class="n">D4</span>Sequence: submit and approve a week</h2><div class="mermaid">
+sequenceDiagram
+  actor Emp as Employee
+  participant TS as Timesheet screen
+  participant API as Time API
+  participant RULES as Business rules
+  actor Mgr as Manager
+  Emp->>TS: Type hours in cells
+  TS->>API: setTimesheetCell
+  API->>RULES: round to 15 min, max 24 h/day, member of project, period open
+  RULES-->>API: ok
+  Emp->>TS: Submit week
+  TS->>API: submitTimesheet
+  API-->>TS: entries Submitted (locked)
+  Mgr->>API: approveTimeEntries
+  API->>RULES: not self-approval, still submitted
+  API->>API: freeze bill rate and cost rate on each entry
+  API-->>Mgr: Approved, ready to bill
+  alt Sent back
+    Mgr->>API: rejectTimeEntries(reason)
+    API-->>Emp: Draft again with reason
+  end
+</div></section>
+
+<section id="d-seq-invoice"><h2><span class="n">D5</span>Sequence: invoice from hours to payment</h2><div class="mermaid">
+sequenceDiagram
+  actor Acc as Accountant
+  participant INV as Invoices screen
+  participant API as Billing API
+  participant RULES as Billing rules
+  actor Cli as Client
+  Acc->>INV: Create invoice (client, hours, grouping)
+  INV->>API: createInvoiceFromHours
+  API->>RULES: resolve rates, build lines, deduct open deposits
+  API-->>INV: Draft (no number), hours linked
+  Acc->>API: issueInvoice
+  API->>RULES: period open, next gapless number for fiscal year
+  API-->>INV: Issued INV-2026-021
+  Acc->>API: markInvoiceSent
+  API-->>Cli: PDF with company identity and tax lines
+  Cli-->>Acc: Payment (full or partial)
+  Acc->>API: recordPayment(date, amount, method, ref)
+  API->>RULES: balance = total - payments - credits
+  API-->>INV: Partly paid or Paid
+</div></section>
+
+<section id="d-seq-credit"><h2><span class="n">D6</span>Sequence: correct an issued invoice</h2><div class="mermaid">
+sequenceDiagram
+  actor Acc as Accountant
+  participant API as Billing API
+  Acc->>API: createCreditNote(invoice, lines, releaseHours?)
+  API->>API: number in CN- series, negative amounts
+  alt releaseHours
+    API->>API: unlink hours, back to Ready to bill
+  end
+  API-->>Acc: Original shown as Credited, balance reduced
+  Note over Acc,API: Issued invoices are never deleted. Void only if no payment exists.
+</div></section>
+
+<section id="d-flow-rate"><h2><span class="n">D7</span>Flowchart: which rate is billed</h2><div class="mermaid">
+flowchart TD
+  S([Approved hour]) --> F{Rate frozen at approval?}
+  F -- yes --> U[Use frozen rate]
+  F -- no --> A{Person on client rate card?}
+  A -- yes --> R1[Use that rate]
+  A -- no --> B{Job title on rate card?}
+  B -- yes --> R2[Use title rate]
+  B -- no --> C{Client default rate?}
+  C -- yes --> R3[Use client rate]
+  C -- no --> R4[Employee billable rate valid on that date]
+</div></section>
+
+<section id="d-flow-billing"><h2><span class="n">D8</span>Flowchart: choosing the invoice type</h2><div class="mermaid">
+flowchart TD
+  S([Something to bill]) --> T{Project budget type}
+  T -- Hourly --> H[Invoice from approved hours<br/>group by person / task / day]
+  T -- Fixed price --> X{Billing on a milestone?}
+  X -- yes --> M[Milestone invoice]
+  X -- no --> FS[Fixed share: % of price<br/>never above the price]
+  T -- Retainer --> R[Monthly amount + hours beyond included at overage rate]
+  S --> DP{Advance before work?}
+  DP -- yes --> D[Deposit invoice<br/>deducted on next final invoice]
+  S --> FR[Anything else: free invoice]
+  H & M & FS & R & D & FR --> IS[Draft -> Issue -> Send -> Payments]
+</div></section>
+
+<section id="d-flow-approvals"><h2><span class="n">D9</span>Flowchart: leave and expense approval</h2><div class="mermaid">
+flowchart TD
+  L([Employee request]) --> K{Type}
+  K -- Leave --> L1[Pending] --> AP{Approver from settings}
+  K -- Expense --> E1[Submitted with receipt] --> AP
+  AP --> SELF{Approver is requester?}
+  SELF -- yes --> NO[Refused: no self-approval]
+  SELF -- no --> DEC{Decision}
+  DEC -- approve --> OK[Approved]
+  DEC -- decline --> REJ[Declined / Rejected with reason]
+  OK -- leave --> CAP[Capacity and expected hours reduced]
+  OK -- billable expense --> BILL[Offered on next client invoice]
+  OK -- expense --> RE[Reimbursed by finance]
+</div></section>
+
+<section id="d-states"><h2><span class="n">D10</span>State diagrams: time, expense, leave</h2><div class="mermaid">
+stateDiagram-v2
+  state "Time entry" as T {
+    [*] --> Draft
+    Draft --> Submitted
+    Submitted --> Approved
+    Submitted --> SentBack
+    SentBack --> Submitted
+    Approved --> Invoiced
+    Approved --> Draft: reopened
+  }
+</div><div class="mermaid">
+stateDiagram-v2
+  state "Expense" as X {
+    [*] --> Submitted
+    Submitted --> Approved
+    Submitted --> Rejected
+    Approved --> Reimbursed
+  }
+  state "Leave" as L {
+    [*] --> Pending
+    Pending --> ApprovedLeave
+    Pending --> Declined
+    Pending --> Cancelled
+  }
+</div></section>
+
+<section id="d-erd"><h2><span class="n">D11</span>Entity-relationship diagram</h2><div class="mermaid">
+erDiagram
+  WORKSPACE ||--|| SETTINGS : configures
+  WORKSPACE ||--o{ DEPARTMENT : has
+  WORKSPACE ||--o{ EMPLOYEE : employs
+  WORKSPACE ||--o{ CLIENT : serves
+  DEPARTMENT ||--o{ EMPLOYEE : groups
+  EMPLOYEE ||--o{ RATE_CHANGE : history
+  CLIENT ||--o{ CONTACT : has
+  CLIENT ||--o{ RATE_CARD_ENTRY : agrees
+  CLIENT ||--o{ PROJECT : orders
+  PROJECT ||--o{ MILESTONE : has
+  PROJECT ||--o{ TASK : contains
+  TASK ||--o{ COMMENT : discusses
+  TASK ||--o{ ACTIVITY : records
+  EMPLOYEE ||--o{ TIME_ENTRY : logs
+  PROJECT ||--o{ TIME_ENTRY : receives
+  CLIENT ||--o{ INVOICE : billed
+  INVOICE ||--o{ INVOICE_LINE : contains
+  INVOICE ||--o{ PAYMENT : settled_by
+  INVOICE ||--o{ INVOICE : credited_by
+  INVOICE_LINE }o--o{ TIME_ENTRY : bills
+  EMPLOYEE ||--o{ EXPENSE : spends
+  PROJECT ||--o{ EXPENSE : charged_to
+  EMPLOYEE ||--o{ LEAVE_REQUEST : requests
+  EMPLOYEE {
+    string id
+    string name
+    string role
+    string status
+    number weeklyCapacity
+    string workingDays
+    number hourlyCost
+    number billableRate
+  }
+  TIME_ENTRY {
+    string id
+    date date
+    number hours
+    bool billable
+    string status
+    number billRate
+    number costRate
+    string invoiceId
+  }
+  INVOICE {
+    string id
+    string number
+    string kind
+    string status
+    date issueDate
+    date dueDate
+    string currency
+    number exchangeRate
+    number withholdingRate
+  }
+</div></section>
+
+<section id="d-dictionary"><h2><span class="n">D12</span>Data dictionary (main fields)</h2><table><thead><tr><th>Entity</th><th>Field</th><th>Type</th><th>Meaning</th></tr></thead><tbody><tr><td>Settings</td><td>company.ice</td><td>text (15 digits)</td><td>Moroccan company identifier printed on invoices</td></tr><tr><td>Settings</td><td>company.invoiceNumberFormat</td><td>text</td><td>e.g. INV-{YYYY}-{SEQ}</td></tr><tr><td>Settings</td><td>company.fiscalYearStartMonth</td><td>1–12</td><td>Start of the fiscal year (numbering, YTD)</td></tr><tr><td>Settings</td><td>lockedThrough</td><td>date</td><td>Period lock date</td></tr><tr><td>Settings</td><td>approvals[]</td><td>rules</td><td>Approver per subject (timesheet, leave, expense), steps</td></tr><tr><td>Employee</td><td>status</td><td>enum</td><td>starting, active, on_leave, notice, inactive</td></tr><tr><td>Employee</td><td>workingDays</td><td>int[]</td><td>Days of week worked (1 = Monday)</td></tr><tr><td>Employee</td><td>rateHistory[]</td><td>list</td><td>effectiveFrom, hourlyCost, billableRate, reason</td></tr><tr><td>Client</td><td>rateCard[]</td><td>list</td><td>employeeId or jobTitle → rate</td></tr><tr><td>Client</td><td>paymentTermsDays</td><td>number</td><td>Days until due</td></tr><tr><td>Project</td><td>budgetType</td><td>enum</td><td>hourly, fixed, retainer, non_billable</td></tr><tr><td>Project</td><td>retainer</td><td>object</td><td>monthlyAmount, includedHours, overageRate</td></tr><tr><td>Project</td><td>healthOverride</td><td>object</td><td>health, reason, by, at</td></tr><tr><td>Task</td><td>labelIds[]</td><td>ids</td><td>Labels from settings</td></tr><tr><td>Time entry</td><td>status</td><td>enum</td><td>draft, submitted, approved, rejected</td></tr><tr><td>Time entry</td><td>billRate / costRate</td><td>number</td><td>Frozen at approval</td></tr><tr><td>Time entry</td><td>invoiceId</td><td>id</td><td>Set when billed</td></tr><tr><td>Invoice</td><td>kind</td><td>enum</td><td>hours, fixed, milestone, retainer, advance, free, credit_note</td></tr><tr><td>Invoice</td><td>status</td><td>enum</td><td>draft, issued, sent, paid, void</td></tr><tr><td>Invoice</td><td>fiscalYear</td><td>number</td><td>Year of the number sequence</td></tr><tr><td>Invoice line</td><td>taxRate</td><td>%</td><td>Per-line VAT</td></tr><tr><td>Invoice line</td><td>advanceInvoiceId</td><td>id</td><td>Deposit being deducted</td></tr><tr><td>Payment</td><td>method</td><td>enum</td><td>bank_transfer, card, cash, cheque, other</td></tr><tr><td>Expense</td><td>billable / invoiceId</td><td>bool / id</td><td>Re-billed to client when invoiced</td></tr><tr><td>Leave</td><td>status</td><td>enum</td><td>pending, approved, declined, cancelled</td></tr></tbody></table></section>
+
+<section id="d-api"><h2><span class="n">D13</span>System interface specification (API)</h2><p>Each screen calls an API function in <code>src/lib/api</code>. Today these functions use the browser store; in Phase 7 each maps to the server endpoint below (REST, JSON, workspace from the session, permission checked on the server).</p><table><thead><tr><th>Area</th><th>Endpoints (planned)</th><th>Notes</th></tr></thead><tbody><tr><td>Employees</td><td>GET /employees · POST /employees · PATCH /employees/{id} · DELETE /employees/{id} · POST /employees/{id}/rates</td><td>list/create/update/delete, changeRate</td></tr><tr><td>Clients</td><td>GET/POST /clients · PATCH/DELETE /clients/{id}</td><td>delete refused when invoiced</td></tr><tr><td>Projects</td><td>GET/POST /projects · GET/PATCH/DELETE /projects/{id} · PUT /projects/{id}/health</td><td>health override</td></tr><tr><td>Tasks & milestones</td><td>GET/POST /tasks · PATCH/DELETE /tasks/{id} · POST /tasks/{id}/move · GET/POST /tasks/{id}/comments · GET /tasks/{id}/activity · /milestones</td><td>comments, mentions, activity</td></tr><tr><td>Time</td><td>GET /time-entries · PUT /timesheet/cell · POST /time-entries · POST /timesheet/copy-week · POST /timesheet/submit · POST /time-entries/approve · /reject · /reopen</td><td>rounding, locks, rate freeze</td></tr><tr><td>Timer</td><td>GET /timer · POST /timer/start · POST /timer/stop · DELETE /timer</td><td></td></tr><tr><td>Invoices</td><td>GET /invoices · POST /invoices/from-hours · POST /invoices · PATCH /invoices/{id} · POST /invoices/{id}/issue · /send · /payments · /void · /credit-notes · DELETE /invoices/{id}</td><td>drafts only deletable</td></tr><tr><td>Expenses</td><td>GET/POST /expenses · POST /expenses/{id}/review · /reimburse · DELETE</td><td>approval</td></tr><tr><td>Leave</td><td>GET/POST /leave · POST /leave/{id}/decision · /cancel</td><td></td></tr><tr><td>Settings</td><td>GET /settings · PUT /settings/company · /approvals · /lists · /holidays · /period-lock · /departments</td><td>admin only</td></tr><tr><td>Export</td><td>GET /export (workspace JSON)</td><td>admin only</td></tr></tbody></table></section>
+
+<section id="d-backlog"><h2><span class="n">D14</span>Product backlog (epics)</h2><table><thead><tr><th>Epic</th><th>Main stories</th><th>Status</th></tr></thead><tbody><tr><td>Platform</td><td>Settings, approval rules, period lock, data export, audit</td><td><span class="pill p-done">Done</span></td></tr><tr><td>HR</td><td>Lifecycle statuses, working days, rate history, cost visibility</td><td><span class="pill p-done">Done</span></td></tr><tr><td>CRM</td><td>Legal data, rate card, archive, contacts</td><td><span class="pill p-done">Done</span></td></tr><tr><td>Projects</td><td>Labels, comments, mentions, activity, health override, budget alerts, saved views</td><td><span class="pill p-done">Done</span></td></tr><tr><td>Time</td><td>Timer, quick log, copy week, 15-min, reopen, rate freeze, expected hours</td><td><span class="pill p-done">Done</span></td></tr><tr><td>Billing</td><td>Gapless numbers, payments, multi-tax, withholding, currencies, credit notes, all invoice types</td><td><span class="pill p-done">Done</span></td></tr><tr><td>Receivables</td><td>Aging buckets, exports</td><td><span class="pill p-done">Done</span></td></tr><tr><td>Analytics</td><td>KPIs, bridge, risks, capacity, report PDF/CSV, assistant</td><td><span class="pill p-done">Done</span></td></tr><tr><td>Dashboards & reports</td><td>Manager/employee home, standard reports, Excel, mobile tables</td><td><span class="pill p-plan">Next</span></td></tr><tr><td>Release 2</td><td>Org chart, leave accrual, documents, import, client portal, Gantt, quotes, recurring invoices, reminders</td><td><span class="pill p-plan">Planned</span></td></tr><tr><td>Release 3</td><td>OKRs, reviews, overheads, scheduled reports, branding, custom fields, search</td><td><span class="pill p-plan">Planned</span></td></tr><tr><td>Backend</td><td>Database, server auth and permissions, files, email, backups</td><td><span class="pill p-plan">Planned</span></td></tr></tbody></table></section>
+
+<section id="d-ac"><h2><span class="n">D15</span>Acceptance criteria</h2><table><thead><tr><th>ID</th><th>Given / When / Then</th><th>Status</th></tr></thead><tbody><tr><td>AC-01</td><td>Given a draft invoice, when it is deleted, then no number is consumed and the next issued invoice keeps the sequence</td><td><span class="pill p-done">Done</span></td></tr><tr><td>AC-02</td><td>Given an issued invoice with a payment, when someone tries to void it, then it is refused and a credit note is required</td><td><span class="pill p-done">Done</span></td></tr><tr><td>AC-03</td><td>Given approved hours, when the employee's rate later changes, then the invoice uses the rate frozen at approval</td><td><span class="pill p-done">Done</span></td></tr><tr><td>AC-04</td><td>Given a period locked through a date, when an hour on that date is edited, then the change is refused</td><td><span class="pill p-done">Done</span></td></tr><tr><td>AC-05</td><td>Given a manager, when they try to approve their own week, then it is refused</td><td><span class="pill p-done">Done</span></td></tr><tr><td>AC-06</td><td>Given 1 h 07 typed, when saved, then 1 h 00 is stored (15-minute rounding)</td><td><span class="pill p-done">Done</span></td></tr><tr><td>AC-07</td><td>Given a fixed-price project at 80% billed, when a 30% share is requested, then it is refused</td><td><span class="pill p-done">Done</span></td></tr><tr><td>AC-08</td><td>Given an open deposit, when the next final invoice is created, then the deposit is deducted with its tax</td><td><span class="pill p-done">Done</span></td></tr><tr><td>AC-09</td><td>Given payments equal to the balance, when recorded, then the invoice becomes Paid</td><td><span class="pill p-done">Done</span></td></tr><tr><td>AC-10</td><td>Given a client with invoices, when deletion is requested, then it is refused (archive instead)</td><td><span class="pill p-done">Done</span></td></tr><tr><td>AC-11</td><td>Given an invoice 40 days past due, when Receivables opens, then it appears in 31–60 and the client is flagged high risk</td><td><span class="pill p-done">Done</span></td></tr></tbody></table></section>
+
+<section id="d-trace"><h2><span class="n">D16</span>Traceability matrix</h2><table><thead><tr><th>Requirement</th><th>Screen</th><th>Code</th><th>Tests</th></tr></thead><tbody><tr><td>Workspace settings & period lock</td><td>Workspace settings</td><td>settings-api.ts</td><td>settings-api.test.ts</td></tr><tr><td>Approval rules, no self-approval</td><td>Time approvals, Leave, Expenses</td><td>approvals.ts</td><td>approvals.test.ts</td></tr><tr><td>Rate history & rate card</td><td>Employees, Clients</td><td>rates.ts, billing.ts</td><td>rates.test.ts, crm.test.ts</td></tr><tr><td>Time rules (rounding, locks, membership)</td><td>Timesheets</td><td>work-billing-api.ts</td><td>time-rules.test.ts, work-billing-api.test.ts</td></tr><tr><td>Gapless numbering, payments, credit notes</td><td>Client invoices</td><td>billing.ts, work-billing-api.ts</td><td>invoicing.test.ts, billing.test.ts</td></tr><tr><td>Invoice types, deposits, retainer</td><td>New invoice</td><td>invoice-builders.ts</td><td>invoice-types.test.ts</td></tr><tr><td>Spec reference scenario (13.3)</td><td>End to end</td><td>billing + builders</td><td>reference-scenario.test.ts</td></tr><tr><td>Receivables aging</td><td>Receivables</td><td>billing.ts</td><td>aging.test.ts</td></tr><tr><td>Profitability & budget alerts</td><td>Profitability, Projects</td><td>profitability.ts</td><td>profitability.test.ts</td></tr><tr><td>Project health, collaboration</td><td>Projects</td><td>project-metrics.ts, task-collab-api.ts</td><td>project-metrics.test.ts, project-collab.test.ts</td></tr><tr><td>Capacity, leave, KPIs</td><td>Workload, Leave</td><td>planning.ts, kpis.ts</td><td>planning.test.ts, kpis.test.ts</td></tr><tr><td>Analytics figures</td><td>Analytics</td><td>analytics.ts</td><td>analytics.test.ts</td></tr><tr><td>Data export</td><td>Workspace settings</td><td>data-export-api.ts</td><td>data-export-api.test.ts</td></tr></tbody></table></section>
+
+<section id="d-nfr"><h2><span class="n">D17</span>Non-functional requirements and tests</h2><table><thead><tr><th>Area</th><th>Requirement</th><th>How it is verified</th></tr></thead><tbody><tr><td>Correctness</td><td>All money and rules computed by tested pure functions</td><td>398 unit tests in 27 files</td></tr><tr><td>Security</td><td>No formula injection in CSV, escaped PDF/HTML, timeouts, demo blocked in production</td><td>Unit tests, CI guard job</td></tr><tr><td>Accessibility</td><td>Keyboard navigation, focus states, labels, status never shown by color alone</td><td>Playwright checks, manual review</td></tr><tr><td>Internationalisation</td><td>9 languages, right-to-left Arabic, no missing keys</td><td>i18n sync script in CI</td></tr><tr><td>Performance</td><td>Year of data computed in the browser without lag</td><td>Analytics on ~1,500 entries</td></tr><tr><td>Responsiveness</td><td>Usable on phones; no horizontal scroll</td><td>Playwright phone test</td></tr><tr><td>Reliability</td><td>Build and e2e pass before merge</td><td>GitHub Actions on every PR</td></tr></tbody></table></section>
 
 <section id="install"><h2><span class="n">28</span>Installation</h2>
 <pre><code>git clone https://github.com/yahyanaim/Nexora-Saas.git
