@@ -2,7 +2,8 @@ import NextTopLoader from "nextjs-toploader"
 import ProviderContexts from "@/contexts/app-provider"
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages, getTranslations } from "next-intl/server"
-import { Inter, Roboto_Mono } from "next/font/google"
+import { Inter } from "next/font/google"
+import localFont from "next/font/local"
 import { cn } from "@/lib/utils"
 import { routing } from "@/i18n/routing"
 import "./globals.css"
@@ -15,10 +16,11 @@ const inter = Inter({
   display: "swap",
 })
 
-// Technical family (IDs, codes, keys); numbers use Inter's tabular figures
-const robotoMono = Roboto_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
+// Technical family (IDs, codes, keys); numbers use Inter's tabular figures.
+// Bundled (variable, latin) so builds don't depend on fetching it.
+const robotoMono = localFont({
+  src: "../../fonts/roboto-mono-latin-var.woff2",
+  weight: "400 700",
   variable: "--font-mono",
   display: "swap",
 })
