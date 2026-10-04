@@ -1467,5 +1467,22 @@
   "retainer": "ریٹینر",
   "retainerShort": "{amount}/ماہ · {hours} گھنٹے شامل",
   "retainerTerms": "{hours} گھنٹوں کے لیے {amount} ماہانہ، پھر {rate}/گھنٹہ",
-  "shareOfPrice": "قیمت کا حصہ (%)"
+  "shareOfPrice": "قیمت کا حصہ (%)",
+  "receivables": "وصولیاں",
+  "pageDescReceivables": "کلائنٹس کے کھلے بقایاجات تاخیر کے لحاظ سے۔",
+  "agingCurrent": "ابھی واجب نہیں",
+  "aging1to30": "1–30 دن",
+  "aging31to60": "31–60 دن",
+  "aging61to90": "61–90 دن",
+  "aging90plus": "90 دن سے زیادہ",
+  "openReceivables": "کھلی وصولیاں",
+  "clientsWithBalance": "{count} کلائنٹس کا بقایا",
+  "notYetDue": "مقررہ تاریخ سے پہلے",
+  "pastDueDate": "مقررہ تاریخ کے بعد",
+  "followUpNow": "ابھی رابطہ کریں",
+  "noOpenReceivables": "فی الحال کسی کلائنٹ کا کچھ واجب نہیں۔",
+  "invoiceCount": "{count} انوائس",
+  "exportInvoices": "انوائس ایکسپورٹ کریں",
+  "exportPayments": "ادائیگیاں ایکسپورٹ کریں",
+  "invoiceNumber": "انوائس نمبر"
 }

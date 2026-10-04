@@ -6,7 +6,8 @@ import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
-import { AlertTriangle, CheckCircle, Clock, Receipt, Plus } from "@/components/ui/carbon/icons"
+import { AlertTriangle, CheckCircle, Clock, DownloadIcon, Receipt, Plus } from "@/components/ui/carbon/icons"
+import { exportToCsv } from "@/lib/utils/export-data"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTable } from "../data-table-chunks/data-table"
 import { DataTableColumnHeader } from "../data-table-chunks/data-table-column-header"
@@ -169,17 +170,87 @@ export default function ClientInvoicesPage() {
   )
 
   const readyClients = clients.filter((c) => unbilled.has(c.id))
+  const clientName = (id: string) => clients.find((c) => c.id === id)?.name ?? ""
+
+  // Invoice and payment journals for the accountant (BIL-17)
+  const exportInvoices = () => {
+    const rows = invoices
+      .filter((i) => i.status !== ClientInvoiceStatus.DRAFT)
+      .map((i) => {
+        const tot = invoiceTotals(i)
+        return {
+          number: i.number,
+          kind: i.kind ?? InvoiceKind.HOURS,
+          client: clientName(i.clientId),
+          issueDate: i.issueDate,
+          dueDate: i.dueDate,
+          status: i.status,
+          currency: i.currency ?? workspace.currency,
+          subtotal: tot.subtotal,
+          tax: tot.tax,
+          withholding: tot.withholding,
+          total: tot.total,
+          balance: invoiceBalance(i, invoices),
+        }
+      })
+    exportToCsv(rows, "invoices", [
+      { key: "number", label: t("invoiceNumber") },
+      { key: "kind", label: t("type") },
+      { key: "client", label: t("client") },
+      { key: "issueDate", label: t("issueDate") },
+      { key: "dueDate", label: t("dueDate") },
+      { key: "status", label: t("status") },
+      { key: "currency", label: t("currency") },
+      { key: "subtotal", label: t("subtotal") },
+      { key: "tax", label: t("tax") },
+      { key: "withholding", label: t("withholding") },
+      { key: "total", label: t("total") },
+      { key: "balance", label: t("balanceDue") },
+    ])
+  }
+  const exportPayments = () => {
+    const rows = invoices.flatMap((i) =>
+      (i.payments ?? []).map((p) => ({
+        date: p.date,
+        number: i.number,
+        client: clientName(i.clientId),
+        method: p.method,
+        reference: p.reference ?? "",
+        currency: i.currency ?? workspace.currency,
+        amount: p.amount,
+      }))
+    )
+    exportToCsv(rows, "payments", [
+      { key: "date", label: t("date") },
+      { key: "number", label: t("invoiceNumber") },
+      { key: "client", label: t("client") },
+      { key: "method", label: t("paymentMethod") },
+      { key: "reference", label: t("reference") },
+      { key: "currency", label: t("currency") },
+      { key: "amount", label: t("amount") },
+    ])
+  }
 
   return (
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader
         actions={
-          canCreate && (
-            <Button onClick={() => setCreating(true)}>
-              <Plus className="size-4" />
-              {t("newInvoice")}
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={exportInvoices} disabled={invoices.length === 0}>
+              <DownloadIcon className="size-4" />
+              {t("exportInvoices")}
             </Button>
-          )
+            <Button variant="outline" onClick={exportPayments} disabled={!invoices.some((i) => i.payments?.length)}>
+              <DownloadIcon className="size-4" />
+              {t("exportPayments")}
+            </Button>
+            {canCreate && (
+              <Button onClick={() => setCreating(true)}>
+                <Plus className="size-4" />
+                {t("newInvoice")}
+              </Button>
+            )}
+          </div>
         }
       />
       <MetricCardGrid cards={cards} isLoading={isLoading} />

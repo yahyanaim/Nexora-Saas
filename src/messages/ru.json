@@ -1467,5 +1467,22 @@
   "retainer": "Абонемент",
   "retainerShort": "{amount}/мес · {hours} ч включено",
   "retainerTerms": "{amount} в месяц за {hours} ч, далее {rate}/ч",
-  "shareOfPrice": "Доля цены (%)"
+  "shareOfPrice": "Доля цены (%)",
+  "receivables": "Дебиторка",
+  "pageDescReceivables": "Открытые остатки клиентов по сроку просрочки.",
+  "agingCurrent": "Срок не наступил",
+  "aging1to30": "1–30 дней",
+  "aging31to60": "31–60 дней",
+  "aging61to90": "61–90 дней",
+  "aging90plus": "Более 90 дней",
+  "openReceivables": "Открытая дебиторка",
+  "clientsWithBalance": "Клиентов с остатком: {count}",
+  "notYetDue": "До срока оплаты",
+  "pastDueDate": "После срока оплаты",
+  "followUpNow": "Напомнить сейчас",
+  "noOpenReceivables": "Сейчас никто из клиентов ничего не должен.",
+  "invoiceCount": "Счетов: {count}",
+  "exportInvoices": "Экспорт счетов",
+  "exportPayments": "Экспорт платежей",
+  "invoiceNumber": "Номер счёта"
 }

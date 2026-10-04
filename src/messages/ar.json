@@ -1467,5 +1467,22 @@
   "retainer": "اشتراك شهري",
   "retainerShort": "{amount}/شهر · {hours} س مشمولة",
   "retainerTerms": "{amount} شهريًا مقابل {hours} س، ثم {rate}/س",
-  "shareOfPrice": "نسبة من السعر (%)"
+  "shareOfPrice": "نسبة من السعر (%)",
+  "receivables": "الذمم المدينة",
+  "pageDescReceivables": "أرصدة العملاء المفتوحة حسب مدة التأخر.",
+  "agingCurrent": "غير مستحق بعد",
+  "aging1to30": "1–30 يومًا",
+  "aging31to60": "31–60 يومًا",
+  "aging61to90": "61–90 يومًا",
+  "aging90plus": "أكثر من 90 يومًا",
+  "openReceivables": "الذمم المفتوحة",
+  "clientsWithBalance": "{count} عملاء لديهم رصيد",
+  "notYetDue": "قبل تاريخ الاستحقاق",
+  "pastDueDate": "بعد تاريخ الاستحقاق",
+  "followUpNow": "تابع الآن",
+  "noOpenReceivables": "لا يوجد عميل مدين حاليًا.",
+  "invoiceCount": "{count} فواتير",
+  "exportInvoices": "تصدير الفواتير",
+  "exportPayments": "تصدير المدفوعات",
+  "invoiceNumber": "رقم الفاتورة"
 }

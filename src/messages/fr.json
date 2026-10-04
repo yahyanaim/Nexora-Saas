@@ -1467,5 +1467,22 @@
   "retainer": "Abonnement",
   "retainerShort": "{amount}/mois · {hours} h incluses",
   "retainerTerms": "{amount} par mois pour {hours} h, puis {rate}/h",
-  "shareOfPrice": "Part du prix (%)"
+  "shareOfPrice": "Part du prix (%)",
+  "receivables": "Créances",
+  "pageDescReceivables": "Soldes clients ouverts selon leur retard.",
+  "agingCurrent": "Non échu",
+  "aging1to30": "1–30 jours",
+  "aging31to60": "31–60 jours",
+  "aging61to90": "61–90 jours",
+  "aging90plus": "Plus de 90 jours",
+  "openReceivables": "Créances ouvertes",
+  "clientsWithBalance": "{count, plural, one {# client} other {# clients}} avec un solde",
+  "notYetDue": "Avant l'échéance",
+  "pastDueDate": "Après l'échéance",
+  "followUpNow": "À relancer",
+  "noOpenReceivables": "Aucun client ne doit rien pour l'instant.",
+  "invoiceCount": "{count, plural, one {# facture} other {# factures}}",
+  "exportInvoices": "Exporter les factures",
+  "exportPayments": "Exporter les paiements",
+  "invoiceNumber": "N° de facture"
 }

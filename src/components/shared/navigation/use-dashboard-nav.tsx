@@ -157,6 +157,13 @@ export function useDashboardNav() {
             permission: AdminPermissionsPlatform.INVOICES_READ,
           },
           {
+            title: t("receivables"),
+            url: "/dashboard/receivables",
+            icon: Receipt,
+            descriptionKey: "pageDescReceivables",
+            permission: AdminPermissionsPlatform.INVOICES_READ,
+          },
+          {
             title: t("expenses"),
             url: "/dashboard/expenses",
             icon: Receipt,

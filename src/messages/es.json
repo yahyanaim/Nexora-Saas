@@ -1467,5 +1467,22 @@
   "retainer": "Iguala",
   "retainerShort": "{amount}/mes · {hours} h incluidas",
   "retainerTerms": "{amount} al mes por {hours} h, luego {rate}/h",
-  "shareOfPrice": "Parte del precio (%)"
+  "shareOfPrice": "Parte del precio (%)",
+  "receivables": "Cuentas por cobrar",
+  "pageDescReceivables": "Saldos de clientes abiertos según su retraso.",
+  "agingCurrent": "No vencido",
+  "aging1to30": "1–30 días",
+  "aging31to60": "31–60 días",
+  "aging61to90": "61–90 días",
+  "aging90plus": "Más de 90 días",
+  "openReceivables": "Por cobrar",
+  "clientsWithBalance": "{count, plural, one {# cliente} other {# clientes}} con saldo",
+  "notYetDue": "Antes del vencimiento",
+  "pastDueDate": "Después del vencimiento",
+  "followUpNow": "Reclamar ahora",
+  "noOpenReceivables": "Ningún cliente debe nada ahora.",
+  "invoiceCount": "{count, plural, one {# factura} other {# facturas}}",
+  "exportInvoices": "Exportar facturas",
+  "exportPayments": "Exportar pagos",
+  "invoiceNumber": "N.º de factura"
 }

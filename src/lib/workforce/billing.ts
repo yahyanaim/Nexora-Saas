@@ -281,3 +281,35 @@ export function displayStatus(invoice: ClientInvoice, today = todayIso(), all: C
   if ((invoice.payments ?? []).length > 0) return "partially_paid"
   return invoice.status
 }
+
+export const AGING_BUCKETS = ["current", "d1_30", "d31_60", "d61_90", "d90_plus"] as const
+export type AgingBucket = (typeof AGING_BUCKETS)[number]
+
+/** Which receivables bucket an open invoice falls in on a date (BIL-16). */
+export function agingBucket(dueDate: string, today = todayIso()): AgingBucket {
+  const days = Math.floor((new Date(`${today}T00:00:00`).getTime() - new Date(`${dueDate}T00:00:00`).getTime()) / 86400000)
+  if (days <= 0) return "current"
+  if (days <= 30) return "d1_30"
+  if (days <= 60) return "d31_60"
+  if (days <= 90) return "d61_90"
+  return "d90_plus"
+}
+
+/**
+ * Receivables aging per client in the base currency: what's still owed on
+ * issued invoices, by how long it is past due (BIL-16).
+ */
+export function receivablesAging(invoices: ClientInvoice[], today = todayIso()) {
+  const rows = new Map<string, Record<AgingBucket, number> & { total: number; count: number }>()
+  for (const invoice of invoices) {
+    const balance = invoiceBalance(invoice, invoices)
+    if (balance <= 0) continue
+    const row = rows.get(invoice.clientId) ?? { current: 0, d1_30: 0, d31_60: 0, d61_90: 0, d90_plus: 0, total: 0, count: 0 }
+    const amount = toBase(balance, invoice)
+    row[agingBucket(invoice.dueDate, today)] = roundMoney(row[agingBucket(invoice.dueDate, today)] + amount)
+    row.total = roundMoney(row.total + amount)
+    row.count++
+    rows.set(invoice.clientId, row)
+  }
+  return rows
+}

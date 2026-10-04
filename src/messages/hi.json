@@ -1467,5 +1467,22 @@
   "retainer": "रिटेनर",
   "retainerShort": "{amount}/माह · {hours} घंटे शामिल",
   "retainerTerms": "{hours} घंटे के लिए {amount} मासिक, फिर {rate}/घंटा",
-  "shareOfPrice": "मूल्य का हिस्सा (%)"
+  "shareOfPrice": "मूल्य का हिस्सा (%)",
+  "receivables": "प्राप्य",
+  "pageDescReceivables": "देरी के अनुसार ग्राहकों की खुली बकाया राशि।",
+  "agingCurrent": "अभी देय नहीं",
+  "aging1to30": "1–30 दिन",
+  "aging31to60": "31–60 दिन",
+  "aging61to90": "61–90 दिन",
+  "aging90plus": "90 दिन से अधिक",
+  "openReceivables": "खुले प्राप्य",
+  "clientsWithBalance": "{count} ग्राहकों पर बकाया",
+  "notYetDue": "नियत तिथि से पहले",
+  "pastDueDate": "नियत तिथि के बाद",
+  "followUpNow": "अभी संपर्क करें",
+  "noOpenReceivables": "अभी किसी ग्राहक पर कुछ बकाया नहीं।",
+  "invoiceCount": "{count} चालान",
+  "exportInvoices": "चालान निर्यात करें",
+  "exportPayments": "भुगतान निर्यात करें",
+  "invoiceNumber": "चालान संख्या"
 }

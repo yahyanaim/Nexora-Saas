@@ -1467,5 +1467,22 @@
   "retainer": "包月",
   "retainerShort": "{amount}/月 · 含 {hours} 小时",
   "retainerTerms": "每月 {amount} 含 {hours} 小时，之后 {rate}/小时",
-  "shareOfPrice": "价格比例 (%)"
+  "shareOfPrice": "价格比例 (%)",
+  "receivables": "应收账款",
+  "pageDescReceivables": "按逾期时长显示客户未结余额。",
+  "agingCurrent": "未到期",
+  "aging1to30": "1–30 天",
+  "aging31to60": "31–60 天",
+  "aging61to90": "61–90 天",
+  "aging90plus": "超过 90 天",
+  "openReceivables": "未收款项",
+  "clientsWithBalance": "{count} 个客户有余额",
+  "notYetDue": "到期日之前",
+  "pastDueDate": "已过到期日",
+  "followUpNow": "立即跟进",
+  "noOpenReceivables": "目前没有客户欠款。",
+  "invoiceCount": "{count} 张发票",
+  "exportInvoices": "导出发票",
+  "exportPayments": "导出付款",
+  "invoiceNumber": "发票号"
 }

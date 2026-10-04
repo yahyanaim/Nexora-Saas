@@ -1467,5 +1467,22 @@
   "retainer": "Retainer",
   "retainerShort": "{amount}/Monat · {hours} h inklusive",
   "retainerTerms": "{amount} pro Monat für {hours} h, danach {rate}/h",
-  "shareOfPrice": "Anteil am Preis (%)"
+  "shareOfPrice": "Anteil am Preis (%)",
+  "receivables": "Forderungen",
+  "pageDescReceivables": "Offene Kundensalden nach Überfälligkeit.",
+  "agingCurrent": "Noch nicht fällig",
+  "aging1to30": "1–30 Tage",
+  "aging31to60": "31–60 Tage",
+  "aging61to90": "61–90 Tage",
+  "aging90plus": "Über 90 Tage",
+  "openReceivables": "Offene Forderungen",
+  "clientsWithBalance": "{count, plural, one {# Kunde} other {# Kunden}} mit Saldo",
+  "notYetDue": "Vor Fälligkeit",
+  "pastDueDate": "Nach Fälligkeit",
+  "followUpNow": "Jetzt nachfassen",
+  "noOpenReceivables": "Derzeit schuldet kein Kunde etwas.",
+  "invoiceCount": "{count, plural, one {# Rechnung} other {# Rechnungen}}",
+  "exportInvoices": "Rechnungen exportieren",
+  "exportPayments": "Zahlungen exportieren",
+  "invoiceNumber": "Rechnungsnummer"
 }
