@@ -17,6 +17,7 @@ import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useLeave } from "@/hooks/workforce/use-leave"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { UTILIZATION_TARGET, employeeKpis, periodRange, teamKpis, type EmployeeKpis, type KpiPeriod } from "@/lib/workforce/kpis"
 import { isTaskOverdue } from "@/lib/workforce/project-metrics"
 import { EmployeeStatus, type Employee } from "@/types/workforce"
@@ -45,6 +46,8 @@ export default function TeamKpisPage() {
   const { data: projects = [] } = useProjects()
   const { data: clients = [] } = useClients()
   const { data: leave = [] } = useLeave()
+  const { data: settings } = useWorkspaceSettings()
+  const holidays = useMemo(() => settings?.holidays.map((h) => h.date) ?? [], [settings])
 
   const [period, setPeriod] = useState<KpiPeriod>("30d")
   const [selected, setSelected] = useState<Row | null>(null)
@@ -54,8 +57,8 @@ export default function TeamKpisPage() {
     () =>
       employees
         .filter((e) => e.status !== EmployeeStatus.INACTIVE && e.billableRate > 0)
-        .map((employee) => ({ ...employeeKpis(employee, { entries, tasks, projects, clients, leave }, from, to), employee })),
-    [employees, entries, tasks, projects, clients, leave, from, to]
+        .map((employee) => ({ ...employeeKpis(employee, { entries, tasks, projects, clients, leave, holidays }, from, to), employee })),
+    [employees, entries, tasks, projects, clients, leave, holidays, from, to]
   )
   const team = teamKpis(rows)
   const money = (n: number) => formatMoney(n, workspace.currency, locale)

@@ -30,6 +30,7 @@ export default function EmployeesPage() {
   const canCreate = can(authedUser, AdminPermissionsPlatform.EMPLOYEES_CREATE)
   const canEdit = can(authedUser, AdminPermissionsPlatform.EMPLOYEES_UPDATE)
   const canDelete = can(authedUser, AdminPermissionsPlatform.EMPLOYEES_DELETE)
+  const canSeeCosts = can(authedUser, AdminPermissionsPlatform.COSTS_READ)
 
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Employee | null>(null)
@@ -129,6 +130,7 @@ export default function EmployeesPage() {
           employees={employees}
           departments={departments}
           currency={workspace.currency}
+          canSeeCosts={canSeeCosts}
           onValid={handleValid}
         />
       </DataTableEntityFormSheet>
@@ -138,6 +140,8 @@ export default function EmployeesPage() {
         employees={employees}
         departments={departments}
         currency={workspace.currency}
+        canSeeCosts={canSeeCosts}
+        canEditRates={canEdit && canSeeCosts}
         onOpenChange={(open) => !open && setViewing(null)}
         onSelect={setViewing}
       />

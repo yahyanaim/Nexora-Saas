@@ -24,6 +24,7 @@ import {
   ApprovalSubject,
   type ApprovalRule,
   type CompanySettings,
+  type Holiday,
   type WorkspaceSettings,
 } from "@/types/work-settings"
 
@@ -215,6 +216,41 @@ function DepartmentsCard() {
   )
 }
 
+function HolidaysCard({ initial }: { initial: Holiday[] }) {
+  const t = useTranslations()
+  const { holidays } = useSettingsMutations()
+  const [rows, setRows] = useState(initial)
+  const update = (i: number, patch: Partial<Holiday>) => setRows((list) => list.map((h, j) => (j === i ? { ...h, ...patch } : h)))
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("publicHolidays")}</CardTitle>
+        <CardDescription>{t("publicHolidaysHint")}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <ul className="grid gap-2 md:grid-cols-2">
+          {rows.map((h, i) => (
+            <li key={i} className="flex items-center gap-2 rounded-2xl border border-border p-2">
+              <Input type="date" aria-label={t("date")} className="h-9 w-40 shrink-0" value={h.date} onChange={(e) => update(i, { date: e.target.value })} />
+              <Input aria-label={t("name")} className="h-9 min-w-0 flex-1" value={h.name} onChange={(e) => update(i, { name: e.target.value })} />
+              <Button variant="ghost" size="icon-sm" aria-label={t("delete")} onClick={() => setRows((list) => list.filter((_, j) => j !== i))}>
+                <Trash2 />
+              </Button>
+            </li>
+          ))}
+        </ul>
+        <div>
+          <Button variant="outline" size="sm" onClick={() => setRows((list) => [...list, { date: "", name: "" }])}>
+            <Plus /> {t("addHoliday")}
+          </Button>
+        </div>
+        <SaveBar onSave={() => holidays.mutate(rows)} pending={holidays.isPending} />
+      </CardContent>
+    </Card>
+  )
+}
+
 function ListsTab({ initial }: { initial: WorkspaceSettings }) {
   const t = useTranslations()
   const { lists } = useSettingsMutations()
@@ -227,6 +263,7 @@ function ListsTab({ initial }: { initial: WorkspaceSettings }) {
   return (
     <div className="flex flex-col gap-6">
       <DepartmentsCard />
+      <HolidaysCard initial={initial.holidays} />
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>

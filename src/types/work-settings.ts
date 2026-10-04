@@ -59,6 +59,12 @@ export interface ExpenseCategorySetting {
   enabled: boolean
 }
 
+export interface Holiday {
+  /** ISO date */
+  date: string
+  name: string
+}
+
 export interface TaskLabel {
   id: string
   name: string
@@ -73,6 +79,8 @@ export interface WorkspaceSettings {
   taskLabels: TaskLabel[]
   /** Receipts are required for expenses above this amount (EXP-2) */
   receiptRequiredAbove: number
+  /** Public holidays for the company's country; religious dates are editable (HR-4) */
+  holidays: Holiday[]
 }
 
 /** Subjects whose second step can depend on an amount. */

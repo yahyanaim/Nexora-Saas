@@ -11,9 +11,10 @@ import {
   renameDepartmentApi,
   updateApprovalsApi,
   updateCompanyApi,
+  updateHolidaysApi,
   updateListsApi,
 } from "@/lib/api/settings-api"
-import type { ApprovalRule, CompanySettings, WorkspaceSettings } from "@/types/work-settings"
+import type { ApprovalRule, CompanySettings, Holiday, WorkspaceSettings } from "@/types/work-settings"
 
 export function useWorkspaceSettings() {
   const { id } = useCurrentWorkspace()
@@ -37,6 +38,7 @@ export function useSettingsMutations() {
   return {
     company: useMutation({ mutationFn: (c: CompanySettings) => updateCompanyApi(workspaceId, c), onSuccess: saved, onError }),
     approvals: useMutation({ mutationFn: (a: ApprovalRule[]) => updateApprovalsApi(workspaceId, a), onSuccess: saved, onError }),
+    holidays: useMutation({ mutationFn: (h: Holiday[]) => updateHolidaysApi(workspaceId, h), onSuccess: saved, onError }),
     lists: useMutation({ mutationFn: (l: Lists) => updateListsApi(workspaceId, l), onSuccess: saved, onError }),
     createDepartment: useMutation({
       mutationFn: (name: string) => createDepartmentApi(workspaceId, name),

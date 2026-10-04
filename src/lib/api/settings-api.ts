@@ -7,6 +7,7 @@ import {
   ApprovalSubject,
   type ApprovalRule,
   type CompanySettings,
+  type Holiday,
   type WorkspaceSettings,
 } from "@/types/work-settings"
 import { createId, readCollection, readDocument, writeCollection, writeDocument } from "@/lib/workforce/demo-store"
@@ -42,6 +43,40 @@ const COMPANIES: Record<string, CompanySettings> = {
     timeZone: "America/Los_Angeles",
     invoiceNumberFormat: "NW-{YYYY}-{SEQ}",
   },
+}
+
+/** 2026 public holidays. Religious dates follow the moon and are estimates to confirm each year. */
+const HOLIDAYS: Record<string, Holiday[]> = {
+  ws_atlas: [
+    { date: "2026-01-01", name: "New Year's Day" },
+    { date: "2026-01-11", name: "Independence Manifesto Day" },
+    { date: "2026-01-14", name: "Amazigh New Year" },
+    { date: "2026-03-20", name: "Eid al-Fitr" },
+    { date: "2026-03-21", name: "Eid al-Fitr (day 2)" },
+    { date: "2026-05-01", name: "Labour Day" },
+    { date: "2026-05-27", name: "Eid al-Adha" },
+    { date: "2026-05-28", name: "Eid al-Adha (day 2)" },
+    { date: "2026-06-16", name: "Islamic New Year" },
+    { date: "2026-07-30", name: "Throne Day" },
+    { date: "2026-08-14", name: "Oued Ed-Dahab Day" },
+    { date: "2026-08-20", name: "Revolution of the King and the People" },
+    { date: "2026-08-21", name: "Youth Day" },
+    { date: "2026-08-25", name: "Mawlid" },
+    { date: "2026-11-06", name: "Green March" },
+    { date: "2026-11-18", name: "Independence Day" },
+  ],
+  ws_northwind: [
+    { date: "2026-01-01", name: "New Year's Day" },
+    { date: "2026-01-19", name: "Martin Luther King Jr. Day" },
+    { date: "2026-02-16", name: "Presidents' Day" },
+    { date: "2026-05-25", name: "Memorial Day" },
+    { date: "2026-06-19", name: "Juneteenth" },
+    { date: "2026-07-03", name: "Independence Day (observed)" },
+    { date: "2026-09-07", name: "Labor Day" },
+    { date: "2026-11-11", name: "Veterans Day" },
+    { date: "2026-11-26", name: "Thanksgiving" },
+    { date: "2026-12-25", name: "Christmas Day" },
+  ],
 }
 
 /** Section 8.3 defaults: managers approve time, leave and expenses; accountants issue invoices. */
@@ -81,6 +116,7 @@ export function seedSettings(workspaceId: string): WorkspaceSettings {
       { id: "lbl_client", name: "Client request" },
     ],
     receiptRequiredAbove: 25,
+    holidays: HOLIDAYS[workspaceId] ?? [],
   }
 }
 
@@ -135,6 +171,18 @@ export async function updateListsApi(workspaceId: string, lists: ListsInput): Pr
     ...lists,
     taskLabels: lists.taskLabels.map((l) => ({ ...l, name: l.name.trim() })),
   }
+  write(workspaceId, next)
+  return next
+}
+
+/** Saves the holiday calendar; one holiday per date. */
+export async function updateHolidaysApi(workspaceId: string, holidays: Holiday[]): Promise<WorkspaceSettings> {
+  const cleaned = holidays
+    .map((h) => ({ date: h.date, name: h.name.trim() }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+  if (cleaned.some((h) => !/^\d{4}-\d{2}-\d{2}$/.test(h.date) || !h.name)) throw new Error("Each holiday needs a date and a name")
+  if (new Set(cleaned.map((h) => h.date)).size !== cleaned.length) throw new Error("Two holidays are on the same date")
+  const next = { ...read(workspaceId), holidays: cleaned }
   write(workspaceId, next)
   return next
 }

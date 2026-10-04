@@ -1,5 +1,8 @@
 "use client"
 
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { can } from "@/lib/permissions/can"
+import { AdminPermissionsPlatform } from "@/types/roles"
 import { useMemo } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
 import { useLocale, useTranslations } from "next-intl"
@@ -25,6 +28,7 @@ import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useMilestones, useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useLeave } from "@/hooks/workforce/use-leave"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { addDays, displayStatus, invoiceTotals, weekStart } from "@/lib/workforce/billing"
 import { MilestoneState, milestoneState, projectStatsById, todayIso } from "@/lib/workforce/project-metrics"
@@ -42,6 +46,9 @@ const WEEKS = 8
 
 export default function ExecutivePage() {
   const t = useTranslations()
+  const { authedUser } = useAuthGuard()
+  // Profit and margin need the costs permission (BR-9)
+  const canSeeCosts = can(authedUser, AdminPermissionsPlatform.COSTS_READ)
   const locale = useLocale()
   const workspace = useCurrentWorkspace()
   const { data: employees = [], isLoading } = useEmployees()
@@ -52,6 +59,8 @@ export default function ExecutivePage() {
   const { data: entries = [] } = useTimeEntries()
   const { data: invoices = [] } = useClientInvoices()
   const { data: leave = [] } = useLeave()
+  const { data: settings } = useWorkspaceSettings()
+  const holidays = useMemo(() => settings?.holidays.map((h) => h.date) ?? [], [settings])
   const { data: expenses = [] } = useExpenses()
 
   const today = todayIso()
@@ -78,7 +87,7 @@ export default function ExecutivePage() {
     const team = teamKpis(
       employees
         .filter((e) => e.status !== EmployeeStatus.INACTIVE && e.billableRate > 0)
-        .map((e) => employeeKpis(e, { entries, tasks, projects, clients, leave }, from, to))
+        .map((e) => employeeKpis(e, { entries, tasks, projects, clients, leave, holidays }, from, to))
     )
 
     const byClient = new Map<string, number>()
@@ -114,10 +123,10 @@ export default function ExecutivePage() {
         expenses: expenses.filter((x) => x.status === ExpenseStatus.SUBMITTED).length,
       },
     }
-  }, [invoices, projects, tasks, milestones, entries, expenses, employees, clients, leave, today])
+  }, [invoices, projects, tasks, milestones, entries, expenses, employees, clients, leave, holidays, today])
 
   const cards: MetricCardItem[] = [
-    { key: "revenue", title: t("revenueEarned"), value: money(figures.revenue), valueClassName: "text-primary", footer: { icon: TrendingUp, text: figures.margin === null ? t("noRevenueYet") : t("profitAndMargin", { profit: money(figures.profit), margin: figures.margin }) } },
+    { key: "revenue", title: t("revenueEarned"), value: money(figures.revenue), valueClassName: "text-primary", footer: { icon: TrendingUp, text: figures.margin === null ? t("noRevenueYet") : canSeeCosts ? t("profitAndMargin", { profit: money(figures.profit), margin: figures.margin }) : t("approvedHoursAndPaid") } },
     { key: "outstanding", title: t("outstanding"), value: money(figures.outstanding), footer: { icon: Clock, text: t("sentInvoicesCount", { count: figures.openCount }) } },
     { key: "overdue", title: t("overdue"), value: money(figures.overdue), valueClassName: figures.overdueCount ? "text-destructive" : undefined, footer: { icon: AlertTriangle, text: t("pastDueCount", { count: figures.overdueCount }) } },
     { key: "util", title: t("teamUtilization"), value: figures.team.utilization === null ? "—" : `${figures.team.utilization}%`, valueClassName: "text-success-foreground", footer: { icon: Gauge, text: t("last30Days") } },

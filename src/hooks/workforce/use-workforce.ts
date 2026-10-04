@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import {
+  changeRateApi,
   createEmployeeApi,
   deleteEmployeeApi,
   listDepartmentsApi,
@@ -17,7 +18,7 @@ import {
   listClientsApi,
   updateClientApi,
 } from "@/lib/api/clients-api"
-import type { ClientInput, EmployeeInput } from "@/types/workforce"
+import type { ClientInput, EmployeeInput, RateChange } from "@/types/workforce"
 
 export function useEmployees() {
   const { id } = useCurrentWorkspace()
@@ -85,6 +86,21 @@ export function useEmployeeMutations() {
     { create: createEmployeeApi, update: updateEmployeeApi, remove: deleteEmployeeApi },
     { created: t("employeeCreated"), updated: t("employeeUpdated"), deleted: t("employeeDeleted") }
   )
+}
+
+/** Records an effective-dated rate change for one employee (HR-3). */
+export function useRateChange() {
+  const t = useTranslations()
+  const { id: workspaceId } = useCurrentWorkspace()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, change }: { id: string; change: RateChange }) => changeRateApi(workspaceId, id, change),
+    onSuccess: () => {
+      toast.success(t("ratesUpdated"))
+      queryClient.invalidateQueries({ queryKey: ["employees", workspaceId] })
+    },
+    onError: (err: unknown) => toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong")),
+  })
 }
 
 export function useClientMutations() {

@@ -168,7 +168,7 @@ export function useDashboardNav() {
             url: "/dashboard/profitability",
             icon: TrendingUp,
             descriptionKey: "pageDescProfitability",
-            permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
+            permission: AdminPermissionsPlatform.COSTS_READ,
           },
         ],
       },

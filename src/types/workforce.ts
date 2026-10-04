@@ -48,6 +48,7 @@ export const WORK_ROLE_PERMISSIONS: Record<WorkRole, AdminPermissionsPlatform[]>
     P.INVOICES_UPDATE,
     P.TRANSACTIONS_READ,
     P.VIEW_ANALYTICS,
+    P.COSTS_READ,
   ],
   [WorkRole.EMPLOYEE]: [P.PROJECTS_READ, P.FILES_READ, P.FILES_CREATE, P.TIME_TRACK],
   [WorkRole.CLIENT]: [P.PROJECTS_READ, P.INVOICES_READ],
@@ -60,9 +61,12 @@ export enum EmploymentType {
   INTERN = "intern",
 }
 
+/** Lifecycle (HR-5). INACTIVE is a former employee: history stays, no new work. */
 export enum EmployeeStatus {
+  STARTING = "starting",
   ACTIVE = "active",
   ON_LEAVE = "on_leave",
+  NOTICE = "notice",
   INACTIVE = "inactive",
 }
 
@@ -92,12 +96,27 @@ export interface Employee {
   billableRate: number
   /** Hours per week the employee can be planned for */
   weeklyCapacity: number
+  /** Days of the week worked, 0 = Sunday; defaults to Monday–Friday (HR-4) */
+  workingDays?: number[]
+  /** Effective-dated rates, oldest first; hourlyCost/billableRate mirror the one in force today (HR-3, BR-4) */
+  rateHistory?: RateChange[]
   skills: string[]
   createdAt: string
   updatedAt: string
 }
 
 export type EmployeeInput = Omit<Employee, "id" | "workspaceId" | "createdAt" | "updatedAt">
+
+/** A cost and billable rate taking effect on a date. */
+export interface RateChange {
+  /** ISO date */
+  effectiveFrom: string
+  hourlyCost: number
+  billableRate: number
+  reason?: string
+}
+
+export const DEFAULT_WORKING_DAYS = [1, 2, 3, 4, 5]
 
 export enum ClientStatus {
   LEAD = "lead",

@@ -9,6 +9,7 @@ import {
   type TimeEntry,
 } from "@/types/work-billing"
 import { todayIso } from "./project-metrics"
+import { rateOn } from "./rates"
 
 // ---------- Dates ----------
 
@@ -35,9 +36,14 @@ export function weekDays(monday: string) {
 
 // ---------- Rates ----------
 
-/** Hourly price for an entry: the client's agreed rate, else the employee's billable rate. */
-export function hourlyRate(employee: Employee | undefined, client: Client | undefined) {
-  return client?.hourlyRate ?? employee?.billableRate ?? 0
+/**
+ * Hourly price for an entry: the client's agreed rate, else the employee's
+ * billable rate in force on the entry's date (BR-4).
+ */
+export function hourlyRate(employee: Employee | undefined, client: Client | undefined, date?: string) {
+  if (client?.hourlyRate !== undefined) return client.hourlyRate
+  if (!employee) return 0
+  return date ? rateOn(employee, date).billableRate : employee.billableRate
 }
 
 /**
@@ -69,7 +75,7 @@ export function unbilledValueByClient(
     const employee = employees.find((e) => e.id === entry.employeeId)
     const current = totals.get(project.clientId!) ?? { hours: 0, amount: 0 }
     current.hours += entry.hours
-    current.amount += entry.hours * hourlyRate(employee, client)
+    current.amount += entry.hours * hourlyRate(employee, client, entry.date)
     totals.set(project.clientId!, current)
   }
   return totals
@@ -90,7 +96,9 @@ export function buildInvoiceLines(
 ): InvoiceLine[] {
   const groups = new Map<string, TimeEntry[]>()
   for (const entry of entries) {
-    const key = `${entry.projectId}:${entry.employeeId}`
+    // A rate change inside the period starts a new line at the new price
+    const employee = employees.find((e) => e.id === entry.employeeId)
+    const key = `${entry.projectId}:${entry.employeeId}:${hourlyRate(employee, client, entry.date)}`
     groups.set(key, [...(groups.get(key) ?? []), entry])
   }
   return [...groups.values()].map((group) => {
@@ -101,7 +109,7 @@ export function buildInvoiceLines(
       id: createLineId(),
       description: `${project ? `${project.code} · ${project.name}` : "Project"} — ${employee?.name ?? "Team member"}`,
       quantity: roundHours(group.reduce((sum, e) => sum + e.hours, 0)),
-      unitPrice: hourlyRate(employee, client),
+      unitPrice: hourlyRate(employee, client, first.date),
       projectId: first.projectId,
       timeEntryIds: group.map((e) => e.id),
     }

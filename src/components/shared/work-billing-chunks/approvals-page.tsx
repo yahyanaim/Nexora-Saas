@@ -72,7 +72,7 @@ export default function ApprovalsPage() {
       const project = projects.find((p) => p.id === e.projectId)
       if (!e.billable || project?.budgetType !== BudgetType.HOURLY) return sum
       const client = clients.find((c) => c.id === project.clientId)
-      return sum + e.hours * hourlyRate(employees.find((x) => x.id === e.employeeId), client)
+      return sum + e.hours * hourlyRate(employees.find((x) => x.id === e.employeeId), client, e.date)
     }, 0)
 
   const formatWeek = (monday: string) =>

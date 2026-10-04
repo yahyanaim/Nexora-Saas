@@ -4,6 +4,7 @@ import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import { ExpenseStatus, type Expense, type ProjectProfit } from "@/types/work-costs"
 import { hourlyRate } from "./billing"
 import { taskProgress } from "./project-metrics"
+import { rateOn } from "./rates"
 
 const SPENT = [ExpenseStatus.APPROVED, ExpenseStatus.REIMBURSED]
 
@@ -31,7 +32,7 @@ export function projectProfit(
   if (project.budgetType === BudgetType.HOURLY) {
     revenue = entries
       .filter((e) => e.status === TimeEntryStatus.APPROVED && e.billable)
-      .reduce((sum, e) => sum + e.hours * hourlyRate(employee(e.employeeId), client), 0)
+      .reduce((sum, e) => sum + e.hours * hourlyRate(employee(e.employeeId), client, e.date), 0)
   } else if (project.budgetType === BudgetType.FIXED && project.budgetAmount) {
     revenue = (project.budgetAmount * taskProgress(data.tasks.filter((t) => t.projectId === project.id))) / 100
   }
@@ -39,7 +40,10 @@ export function projectProfit(
     revenue += expenses.filter((x) => x.billable).reduce((sum, x) => sum + x.amount, 0)
   }
 
-  const laborCost = entries.reduce((sum, e) => sum + e.hours * (employee(e.employeeId)?.hourlyCost ?? 0), 0)
+  const laborCost = entries.reduce((sum, e) => {
+    const person = employee(e.employeeId)
+    return sum + e.hours * (person ? rateOn(person, e.date).hourlyCost : 0)
+  }, 0)
   const expenseTotal = expenses.reduce((sum, x) => sum + x.amount, 0)
   const profit = revenue - laborCost - expenseTotal
 

@@ -3,7 +3,7 @@ import { BudgetType, TaskStatus, type WorkProject, type WorkTask } from "@/types
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import type { LeaveRequest } from "@/types/work-planning"
 import { addDays, hourlyRate } from "./billing"
-import { leaveDays, workingDays } from "./planning"
+import { employeeWorkDays, hoursPerDay, leaveDays } from "./planning"
 import { todayIso } from "./project-metrics"
 
 export type KpiPeriod = "month" | "30d" | "quarter"
@@ -43,6 +43,8 @@ interface Data {
   projects: WorkProject[]
   clients: Client[]
   leave: LeaveRequest[]
+  /** Public holidays (ISO dates); nobody is expected to work on them */
+  holidays?: string[]
 }
 
 const ratio = (part: number, whole: number) => (whole > 0 ? Math.round((part / whole) * 100) : null)
@@ -50,9 +52,9 @@ const round1 = (n: number) => Math.round(n * 10) / 10
 
 /** One person's KPIs for a date range. */
 export function employeeKpis(employee: Employee, data: Data, from: string, to: string): EmployeeKpis {
-  const days = workingDays(from, to)
+  const days = employeeWorkDays(employee, from, to, data.holidays)
   const off = leaveDays(data.leave, employee.id, from, to)
-  const availableHours = round1((employee.weeklyCapacity / 5) * days.filter((d) => !off.has(d)).length)
+  const availableHours = round1(hoursPerDay(employee) * days.filter((d) => !off.has(d)).length)
 
   const entries = data.entries.filter(
     (e) => e.employeeId === employee.id && e.date >= from && e.date <= to && e.status !== TimeEntryStatus.REJECTED
@@ -66,7 +68,7 @@ export function employeeKpis(employee: Employee, data: Data, from: string, to: s
     .reduce((sum, e) => {
       const project = data.projects.find((p) => p.id === e.projectId)
       if (project?.budgetType !== BudgetType.HOURLY) return sum
-      return sum + e.hours * hourlyRate(employee, data.clients.find((c) => c.id === project.clientId))
+      return sum + e.hours * hourlyRate(employee, data.clients.find((c) => c.id === project.clientId), e.date)
     }, 0)
 
   const completed = data.tasks.filter(
@@ -141,7 +143,7 @@ export function weeklyRevenue(
       const project = data.projects.find((p) => p.id === e.projectId)
       if (project?.budgetType !== BudgetType.HOURLY) continue
       const employee = data.employees.find((x) => x.id === e.employeeId)
-      revenue += e.hours * hourlyRate(employee, data.clients.find((c) => c.id === project.clientId))
+      revenue += e.hours * hourlyRate(employee, data.clients.find((c) => c.id === project.clientId), e.date)
       hours += e.hours
     }
     return { week: monday, revenue: Math.round(revenue), hours: round1(hours) }

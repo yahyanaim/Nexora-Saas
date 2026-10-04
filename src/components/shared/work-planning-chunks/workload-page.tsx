@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { useEmployees } from "@/hooks/workforce/use-workforce"
 import { useTasks } from "@/hooks/workforce/use-work-projects"
 import { useLeave } from "@/hooks/workforce/use-leave"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { leaveDays, loadPercent, plannedHours, weeklyCapacity } from "@/lib/workforce/planning"
@@ -32,6 +33,8 @@ export default function WorkloadPage() {
   const { data: employees = [], isLoading } = useEmployees()
   const { data: tasks = [] } = useTasks()
   const { data: leave = [] } = useLeave()
+  const { data: settings } = useWorkspaceSettings()
+  const holidays = useMemo(() => settings?.holidays.map((h) => h.date) ?? [], [settings])
 
   const today = todayIso()
   const mondays = useMemo(() => Array.from({ length: WEEKS }, (_, i) => addDays(weekStart(today), i * 7)), [today])
@@ -42,13 +45,13 @@ export default function WorkloadPage() {
       people.map((person) => ({
         person,
         weeks: mondays.map((monday) => {
-          const capacity = weeklyCapacity(person, leave, monday)
+          const capacity = weeklyCapacity(person, leave, monday, holidays)
           const planned = plannedHours(tasks, person.id, monday, today)
           const off = leaveDays(leave, person.id, monday, addDays(monday, 6)).size
           return { monday, capacity, planned, off, percent: loadPercent(planned, capacity) }
         }),
       })),
-    [people, mondays, tasks, leave, today]
+    [people, mondays, tasks, leave, holidays, today]
   )
 
   const thisWeek = grid.map((row) => row.weeks[0]!)
