@@ -1747,5 +1747,8 @@
   "repVal_subcontractor": "Subcontratista",
   "repVal_other": "Otro",
   "erpReports": "Informes",
-  "pageDescErpReports": "Informes estándar con filtros, exportables a Excel, CSV y PDF."
+  "pageDescErpReports": "Informes estándar con filtros, exportables a Excel, CSV y PDF.",
+  "addRowHint": "Elige un proyecto abajo, añade una fila y escribe tus horas.",
+  "noWorkloadPeople": "No hay empleados activos",
+  "noWorkloadPeopleHint": "Añade empleados con capacidad semanal para ver su carga."
 }

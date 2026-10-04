@@ -1747,5 +1747,8 @@
   "repVal_subcontractor": "Subunternehmer",
   "repVal_other": "Sonstiges",
   "erpReports": "Berichte",
-  "pageDescErpReports": "Standardberichte mit Filtern, exportierbar als Excel, CSV und PDF."
+  "pageDescErpReports": "Standardberichte mit Filtern, exportierbar als Excel, CSV und PDF.",
+  "addRowHint": "Wählen Sie unten ein Projekt, fügen Sie eine Zeile hinzu und tragen Sie Ihre Stunden ein.",
+  "noWorkloadPeople": "Keine aktiven Mitarbeitenden",
+  "noWorkloadPeopleHint": "Fügen Sie Mitarbeitende mit Wochenkapazität hinzu, um ihre Auslastung zu sehen."
 }

@@ -297,7 +297,7 @@ Security already in place:
 | :--- | :--- | :--- |
 | 0–3 | Fixes, settings, HR, CRM, projects, time, billing, receivables | ✅ Done |
 | Analytics | Analytics on ERP data, PDF/CSV report, assistant | ✅ Done |
-| 4 | My work and Team dashboards, standard reports, Excel/CSV/PDF export, freshness indicator | ✅ Done · mobile cards on every list in progress |
+| 4 | My work and Team dashboards, standard reports, Excel/CSV/PDF export, freshness indicator, phone cards and empty/loading states on every list | ✅ Done |
 | 5 | Org chart, leave balances, documents and contracts, CSV import, client portal, Gantt, quotes, recurring invoices, reminders | Planned |
 | 6 | Goals and KPIs, reviews, overhead costs, scheduled reports, branding, custom fields, global search | Planned |
 | 7 | Server version: database, secure sign-in, permissions enforced on the server, files, email, backups | Planned |

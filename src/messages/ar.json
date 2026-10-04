@@ -1747,5 +1747,8 @@
   "repVal_subcontractor": "مقاول من الباطن",
   "repVal_other": "أخرى",
   "erpReports": "التقارير",
-  "pageDescErpReports": "تقارير قياسية مع مرشحات، قابلة للتصدير إلى Excel وCSV وPDF."
+  "pageDescErpReports": "تقارير قياسية مع مرشحات، قابلة للتصدير إلى Excel وCSV وPDF.",
+  "addRowHint": "اختر مشروعًا في الأسفل وأضف صفًا ثم اكتب ساعاتك.",
+  "noWorkloadPeople": "لا يوجد موظفون نشطون",
+  "noWorkloadPeopleHint": "أضف موظفين بسعة أسبوعية لرؤية عبء عملهم."
 }

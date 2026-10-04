@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import { CheckCircle, CheckCircle2, Clock, DollarSign, Users, XCircle } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { can } from "@/lib/permissions/can"
 import { AdminPermissionsPlatform } from "@/types/roles"
@@ -99,12 +100,10 @@ export default function ApprovalsPage() {
       />
       <MetricCardGrid cards={cards} isLoading={isLoading} />
 
-      {!isLoading && groups.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-3xl border border-border bg-card py-16 text-center shadow-panel">
-          <CheckCircle className="size-8 text-success-foreground" />
-          <p className="font-medium">{t("allCaughtUp")}</p>
-          <p className="text-sm text-muted-foreground">{t("noHoursWaiting")}</p>
-        </div>
+      {isLoading ? (
+        <ListSkeleton rows={3} />
+      ) : groups.length === 0 ? (
+        <EmptyState icon={CheckCircle} title={t("allCaughtUp")} hint={t("noHoursWaiting")} className="bg-card" />
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
           {groups.map((group) => {

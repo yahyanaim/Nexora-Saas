@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { AlertTriangle, ChevronLeft, ChevronRight, Copy, Plus, RotateCcw, Send, Trash2 } from "@/components/ui/carbon/icons"
+import { AlertTriangle, ChevronLeft, ChevronRight, Clock, Copy, Plus, RotateCcw, Send, Trash2 } from "@/components/ui/carbon/icons"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -25,6 +25,7 @@ import { entryDisplayStatus } from "@/lib/workforce/billing"
 import { TimerBar } from "./timer-bar"
 import { QuickLog } from "./quick-log"
 import { PageHeader } from "@/components/shared/page-header"
+import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { cn } from "@/lib/utils"
 import { useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
@@ -70,6 +71,7 @@ export default function TimesheetPage() {
   const [added, setAdded] = useState<{ view: string; rows: Row[] }>({ view: "", rows: [] })
   const [newProject, setNewProject] = useState("")
   const [newTask, setNewTask] = useState(NO_TASK)
+  const [pickedDay, setPickedDay] = useState("")
 
   // Until someone is picked, show whoever logged time most recently
   const latestLogger = [...entries].reverse().find((e) => staff.some((s) => s.id === e.employeeId))?.employeeId
@@ -82,6 +84,8 @@ export default function TimesheetPage() {
   const days = weekDays(monday)
   const sunday = days[6]!
   const today = todayIso()
+  // Phones edit one day at a time: the picked day, else today when it is in this week, else Monday
+  const activeDay = days.includes(pickedDay) ? pickedDay : days.includes(today) ? today : monday
 
   const weekEntries = useMemo(
     () => entries.filter((e) => e.employeeId === employeeId && e.date >= monday && e.date <= sunday),
@@ -210,7 +214,71 @@ export default function TimesheetPage() {
         </div>
       )}
 
-      <section className="relative overflow-x-auto rounded-3xl border border-border bg-card p-2 shadow-panel md:p-3">
+      <section className="relative rounded-3xl border border-border bg-card p-2 shadow-panel md:p-3">
+        {/* Phones: pick a day, then type the hours for each row of that day */}
+        <div className="md:hidden">
+          <div className="grid grid-cols-7 gap-1" role="tablist" aria-label={t("timesheetFor", { name: employee?.name ?? "", week: weekLabel })}>
+            {days.map((d) => (
+              <button
+                key={d}
+                type="button"
+                role="tab"
+                aria-selected={d === activeDay}
+                onClick={() => setPickedDay(d)}
+                className={cn(
+                  "flex flex-col items-center rounded-xl px-0.5 py-2 text-[11px] transition-colors",
+                  d === activeDay ? "bg-primary text-primary-foreground" : d === today ? "bg-info-soft text-info-foreground" : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <span>{new Intl.DateTimeFormat(locale, { weekday: "narrow" }).format(new Date(`${d}T00:00:00`))}</span>
+                <span className="text-sm font-semibold">{Number(d.slice(8))}</span>
+                <span className="tabular-nums opacity-80">{dayTotal(d) ? formatHours(dayTotal(d)) : "·"}</span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-col gap-2">
+            {isLoading ? (
+              <ListSkeleton rows={3} />
+            ) : rows.length === 0 ? (
+              <EmptyState icon={Clock} title={t("noHoursThisWeek")} hint={t("addRowHint")} />
+            ) : (
+              rows.map((row) => {
+                const project = projects.find((p) => p.id === row.projectId)
+                const task = tasks.find((x) => x.id === row.taskId)
+                const entry = cellEntry(row, activeDay)
+                const total = days.reduce((sum, d) => sum + (cellEntry(row, d)?.hours ?? 0), 0)
+                const label = `${project?.name ?? "—"}${task ? ` · ${task.title}` : ""}`
+                return (
+                  <div key={row.key} className="flex items-center gap-3 rounded-2xl border border-border px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{project?.name ?? "—"}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {project?.code}
+                        {task ? ` · ${task.title}` : ""} · {t("total")} {formatHours(total)}
+                      </p>
+                    </div>
+                    <div className="w-20 shrink-0">
+                      <HoursCell
+                        key={`${activeDay}:${entry?.hours ?? 0}:${entry?.status ?? ""}`}
+                        entry={entry}
+                        label={t("hoursOn", { row: label, date: activeDay })}
+                        disabled={!employeeId}
+                        onCommit={(hours) => setCell.mutate({ employeeId, projectId: row.projectId, taskId: row.taskId, date: activeDay, hours })}
+                      />
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </div>
+          {employee && (
+            <p className="px-1 pt-3 text-xs text-muted-foreground">
+              {t("expectedHours", { hours: Math.round(weekTotal * 100) / 100, expected })}
+              {gap > 0 && <span className="ms-2 font-medium text-warning-foreground">{t("hoursMissing", { hours: gap })}</span>}
+            </p>
+          )}
+        </div>
+        <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[56rem] border-separate border-spacing-1 text-sm">
           <caption className="sr-only">{t("timesheetFor", { name: employee?.name ?? "", week: weekLabel })}</caption>
           <thead>
@@ -306,6 +374,7 @@ export default function TimesheetPage() {
             )}
           </tfoot>
         </table>
+        </div>
 
         <div className="mt-2 flex flex-col gap-2 border-t border-border p-3 sm:flex-row sm:items-center">
           <Select value={newProject} onValueChange={(v) => { setNewProject(v); setNewTask(NO_TASK) }}>

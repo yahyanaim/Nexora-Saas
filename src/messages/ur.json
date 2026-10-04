@@ -1747,5 +1747,8 @@
   "repVal_subcontractor": "ذیلی ٹھیکیدار",
   "repVal_other": "دیگر",
   "erpReports": "رپورٹس",
-  "pageDescErpReports": "فلٹرز کے ساتھ معیاری رپورٹس، Excel، CSV اور PDF میں ایکسپورٹ۔"
+  "pageDescErpReports": "فلٹرز کے ساتھ معیاری رپورٹس، Excel، CSV اور PDF میں ایکسپورٹ۔",
+  "addRowHint": "نیچے پروجیکٹ منتخب کریں، قطار شامل کریں اور اپنے گھنٹے لکھیں۔",
+  "noWorkloadPeople": "کوئی فعال ملازم نہیں",
+  "noWorkloadPeopleHint": "ان کا کام کا بوجھ دیکھنے کے لیے ہفتہ وار گنجائش والے ملازمین شامل کریں۔"
 }

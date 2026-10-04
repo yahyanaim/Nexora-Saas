@@ -4,8 +4,9 @@ import { useMemo } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
-import { AlertTriangle, Clock, Gauge, TreePalm } from "@/components/ui/carbon/icons"
+import { AlertTriangle, Clock, Gauge, TreePalm, Users } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { cn } from "@/lib/utils"
 import { useEmployees } from "@/hooks/workforce/use-workforce"
 import { useTasks } from "@/hooks/workforce/use-work-projects"
@@ -75,7 +76,37 @@ export default function WorkloadPage() {
       <PageHeader />
       <MetricCardGrid cards={cards} isLoading={isLoading} />
 
-      <section className="relative overflow-x-auto rounded-3xl border border-border bg-card p-2 shadow-panel md:p-3">
+      {isLoading ? (
+        <ListSkeleton />
+      ) : grid.length === 0 ? (
+        <EmptyState icon={Users} title={t("noWorkloadPeople")} hint={t("noWorkloadPeopleHint")} />
+      ) : (
+      <>
+      {/* Phones: one card per person, the six weeks as small tiles */}
+      <section className="space-y-2 md:hidden">
+        {grid.map(({ person, weeks }) => (
+          <div key={person.id} className="rounded-2xl border border-border bg-card p-4 shadow-panel">
+            <div className="flex items-center gap-3">
+              <SpaceAvatar name={person.name} size="sm" />
+              <div className="min-w-0">
+                <p className="truncate font-medium">{person.name}</p>
+                <p className="truncate text-xs text-muted-foreground">{person.jobTitle}</p>
+              </div>
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-1.5">
+              {weeks.map((w, i) => (
+                <div key={w.monday} className={cn("rounded-xl px-2 py-2 text-center", loadClass(w.percent))}>
+                  <span className="block text-[11px] opacity-80">{i === 0 ? t("thisWeek") : weekLabel(w.monday)}</span>
+                  <span className="block text-sm font-semibold tabular-nums">{Number.isFinite(w.percent) ? `${w.percent}%` : "—"}</span>
+                  <span className="block text-[11px] tabular-nums opacity-80">{w.planned} / {w.capacity} h</span>
+                  {w.off > 0 && <span className="block text-[11px]">{t("daysOff", { count: w.off })}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+      <section className="relative hidden overflow-x-auto rounded-3xl border border-border bg-card p-2 shadow-panel md:block md:p-3">
         <table className="w-full min-w-[52rem] border-separate border-spacing-1.5 text-sm">
           <caption className="sr-only">{t("workloadCaption")}</caption>
           <thead>
@@ -126,6 +157,8 @@ export default function WorkloadPage() {
           </tbody>
         </table>
       </section>
+      </>
+      )}
 
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         {[
