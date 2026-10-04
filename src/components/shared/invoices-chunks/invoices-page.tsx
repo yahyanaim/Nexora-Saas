@@ -14,7 +14,7 @@ import { useInvoicesTable } from "@/hooks/invoices/use-invoices-table"
 import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
 import { InvoiceForm, InvoiceFormHandle } from "./invoice-form"
 import { getInvoicesColumns } from "./invoices-columns"
@@ -32,6 +32,7 @@ type PendingAction =
 
 export default function InvoicesPage() {
   const t = useTranslations()
+  const locale = useLocale()
   const [formOpen, setFormOpen] = useState(false)
   const [formMode, setFormMode] = useState<"create" | "edit">("create")
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
@@ -92,12 +93,12 @@ export default function InvoicesPage() {
 
   const handleDownload = useCallback(async (invoice: Invoice) => {
     try {
-      await generateInvoicePdf(invoice)
+      await generateInvoicePdf(invoice, locale)
       toast.success(t("downloadStarted"))
     } catch (_error) {
       toast.error(t("downloadFailed"))
     }
-  }, [t])
+  }, [t, locale])
 
   const handleSend = useCallback(async (invoice: Invoice) => {
     try {
@@ -137,13 +138,13 @@ export default function InvoicesPage() {
     })
   }, [create, refresh, t])
 
-  const handlePrint = useCallback((invoice: Invoice) => {
+  const handlePrint = useCallback(async (invoice: Invoice) => {
     try {
-      printInvoice(invoice)
+      await printInvoice(invoice, locale)
     } catch (_error) {
       toast.error("Failed to open print preview")
     }
-  }, [])
+  }, [locale])
 
   const handleSendReminder = useCallback(async (invoice: Invoice) => {
     try {

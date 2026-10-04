@@ -30,6 +30,15 @@ const COMPANIES: Record<string, CompanySettings> = {
     weekStart: "monday",
     timeZone: "Africa/Casablanca",
     invoiceNumberFormat: "INV-{YYYY}-{SEQ}",
+    phone: "+212 522 00 00 00",
+    email: "billing@atlas.example",
+    website: "atlas-consulting.example",
+    shareCapital: "100 000 MAD",
+    bankName: "Attijariwafa Bank",
+    bankAccount: "007 780 0001234567890123 45",
+    bankSwift: "BCMAMAMC",
+    invoiceFooter: "Payment by bank transfer quoting the invoice number. Late payments bear interest at the legal rate.",
+    brandColor: "#2563eb",
   },
   ws_northwind: {
     legalName: "Northwind Studio LLC",
@@ -43,6 +52,14 @@ const COMPANIES: Record<string, CompanySettings> = {
     weekStart: "monday",
     timeZone: "America/Los_Angeles",
     invoiceNumberFormat: "NW-{YYYY}-{SEQ}",
+    phone: "+1 415 555 0142",
+    email: "accounts@northwind.example",
+    website: "northwind.example",
+    bankName: "First Republic Bank",
+    bankAccount: "IBAN US00 0000 0000 1234 5678",
+    bankSwift: "FRBBUS6S",
+    invoiceFooter: "Thank you for your business. Payment due within the agreed terms.",
+    brandColor: "#7c3aed",
   },
 }
 
@@ -125,7 +142,15 @@ const read = (workspaceId: string) => readDocument("settings", workspaceId, () =
 const write = (workspaceId: string, value: WorkspaceSettings) => writeDocument("settings", workspaceId, value)
 
 export async function getSettingsApi(workspaceId: string): Promise<WorkspaceSettings> {
-  return read(workspaceId)
+  const settings = read(workspaceId)
+  // Demo workspaces saved before the payment fields existed pick them up from the seed
+  const seed = COMPANIES[workspaceId]
+  if (!seed) return settings
+  const company = { ...settings.company }
+  for (const key of Object.keys(seed) as (keyof CompanySettings)[]) {
+    if (company[key] === undefined) (company as Record<string, unknown>)[key] = seed[key]
+  }
+  return { ...settings, company }
 }
 
 const ICE = /^\d{15}$/
@@ -137,6 +162,9 @@ export async function updateCompanyApi(workspaceId: string, company: CompanySett
   if (!/^[A-Z]{3}$/.test(company.baseCurrency)) throw new Error("Pick a base currency")
   if (company.fiscalYearStartMonth < 1 || company.fiscalYearStartMonth > 12) throw new Error("Pick the first month of the fiscal year")
   if (!company.invoiceNumberFormat.includes("{SEQ}")) throw new Error("The invoice number format must contain {SEQ}")
+  if (company.logoDataUrl && (!/^data:image\/(png|jpeg);base64,/.test(company.logoDataUrl) || company.logoDataUrl.length > 400_000)) throw new Error("The logo must be a PNG or JPEG under 300 KB")
+  if (company.brandColor && !/^#[0-9a-fA-F]{6}$/.test(company.brandColor)) throw new Error("The brand colour must look like #2563eb")
+  if (company.email && !/^\S+@\S+\.\S+$/.test(company.email)) throw new Error("Enter a valid billing email")
   const next = { ...read(workspaceId), company: { ...company, legalName: company.legalName.trim() } }
   recordAudit(workspaceId, { action: "Company details updated", actionKey: "settings.company", category: "Settings", target: "Workspace settings" })
   write(workspaceId, next)

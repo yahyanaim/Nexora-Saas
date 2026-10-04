@@ -19,6 +19,9 @@ import { REPORT_IDS, buildReport, type ReportColumn, type ReportId, type ReportR
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { exportToCsv } from "@/lib/utils/export-data"
 import { downloadXlsx } from "@/lib/utils/xlsx"
+import { getPdfTranslator } from "@/lib/pdf/pdf-i18n"
+import { renderTableReport } from "@/lib/pdf/report-template"
+import { companyLines, hexToRgb, legalLine, loadLogo } from "@/lib/pdf/pdf-kit"
 import { cn } from "@/lib/utils"
 
 type Preset = "thisMonth" | "lastMonth" | "thisQuarter" | "thisYear" | "last12" | "custom"
@@ -143,28 +146,60 @@ export default function ReportsPage() {
       report.columns.map((c) => ({ key: c.key, label: t(c.label) }))
     )
   const exportPdf = async () => {
-    const { jsPDF } = await import("jspdf")
-    const autoTable = (await import("jspdf-autotable")).default
-    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" })
-    const clean = (s: string) => s.replace(/[  ]/g, " ").replace(/−/g, "-")
-    doc.setFillColor(37, 99, 235)
-    doc.rect(0, 0, doc.internal.pageSize.getWidth(), 4, "F")
-    doc.setFontSize(15)
-    doc.text(clean(`${title} · ${workspace.name}`), 14, 16)
-    doc.setFontSize(9)
-    doc.setTextColor(100, 116, 139)
-    doc.text(clean(filterSummary), 14, 22)
-    autoTable(doc, {
-      startY: 27,
-      head: [report.columns.map((c) => clean(t(c.label)))],
-      body: report.rows.map((r) => report.columns.map((c) => clean(display(c, r[c.key] ?? null)))),
-      foot: [report.columns.map((c, i) => (i === 0 ? t("total") : report.totals[c.key] !== undefined ? clean(display(c, report.totals[c.key] ?? null)) : ""))],
-      styles: { fontSize: 7.5, cellPadding: 1.6 },
-      headStyles: { fillColor: [241, 245, 249], textColor: [51, 65, 85] },
-      footStyles: { fillColor: [248, 250, 252], textColor: [15, 23, 42], fontStyle: "bold" },
-      columnStyles: Object.fromEntries(report.columns.map((c, i) => [i, { halign: c.type === "text" || c.type === "date" ? "left" : "right" }])),
+    // PDFs use the user's language when the PDF fonts can draw it (see pdf-i18n)
+    const { t: pt, has, locale: pl } = await getPdfTranslator(locale)
+    const company = settings?.company
+    const pMoney = (n: number) => new Intl.NumberFormat(pl, { style: "currency", currency: workspace.currency, maximumFractionDigits: 2 }).format(n)
+    const pDate = (iso: string) => new Intl.DateTimeFormat(pl, { day: "2-digit", month: "short", year: "numeric" }).format(new Date(`${iso}T00:00:00`))
+    const pDisplay = (c: ReportColumn, v: ReportRow[string]) => {
+      if (v === null || v === undefined || v === "") return "—"
+      switch (c.type) {
+        case "money":
+          return pMoney(Number(v))
+        case "hours":
+          return `${Number(v).toLocaleString(pl, { maximumFractionDigits: 2 })} h`
+        case "percent":
+          return `${Number(v).toLocaleString(pl, { maximumFractionDigits: 1 })}%`
+        case "date":
+          return pDate(String(v))
+        case "number":
+          return Number(v).toLocaleString(pl)
+        default:
+          return has(`repVal_${v}`) ? pt(`repVal_${v}`) : String(v)
+      }
+    }
+    const numeric = report.columns.filter((c) => (c.type === "money" || c.type === "hours" || c.type === "percent") && report.totals[c.key] !== undefined)
+    await renderTableReport({
+      brand: hexToRgb(company?.brandColor),
+      logo: await loadLogo(company?.logoDataUrl),
+      title: pt(`rep_${reportId}`),
+      description: pt(`repDesc_${reportId}`),
+      company: company?.tradeName || company?.legalName || workspace.name,
+      companyLine: companyLines(company)[0],
+      generatedOn: `${pt("pdfGeneratedOn")} ${new Intl.DateTimeFormat(pl, { dateStyle: "long", timeStyle: "short" }).format(new Date())}`,
+      chips: [
+        [pt("repPeriod"), `${pDate(range.from)} - ${pDate(range.to)}`],
+        ...(clientId ? ([[pt("client"), clients.find((c) => c.id === clientId)?.name ?? ""]] as [string, string][]) : []),
+        ...(projectId ? ([[pt("project"), projects.find((p) => p.id === projectId)?.name ?? ""]] as [string, string][]) : []),
+        ...(employeeId ? ([[pt("repEmployee"), employees.find((e) => e.id === employeeId)?.name ?? ""]] as [string, string][]) : []),
+        ...(departmentId ? ([[pt("repDepartment"), departments.find((d) => d.id === departmentId)?.name ?? ""]] as [string, string][]) : []),
+        ...(hiddenCosts ? ([[pt("pdfNote"), pt("repCostsHidden")]] as [string, string][]) : []),
+      ],
+      tiles: [
+        { label: pt("pdfRows"), value: report.rows.length.toLocaleString(pl) },
+        ...numeric.slice(0, 4).map((c) => ({ label: pt(c.label), value: pDisplay(c, report.totals[c.key] ?? null) })),
+      ],
+      columns: report.columns.map((c) => ({ label: pt(c.label), align: c.type === "text" || c.type === "date" ? "left" : "right" })),
+      rows: report.rows.map((r) => report.columns.map((c) => pDisplay(c, r[c.key] ?? null))),
+      totals: report.columns.map((c, i) => (i === 0 ? pt("total") : report.totals[c.key] !== undefined ? pDisplay(c, report.totals[c.key] ?? null) : "")),
+      emptyText: pt("repEmpty"),
+      footer: {
+        left: pt("pdfConfidential"),
+        legal: legalLine(company, workspace.name),
+        pageLabel: (page, total) => pt("pdfPageOf", { page, total }),
+      },
+      filename: `${fileBase}.pdf`,
     })
-    doc.save(`${fileBase}.pdf`)
   }
 
   const isLoading = l1 || l2

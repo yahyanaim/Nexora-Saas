@@ -20,7 +20,7 @@ import { useTransactionsTable } from "@/hooks/transactions/use-transactions-tabl
 import { useEntityMutations } from "@/hooks/tables/use-table-entity-mutations"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { TransactionForm, TransactionFormHandle } from "./transaction-form"
 import { TransactionFormValues } from "@/hooks/transactions/transaction-form-schema"
 import { getTransactionsColumns } from "./transactions-columns"
@@ -40,6 +40,7 @@ type PendingAction =
 
 export default function TransactionsPage() {
   const t = useTranslations()
+  const locale = useLocale()
   const [formOpen, setFormOpen] = useState(false)
   const [formMode, setFormMode] = useState<"create" | "edit">("create")
   const [editingTransaction, setEditingTransaction] =
@@ -164,23 +165,23 @@ export default function TransactionsPage() {
   // Download receipt handler
   const handleDownloadReceipt = useCallback(async (transaction: Transaction) => {
     try {
-      await generateReceiptPdf(transaction)
+      await generateReceiptPdf(transaction, locale)
       toast.success(t("receiptDownloaded"))
     } catch (err) {
       console.error("Failed to generate PDF receipt:", err)
       toast.error("Failed to generate PDF receipt")
     }
-  }, [t])
+  }, [t, locale])
 
   // Print handler
-  const handlePrint = useCallback((transaction: Transaction) => {
+  const handlePrint = useCallback(async (transaction: Transaction) => {
     try {
-      printReceipt(transaction)
+      await printReceipt(transaction, locale)
     } catch (err) {
       console.error("Failed to print receipt:", err)
       toast.error("Failed to open print preview")
     }
-  }, [])
+  }, [locale])
 
   const columns = useMemo(
     () =>

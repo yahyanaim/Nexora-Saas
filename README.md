@@ -4,7 +4,7 @@
 [![React](https://img.shields.io/badge/React-19-blue?style=flat&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/Tests-426%20passing-brightgreen?style=flat&logo=vitest)](https://vitest.dev/)
+[![Tests](https://img.shields.io/badge/Tests-432%20passing-brightgreen?style=flat&logo=vitest)](https://vitest.dev/)
 [![Languages](https://img.shields.io/badge/Languages-9%20incl.%20Arabic-0f62fe?style=flat)](#languages)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=flat)](LICENSE)
 
@@ -19,7 +19,7 @@ It replaces several separate tools:
 - the "who owes us money" list
 - the end-of-month profitability workbook
 
-> **Current version (v3.2):** the complete front end, running on demo data stored in the browser. Every screen, rule and calculation works. Shared multi-user data comes with the server version (Phase 7).
+> **Current version (v3.3):** the complete front end, running on demo data stored in the browser. Every screen, rule and calculation works. Shared multi-user data comes with the server version (Phase 7).
 
 📘 **Full documentation:** open [`documentation/doc.html`](documentation/doc.html) (English) or [`documentation/doc-ar.html`](documentation/doc-ar.html) (العربية). It covers:
 - the user manual and role guides
@@ -73,7 +73,7 @@ It replaces several separate tools:
 | **Clients** | Legal details, billing address, currency, invoice language, payment terms, contacts, client rate cards, archive |
 | **Projects & tasks** | Hourly, fixed-price, retainer and internal projects. Board, list, milestones and team views. Labels, subtasks, comments with @mentions, activity history. Automatic health with manual override. Budget alerts at 80% and 100%. Saved filters |
 | **Time** | Weekly timesheet, timer, quick log, copy last week, 15-minute rounding, submit → approve or send back, reopening. Rates are frozen at approval |
-| **Invoicing** | Invoices from approved hours (grouped by person, task or day), fixed-price share, milestone, retainer, deposit and free-form invoices. Gapless numbering at issue. Several tax rates, withholding tax, multiple currencies, partial payments, credit notes, PDF and CSV |
+| **Invoicing** | Invoices from approved hours (grouped by person, task or day), fixed-price share, milestone, retainer, deposit and free-form invoices. Gapless numbering at issue. Several tax rates, withholding tax, multiple currencies, partial payments, credit notes. Professional branded PDF (logo, colour, bank details, VAT per rate, payments, stamps, legal footer) and CSV |
 | **Receivables** | Open balances by days overdue: not due, 1–30, 31–60, 61–90 and 90+ days |
 | **Expenses & profitability** | Expenses with receipts and approval, re-billing to clients. Margin and budget use per project |
 | **Planning** | Timeline, calendar, workload against capacity, leave requests and approval, leave balances per type with half-days, carry-over and pro-rating for new hires |
@@ -171,7 +171,7 @@ Variables are validated with Zod at startup. A production build with demo mode o
 | :--- | :--- |
 | `npm run dev` | Development server (Turbopack) |
 | `npm run build` / `npm start` | Production build and server |
-| `npm test` | Unit tests (Vitest, 426 tests) |
+| `npm test` | Unit tests (Vitest, 432 tests) |
 | `npm run test:watch` | Unit tests in watch mode |
 | `npm run typecheck` | TypeScript check |
 | `npm run lint` | ESLint, zero warnings allowed |
@@ -265,7 +265,7 @@ All texts live in `src/messages/<locale>.json`. A missing key in any language fa
 Every pull request runs the following checks (`.github/workflows/ci.yml`):
 
 - type check, lint and translation sync
-- 426 unit tests
+- 432 unit tests
 - production build
 - Playwright end-to-end tests
 - dependency audit

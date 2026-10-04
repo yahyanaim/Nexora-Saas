@@ -1,206 +1,158 @@
-import type { JsPDFWithAutoTable } from "@/types/pdf"
 import type { Client, Workspace } from "@/types/workforce"
-import { InvoiceKind, type ClientInvoice } from "@/types/work-billing"
+import { ClientInvoiceStatus, InvoiceKind, type ClientInvoice, type ClientInvoiceDisplayStatus } from "@/types/work-billing"
+import type { WorkProject } from "@/types/work-projects"
 import type { CompanySettings } from "@/types/work-settings"
 import { displayStatus, invoiceTotals } from "@/lib/workforce/billing"
+import { todayIso } from "@/lib/workforce/project-metrics"
+import { companyLines, hexToRgb, legalLine, loadLogo, type Tone } from "./pdf-kit"
+import { renderInvoiceDocument, type InvoiceDocument } from "./invoice-template"
+import { getPdfTranslator } from "./pdf-i18n"
 
-/** Labels printed on the PDF, passed in already translated. */
-export interface InvoicePdfLabels {
-  invoice: string
-  billTo: string
-  issueDate: string
-  dueDate: string
-  status: string
-  description: string
-  quantity: string
-  rate: string
-  amount: string
-  subtotal: string
-  tax: string
-  total: string
-  notes: string
-  paymentTerms: string
-  creditNote: string
-  draft: string
-  withholding: string
-  paid: string
-  balanceDue: string
+const STATUS: Record<ClientInvoiceDisplayStatus, { key: string; tone: Tone }> = {
+  [ClientInvoiceStatus.DRAFT]: { key: "draft", tone: "neutral" },
+  [ClientInvoiceStatus.ISSUED]: { key: "issued", tone: "info" },
+  [ClientInvoiceStatus.SENT]: { key: "sent", tone: "info" },
+  [ClientInvoiceStatus.PAID]: { key: "paid", tone: "success" },
+  [ClientInvoiceStatus.VOID]: { key: "cancelled", tone: "danger" },
+  overdue: { key: "overdue", tone: "danger" },
+  partially_paid: { key: "partiallyPaid", tone: "warning" },
+  credited: { key: "credited", tone: "neutral" },
 }
 
-async function loadLogo(): Promise<HTMLImageElement | null> {
-  if (typeof window === "undefined") return null
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.onload = () => resolve(img)
-    img.onerror = () => resolve(null)
-    img.src = "/app-logo.png"
-  })
-}
-
-/**
- * Builds and downloads a client invoice as an A4 PDF, in the same style as
- * the app's other PDF exports (blue accent bar, logo, line table, totals).
- */
-export async function downloadClientInvoicePdf(
-  invoice: ClientInvoice,
-  client: Client | undefined,
-  workspace: Workspace,
-  labels: InvoicePdfLabels,
-  statusLabel: string,
-  locale?: string,
-  /** Legal identity printed under the company name (spec 12.3: ICE, tax ID, trade register) */
-  company?: CompanySettings,
+export interface ClientInvoicePdfInput {
+  invoice: ClientInvoice
+  /** Every invoice of the workspace: credit notes and their originals */
+  allInvoices?: ClientInvoice[]
+  client?: Client
+  workspace: Workspace
+  /** Legal identity, contact and bank details (spec 12.3) */
+  company?: CompanySettings
+  projects?: WorkProject[]
   /** What the client still owes, after payments and credit notes */
   balance?: number
-) {
-  const { jsPDF } = await import("jspdf")
-  const autoTable = (await import("jspdf-autotable")).default
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" })
+  locale: string
+}
 
-  const pageWidth = doc.internal.pageSize.getWidth()
-  const margin = 16
-  const blue: [number, number, number] = [37, 99, 235]
-  const navy: [number, number, number] = [15, 23, 42]
-  const muted: [number, number, number] = [100, 116, 139]
-  const money = (n: number) =>
-    new Intl.NumberFormat(locale, { style: "currency", currency: invoice.currency }).format(n)
-  const date = (iso: string) =>
-    new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${iso}T00:00:00`))
-
-  doc.setFillColor(...blue)
-  doc.rect(0, 0, pageWidth, 4, "F")
-
-  let y = 20
-  const logo = await loadLogo()
-  if (logo) {
-    try {
-      doc.addImage(logo, "PNG", margin, y - 6, 12, 12)
-    } catch {
-      // A broken logo shouldn't stop the export
-    }
-  }
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(14)
-  doc.setTextColor(...navy)
-  doc.text(company?.legalName ?? workspace.name, margin + 16, y + 1)
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(7.5)
-  doc.setTextColor(...muted)
-  const identity = [
-    [company?.address, company?.city, company?.country].filter(Boolean).join(", "),
-    [company?.ice && `ICE ${company.ice}`, company?.taxId && `IF ${company.taxId}`, company?.tradeRegister && `RC ${company.tradeRegister}`].filter(Boolean).join(" · "),
-  ].filter(Boolean)
-  identity.forEach((line, i) => doc.text(line, margin + 16, y + 5.5 + i * 3.6))
+/** Maps a client invoice or credit note to the shared invoice layout (no file is saved). */
+export async function buildClientInvoiceDocument(input: ClientInvoicePdfInput): Promise<InvoiceDocument> {
+  const { invoice, client, workspace, company } = input
+  const { t, locale } = await getPdfTranslator(input.locale)
+  const money = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: invoice.currency }).format(n)
+  const date = (iso: string) => new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${iso}T00:00:00`))
+  const hours = (n: number) => `${new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(n)} h`
 
   const isCredit = invoice.kind === InvoiceKind.CREDIT_NOTE
-  doc.setFont("helvetica", "bold")
-  doc.setFontSize(20)
-  doc.setTextColor(...navy)
-  doc.text((isCredit ? labels.creditNote : labels.invoice).toUpperCase(), pageWidth - margin, y, { align: "right" })
-  doc.setFontSize(10)
-  doc.setFont("helvetica", "normal")
-  doc.setTextColor(...muted)
-  doc.text(invoice.number || labels.draft, pageWidth - margin, y + 6, { align: "right" })
-
-  // Bill to + dates
-  y += 22
-  doc.setFontSize(8)
-  doc.setTextColor(...muted)
-  doc.text(labels.billTo.toUpperCase(), margin, y)
-  doc.setFontSize(11)
-  doc.setFont("helvetica", "bold")
-  doc.setTextColor(...navy)
-  doc.text(client?.name ?? "—", margin, y + 6)
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.setTextColor(...muted)
-  const clientLines = [
-    client?.legalName,
-    client?.billingAddress ?? client?.address,
-    client?.email,
-    [client?.ice && `ICE ${client.ice}`, client?.taxId].filter(Boolean).join(" · "),
-  ].filter(Boolean) as string[]
-  clientLines.forEach((line, i) => doc.text(line, margin, y + 11 + i * 4.5))
+  const status = displayStatus(invoice, todayIso(), input.allInvoices ?? [])
+  const totals = invoiceTotals(invoice)
+  const balance = input.balance ?? totals.total - totals.paid
+  const isDraft = invoice.status === ClientInvoiceStatus.DRAFT
+  const original = isCredit ? input.allInvoices?.find((x) => x.id === invoice.creditNoteFor) : undefined
+  const sellerName = company?.tradeName || company?.legalName || workspace.name
 
   const meta: [string, string][] = [
-    [labels.issueDate, date(invoice.issueDate)],
-    [labels.dueDate, date(invoice.dueDate)],
-    [labels.status, statusLabel],
+    [t("issueDate"), date(invoice.issueDate)],
+    ...(!isCredit ? ([[t("dueDate"), date(invoice.dueDate)]] as [string, string][]) : []),
+    ...(client && !isCredit ? ([[t("pdfTerms"), t("pdfNetDays", { days: client.paymentTermsDays })]] as [string, string][]) : []),
+    [t("currency"), invoice.currency],
+    ...(original ? ([[t("pdfCorrects"), original.number]] as [string, string][]) : []),
   ]
-  meta.forEach(([k, v], i) => {
-    const rowY = y + i * 6
-    doc.setFontSize(8)
-    doc.setTextColor(...muted)
-    doc.text(k, pageWidth - margin - 40, rowY)
-    doc.setFontSize(9)
-    doc.setTextColor(...navy)
-    doc.text(v, pageWidth - margin, rowY, { align: "right" })
+
+  const highlight = isCredit
+    ? { label: t("creditNote"), value: money(totals.total), note: original ? t("pdfCreditFor", { number: original.number }) : undefined }
+    : status === ClientInvoiceStatus.PAID
+      ? { label: t("pdfAmountPaid"), value: money(totals.total), note: invoice.paidAt ? `${t("paid")} ${date(invoice.paidAt.slice(0, 10))}` : undefined }
+      : { label: t("pdfAmountDue"), value: money(balance), note: `${t("dueDate")} ${date(invoice.dueDate)}` }
+
+  const projectOf = (id?: string) => input.projects?.find((p) => p.id === id)
+  const items: InvoiceDocument["items"] = invoice.lines.map((l) => {
+    const project = projectOf(l.projectId)
+    const detail = [project && !l.description.includes(project.code) ? `${project.code} · ${project.name}` : undefined, l.timeEntryIds.length ? t("pdfTimeEntries", { count: l.timeEntryIds.length }) : undefined]
+      .filter(Boolean)
+      .join("  ·  ")
+    return {
+      title: l.description,
+      detail: detail || undefined,
+      quantity: l.timeEntryIds.length ? hours(l.quantity) : new Intl.NumberFormat(locale).format(l.quantity),
+      unitPrice: money(l.unitPrice),
+      tax: `${l.taxRate ?? invoice.taxRate}%`,
+      amount: money(l.quantity * l.unitPrice),
+    }
   })
 
-  y += Math.max(26, 11 + clientLines.length * 4.5 + 6)
+  const rows: InvoiceDocument["totals"] = [
+    { label: t("subtotal"), value: money(totals.subtotal) },
+    ...totals.taxes.map((tx) => ({ label: `${t("pdfVat")} ${tx.rate}%  (${t("pdfOn")} ${money(tx.base)})`, value: money(tx.amount) })),
+    ...(totals.withholding ? [{ label: `${t("withholding")} ${invoice.withholdingRate}%`, value: `-${money(totals.withholding)}` }] : []),
+    { label: t("total"), value: money(totals.total), strong: true },
+    ...(totals.paid ? [{ label: t("paid"), value: `-${money(totals.paid)}` }] : []),
+  ]
+  const credited = !isCredit ? Math.max(0, totals.total - totals.paid - balance) : 0
+  if (credited > 0.005) rows.push({ label: t("credited"), value: `-${money(credited)}` })
 
-  autoTable(doc, {
-    startY: y,
-    margin: { left: margin, right: margin },
-    theme: "grid",
-    head: [[labels.description, labels.quantity, labels.rate, labels.amount]],
-    body: invoice.lines.map((l) => [
-      l.description,
-      l.timeEntryIds.length ? `${l.quantity} h` : String(l.quantity),
-      money(l.unitPrice),
-      money(l.quantity * l.unitPrice),
-    ]),
-    headStyles: { fillColor: [241, 245, 249], textColor: [51, 65, 85], fontStyle: "bold", fontSize: 8 },
-    bodyStyles: { fontSize: 9, textColor: navy },
-    columnStyles: {
-      1: { halign: "right", cellWidth: 22 },
-      2: { halign: "right", cellWidth: 30 },
-      3: { halign: "right", cellWidth: 32, fontStyle: "bold" },
+  const bank: [string, string][] = [
+    ...(company?.bankName ? ([[t("pdfBank"), company.bankName]] as [string, string][]) : []),
+    ...(company?.bankAccount ? ([[t("pdfAccount"), company.bankAccount]] as [string, string][]) : []),
+    ...(company?.bankSwift ? ([["SWIFT / BIC", company.bankSwift]] as [string, string][]) : []),
+  ]
+
+  return {
+    brand: hexToRgb(company?.brandColor),
+    logo: await loadLogo(company?.logoDataUrl),
+    title: isCredit ? t("creditNote") : t("invoice"),
+    number: invoice.number || t("draft"),
+    status: { label: t(STATUS[status].key), tone: STATUS[status].tone },
+    stamp: isDraft
+      ? { text: t("draft"), tone: "neutral" }
+      : invoice.status === ClientInvoiceStatus.VOID
+        ? { text: t("cancelled"), tone: "danger" }
+        : status === ClientInvoiceStatus.PAID
+          ? { text: t("paid"), tone: "success" }
+          : undefined,
+    seller: { name: sellerName, lines: companyLines(company) },
+    buyer: {
+      label: t("billTo"),
+      name: client?.name ?? "—",
+      lines: [
+        client?.legalName && client.legalName !== client.name ? client.legalName : undefined,
+        client?.billingAddress ?? client?.address,
+        client?.email,
+        [client?.ice && `ICE ${client.ice}`, client?.taxId && `IF ${client.taxId}`].filter(Boolean).join("  ·  "),
+      ].filter(Boolean) as string[],
     },
-    styles: { lineColor: [226, 232, 240], lineWidth: 0.3, cellPadding: 3 },
-  })
-
-  y = ((doc as unknown as JsPDFWithAutoTable).lastAutoTable?.finalY ?? y) + 8
-  const totals = invoiceTotals(invoice)
-  const rows: [string, string, boolean][] = [
-    [labels.subtotal, money(totals.subtotal), false],
-    ...totals.taxes.map((tx): [string, string, boolean] => [`${labels.tax} ${tx.rate}% (${money(tx.base)})`, money(tx.amount), false]),
-    ...(totals.withholding ? [[`${labels.withholding} (${invoice.withholdingRate}%)`, `−${money(totals.withholding)}`, false] as [string, string, boolean]] : []),
-    [labels.total, money(totals.total), true],
-    ...(totals.paid ? [[labels.paid, `−${money(totals.paid)}`, false] as [string, string, boolean]] : []),
-    ...(balance !== undefined && !isCredit && balance !== totals.total ? [[labels.balanceDue, money(balance), true] as [string, string, boolean]] : []),
-  ]
-  rows.forEach(([k, v, strong], i) => {
-    const rowY = y + i * 7
-    doc.setFont("helvetica", strong ? "bold" : "normal")
-    doc.setFontSize(strong ? 11 : 9)
-    doc.setTextColor(...(strong ? navy : muted))
-    doc.text(k, pageWidth - margin - 75, rowY)
-    doc.setTextColor(...navy)
-    doc.text(v, pageWidth - margin, rowY, { align: "right" })
-  })
-
-  y += rows.length * 7 + 8
-  doc.setFont("helvetica", "normal")
-  doc.setFontSize(9)
-  doc.setTextColor(...muted)
-  if (client) doc.text(`${labels.paymentTerms}: ${client.paymentTermsDays}`, margin, y)
-  if (invoice.notes) {
-    doc.setFont("helvetica", "bold")
-    doc.text(labels.notes, margin, y + 8)
-    doc.setFont("helvetica", "normal")
-    doc.text(doc.splitTextToSize(invoice.notes, pageWidth - margin * 2), margin, y + 13)
+    meta,
+    highlight,
+    columns: { item: t("description"), quantity: t("quantity"), unitPrice: t("pdfUnitPrice"), tax: t("pdfVat"), amount: t("amount") },
+    items,
+    totals: rows,
+    due: !isCredit && status !== ClientInvoiceStatus.PAID && invoice.status !== ClientInvoiceStatus.VOID ? { label: t("balanceDue"), value: money(balance) } : undefined,
+    tables: [
+      {
+        title: t("pdfPaymentsReceived"),
+        head: [t("date"), t("paymentMethod"), t("pdfReference"), t("amount")],
+        rows: (invoice.payments ?? []).map((p) => [date(p.date), t(`method_${p.method}`), p.reference ?? "—", money(p.amount)]),
+        alignRight: [3],
+      },
+    ],
+    payment:
+      bank.length && !isCredit
+        ? { title: t("pdfPaymentDetails"), rows: [...bank, [t("pdfReference"), invoice.number || t("draft")]] }
+        : undefined,
+    notes: invoice.notes ? { title: t("notes"), text: invoice.notes } : undefined,
+    smallPrint: [
+      ...(invoice.exchangeRate && company && invoice.currency !== company.baseCurrency
+        ? [`${t("pdfExchangeRate")}: 1 ${invoice.currency} = ${invoice.exchangeRate} ${company.baseCurrency}${invoice.exchangeRateDate ? ` (${date(invoice.exchangeRateDate)})` : ""}`]
+        : []),
+    ],
+    footer: {
+      note: company?.invoiceFooter,
+      legal: legalLine(company, workspace.name),
+      pageLabel: (page, total) => t("pdfPageOf", { page, total }),
+    },
+    filename: `${invoice.number || "draft"}${invoice.status === ClientInvoiceStatus.VOID ? "-cancelled" : ""}.pdf`,
   }
+}
 
-  if (invoice.exchangeRate && company && invoice.currency !== company.baseCurrency) {
-    doc.setFontSize(8)
-    doc.setTextColor(...muted)
-    doc.text(
-      `1 ${invoice.currency} = ${invoice.exchangeRate} ${company.baseCurrency}${invoice.exchangeRateDate ? ` (${date(invoice.exchangeRateDate)})` : ""}`,
-      margin,
-      doc.internal.pageSize.getHeight() - 12
-    )
-  }
-
-  doc.save(`${invoice.number || "draft"}${displayStatus(invoice) === "void" ? "-cancelled" : ""}.pdf`)
+/** Builds and downloads a client invoice or credit note as a branded A4 PDF. */
+export async function downloadClientInvoicePdf(input: ClientInvoicePdfInput) {
+  await renderInvoiceDocument(await buildClientInvoiceDocument(input))
 }

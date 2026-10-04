@@ -19,6 +19,7 @@ import type { Client } from "@/types/workforce"
 import type { CompanySettings } from "@/types/work-settings"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { downloadClientInvoicePdf } from "@/lib/pdf/generate-client-invoice-pdf"
+import { useProjects } from "@/hooks/workforce/use-work-projects"
 import { ClientInvoiceStatus, InvoiceKind, PaymentMethod, type ClientInvoice, type InvoiceLine, type Payment } from "@/types/work-billing"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 import { formatShortDate } from "../work-projects-chunks/project-labels"
@@ -55,6 +56,7 @@ export function InvoiceSheet(props: Props) {
   const locale = useLocale()
   const workspace = useCurrentWorkspace()
   const [downloading, setDownloading] = useState(false)
+  const { data: projects = [] } = useProjects()
   const [confirm, setConfirm] = useState<"void" | "delete" | null>(null)
   const [crediting, setCrediting] = useState(false)
   const [lineDesc, setLineDesc] = useState("")
@@ -99,36 +101,7 @@ export function InvoiceSheet(props: Props) {
   const download = async () => {
     setDownloading(true)
     try {
-      await downloadClientInvoicePdf(
-        invoice,
-        client,
-        workspace,
-        {
-          invoice: t("invoice"),
-          billTo: t("billTo"),
-          issueDate: t("issueDate"),
-          dueDate: t("dueDate"),
-          status: t("status"),
-          description: t("description"),
-          quantity: t("quantity"),
-          rate: t("rate"),
-          amount: t("amount"),
-          subtotal: t("subtotal"),
-          tax: t("tax"),
-          total: t("total"),
-          notes: t("notes"),
-          paymentTerms: t("paymentTermsDays"),
-          creditNote: t("creditNote"),
-          draft: t("draft"),
-          withholding: t("withholding"),
-          paid: t("paid"),
-          balanceDue: t("balanceDue"),
-        },
-        t(INVOICE_STATUS_LABEL[status]),
-        locale,
-        company,
-        balance
-      )
+      await downloadClientInvoicePdf({ invoice, allInvoices, client, workspace, company, projects, balance, locale })
     } finally {
       setDownloading(false)
     }
