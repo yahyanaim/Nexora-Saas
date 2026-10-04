@@ -23,6 +23,10 @@ export interface CompanySettings {
   timeZone: string
   /** Prefix and pattern for invoice numbers, e.g. INV-{YYYY}-{SEQ} */
   invoiceNumberFormat: string
+  /** Pattern for quote numbers, e.g. DEV-{YYYY}-{SEQ} */
+  quoteNumberFormat?: string
+  /** Layout of quotes and invoices: classic (bordered, French style) or modern */
+  documentStyle?: "classic" | "modern"
   /** Contact lines printed on invoices and reports */
   phone?: string
   email?: string

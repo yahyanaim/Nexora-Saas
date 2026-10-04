@@ -34,6 +34,7 @@ import {
   TreePalm,
   Network,
   FileBadge,
+  FileSignature,
   DollarSign,
   TrendingUp,
   type LucideIcon,
@@ -172,6 +173,13 @@ export function useDashboardNav() {
         title: t("finance"),
         icon: DollarSign,
         items: [
+          {
+            title: t("quotes"),
+            url: "/dashboard/quotes",
+            icon: FileSignature,
+            descriptionKey: "pageDescQuotes",
+            permission: AdminPermissionsPlatform.INVOICES_READ,
+          },
           {
             title: t("clientInvoices"),
             url: "/dashboard/client-invoices",

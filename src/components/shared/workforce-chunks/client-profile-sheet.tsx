@@ -1,6 +1,11 @@
 "use client"
 
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
+import { useQuotes } from "@/hooks/workforce/use-quotes"
+import { quoteDisplayStatus, quoteTotals } from "@/lib/workforce/quotes"
+import { todayIso } from "@/lib/workforce/project-metrics"
+import { QUOTE_STATUS_CLASS, QUOTE_STATUS_LABEL } from "../work-billing-chunks/quotes-page"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
@@ -18,6 +23,9 @@ interface Props {
 /** Read-only client profile: billing details, terms and contacts. */
 export function ClientProfileSheet({ client, employees, currency, onOpenChange }: Props) {
   const t = useTranslations()
+  const locale = useLocale()
+  const { data: allQuotes = [] } = useQuotes()
+  const clientQuotes = client ? allQuotes.filter((q) => q.clientId === client.id) : []
   const manager = employees.find((e) => e.id === client?.accountManagerId)
 
   return (
@@ -98,6 +106,31 @@ export function ClientProfileSheet({ client, employees, currency, onOpenChange }
                     </span>
                   </div>
                 ))}
+              </Section>
+
+              <Section title={t("quotes")}>
+                {clientQuotes.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">{t("noQuotes")}</p>
+                ) : (
+                  <ul className="flex flex-col divide-y divide-border rounded-xl border border-border">
+                    {clientQuotes.slice(0, 6).map((q) => {
+                      const s = quoteDisplayStatus(q, todayIso())
+                      return (
+                        <li key={q.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                          <span className="min-w-0">
+                            <span className="block font-mono text-xs">{q.number || t("draft")}</span>
+                            <span className="block truncate text-xs text-muted-foreground">{q.subject}</span>
+                          </span>
+                          <span className="flex shrink-0 items-center gap-2">
+                            <span className="tabular-nums">{formatMoney(quoteTotals(q).net, q.currency, locale)}</span>
+                            <Badge variant="outline" className={QUOTE_STATUS_CLASS[s]}>{t(QUOTE_STATUS_LABEL[s])}</Badge>
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+                <Link href="/dashboard/quotes" className="text-sm text-primary hover:underline">{t("manageQuotes")}</Link>
               </Section>
 
               {client.notes && (

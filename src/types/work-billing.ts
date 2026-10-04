@@ -88,6 +88,8 @@ export interface InvoiceLine {
   description: string
   /** Hours (or units for a manual line) */
   quantity: number
+  /** Unit printed next to the quantity (h, pages, flat…) */
+  unit?: string
   unitPrice: number
   projectId?: string
   /** Time entries billed by this line; freed again if the invoice is voided or deleted */
@@ -132,6 +134,10 @@ export interface ClientInvoice {
   /** The invoice a credit note corrects (BIL-10) */
   creditNoteFor?: string
   deliveries?: InvoiceDelivery[]
+  /** Project description printed above the lines (carried over from a quote) */
+  subject?: string
+  /** The accepted quote this invoice comes from */
+  quoteId?: string
   createdAt: string
   updatedAt: string
 }
