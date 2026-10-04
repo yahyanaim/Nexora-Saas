@@ -100,15 +100,16 @@ export function SheetContent({
   const sideClasses = {
     top: "inset-x-0 top-0 border-b max-h-[80vh]",
     bottom: "inset-x-0 bottom-0 border-t max-h-[80vh] rounded-t-2xl",
-    left: "inset-y-0 left-0 border-r w-full max-w-md",
-    right: "inset-y-0 right-0 border-l w-full max-w-md",
+    // Floating panel: inset from the screen edge with large rounded corners
+    left: "inset-y-2 start-2 w-[calc(100%-1rem)] max-w-md rounded-[28px] border sm:inset-y-3 sm:start-3",
+    right: "inset-y-2 end-2 w-[calc(100%-1rem)] max-w-lg rounded-[28px] border sm:inset-y-3 sm:end-3",
   }
 
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-gray-950/40 backdrop-blur-[2px] transition-opacity duration-200 animate-in fade-in-0"
+        className="fixed inset-0 bg-slate-900/30 transition-opacity duration-200 animate-in fade-in-0"
         onClick={() => context.setOpen(false)}
       />
 
@@ -117,7 +118,7 @@ export function SheetContent({
         role="dialog"
         aria-modal="true"
         className={cn(
-          "fixed z-50 flex flex-col bg-card border-border p-6 shadow-2xl overflow-y-auto duration-200 animate-in",
+          "fixed z-50 flex flex-col bg-card border-border/70 p-6 shadow-[0_24px_64px_-12px_rgba(15,23,42,0.28)] overflow-y-auto duration-300 animate-in sm:p-8",
           side === "left" && "slide-in-from-left",
           side === "right" && "slide-in-from-right",
           side === "top" && "slide-in-from-top",
@@ -130,7 +131,7 @@ export function SheetContent({
           <button
             type="button"
             onClick={() => context.setOpen(false)}
-            className="absolute top-4 end-4 rounded-full p-2 text-muted-foreground hover:bg-muted/70 hover:text-foreground transition-colors"
+            className="absolute top-6 end-6 rounded-full p-2 text-foreground/70 hover:bg-muted/70 hover:text-foreground transition-colors sm:top-8 sm:end-8"
             aria-label="Close panel"
           >
             <Close className="size-4" />
@@ -149,7 +150,7 @@ export function SheetHeader({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex flex-col space-y-1.5 pb-4 border-b border-border/60 text-left", className)}
+      className={cn("mb-6 flex flex-col gap-1.5 border-b border-border/70 pb-6 pe-10 text-start", className)}
       {...props}
     >
       {children}
@@ -164,7 +165,7 @@ export function SheetTitle({
 }: React.HTMLAttributes<HTMLHeadingElement>) {
   return (
     <h3
-      className={cn("text-lg font-semibold tracking-tight text-foreground", className)}
+      className={cn("font-serif text-[26px] font-normal leading-tight tracking-[-0.01em] text-foreground", className)}
       {...props}
     >
       {children}
@@ -195,7 +196,7 @@ export function SheetFooter({
   return (
     <div
       className={cn(
-        "mt-auto flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-4 border-t border-border/60",
+        "mt-auto flex flex-col-reverse gap-2.5 pt-6 sm:flex-row sm:justify-end [&_button]:h-11 [&_button]:rounded-xl [&_button]:px-5",
         className
       )}
       {...props}
