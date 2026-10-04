@@ -9,6 +9,8 @@ vi.mock("./lock-screen", () => ({ LockScreen: () => <div>lock-screen</div> }))
 vi.mock("./navigation/dashboard-rail", () => ({ DashboardRail: () => <nav>rail</nav> }))
 vi.mock("./navigation/dashboard-topbar", () => ({ DashboardTopbar: () => <header>topbar</header> }))
 vi.mock("./navigation/mobile-nav-drawer", () => ({ MobileNavDrawer: () => null }))
+vi.mock("@/i18n/navigation", () => ({ usePathname: () => "/dashboard" }))
+vi.mock("./platform-only", () => ({ PlatformOnly: () => <div>platform-only</div> }))
 
 describe("DashboardLayout", () => {
   beforeEach(() => {

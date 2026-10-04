@@ -107,7 +107,7 @@ describe("AuthProvider", () => {
     expect(screen.getByTestId("user-name").textContent).toBe("none")
   })
 
-  it("redirects to /dashboard/plans when UPGRADE_REQUIRED_EVENT is dispatched", async () => {
+  it("redirects to /dashboard/subscription when UPGRADE_REQUIRED_EVENT is dispatched", async () => {
     vi.spyOn(authApis, "fetchMyAccountApi").mockResolvedValueOnce({
       id: "usr-123",
       name: "Founder",
@@ -125,7 +125,7 @@ describe("AuthProvider", () => {
       window.dispatchEvent(new CustomEvent(UPGRADE_REQUIRED_EVENT))
     })
 
-    expect(mockPush).toHaveBeenCalledWith("/dashboard/plans")
+    expect(mockPush).toHaveBeenCalledWith("/dashboard/subscription")
   })
 
   it("navigates only once when several upgrade_required events fire together", async () => {

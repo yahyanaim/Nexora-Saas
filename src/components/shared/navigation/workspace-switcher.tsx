@@ -12,13 +12,18 @@ import {
 import { Building, Check, ChevronsUpDown } from "@/components/ui/carbon/icons"
 import { useHasMounted } from "@/hooks/use-has-mounted"
 import { useCurrentWorkspace, useWorkspaceStore } from "@/store/workspace-store"
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { cn } from "@/lib/utils"
 import { navSurface } from "./nav-styles"
 
 /** Top-bar pill that shows the current company and switches between them. */
 export function WorkspaceSwitcher({ className, showName = false }: { className?: string; showName?: boolean }) {
   const t = useTranslations()
-  const workspaces = useWorkspaceStore((s) => s.workspaces)
+  const allWorkspaces = useWorkspaceStore((s) => s.workspaces)
+  const { authedUser } = useAuthGuard()
+  // An employee account belongs to one company; only the platform team and demo admins switch
+  const ownWorkspace = (authedUser as { workspaceId?: string } | undefined)?.workspaceId
+  const workspaces = ownWorkspace ? allWorkspaces.filter((w) => w.id === ownWorkspace) : allWorkspaces
   const setCurrent = useWorkspaceStore((s) => s.setCurrent)
   const current = useCurrentWorkspace()
   // The saved choice is only known in the browser
