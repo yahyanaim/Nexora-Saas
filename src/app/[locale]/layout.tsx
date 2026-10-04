@@ -2,7 +2,7 @@ import NextTopLoader from "nextjs-toploader"
 import ProviderContexts from "@/contexts/app-provider"
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages, getTranslations } from "next-intl/server"
-import { Inter, JetBrains_Mono } from "next/font/google"
+import { Inter, Roboto_Mono } from "next/font/google"
 import { cn } from "@/lib/utils"
 import { routing } from "@/i18n/routing"
 import "./globals.css"
@@ -15,8 +15,8 @@ const inter = Inter({
   display: "swap",
 })
 
-// Code only (API keys, snippets); numbers use Inter's tabular figures
-const jetbrainsMono = JetBrains_Mono({
+// Technical family (IDs, codes, keys); numbers use Inter's tabular figures
+const robotoMono = Roboto_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
   variable: "--font-mono",
@@ -61,7 +61,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
 
   return (
     <html
-      className={cn(inter.variable, jetbrainsMono.variable)}
+      className={cn(inter.variable, robotoMono.variable)}
       suppressHydrationWarning
       lang={locale}
       dir={locale === "ar" || locale === "ur" ? "rtl" : "ltr"}
