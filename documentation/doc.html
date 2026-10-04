@@ -3,1208 +3,439 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nexora SaaS: Product &amp; Technical Documentation</title>
-  <meta name="description" content="End-to-end wireframes, specification, architecture, diagrams, data dictionary, ERD, product backlog, acceptance criteria and traceability for Nexora SaaS." />
+  <title>Nexora ERP: Product &amp; Technical Documentation</title>
+  <meta name="description" content="Nexora ERP for service companies: modules, business rules, data model, architecture, setup, delivery status and roadmap." />
   <link rel="icon" type="image/png" href="app-logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 </head>
 <body>
 <div class="wrap">
-  <!-- ===== ASIDE ===== -->
   <aside>
-    <a href="#whatsnew" class="brand-header">
-      <div class="brand-logo-box">
-        <img src="app-logo.png" alt="Nexora SaaS Logo" class="brand-logo-img" />
-      </div>
+    <a href="#overview" class="brand-header">
+      <div class="brand-logo-box"><img src="app-logo.png" alt="Nexora" class="brand-logo-img" /></div>
       <div class="brand-text">
-        <span class="brand-title">Nexora SaaS</span>
-        <span class="brand-subtitle">Enterprise Cloud Platform</span>
+        <span class="brand-title">Nexora ERP</span>
+        <span class="brand-subtitle">ERP for service companies</span>
       </div>
     </a>
-    <div class="sidebar-subtext">Product &amp; Technical Documentation · <b>v3.0</b> · single end-to-end reference. <a href="#whatsnew">What's new →</a></div>
+    <div class="sidebar-subtext">Product &amp; Technical Documentation · <b>v3.0</b> · front end delivered on demo data (Phases 0–3).</div>
     <nav>
       <div class="grp">Start here</div>
-      <a href="#erp" class="nav-highlight">★ Nexora ERP v3.0 (current)</a>
-      <a href="#whatsnew">🆕 What's new (per deployment)</a>
-      <a href="#changelog">🗒️ Changelog</a>
-      <a href="#wireframes">🧩 Wireframes (every view + admin)</a>
-      <a href="#designsystem">🎨 Design tokens &amp; components</a>
-
-      <div class="grp">Blueprint series</div>
-      <a href="#phase1" class="nav-highlight">★ Phase 1: Vision &amp; Market Research</a>
-      <a href="#phase2" class="nav-highlight">★ Phase 2: Master Technical Blueprint</a>
-      <a href="#phase3" class="nav-highlight">★ Phase 3: Redevelopment &amp; Execution</a>
-      <a href="#verification" class="nav-highlight">★ Phase Verification (founder checklist)</a>
-      <a href="#readiness" class="nav-highlight">★ Release Readiness (v2.4 · notes/UAT/ops)</a>
-
-      <div class="grp">Overview</div>
-      <a href="#intro">1. Introduction &amp; Scope</a>
-      <a href="#spec">2. Detailed Specification</a>
-      <a href="#phases">3. Phase-wise Plan</a>
-
-      <div class="grp">Business &amp; Process</div>
-      <a href="#business">4. Business &amp; Process Mapping</a>
-      <a href="#usecase">5. Real Enterprise Use Case &amp; Flowchart</a>
-
-      <div class="grp">UX / UI</div>
-      <a href="#uxflow">6. UI/UX: Step by Step</a>
-      <a href="#sitemap">7. End-to-End Site Map</a>
-      <a href="#designsystem">8. Design System</a>
-
-      <div class="grp">System &amp; Logic</div>
-      <a href="#architecture">9. Data &amp; System Architecture</a>
-      <a href="#ailogic">⚙️ AI &amp; Telemetry: technical logic</a>
-      <a href="#logic">10. Logic &amp; Interaction</a>
-      <a href="#sequence">11. Sequence Diagrams</a>
-      <a href="#flowchart">12. Billing &amp; Invoicing Flowchart</a>
-
-      <div class="grp">Technical / Data</div>
-      <a href="#erd">13. ERD</a>
-      <a href="#dictionary">14. Data Dictionary</a>
-      <a href="#interfaces">15. System Interface Spec (APIs)</a>
-
-      <div class="grp">Execution &amp; Quality</div>
-      <a href="#backlog">16. Product Backlog</a>
-      <a href="#ac">17. Acceptance Criteria</a>
-      <a href="#traceability">18. Traceability Matrix</a>
-      <a href="#quality">19. Quality &amp; NFRs (58 Tests)</a>
+      <a href="#overview">1. What Nexora ERP is</a>
+      <a href="#status">2. Delivery status</a>
+      <a href="#run">3. Run it locally</a>
+      <a href="#tour">4. Navigation &amp; screens</a>
+      <div class="grp">Product</div>
+      <a href="#roles">5. Roles &amp; permissions</a>
+      <a href="#flow">6. End-to-end flow</a>
+      <a href="#m-settings">7. Workspace settings</a>
+      <a href="#m-people">8. Employees (HR)</a>
+      <a href="#m-clients">9. Clients (CRM)</a>
+      <a href="#m-projects">10. Projects &amp; tasks</a>
+      <a href="#m-time">11. Time tracking &amp; approvals</a>
+      <a href="#m-billing">12. Invoicing &amp; payments</a>
+      <a href="#m-receivables">13. Receivables</a>
+      <a href="#m-costs">14. Expenses &amp; profitability</a>
+      <a href="#m-planning">15. Planning &amp; leave</a>
+      <a href="#m-analytics">16. Analytics</a>
+      <div class="grp">Rules &amp; data</div>
+      <a href="#rules">17. Business rules</a>
+      <a href="#invoice-states">18. Invoice life cycle</a>
+      <a href="#data">19. Data model</a>
+      <a href="#demo">20. Demo data</a>
+      <div class="grp">Engineering</div>
+      <a href="#arch">21. Architecture</a>
+      <a href="#design">22. Design system</a>
+      <a href="#i18n">23. Languages</a>
+      <a href="#quality">24. Quality &amp; security</a>
+      <div class="grp">Roadmap</div>
+      <a href="#roadmap">25. What is left &amp; why</a>
+      <a href="#changelog">26. Changelog</a>
     </nav>
   </aside>
 
 <main>
-    <header class="hero">
-      <div class="hero-top-row">
-        <div class="hero-brand-pill">
-          <img src="app-logo.png" alt="Nexora Logo" class="hero-logo-img" />
-          <span class="hero-brand-name">Nexora SaaS</span>
-          <span class="hero-version-tag">v2.4 Production</span>
-        </div>
-        <div class="hero-status-pill">
-          <span class="status-dot-green"></span>
-          398/398 Tests Passing
-        </div>
+  <header class="hero">
+    <div class="hero-top-row">
+      <div class="hero-brand-pill">
+        <img src="app-logo.png" alt="Nexora" class="hero-logo-img" />
+        <span class="hero-brand-name">Nexora ERP</span>
+        <span class="hero-version-tag">v3.0 · front end</span>
       </div>
-      <h1>Nexora SaaS: Product &amp; Technical Documentation</h1>
-      <p>An enterprise-grade B2B Cloud Platform engineered with Next.js 16 (Turbopack), React 19, TypeScript strict mode, IBM Carbon Design System, and Tailwind CSS v4. This master document is the single end-to-end reference: specifications, business architecture, process mapping, sequence diagrams, ERD, data dictionary, API specifications, and the full execution pack (backlog, acceptance criteria, and traceability).</p>
-      <div class="badges">
-        <span class="badge">Next.js 16.1.6 · React 19.2.4</span>
-        <span class="badge">IBM Carbon Design System</span>
-        <span class="badge">Tailwind CSS v4</span>
-        <span class="badge">398 Passing Vitest Tests</span>
-        <span class="badge">9 languages (incl. Arabic RTL)</span>
-        <span class="badge">Dual-Mode Demo Fallback</span>
-        <span class="badge">SOC 2 / GDPR Compliant</span>
-      </div>
-    </header>
+      <div class="hero-status-pill"><span class="status-dot-green"></span>398/398 tests passing</div>
+    </div>
+    <h1>Nexora ERP: Product &amp; Technical Documentation</h1>
+    <p>Nexora is an ERP for service companies (agencies, consultancies, studios, IT services). It follows the whole chain of the business: <b>people → clients → projects → hours → invoices → cash → profit</b>. This document describes what has been delivered, how each module behaves, the business rules behind it, how the code is organised, and what remains to be built. It follows the <b>Nexora ERP cahier des charges</b>.</p>
+    <div class="badges">
+      <span class="badge">Next.js 16 · React 19 · TypeScript</span>
+      <span class="badge">Tailwind CSS v4 · Nexora DS</span>
+      <span class="badge">9 languages incl. Arabic (RTL)</span>
+      <span class="badge">398 unit tests · Playwright e2e</span>
+      <span class="badge">Demo data in the browser (backend = Phase 7)</span>
+    </div>
+  </header>
 
-    <!-- Nexora ERP v3.0 -->
-    <section id="erp">
-      <h2><span class="n">★</span>Nexora ERP v3.0: services-company ERP (front end on demo data)</h2>
-      <p>Nexora is now an ERP for service companies (agencies, consultancies, studios): it follows people, clients, projects and hours all the way to invoices, cash and profit. This section describes what is built, how it works, how to run it, and what is left. It follows the <b>Nexora ERP cahier des charges</b>; the front end is built first on demo data, the real backend comes last.</p>
+  <section id="overview">
+    <h2><span class="n">01</span>What Nexora ERP is</h2>
+    <p>Service companies sell time and expertise. Their questions are always the same: <i>who works on what, how many hours, what can we bill, who has not paid, and are we making money?</i> Nexora answers them in one tool instead of spreadsheets plus separate HR, time and invoicing apps.</p>
+    <div class="grid3">
+      <div class="card"><h4>Run the team</h4><p>Employees, departments, rates that change over time, working days, holidays, leave and capacity.</p></div>
+      <div class="card"><h4>Deliver the work</h4><p>Clients, projects, tasks, milestones, budgets, health, and the hours people log on them.</p></div>
+      <div class="card"><h4>Get paid and measure</h4><p>Invoices of every type, payments, credit notes, receivables, expenses, margin and analytics.</p></div>
+    </div>
+    <div class="callout"><b>Important:</b> the current version is the complete <b>front end running on demo data</b> stored in the browser. Every screen, rule and calculation works, but data is not shared between users until the real backend (Phase 7) is connected.</div>
+  </section>
 
-      <div class="card" style="border-left:4px solid #2563eb">
-        <h4>2026-10-04 · Release v3.0: ERP Phases 0–3, analytics on ERP data, new side panels <span class="badge">latest</span></h4>
-        <ul>
-          <li><b>Design:</b> top tab bar with icon rail; Nexora DS tokens (colors, dark mode, radius, elevation, Inter + Roboto Mono); floating rounded side panels with serif titles.</li>
-          <li><b>Phase 0 – fixes:</b> CSV formula-injection guard, HTML escaping in PDFs, request timeouts, clear API errors.</li>
-          <li><b>Phase 1 – settings, HR, clients:</b> company identity (ICE, tax ID, trade register), departments, holidays, leave types, expense categories, labels, approval rules, period lock, data export; employee lifecycle statuses, working days, dated rate history, cost visibility by permission; client legal details, billing address, currency, language, rate card; audit log.</li>
-          <li><b>Phase 2 – projects &amp; time:</b> task labels, comments with @mentions, activity history, manual health override, budget alerts (80% / 100%), saved filters; timer, quick log, copy last week, 15-minute steps, expected-hours gap, reopening, rates frozen at approval, closed projects refuse hours.</li>
-          <li><b>Phase 3 – billing:</b> gapless numbering at issue (drafts have no number), issued/sent/paid, partial payments, several tax rates, withholding, currencies with exchange rate, credit notes (CN- series); hours, fixed share, milestone, retainer, deposit and free invoices; grouping by person/task/day; deposit deduction; billed share of a fixed price; receivables aging; invoice and payment CSV exports.</li>
-          <li><b>Analytics:</b> the Analytics page now reads ERP data – revenue earned, gross margin, utilization, cash collected, cumulative revenue vs a comparison period, revenue by client and billing type, revenue waterfall, clients at risk, capacity, top projects, utilization and average rate over time; filters by period, comparison, client and team; PDF / print / CSV report; Ask Victor answers from live figures. Executive overview and Team KPIs pages were removed.</li>
-          <li><b>Demo data:</b> a year of history (finished projects, monthly invoices, payments, open and overdue balances).</li>
-        </ul>
-      </div>
+  <section id="status">
+    <h2><span class="n">02</span>Delivery status</h2>
+    <table>
+      <thead><tr><th>Phase</th><th>Content</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Design</td><td>Top tab bar + icon rail, Nexora DS tokens, dark mode, floating side panels</td><td><span class="pill p-done">Done</span></td></tr>
+        <tr><td>0 – Fixes</td><td>CSV injection guard, safe PDF output, request timeouts, readable errors</td><td><span class="pill p-done">Done</span></td></tr>
+        <tr><td>1 – Platform, HR, CRM</td><td>Workspace settings, approval rules, period lock, data export; employee lifecycle, working days, rate history, cost visibility; client legal data, rate cards; audit log</td><td><span class="pill p-done">Done</span></td></tr>
+        <tr><td>2 – Projects &amp; time</td><td>Labels, comments &amp; @mentions, activity, health override, budget alerts, saved views; timer, quick log, copy week, 15-min rounding, reopening, rate freeze</td><td><span class="pill p-done">Done</span></td></tr>
+        <tr><td>3 – Billing</td><td>Gapless numbering, payments, multi-tax, withholding, currencies, credit notes; all invoice types; receivables aging; CSV exports</td><td><span class="pill p-done">Done</span></td></tr>
+        <tr><td>Analytics</td><td>Analytics page on ERP data, PDF/CSV report, assistant</td><td><span class="pill p-done">Done</span></td></tr>
+        <tr><td>4 – Dashboards &amp; reports</td><td>Manager/employee dashboards, standard reports, Excel export, phone tables</td><td><span class="pill p-plan">Next</span></td></tr>
+        <tr><td>5 – Release 2</td><td>Org chart, leave accrual, documents, CSV import, client portal, Gantt, quotes, recurring invoices, reminders</td><td><span class="pill p-plan">Planned</span></td></tr>
+        <tr><td>6 – Release 3</td><td>KPIs/OKRs, reviews, overheads, scheduled reports, branding, custom fields, search, assistant</td><td><span class="pill p-plan">Planned</span></td></tr>
+        <tr><td>7 – Backend</td><td>Database, server auth &amp; permissions, files, email, backups</td><td><span class="pill p-plan">Planned</span></td></tr>
+      </tbody>
+    </table>
+  </section>
 
-      <h3>Modules and where to find them</h3>
-      <table>
-        <thead><tr><th>Menu</th><th>Page</th><th>What it does</th></tr></thead>
-        <tbody>
-          <tr><td>Dashboard</td><td>Analytics</td><td>Revenue, margin, utilization, cash, clients at risk; report export</td></tr>
-          <tr><td>Organization</td><td>Employees · Clients · Projects · Timesheets · Time approvals</td><td>People and rates, clients and rate cards, projects (board, list, milestones, team), weekly hours, approvals</td></tr>
-          <tr><td>Finance</td><td>Client invoices · Receivables · Expenses · Profitability</td><td>Invoicing and payments, who owes what by lateness, expenses, margin per project</td></tr>
-          <tr><td>Planning</td><td>Timeline · Calendar · Workload · Leave</td><td>Schedule, capacity per person, leave requests</td></tr>
-          <tr><td>System</td><td>Workspace settings · Roles · Sessions · Audit logs</td><td>Company, lists, approval rules, period lock, data export, permissions</td></tr>
-        </tbody>
-      </table>
+  <section id="run">
+    <h2><span class="n">03</span>Run it locally</h2>
+    <pre><code>git checkout main &amp;&amp; git pull
+npm install
 
-      <h3>Key business rules</h3>
-      <ul>
-        <li><b>Rates:</b> a person's bill rate is resolved person on the client's rate card → job title on the rate card → client rate → the employee's rate on that date. Rates are frozen on each hour when it is approved, so later rate changes never alter approved work.</li>
-        <li><b>Invoice numbers</b> are given when an invoice is issued, gapless per fiscal year (format set in settings, e.g. <code>INV-{YYYY}-{SEQ}</code>). Deleting a draft never leaves a gap; issued invoices are cancelled with a credit note, never deleted.</li>
-        <li><b>Period lock:</b> nothing dated on or before the lock date can be changed.</li>
-        <li><b>Approvals:</b> nobody approves their own hours, leave or expenses.</li>
-        <li><b>Rounding:</b> hours to 15 minutes; money to the cent per line; tax per rate.</li>
-        <li><b>Revenue (analytics):</b> approved billable hours on hourly projects × frozen rate, plus fixed-price, milestone and retainer invoices, less credit notes. Gross margin = revenue − cost of all hours − approved expenses. Utilization = billable hours ÷ available hours (capacity less leave and holidays), target 75%.</li>
-      </ul>
-
-      <h3>How it is built</h3>
-      <ul>
-        <li><b>Stack:</b> Next.js 16, React 19, TypeScript strict, Tailwind v4, react-query, next-intl (9 languages incl. Arabic right-to-left).</li>
-        <li><b>Pure business logic</b> lives in <code>src/lib/workforce/</code> (billing, invoice builders, rates, approvals, planning, KPIs, analytics) and is fully unit-tested, so the backend can reuse the same rules.</li>
-        <li><b>Demo data layer:</b> <code>src/lib/api/*-api.ts</code> functions read and write the browser's local storage per workspace (<code>nexora:&lt;collection&gt;:&lt;workspace&gt;</code>). Each function is the seam to replace with a real API call in Phase 7; screens do not change.</li>
-        <li><b>Quality:</b> typecheck, lint, 398 unit tests, i18n sync check, production build and Playwright end-to-end tests run in CI on every pull request.</li>
-      </ul>
-
-      <h3>Run it locally</h3>
-      <pre><code>npm install
 # .env.local
 NEXT_PUBLIC_API_URL=http://localhost:4000/api
 NEXT_PUBLIC_DEMO_MODE=true
 
-npm run dev     # then "Instant Demo Preview" on the login page</code></pre>
-      <p>If pages look outdated after a pull: stop the dev server, <code>rm -rf .next</code>, start again. Old demo data can be cleared in the browser (DevTools → Application → Local Storage → <code>nexora:</code> keys). A production build refuses <code>NEXT_PUBLIC_DEMO_MODE=true</code> on purpose.</p>
+npm run dev</code></pre>
+    <p>Open <code>http://localhost:3000</code> and click <b>Instant Demo Preview</b> on the login page. Use the workspace switcher in the top bar to move between the two demo companies (Atlas Consulting, Northwind Studio).</p>
+    <ul>
+      <li>Pages look old after a pull → stop the server, <code>rm -rf .next</code>, start again, hard-refresh the browser.</li>
+      <li>Reset the demo → DevTools → Application → Local Storage → delete the <code>nexora:</code> keys.</li>
+      <li><code>npm run build</code> refuses <code>NEXT_PUBLIC_DEMO_MODE=true</code> on purpose, so a demo never reaches production by accident.</li>
+      <li>Checks: <code>npx tsc --noEmit</code>, <code>npm run lint</code>, <code>npx vitest run</code>, <code>node scripts/check-i18n-sync.mjs</code>, <code>npm run e2e</code>.</li>
+    </ul>
+  </section>
 
-      <h3>Roadmap: what is left and why it matters</h3>
-      <table>
-        <thead><tr><th>Phase</th><th>Scope</th><th>Why it matters</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>0–3</td><td>Fixes, settings, HR, clients, projects, time, billing, receivables, analytics</td><td>The core: work is tracked, billed and collected</td><td><b>Done</b></td></tr>
-          <tr><td>4</td><td>Manager and employee dashboards, standard reports, Excel export, phone layout</td><td>Each role sees what to act on; month-end reports without spreadsheets; time logged from phones arrives on time</td><td>Next</td></tr>
-          <tr><td>5 (R2)</td><td>Org chart, leave accrual and half-days, documents and contracts, CSV import, client portal, Gantt and dependencies, templates, quotes, recurring invoices, reminders</td><td>Closes the sales → project → invoice loop, brings cash in faster, makes onboarding a new company quick</td><td>Planned</td></tr>
-          <tr><td>6 (R3)</td><td>KPIs/OKRs and reviews, overhead costs, scheduled reports, branding, custom fields, global search, assistant</td><td>True net profit, fact-based reviews, what larger customers expect</td><td>Planned</td></tr>
-          <tr><td>7</td><td>Real backend: database, server-side auth and permissions, files, email, backups</td><td>Shared, permanent and secure data – what makes it a product you can sell</td><td>Planned</td></tr>
-        </tbody>
-      </table>
-    </section>
+  <section id="tour">
+    <h2><span class="n">04</span>Navigation &amp; screens</h2>
+    <p>The top bar holds the main sections; the icon rail on the left lists the pages of the selected section. Detail and edit forms open in a floating side panel.</p>
+    <table>
+      <thead><tr><th>Section</th><th>Pages</th></tr></thead>
+      <tbody>
+        <tr><td>Dashboard</td><td>Analytics</td></tr>
+        <tr><td>Organization</td><td>Employees · Clients · Projects · Timesheets · Time approvals</td></tr>
+        <tr><td>Finance</td><td>Client invoices · Receivables · Expenses · Profitability</td></tr>
+        <tr><td>Planning</td><td>Timeline · Calendar · Workload · Leave</td></tr>
+        <tr><td>System</td><td>Workspace settings · Roles · Sessions · Audit logs</td></tr>
+        <tr><td>Users, Billing, Management, Support</td><td>Platform pages kept from the original product (accounts, plans, subscriptions, files, developer, reports)</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-    <!-- What's new -->
-    <section id="whatsnew">
-      <h2><span class="n">🆕</span>What's new: per deployment</h2>
-      <p>Every deployment is summarised here and linked to the phase that delivered it, the wireframes, and the acceptance criteria. Full history is in the <a href="#changelog">changelog</a>.</p>
-      
-      <div class="card" style="border-left:4px solid #ffd166">
-        <h4>2026-09-14 · Release v2.4: Executive Analytics Overhaul &amp; Minimalist Auth Suite </h4>
-        <ul>
-          <li><b>Adapted Executive Cloud Analytics Hub</b>: Converted retail metrics into core B2B SaaS telemetry: Monthly Recurring Revenue (<b>$168,920 MRR</b>), Net Revenue Retention (<b>118.4%</b>), Active Multi-tenant Workspaces (<b>1,428</b>), and Churn Rate (<b>1.2%</b>) with vertical bar sparklines.</li>
-          <li><b>Explanatory Operational Summaries</b>: Embedded executive guidance underneath every single analytics card, graph, and breakdown table detailing calculation logic and action triggers.</li>
-          <li><b>ARR Expansion Bridge &amp; Churn Risk Matrix</b>: Visual waterfall modeling Starting ARR ($1,620k) to Ending ARR ($1,992k, +23.0% net YoY) with interactive churn alerts for at-risk accounts.</li>
-          <li><b>AI Compute &amp; Edge Latency Telemetry</b>: Token burn rate monitoring (1.82B tokens/mo, 84.2% cache hit) and global gateway latency indicators (US-East: 28ms, EU-Central: 34ms, AP-South: 62ms).</li>
-          <li><b>Minimalist Auth Suite</b>: Replaced two-column rocket layout with a centered card aesthetic anchored by an architectural vintage city skyline engraving across Login, Register, Forgot Password, 6-digit OTP verification, and Set New Password.</li>
-          <li><b>Automated Test Suite Expansion</b>: 58 passing tests across 12 test suites verifying auth, billing, developer keys, GDPR data portability, and team invitations.</li>
-        </ul>
-        <p class="toc-top">Founder checks: <a href="#verification">verification guide §19</a>.</p>
-      </div>
+  <section id="roles">
+    <h2><span class="n">05</span>Roles &amp; permissions</h2>
+    <p>Each workspace member has a role; screens show or hide actions with permissions. In this front-end version permissions only control the interface; Phase 7 enforces them on the server.</p>
+    <table>
+      <thead><tr><th>Role</th><th>Typical rights</th></tr></thead>
+      <tbody>
+        <tr><td>Admin</td><td>Everything, including settings, period lock, costs and data export</td></tr>
+        <tr><td>Manager</td><td>Projects, team, approvals of their people, costs if granted</td></tr>
+        <tr><td>Accountant</td><td>Invoices, payments, credit notes, receivables, expenses, costs</td></tr>
+        <tr><td>Employee</td><td>Own timesheet, timer, leave and expenses; assigned tasks</td></tr>
+        <tr><td>Client</td><td>Reserved for the client portal (Phase 5)</td></tr>
+      </tbody>
+    </table>
+    <p>Key permissions: <code>employees:*</code>, <code>clients:*</code>, <code>projects:*</code>, <code>time:track</code>, <code>time:approve</code>, <code>invoices:*</code>, <code>costs:read</code> (hourly costs and margins are hidden without it), <code>analytics:view</code>.</p>
+  </section>
 
-      <div class="card">
-        <h4>2026-09-10 · Release v2.3: Developer Platform &amp; SOC 2 Audit Trail</h4>
-        <ul>
-          <li><b>API Keys Management Console</b>: SHA-256 secret generation with scoped permissions and copy-to-clipboard security.</li>
-          <li><b>Webhook Event Dispatcher</b>: HMAC-SHA256 signature verification, endpoint registration, and delivery status logs.</li>
-          <li><b>Immutable Audit Logging</b>: SOC 2 compliance tracking of user sessions, plan upgrades, and role modifications.</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- Blueprint series -->
-    <section id="phase1">
-      <h2><span class="n">★</span>Phase 1: Product Vision &amp; Market Research Blueprint</h2>
-      <p><strong>Strategic Thesis.</strong> High-velocity B2B SaaS engineering teams spend an average of 4–6 months rebuilding the same foundational scaffolding: SAML SSO authentication, multi-tenant RBAC isolation, usage-based token and compute metering, Stripe and wire invoice billing, and SOC 2 compliant audit trails. Nexora eliminates this cold-start penalty by providing a production-grade, audited enterprise foundation.</p>
-
-      <div class="grid2">
-        <div class="card">
-          <h4>Ideal Customer Profile (ICP)</h4>
-          <ul class="tight">
-            <li><b>Enterprise B2B Software Providers:</b> Teams requiring multi-tenant workspace separation with strict RBAC boundary enforcement.</li>
-            <li><b>AI-First &amp; Cloud Infrastructure Startups:</b> Platforms requiring token metering, prompt cache telemetry, and consumption-based billing.</li>
-            <li><b>Developer Tooling Platforms:</b> Services exposing customer-facing REST APIs with SHA-256 scoped keys and real-time HMAC webhooks.</li>
-            <li><b>Regulated Global SaaS Companies:</b> Organizations operating across international borders requiring Moroccan CGI, EU-VAT, and US-EIN fiscal compliance.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4>Competitive Advantage Matrix</h4>
-          <table>
-            <tr><th>Capability</th><th>Standard Starter</th><th>Nexora SaaS</th></tr>
-            <tr><td>Design Language</td><td>Generic UI Kit</td><td><b>IBM Carbon v11 Design Tokens</b></td></tr>
-            <tr><td>API Resiliency</td><td>Fails without live DB</td><td><b>Deterministic Dual-Mode Fallback</b></td></tr>
-            <tr><td>Invoicing Engine</td><td>Basic HTML table</td><td><b>Pro Clean PDF &amp; Bank Wire Remittance</b></td></tr>
-            <tr><td>Fiscal Compliance</td><td>US-only generic tax</td><td><b>Moroccan CGI (ICE/IF/RC) &amp; Global Tax</b></td></tr>
-            <tr><td>Developer Tools</td><td>Simple API tokens</td><td><b>SHA-256 Keys, Webhooks &amp; SOC 2 Logs</b></td></tr>
-          </table>
-        </div>
-      </div>
-
-      <div class="callout">
-        <strong>Unit Economics &amp; Monetization Strategy:</strong> Architected for high-tier NRR expansion (118.4% baseline) using a hybrid model: fixed platform subscriptions (Starter $29, Pro $79, Enterprise $299) coupled with usage-based API request quotas and AI compute token metering overages.
-      </div>
-    </section>
-
-    <section id="phase2">
-      <h2><span class="n">★</span>Phase 2: Master Technical &amp; Architectural Blueprint</h2>
-      <p><strong>System Blueprint.</strong> The platform leverages <b>Next.js 16.1.6 App Router with Turbopack</b>, <b>React 19.2.4</b>, and <b>TypeScript 5.9 strict mode</b>. The architecture decouples client-side UI orchestration from underlying data access via the <b>Feature-Chunk Pattern</b> and the <b>Resilient Dual-Mode API Subsystem</b>.</p>
-
-      <div class="mermaid">
+  <section id="flow">
+    <h2><span class="n">06</span>End-to-end flow</h2>
+    <div class="mermaid">
 flowchart LR
-  subgraph PresentationTier ["1. Presentation &amp; Shell Tier"]
-    Shell["Dashboard Shell<br/>(App Router RSC)"]
-    LocaleProvider["next-intl Provider<br/>(9 Locales)"]
-    ThemeProvider["IBM Carbon Engine<br/>(Light/Dark Theme)"]
-    QueryCache["React Query Cache<br/>(TanStack Layer)"]
-  end
+  A[Client and rate card] --> B[Project and budget]
+  B --> C[Tasks and team]
+  C --> D[Hours logged<br/>timer / timesheet]
+  D --> E{Manager approval}
+  E -- sent back --> D
+  E -- approved: rate frozen --> F[Ready to bill]
+  F --> G[Invoice draft]
+  G --> H[Issued: number given]
+  H --> I[Sent]
+  I --> J[Payments]
+  J --> K[Paid]
+  H --> L[Credit note]
+  I --> M[Receivables and reminders]
+  D --> N[Cost of hours]
+  F --> O[Analytics: revenue, margin, utilization]
+  N --> O
+    </div>
+  </section>
 
-  subgraph FeatureChunks ["2. Feature-Chunk Layer"]
-    OverviewChunk["Overview &amp; Analytics<br/>Telemetry Engine"]
-    UsersChunk["User Governance<br/>&amp; Granular RBAC"]
-    BillingChunk["Subscriptions, Taxes<br/>&amp; Pro Invoicing"]
-    DevChunk["Developer API Keys<br/>&amp; SOC 2 Logs"]
-  end
+  <section id="m-settings">
+    <h2><span class="n">07</span>Workspace settings</h2>
+    <ul>
+      <li><b>Company</b>: legal name, trade name, ICE (15 digits, required on Moroccan invoices), tax ID, trade register, address, base currency, fiscal-year start, week start, time zone, invoice number format (e.g. <code>INV-{YYYY}-{SEQ}</code>).</li>
+      <li><b>Period lock</b>: a date on or before which nothing can be changed (hours, invoices, expenses), for closed accounting periods.</li>
+      <li><b>Data</b>: export all workspace data as JSON; delete the workspace's demo data.</li>
+      <li><b>Lists</b>: departments, public holidays, leave types, expense categories, task labels.</li>
+      <li><b>Approvals</b>: who approves timesheets, leave and expenses (manager, project manager or a named person; one or two steps).</li>
+    </ul>
+  </section>
 
-  subgraph DataAccessTier ["3. Dual-Mode API Subsystem"]
-    AxiosClient["Axios HTTP Client<br/>(Scoped Instance)"]
-    JWTInterceptor["JWT Bearer &amp; Tenant<br/>Header Interceptor"]
-    ErrorInterceptor["Resilient Fallback<br/>Error Interceptor"]
-  end
+  <section id="m-people">
+    <h2><span class="n">08</span>Employees (HR)</h2>
+    <ul>
+      <li>Profile: job title, department, manager, role, employment type, hire date, skills.</li>
+      <li>Statuses: starting, active, on leave, notice, inactive.</li>
+      <li><b>Working days</b> and weekly capacity (e.g. a part-timer working Mon–Wed, 20 h) – used for capacity and utilization.</li>
+      <li><b>Rate history</b>: hourly cost and billable rate with an effective date and a reason. Past work keeps the rate valid on its date.</li>
+      <li>Costs and margins are only visible with the <code>costs:read</code> permission.</li>
+    </ul>
+  </section>
 
-  subgraph ExecutionTargets ["4. Execution Boundaries"]
-    LiveBackend["Enterprise Microservice<br/>via /api/* Proxy"]
-    InMemoryStore[("Deterministic Store<br/>(Mock Fallback)")]
-    StripeEngine["Stripe Billing &amp; Portal<br/>Sandbox Engine"]
-    PDFEngine["jsPDF &amp; AutoTable<br/>Invoice Generator"]
-  end
+  <section id="m-clients">
+    <h2><span class="n">09</span>Clients (CRM)</h2>
+    <ul>
+      <li>Legal name, ICE, tax ID, billing address, currency, invoice language, payment terms, account manager, contacts, status (lead, active, archived).</li>
+      <li><b>Rate card</b>: special rates for a person or a job title for this client.</li>
+      <li>A client with invoices cannot be deleted (archive it instead). Changes are written to the audit log.</li>
+    </ul>
+  </section>
 
-  Shell --> FeatureChunks
-  QueryCache --> FeatureChunks
-  FeatureChunks --> AxiosClient
-  AxiosClient --> JWTInterceptor --> ErrorInterceptor
-  ErrorInterceptor --> LiveBackend
-  ErrorInterceptor -. demo/offline .-> InMemoryStore
-  FeatureChunks --> PDFEngine
-  FeatureChunks --> StripeEngine
+  <section id="m-projects">
+    <h2><span class="n">10</span>Projects &amp; tasks</h2>
+    <ul>
+      <li>Budget types: <b>hourly</b> (time &amp; materials), <b>fixed price</b>, <b>retainer</b> (monthly amount with included hours and an overage rate), <b>non-billable</b> (internal).</li>
+      <li>Views: board (Kanban), list, milestones, team. Filters by assignee, label and priority; filters can be saved as named views.</li>
+      <li>Tasks: status, priority, assignee, milestone, due date, estimate, labels, subtasks, <b>comments with @mentions</b> and an <b>activity history</b> of every change.</li>
+      <li>Health is calculated from schedule and budget; a manager can <b>override</b> it with a reason.</li>
+      <li><b>Budget alerts</b> at 80% and 100% of the budget; fixed-price projects show the share already billed.</li>
+    </ul>
+  </section>
 
-  classDef pTier fill:#f8fafc,stroke:#2563eb,stroke-width:1.8px,color:#1e3a8a;
-  classDef fChunk fill:#f8fafc,stroke:#0284c7,stroke-width:1.8px,color:#075985;
-  classDef dTier fill:#f8fafc,stroke:#64748b,stroke-width:1.8px,color:#1e293b;
-  classDef eTarget fill:#f8fafc,stroke:#059669,stroke-width:1.8px,color:#065f46;
+  <section id="m-time">
+    <h2><span class="n">11</span>Time tracking &amp; approvals</h2>
+    <ul>
+      <li>Weekly timesheet per person and project/task; <b>timer</b> in the top area and a <b>quick log</b>; <b>copy last week</b>.</li>
+      <li>Hours are rounded to <b>15 minutes</b>; max 24 h per day; only team members of the project can log; closed projects refuse hours; the gap to expected hours (capacity less leave and holidays) is shown.</li>
+      <li>Statuses: draft → submitted → approved, or sent back with a reason. Approved hours can be <b>reopened</b> by a manager if not yet invoiced.</li>
+      <li>On approval, the bill rate and cost rate are <b>frozen</b> on each entry.</li>
+      <li>Approvals page: one card per person and week with hours per project and billable value; approve all at once.</li>
+    </ul>
+  </section>
 
-  class PresentationTier pTier;
-  class FeatureChunks fChunk;
-  class DataAccessTier dTier;
-  class ExecutionTargets eTarget;
-      </div>
+  <section id="m-billing">
+    <h2><span class="n">12</span>Invoicing &amp; payments</h2>
+    <table>
+      <thead><tr><th>Invoice type</th><th>How it is built</th></tr></thead>
+      <tbody>
+        <tr><td>Hours</td><td>From approved, unbilled hours; lines grouped by person, task or day</td></tr>
+        <tr><td>Fixed share</td><td>A percentage of a fixed price; never more than the price</td></tr>
+        <tr><td>Milestone</td><td>The amount due when a milestone is reached</td></tr>
+        <tr><td>Retainer</td><td>Monthly amount, plus hours beyond the included ones at the overage rate</td></tr>
+        <tr><td>Deposit</td><td>An advance; deducted automatically on the next final invoice</td></tr>
+        <tr><td>Free</td><td>Any manual lines</td></tr>
+        <tr><td>Credit note</td><td>Cancels all or part of an issued invoice (own <code>CN-</code> numbering); can free the hours for rebilling</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>Several tax rates per invoice (one per line), withholding tax, invoice currency with exchange rate to the base currency.</li>
+      <li><b>Partial payments</b> (date, amount, method, reference); balance due after payments and credit notes; marked paid automatically when fully paid.</li>
+      <li>PDF with company identity (ICE, tax ID, trade register), tax breakdown and balance; delivery log when sent.</li>
+      <li>CSV exports of invoices and of payments for the accountant.</li>
+    </ul>
+  </section>
 
-      <div class="grid2">
-        <div class="card">
-          <h4>The Feature-Chunk Pattern</h4>
-          <p>Every business domain resides in an isolated directory (e.g. <code>src/components/shared/taxes-chunks/</code>, <code>invoices-chunks/</code>, <code>users-chunks/</code>) containing its orchestrator, summary cards, column schemas, dialogs, and forms. This ensures sub-50ms HMR and zero bundle cross-contamination.</p>
-        </div>
-        <div class="card">
-          <h4>Resilient Dual-Mode Data Access</h4>
-          <p>The client communicates through strongly-typed API adapters. When a microservice backend is unreachable or <code>NEXT_PUBLIC_DEMO_MODE=true</code>, the application automatically switches to in-memory state with full search, filter, and pagination fidelity.</p>
-        </div>
-      </div>
-    </section>
+  <section id="m-receivables">
+    <h2><span class="n">13</span>Receivables</h2>
+    <p>Open balances per client, split by lateness: <b>not yet due, 1–30, 31–60, 61–90, over 90 days</b>, in the base currency, with totals and CSV export. Clients with money over 30 days late are flagged as high risk on the Analytics page.</p>
+  </section>
 
-    <section id="phase3">
-      <h2><span class="n">★</span>Phase 3: Redevelopment &amp; Execution Roadmap</h2>
-      <p>The platform was executed across five sequential engineering sprints, adhering to strict acceptance criteria, modular reviews, and test-driven validation.</p>
+  <section id="m-costs">
+    <h2><span class="n">14</span>Expenses &amp; profitability</h2>
+    <ul>
+      <li>Expenses with category, project, receipt, billable flag; submitted → approved / rejected → reimbursed; billable expenses can be re-billed on the next invoice.</li>
+      <li>Profitability per project: revenue, cost of hours, expenses, margin and budget usage.</li>
+    </ul>
+  </section>
 
-      <table>
-        <tr><th>Sprint</th><th>Domain Focus</th><th>Key Deliverables</th><th>Validation Milestone</th></tr>
-        <tr>
-          <td><strong>Sprint 1</strong></td>
-          <td>Identity &amp; Minimalist Auth</td>
-          <td>Email auth, OTP self-service recovery, 2FA authenticator, vintage city engraving backdrop.</td>
-          <td>100% token safety, brute-force OTP throttling, zero session leaks.</td>
-        </tr>
-        <tr>
-          <td><strong>Sprint 2</strong></td>
-          <td>User Governance &amp; RBAC</td>
-          <td>Users, Staffs, Banned Users tables; AI photo headshots; permission-gated action sheets.</td>
-          <td>TanStack Table v8 filtering, role-based mutation gatekeeping.</td>
-        </tr>
-        <tr>
-          <td><strong>Sprint 3</strong></td>
-          <td>Moroccan Tax &amp; Invoicing Engine</td>
-          <td><code>/dashboard/taxes</code> page, Moroccan TVA presets (20%, 14%, 10%, 0%), ICE/IF/RC config, Pro Clean PDF invoice.</td>
-          <td>Stripe/Linear on-screen preview parity, authentic jsPDF vector generation.</td>
-        </tr>
-        <tr>
-          <td><strong>Sprint 4</strong></td>
-          <td>Developer Platform &amp; Telemetry</td>
-          <td>API Key generation (SHA-256), HMAC-SHA256 webhooks, Ask Victor AI telemetry, SOC 2 audit logs.</td>
-          <td>Real-time request metering, webhook delivery retry logs.</td>
-        </tr>
-        <tr>
-          <td><strong>Sprint 5</strong></td>
-          <td>Testing &amp; Production Hardening</td>
-          <td>Vitest integration suite (20 suites, 161 tests), Turbopack static route build (218/218 routes).</td>
-          <td>Zero TypeScript errors, 100% passing test baseline.</td>
-        </tr>
-      </table>
-    </section>
+  <section id="m-planning">
+    <h2><span class="n">15</span>Planning &amp; leave</h2>
+    <ul>
+      <li>Timeline and calendar of projects, milestones and leave.</li>
+      <li>Workload: planned and logged hours against each person's capacity.</li>
+      <li>Leave requests with types from settings and approval; approved leave reduces capacity.</li>
+    </ul>
+  </section>
 
-    <section id="verification">
-      <h2><span class="n">★</span>Phase Verification: Founder Sign-off Checklist</h2>
-      <p>The executive sign-off matrix validates that all functional, visual, and regulatory standards are fulfilled prior to production deployment.</p>
+  <section id="m-analytics">
+    <h2><span class="n">16</span>Analytics</h2>
+    <p>Filters: period (7 days, 30 days, 90 days, 12 months, year to date), comparison (previous period, same period last year, none), client and team.</p>
+    <table>
+      <thead><tr><th>Card</th><th>Shows</th></tr></thead>
+      <tbody>
+        <tr><td>KPI cards</td><td>Revenue earned, gross margin, team utilization, cash collected – each with trend bars and change</td></tr>
+        <tr><td>Revenue over time</td><td>Cumulative revenue vs the comparison period, annual run-rate</td></tr>
+        <tr><td>Revenue by client</td><td>Share bar, amounts with trend lines, split by billing type</td></tr>
+        <tr><td>Revenue bridge</td><td>Waterfall: previous period → growth, new clients → decline, lost clients → now; tab <i>Clients at risk</i> (overdue money, sharp drops, no recent work)</td></tr>
+        <tr><td>Team capacity</td><td>Billable hours, utilization vs 75% target, non-billable share, hours by project</td></tr>
+        <tr><td>Top projects</td><td>Revenue, hours and margin per project</td></tr>
+        <tr><td>Utilization / average rate</td><td>Over time, with the target line</td></tr>
+        <tr><td>Report &amp; assistant</td><td>A4 PDF, preview, print, CSV; Ask Victor answers from the live figures</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-      <div class="grid2">
-        <div class="card">
-          <h4>Security &amp; Identity Verification</h4>
-          <ul class="tight">
-            <li>✅ <b>OTP Password Recovery:</b> 6-digit cryptographic verification with Resend transport.</li>
-            <li>✅ <b>Session Defense:</b> Automatic workstation lock screen after configurable idle periods.</li>
-            <li>✅ <b>RBAC Enforcement:</b> Server actions and route proxies reject unauthorized role tokens.</li>
-            <li>✅ <b>XSS Prevention:</b> DOMPurify sanitization applied to all user-submitted markdown and HTML.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4>Fiscal &amp; Billing Verification</h4>
-          <ul class="tight">
-            <li>✅ <b>Moroccan Fiscal Credentials:</b> ICE, IF, RC, and Patente persist and render correctly.</li>
-            <li>✅ <b>TVA Calculations:</b> Subtotal (HT), TVA (20%), and Total (TTC) accurately calculated.</li>
-            <li>✅ <b>PDF Invoice Generation:</b> High-resolution retina vector logo, wire remittance instructions.</li>
-            <li>✅ <b>Receipt Synchronization:</b> Transaction payments produce official branded receipts.</li>
-          </ul>
-        </div>
-      </div>
+  <section id="rules">
+    <h2><span class="n">17</span>Business rules</h2>
+    <table>
+      <thead><tr><th>Rule</th><th>Behaviour</th></tr></thead>
+      <tbody>
+        <tr><td>Bill rate</td><td>Person on the client's rate card → job title on the rate card → client rate → employee's rate on the date of the work</td></tr>
+        <tr><td>Rate freeze</td><td>Approval stores the bill and cost rate on each entry; later rate changes never change approved work</td></tr>
+        <tr><td>Invoice numbers</td><td>Given at issue, gapless per fiscal year; drafts have no number; issued invoices are never deleted, only credited</td></tr>
+        <tr><td>Period lock</td><td>No create, edit or delete on or before the lock date</td></tr>
+        <tr><td>Self-approval</td><td>Nobody approves their own hours, leave or expenses</td></tr>
+        <tr><td>Rounding</td><td>Hours to 15 minutes; amounts to the cent per line; tax computed per rate</td></tr>
+        <tr><td>Voiding</td><td>An invoice with payments cannot be voided; use a credit note</td></tr>
+        <tr><td>Revenue (analytics)</td><td>Approved billable hours on hourly projects × frozen rate + fixed, milestone and retainer invoices − credit notes</td></tr>
+        <tr><td>Gross margin</td><td>Revenue − cost of all logged hours − approved expenses</td></tr>
+        <tr><td>Utilization</td><td>Billable hours ÷ available hours (working days × hours per day, less leave and holidays); target 75%</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-      <div class="card" style="margin-top: 14px;">
-        <h4>Platform Quality Verification Summary</h4>
-        <table>
-          <tr><th>Verification Check</th><th>Command / Tool</th><th>Observed Output</th><th>Status</th></tr>
-          <tr><td>TypeScript Compilation</td><td><code>npm run typecheck</code></td><td><code>tsc --noEmit</code> exited with code 0</td><td><b>PASSED (0 Errors)</b></td></tr>
-          <tr><td>Unit &amp; Integration Tests</td><td><code>npm test</code></td><td>20 test files, 161 unit tests passed</td><td><b>PASSED (100%)</b></td></tr>
-          <tr><td>Turbopack Production Build</td><td><code>npm run build</code></td><td>218/218 routes compiled statically</td><td><b>PASSED (8.8s)</b></td></tr>
-        </table>
-      </div>
-    </section>
+  <section id="invoice-states">
+    <h2><span class="n">18</span>Invoice life cycle</h2>
+    <div class="mermaid">
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> Issued: issue (number assigned)
+  Draft --> [*]: delete (no gap)
+  Issued --> Sent: send (delivery logged)
+  Issued --> Paid: payments = total
+  Sent --> Paid: payments = total
+  Issued --> Void: cancel (no payments)
+  Sent --> Void: cancel (no payments)
+  Sent --> Credited: credit note
+  Paid --> Credited: credit note
+    </div>
+    <p>Shown statuses also include <b>overdue</b> (past due date with a balance) and <b>partly paid</b>, derived from dates and payments.</p>
+  </section>
 
-    <section id="readiness">
-      <h2><span class="n">★</span>Release Readiness: Production Operations &amp; Runbook</h2>
-      <p><strong>Deployment Architecture.</strong> Nexora SaaS is architected for zero-downtime deployment to modern edge infrastructure (Vercel Edge Network, AWS ECS, or Dockerized Kubernetes clusters).</p>
-
-      <div class="grid2">
-        <div class="card">
-          <h4>Environment Variables Validation (Zod)</h4>
-          <p>All runtime configurations are validated on startup via <code>src/env.ts</code>. Missing or malformed keys halt execution immediately with human-readable error messages:</p>
-          <ul class="tight">
-            <li><code>NEXT_PUBLIC_APP_URL</code>: Base URL for canonical routing.</li>
-            <li><code>NEXT_PUBLIC_API_URL</code>: Endpoint for live microservice REST proxy.</li>
-            <li><code>NEXT_PUBLIC_DEMO_MODE</code>: Toggle for deterministic demo data fallback.</li>
-            <li><code>JWT_SECRET</code>: Cryptographic key for local token verification.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4>Operational Runbook &amp; Disaster Recovery</h4>
-          <ul class="tight">
-            <li><b>Zero-Downtime Rollback:</b> Atomic deployment slots allow instant 1-click rollback via immutable Docker images or Vercel deployment hashes.</li>
-            <li><b>Stateless Edge Ingress:</b> Server-side routes do not maintain sticky sessions, enabling seamless horizontal auto-scaling.</li>
-            <li><b>Telemetry Monitoring:</b> P99 latencies, cache hit ratios, and API rate limits tracked in real-time on the Overview telemetry card.</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- 1 -->
-    <section id="intro">
-      <h2><span class="n">01</span>Introduction &amp; Scope</h2>
-      <p><strong>Purpose.</strong> Enable modern software organizations to launch and operate an enterprise-grade multi-tenant B2B SaaS platform with out-of-the-box governance, executive analytics, developer APIs, subscription lifecycles, and resilient dual-mode API execution.</p>
-      
-      <div class="grid2">
-        <div class="card">
-          <h4>In scope</h4>
-          <ul class="tight">
-            <li>Executive Cloud Analytics Hub with dual comparative graphs and sparklines</li>
-            <li>Multi-tenant workspace governance with role-based access control (RBAC)</li>
-            <li>Minimalist authentication suite with 2FA and session lock screen</li>
-            <li>Subscription tier catalog, usage metering gauges, and PDF invoices</li>
-            <li>Developer API keys, HMAC signed webhooks, and SOC 2 audit logs</li>
-            <li>Native internationalization across 9 languages via <code>next-intl</code></li>
-            <li>Dual-Mode API layer: live REST proxy with automatic in-memory fallback</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4>Out of scope / guardrails</h4>
-          <ul class="tight">
-            <li><strong>No required live database setup</strong>: runs seamlessly on sample memory</li>
-            <li><strong>No live credit card charges</strong>: billing operates in test sandbox mode</li>
-            <li>No proprietary vendor lock-in: standard Next.js App Router conventions</li>
-            <li>Client-side state does not mutate production data without explicit API config</li>
-          </ul>
-        </div>
-      </div>
-      <div class="callout"><strong>Design principle:</strong> every integration degrades gracefully. With zero keys the app is fully usable on deterministic demo data; adding API keys lights up live REST backends with no code changes.</div>
-      
-      <h4>Personas</h4>
-      <table>
-        <tr><th>Persona</th><th>Goal</th><th>Key journeys</th></tr>
-        <tr><td>Executive Admin (Alex)</td><td>Monitor ARR run-rate, manage team roles, inspect SOC 2 logs</td><td>Overview &rarr; Analytics &rarr; Users &rarr; Audit Logs</td></tr>
-        <tr><td>Staff Member (Sophia)</td><td>Manage customer support, review billing disputes, inspect webhooks</td><td>Users &rarr; Invoices &rarr; Webhook deliveries</td></tr>
-        <tr><td>Developer User (Sarah)</td><td>Integrate APIs, provision keys, configure webhook listeners</td><td>Developer &rarr; API Keys &rarr; Webhooks &rarr; Docs</td></tr>
-        <tr><td>Enterprise Buyer (Marcus)</td><td>Procure dedicated cluster, verify SOC 2 security &amp; 99.99% SLA</td><td>Plans &rarr; Enterprise Tier &rarr; Security settings</td></tr>
-      </table>
-    </section>
-
-    <!-- 2 -->
-    <section id="spec">
-      <h2><span class="n">02</span>Detailed Specification</h2>
-      <h3>Functional modules</h3>
-      <table>
-        <tr><th>Module</th><th>Route(s)</th><th>Core capability</th></tr>
-        <tr><td>Auth Suite</td><td><code>/auth</code></td><td>Login, Register, Forgot Password OTP, Password Reset, Vintage City Skyline</td></tr>
-        <tr><td>Cloud Analytics Hub</td><td><code>/dashboard/overview</code></td><td>MRR/ARR growth, NRR, Active Workspaces, Churn, ARR Waterfall, Ask Victor AI</td></tr>
-        <tr><td>User Governance</td><td><code>/dashboard/users</code></td><td>Multi-tenant user roster, role assignment, active/banned status toggle</td></tr>
-        <tr><td>Staff Directory</td><td><code>/dashboard/staffs</code></td><td>Internal staff directory, active-duty indicators, and operational permissions</td></tr>
-        <tr><td>Banned Accounts</td><td><code>/dashboard/banned-users</code></td><td>Compliance monitoring, security sanctions, and account suspension logs</td></tr>
-        <tr><td>Subscription Engine</td><td><code>/dashboard/billing</code></td><td>Tier matrices, usage metering gauges, transaction records, PDF invoice preview</td></tr>
-        <tr><td>Developer Platform</td><td><code>/dashboard/developer</code></td><td>SHA-256 API keys, webhook endpoint registration, event delivery logs</td></tr>
-        <tr><td>Audit Logging</td><td><code>/dashboard/audit-logs</code></td><td>Immutable SOC 2 event trail, severity filters, user identity traceability</td></tr>
-        <tr><td>Security &amp; 2FA</td><td><code>/dashboard/profile/security</code></td><td>TOTP 2FA authenticator, session lock screen, password rotation</td></tr>
-      </table>
-
-      <h3>Non-functional summary</h3>
-      <div class="grid3">
-        <div class="card"><h4>Performance</h4><p>Turbopack-accelerated compilation, virtualized tables for 10k+ records, responsive Recharts.</p></div>
-        <div class="card"><h4>Resilience</h4><p>Dual-Mode client; transparent in-memory demo fallback on network timeout or microservice failure.</p></div>
-        <div class="card"><h4>Security</h4><p>JWT token refresh, 2FA TOTP verification, session lock screen, and strict TypeScript types.</p></div>
-      </div>
-    </section>
-
-    <!-- 3 -->
-    <section id="phases">
-      <h2><span class="n">03</span>Phase-wise Development Plan</h2>
-      <table>
-        <tr><th>Phase</th><th>Theme</th><th>Deliverables</th><th>Status</th></tr>
-        <tr><td>P0</td><td>Foundation</td><td>Next.js 16 scaffold, IBM Carbon tokens, seed dataset &amp; domain model</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>P1</td><td>Governance &amp; Staff</td><td>User management, staff directory, sanctions, avatar upload, RBAC</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>P2</td><td>Billing &amp; Subscriptions</td><td>Plans catalog, subscription table, usage gauges, automated PDF invoices</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>P3</td><td>Developer &amp; Compliance</td><td>API keys console, webhook dispatcher, SOC 2 audit logging</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>P4</td><td>Executive Analytics</td><td>MRR/ARR comparative charts, SaaS revenue breakdown, Ask Victor AI</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>P5</td><td>Modern Auth &amp; Telemetry</td><td>Minimalist Auth Suite (City Skyline, Forgot OTP), ARR Waterfall, AI Token Burn</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>P6</td><td>Enterprise Scale</td><td>Multi-region cluster routing, Okta SSO SAML2, dedicated compliance pods</td><td><span class="pill p-plan">Planned</span></td></tr>
-      </table>
-    </section>
-
-    <!-- 4 -->
-    <section id="business">
-      <h2><span class="n">04</span>Business &amp; Process Mapping</h2>
-      <p>The core customer value stream from account provisioning to revenue generation and infrastructure telemetry:</p>
-      <div class="mermaid">
-flowchart LR
-  A([Client signup]) --> B{Entry point}
-  B -->|Self-service| C[Register Form]
-  B -->|Invited| D[Accept Invite Token]
-  C --> E[Workspace Provisioned]
-  D --> E
-  E --> F[Select Subscription Tier]
-  F --> G[Generate Developer API Key]
-  G --> H[Consume API / AI Tokens]
-  H --> I[Monthly Invoice & Metering]
-  I -.telemetry.-> J[[Executive Analytics Hub]]
-  H -.telemetry.-> J
-  E -.audit event.-> K[(SOC 2 Audit Trail)]
-      </div>
-      <h3>Business process table (RACI-lite)</h3>
-      <table>
-        <tr><th>Process</th><th>Trigger</th><th>System action</th><th>Outcome</th></tr>
-        <tr><td>Onboard</td><td>New user registration</td><td>Provision workspace + assign Owner role</td><td>Active tenant workspace</td></tr>
-        <tr><td>Subscribe</td><td>Select Pro/Enterprise plan</td><td>billingApi.create() &rarr; Stripe checkout</td><td>Active paid subscription</td></tr>
-        <tr><td>API Access</td><td>Generate API key</td><td>generateKey() &rarr; SHA-256 hash stored</td><td>Scoped Bearer token</td></tr>
-        <tr><td>Invoice</td><td>Billing cycle rollover</td><td>Calculate usage overages &rarr; generate PDF</td><td>Downloadable invoice</td></tr>
-        <tr><td>Monitor</td><td>Live traffic &amp; telemetry</td><td>Log API throughput, latencies, MRR delta</td><td>Real-time analytics</td></tr>
-      </table>
-    </section>
-
-    <!-- 5 -->
-    <section id="usecase">
-      <h2><span class="n">05</span>Real-World Enterprise Use Case &amp; Operational Flowchart</h2>
-      
-      <!-- Executive Enterprise Real Use Case Box -->
-      <div class="enterprise-hero-box" style="background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%); border: 1px solid #dbeafe; border-radius: 12px; padding: 26px; color: #0f172a; margin: 18px 0 28px 0; box-shadow: 0 4px 20px rgba(15,98,254,0.06);">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;">
-          <span style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: #0f62fe; border-radius: 10px; font-size: 18px; color: #fff;">🏢</span>
-          <h3 style="margin: 0; font-size: 1.3rem; font-weight: 700; color: #0f172a; letter-spacing: -0.01em;">Real Enterprise Use Case: From Setup to Global Scale</h3>
-        </div>
-        <p style="font-size: 1.05rem; line-height: 1.65; color: #334155; margin-bottom: 20px;">
-          <strong>As an enterprise (e.g., Acme FinTech Cloud Corp), you do this and this:</strong> You deploy the Nexora platform to centralize your multi-department SaaS infrastructure, coordinate high-stakes customer projects with official PDF specification briefs, meter API and compute usage across tiers, issue compliant Pro Clean invoices with wire remittance instructions, integrate external systems via scoped APIs and webhooks, and maintain continuous SOC 2 Type II and GDPR audit readiness.
-        </p>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px;">
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="font-weight: 600; color: #2563eb; margin-bottom: 5px; font-size: 0.95rem;">⚡ 1. Tenant Provisioning &amp; Enterprise SSO</div>
-            <div style="font-size: 0.86rem; line-height: 1.5; color: #475569;">You provision an isolated organization workspace with SAML 2.0 / Okta SSO, enforce hardware TOTP 2FA, and configure corporate session timeouts.</div>
-          </div>
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="font-weight: 600; color: #2563eb; margin-bottom: 5px; font-size: 0.95rem;">👥 2. Org Hierarchy &amp; Granular RBAC</div>
-            <div style="font-size: 0.86rem; line-height: 1.5; color: #475569;">You onboard department managers (Engineering, Finance, Support) and assign strict Owner, Admin, Member, or Viewer roles to restrict sensitive data.</div>
-          </div>
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="font-weight: 600; color: #0284c7; margin-bottom: 5px; font-size: 0.95rem;">🚀 3. Client Projects &amp; PDF Briefs</div>
-            <div style="font-size: 0.86rem; line-height: 1.5; color: #475569;">You launch client deliverables (e.g., "Q4 Cloud Migration"), store architecture assets in the File Vault, and export branded Project Specification PDFs for stakeholders.</div>
-          </div>
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="font-weight: 600; color: #059669; margin-bottom: 5px; font-size: 0.95rem;">💳 4. Usage Metering, Invoices &amp; Receipts</div>
-            <div style="font-size: 0.86rem; line-height: 1.5; color: #475569;">You meter compute seats and API consumption on the Enterprise tier, dispatch Stripe-grade Pro PDF invoices with bank wire info, and receive branded receipts.</div>
-          </div>
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="font-weight: 600; color: #7c3aed; margin-bottom: 5px; font-size: 0.95rem;">🔌 5. Developer APIs &amp; Real-Time Webhooks</div>
-            <div style="font-size: 0.86rem; line-height: 1.5; color: #475569;">Your engineers issue SHA-256 Bearer tokens, register webhooks to sync invoice and project lifecycle events into corporate ERPs, and automate deployment tasks.</div>
-          </div>
-          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-            <div style="font-weight: 600; color: #0f62fe; margin-bottom: 5px; font-size: 0.95rem;">🛡️ 6. AI Telemetry &amp; SOC 2 Compliance</div>
-            <div style="font-size: 0.86rem; line-height: 1.5; color: #475569;">Your CFO queries Ask Victor AI for natural-language ARR run-rate forecasts, while SecOps reviews immutable SOC 2 audit logs and handles automated GDPR erasures.</div>
-          </div>
-        </div>
-      </div>
-
-      <h3>Sequential Enterprise Flowchart</h3>
-      <p>The following flow diagram demonstrates the sequential start-to-finish operational flow of the project from the enterprise's perspective:</p>
-      
-      <div class="mermaid">
-flowchart LR
-  subgraph S1 ["⚡ STAGE 1: TENANT PROVISIONING"]
-    Start(["🏢 Enterprise Onboarding"]):::leadNode --> Step1["<b>1. Identity &amp; Security</b><br/>SAML 2.0 · TOTP 2FA"]:::stage1
-    Step1 --> Step2["<b>2. RBAC &amp; Hierarchy</b><br/>Tenant Schema · Roles"]:::stage1
-  end
-
-  subgraph S2 ["🚀 STAGE 2: WORKSPACE &amp; DELIVERABLES"]
-    Step2 --> Step3["<b>3. Client Projects &amp; Vault</b><br/>Milestones · Asset Vault"]:::stage2
-    Step3 --> Step4["<b>4. Project Specification PDF</b><br/>Automated Briefs"]:::stage2
-  end
-
-  subgraph S3 ["💳 STAGE 3: USAGE METERING &amp; TAX BILLING"]
-    Step4 --> Step5["<b>5. API &amp; Compute Metering</b><br/>Token Meter · Moroccan TVA"]:::stage3
-    Step5 --> Step6["<b>6. Issue PDF Invoice</b><br/>HT + TVA 20% + TTC"]:::stage3
-    Step6 --> Step7["<b>7. Payment &amp; Receipt PDF</b><br/>Stripe / Wire Remittance"]:::stage3
-  end
-
-  subgraph S4 ["🛡️ STAGE 4: DEVELOPER &amp; GOVERNANCE"]
-    Step7 --> Step8["<b>8. API Keys &amp; Webhooks</b><br/>Bearer Tokens · ERP Sync"]:::stage4
-    Step8 --> Step9["<b>9. AI Telemetry &amp; Audits</b><br/>Ask Victor · Audit Logs"]:::stage4
-    Step9 --> End(["🎯 Continuous Scale &amp; Governance"]):::leadNode
-  end
-
-  classDef leadNode fill:#eff6ff,stroke:#0f62fe,stroke-width:2px,color:#0f172a,font-weight:bold;
-  classDef stage1 fill:#ffffff,stroke:#2563eb,stroke-width:1.8px,color:#0f172a;
-  classDef stage2 fill:#ffffff,stroke:#0284c7,stroke-width:1.8px,color:#0f172a;
-  classDef stage3 fill:#ffffff,stroke:#059669,stroke-width:1.8px,color:#0f172a;
-  classDef stage4 fill:#ffffff,stroke:#7c3aed,stroke-width:1.8px,color:#0f172a;
-      </div>
-
-      <h3>Actor-Interaction Mapping</h3>
-      <div class="mermaid">
-flowchart TB
-  admin([🛠️ Executive Admin]):::adminNode
-  staff([👤 Staff Member]):::staffNode
-  user([💻 Developer User]):::userNode
-  ai([🤖 Nexora AI Engine]):::aiNode
-  stripe([💳 Stripe Engine]):::stripeNode
-
-  subgraph NexoraPlatform["Nexora SaaS Platform"]
-    U1((Monitor MRR &amp; Analytics)):::coreNode
-    U2((Manage Workspaces &amp; RBAC)):::coreNode
-    U3((Generate API Keys &amp; Webhooks)):::coreNode
-    U4((Manage Subscriptions &amp; Invoices)):::coreNode
-    U5((Query Telemetry with Ask Victor)):::coreNode
-    U6((Inspect SOC 2 Audit Logs)):::coreNode
-    U7((Reset Password via OTP)):::coreNode
-  end
-
-  admin --- U1
-  admin --- U2
-  admin --- U4
-  admin --- U6
-  staff --- U2
-  staff --- U4
-  user --- U3
-  user --- U7
-  user --- U5
-  U5 -. uses .-> ai
-  U4 -. writes .-> stripe
-
-  classDef adminNode fill:#eff6ff,stroke:#0f62fe,stroke-width:2px,color:#0f172a,font-weight:bold;
-  classDef staffNode fill:#ffffff,stroke:#2563eb,stroke-width:1.6px,color:#0f172a;
-  classDef userNode fill:#ffffff,stroke:#0284c7,stroke-width:1.6px,color:#0f172a;
-  classDef aiNode fill:#faf5ff,stroke:#7c3aed,stroke-width:2px,color:#0f172a,font-weight:bold;
-  classDef stripeNode fill:#ecfdf5,stroke:#059669,stroke-width:2px,color:#0f172a,font-weight:bold;
-  classDef coreNode fill:#ffffff,stroke:#64748b,stroke-width:1.5px,color:#0f172a;
-      </div>
-
-      <h3>Operational Lifecycle Traceability</h3>
-      <table>
-        <tr>
-          <th>Phase</th>
-          <th>As an Enterprise, You Do...</th>
-          <th>Nexora Platform Delivers...</th>
-          <th>Generated Artifact / Deliverable</th>
-        </tr>
-        <tr>
-          <td><strong>1. Provision</strong></td>
-          <td>Admin authenticates via corporate SSO, enforces TOTP 2FA, locks workspace session.</td>
-          <td>Provisions isolated tenant schema, initializes cryptographic audit chain, sets session token.</td>
-          <td><code>Active Secure Tenant Workspace</code></td>
-        </tr>
-        <tr>
-          <td><strong>2. Structure</strong></td>
-          <td>Invites department leaders and staff; sets RBAC permissions (Owner, Admin, Member, Viewer).</td>
-          <td>Dispatches signed invite tokens; enforces permission middleware on every route.</td>
-          <td><code>Granular RBAC Security Matrix</code></td>
-        </tr>
-        <tr>
-          <td><strong>3. Deliver</strong></td>
-          <td>Creates projects, sets milestones, attaches specs, assigns contributors.</td>
-          <td>Coordinates real-time task states, synchronizes file vault assets, compiles specs.</td>
-          <td><code>Downloadable Project Specification PDF</code></td>
-        </tr>
-        <tr>
-          <td><strong>4. Monetize</strong></td>
-          <td>Subscribes to Enterprise tier, tracks compute overages, pays via Wire or Card.</td>
-          <td>Runs automated usage metering, generates Pro PDF Invoices and official branded receipts.</td>
-          <td><code>Pro Clean Invoices &amp; Receipts</code> with wire routing</td>
-        </tr>
-        <tr>
-          <td><strong>5. Automate</strong></td>
-          <td>Developers create scoped API keys and register webhook endpoints for ERP sync.</td>
-          <td>Hashes tokens with SHA-256, monitors request quotas, dispatches webhooks with exponential backoff.</td>
-          <td><code>Enterprise Developer Platform</code> (2.4M req/hr)</td>
-        </tr>
-        <tr>
-          <td><strong>6. Govern</strong></td>
-          <td>Executives query Ask Victor AI for ARR projections; SecOps reviews audit trails.</td>
-          <td>Synthesizes financial run-rates, records tamper-proof SOC 2 logs, processes GDPR erasure requests.</td>
-          <td><code>Continuous SOC 2 &amp; GDPR Compliance</code></td>
-        </tr>
-      </table>
-    </section>
-
-    <!-- 6 -->
-    <section id="uxflow">
-      <h2><span class="n">06</span>UI/UX: Step by Step (Wireframes)</h2>
-      <p>The interface is <strong>data-dense, focused, and executive-led</strong>. Below, key operational screens are modeled as wireframe blueprints:</p>
-
-      <h3>Step 1: Minimalist Auth (with Vintage City Skyline)</h3>
-      <div class="wf">
-        <div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> https://nexora.cloud/en/auth <nav><span>Theme Toggler ◐</span></nav></div>
-        <div class="canvas">
-          <div style="max-width: 360px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 12px; border: 1px solid var(--line);">
-            <div class="box solid"><div class="lbl">Centered Form Card</div><b>Get started</b> · Create an account to get started</div>
-            <div class="box small"><div class="lbl">Username</div>richard_dev</div>
-            <div class="box small"><div class="lbl">Work Email</div>rico@acme.com</div>
-            <div class="box small"><div class="lbl">Password</div>••••••••••••</div>
-            <div style="background:#161616; color:#fff; text-align:center; padding:9px; border-radius:8px; font-weight:600; font-size:0.8rem; margin-top:12px;">Continue</div>
-            <div class="legend" style="text-align:center; margin-top:12px;">Already have an account? <b>Login</b></div>
-          </div>
-          <div style="text-align:center; margin-top:18px; color:#8ea0c8; font-size:0.72rem; font-family:monospace;">
-            [ ===== Vintage Architectural City Skyline Engraving Canvas ===== ]
-          </div>
-        </div>
-      </div>
-
-      <h3>Step 2: Executive Cloud Analytics Hub</h3>
-      <div class="wf">
-        <div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> https://nexora.cloud/en/dashboard/overview <nav><span>Scope: All Workspaces</span><span>$ USD</span><span>Save as report</span></nav></div>
-        <div class="canvas">
-          <div class="row">
-            <div class="box"><div class="lbl">MRR</div><b>$168,920</b> <span class="pill p-done">+24.8%</span><div class="legend">Pacing toward $200k target</div></div>
-            <div class="box"><div class="lbl">NRR</div><b>118.4%</b> <span class="pill p-done">+4.2%</span><div class="legend">Retained expansion revenue</div></div>
-            <div class="box"><div class="lbl">Workspaces</div><b>1,428</b> <span class="pill p-done">+18.5%</span><div class="legend">Active tenant clusters</div></div>
-            <div class="box"><div class="lbl">Churn</div><b>1.2%</b> <span class="pill p-done">-0.6%</span><div class="legend">Monthly logo contraction</div></div>
-          </div>
-          <div class="row">
-            <div class="box" style="flex:2;"><div class="lbl">MRR &amp; Platform Revenue Over Time</div>[ Recharts Dual Line Graph: Current Period vs Prior Cycle ]</div>
-            <div class="box"><div class="lbl">SaaS Breakdown</div>Enterprise: $94.5k · Pro: $48.2k · AI Tokens: $18.4k</div>
-          </div>
-          <div class="row">
-            <div class="box"><div class="lbl">ARR Expansion Bridge</div>Waterfall: $1.62M &rarr; $1.99M</div>
-            <div class="box"><div class="lbl">AI Compute Telemetry</div>1.82B Tokens · 84.2% Cache Hit · 42ms P99</div>
-          </div>
-        </div>
-      </div>
-
-      <h3>Step 3: Developer Platform &amp; Webhooks</h3>
-      <div class="wf">
-        <div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> https://nexora.cloud/en/dashboard/developer</div>
-        <div class="canvas">
-          <div class="row">
-            <div class="box" style="flex:2;">
-              <div class="lbl">API Keys</div>
-              <code>nx_live_8f3a9e...</code> (Full Access) · Expires 2027 · <span class="pill p-done">Active</span>
-            </div>
-            <div class="box">
-              <div class="lbl">Webhooks</div>
-              Endpoint: <code>https://api.acme.com/events</code> · HMAC-SHA256
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 7 -->
-    <section id="sitemap">
-      <h2><span class="n">07</span>End-to-End Site Map</h2>
-      <div class="mermaid">
-flowchart TB
-  Auth["/auth Authentication"] --> Login["/auth?section=login"]
-  Auth --> Reg["/auth?section=register"]
-  Auth --> Forgot["/auth?section=forgot-password"]
-  Forgot --> Verify["/auth?section=very-forgot-password OTP"]
-  Verify --> Reset["/auth?section=reset-password"]
-  Login --> Dash["/dashboard/overview Cloud Analytics"]
-  Dash --> Users["/dashboard/users Users Hub"]
-  Dash --> Staffs["/dashboard/staffs Staff Directory"]
-  Dash --> Banned["/dashboard/banned-users Sanctions"]
-  Dash --> Billing["/dashboard/billing Plans & Invoices"]
-  Dash --> Dev["/dashboard/developer API & Webhooks"]
-  Dash --> Audit["/dashboard/audit-logs SOC 2 Trail"]
-  Dash --> Profile["/dashboard/profile Settings & 2FA"]
-      </div>
-    </section>
-
-    <!-- 8 -->
-    <section id="designsystem">
-      <h2><span class="n">08</span>Design System &amp; Tokens</h2>
-      <p>The Nexora platform's visual architecture is engineered upon <b>IBM Carbon Design System v11</b> integrated with <b>Tailwind CSS v4</b>. The system prioritizes data density, optical hierarchy, typographic clarity, and WCAG 2.1 AA accessibility.</p>
-
-      <h3>1. Complete Color Token Architecture</h3>
-      <table>
-        <tr><th>Token Name</th><th>CSS Variable</th><th>HEX / Value</th><th>Semantic Usage</th></tr>
-        <tr><td>Brand Primary</td><td><code>--brand / --primary</code></td><td><span class="swatch" style="display:inline-flex;padding:2px 8px;margin:0;"><i style="background:#0f62fe"></i> #0f62fe</span></td><td>Active tabs, primary action buttons, key KPI metrics accents</td></tr>
-        <tr><td>Brand Hover</td><td><code>--brand-hover</code></td><td><span class="swatch" style="display:inline-flex;padding:2px 8px;margin:0;"><i style="background:#0353e9"></i> #0353e9</span></td><td>Hover states on interactive primary elements</td></tr>
-        <tr><td>Brand Active</td><td><code>--brand-active</code></td><td><span class="swatch" style="display:inline-flex;padding:2px 8px;margin:0;"><i style="background:#002d9c"></i> #002d9c</span></td><td>Pressed button states, active navigation indicators</td></tr>
-        <tr><td>Brand Subtle / Tint</td><td><code>--brand-soft</code></td><td><span class="swatch" style="display:inline-flex;padding:2px 8px;margin:0;"><i style="background:#edf5ff;border:1px solid #d0e2ff"></i> #edf5ff</span></td><td>Selected table rows, active badge backgrounds, info alerts</td></tr>
-        <tr><td>Success / Growth</td><td><code>--success</code></td><td><span class="swatch" style="display:inline-flex;padding:2px 8px;margin:0;"><i style="background:#198038"></i> #198038</span></td><td>Positive MRR growth (+14.8%), paid status pills, healthy systems</td></tr>
-        <tr><td>Warning / At-Risk</td><td><code>--warning</code></td><td><span class="swatch" style="display:inline-flex;padding:2px 8px;margin:0;"><i style="background:#f1c21b"></i> #f1c21b</span></td><td>Pending invoice payments, quota threshold warnings (&gt;80%)</td></tr>
-        <tr><td>Danger / Churn</td><td><code>--danger / --destructive</code></td><td><span class="swatch" style="display:inline-flex;padding:2px 8px;margin:0;"><i style="background:#da1e28"></i> #da1e28</span></td><td>Overdue accounts, user suspension badges, destructive actions</td></tr>
-        <tr><td>Canvas Light</td><td><code>--canvas</code></td><td><span class="swatch" style="display:inline-flex;padding:2px 8px;margin:0;"><i style="background:#f4f4f4;border:1px solid #ddd"></i> #f4f4f4</span></td><td>Carbon Gray 10 background reducing glare in dense data grids</td></tr>
-        <tr><td>Surface White</td><td><code>--surface</code></td><td><span class="swatch" style="display:inline-flex;padding:2px 8px;margin:0;"><i style="background:#ffffff;border:1px solid #ddd"></i> #ffffff</span></td><td>Primary card backgrounds, modal sheets, and dropdown menus</td></tr>
-        <tr><td>Dark Canvas</td><td><code>--sidebar-bg / dark</code></td><td><span class="swatch" style="display:inline-flex;padding:2px 8px;margin:0;"><i style="background:#161616"></i> #161616</span></td><td>Carbon Gray 100 navigation sidebar and dark theme canvas</td></tr>
-      </table>
-
-      <h3>2. Typographic Scale &amp; Font Hierarchy</h3>
-      <table>
-        <tr><th>Role / Element</th><th>Font Family</th><th>Font Size</th><th>Weight</th><th>Line Height &amp; Usage</th></tr>
-        <tr><td>Display Metric</td><td>Inter / Plex Sans</td><td><b>32px (2rem)</b></td><td>800 Extrabold</td><td>1.1 · ARR Hero Figures ($2.02M, $168.9k)</td></tr>
-        <tr><td>Heading 1 (H1)</td><td>Inter / Plex Sans</td><td><b>24px (1.5rem)</b></td><td>700 Bold</td><td>1.2 · Page titles, major dashboard headers</td></tr>
-        <tr><td>Heading 2 (H2)</td><td>Inter / Plex Sans</td><td><b>18px (1.125rem)</b></td><td>600 Semibold</td><td>1.3 · Card titles, table headers, section dividers</td></tr>
-        <tr><td>Heading 3 (H3)</td><td>Inter / Plex Sans</td><td><b>15px (0.9375rem)</b></td><td>600 Semibold</td><td>1.4 · Sub-card headers, modal titles, form groups</td></tr>
-        <tr><td>Body Text</td><td>IBM Plex Sans</td><td><b>13px (0.8125rem)</b></td><td>400 Regular</td><td>1.5 · General content, table cell data, descriptions</td></tr>
-        <tr><td>Caption / Label</td><td>IBM Plex Sans</td><td><b>11px (0.6875rem)</b></td><td>500 Medium</td><td>1.4 · Micro labels, table column headers, status tags</td></tr>
-        <tr><td>Financial Numbers</td><td>JetBrains Mono / SFMono</td><td><b>12px / 13px</b></td><td>500 Medium</td><td>1.2 · Currency amounts, ICE/IF tax IDs, timestamps</td></tr>
-      </table>
-
-      <div class="grid2">
-        <div class="card">
-          <h4>3. Spacing &amp; Radius Scale</h4>
-          <ul class="tight">
-            <li><b>Base Increment:</b> 4px mathematical grid (<code>4px, 8px, 12px, 16px, 24px, 32px, 48px</code>).</li>
-            <li><b>Border Radii:</b> <code>--radius-sm (4px)</code>, <code>--radius-md (8px)</code>, <code>--radius-lg (12px)</code>, <code>--radius-xl (16px)</code>.</li>
-            <li><b>Elevation &amp; Borders:</b> 1px crisp borders (<code>#e0e0e0</code> light / <code>rgba(255,255,255,0.08)</code> dark) paired with subtle zero-spread drop shadows.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4>4. Component Primitives &amp; Patterns</h4>
-          <p>Built with composable headless primitives:</p>
-          <div style="display:flex; flex-wrap:wrap; gap:6px; margin: 8px 0;">
-            <span class="chip">Buttons (Primary / Outline / Ghost)</span>
-            <span class="chip">Data-Table (TanStack v8)</span>
-            <span class="chip">MiniSparklines</span>
-            <span class="chip">InputOTP (6-digit)</span>
-            <span class="chip">Badge &amp; Status Pills</span>
-            <span class="chip">Slide-over Entity Sheets</span>
-            <span class="chip">Confirm Alert Dialogs</span>
-          </div>
-          <p class="legend">All components support automated keyboard navigation (Tab / Shift+Tab) and 2px visible focus rings.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 9 -->
-    <section id="architecture">
-      <h2><span class="n">09</span>Data &amp; System Architecture</h2>
-      <div class="mermaid">
-flowchart TB
-  subgraph Client["Client Tier (React 19 / Next.js 16)"]
-    UI[App Router RSC + Client Islands]
-    AuthCtx[Auth Context & JWT State]
-    QueryClient[TanStack React Query Cache]
-  end
-
-  subgraph Server["Next.js Server Tier (Node.js 20)"]
-    ServerActions[Next.js Server Actions]
-    APIProxy["/api/* Route Handlers"]
-    DualModeClient[Resilient Dual-Mode API Client]
-  end
-
-  subgraph Ext["External & Live Services"]
-    StripeAPI[Stripe Billing Sandbox]
-    ResendAPI[Resend Email Transports]
-    LiveBackend[Enterprise REST Microservice]
-    InMemoryFallback[(In-Memory Deterministic DB)]
-  end
-
-  UI --> ServerActions
-  UI --> APIProxy
-  ServerActions --> DualModeClient
-  APIProxy --> DualModeClient
-  DualModeClient --> LiveBackend
-  DualModeClient -. fallback .-> InMemoryFallback
-  DualModeClient --> StripeAPI
-  DualModeClient --> ResendAPI
-      </div>
-    </section>
-
-    <!-- 10 -->
-    <section id="ailogic">
-      <h2><span class="n">⚙️</span>AI &amp; Telemetry: Technical Logic</h2>
-      <h3>Ask Victor (Nexora AI) Telemetry Engine</h3>
-      <p>A zero-friction telemetry synthesizer operating directly from client and edge query logs:</p>
-      <div class="card">
-        <h4>Synthesis Algorithm</h4>
-        <ol class="tight">
-          <li><b>Natural Language Intent Routing:</b> Evaluates prompt tokens for intent classification (<code>revenue_expansion</code>, <code>compute_overage</code>, <code>churn_forecast</code>, or <code>platform_health</code>).</li>
-          <li><b>Contextual Data Aggregation:</b> Pulls real-time workspace counters: $168,920 MRR, 1,428 active tenants, 84.2% cache hit ratio, and regional latencies.</li>
-          <li><b>Deterministic Response Formulation:</b> Generates executive board summaries without requiring external LLM API keys in demo mode.</li>
-        </ol>
-      </div>
-
-      <h3>AI Compute Token Metering &amp; Prompt Caching</h3>
-      <p>Tracks LLM token consumption across all workspace members. Shared prefix caching achieves an 84.2% cache hit ratio, reducing raw model inference costs by 18%.</p>
-    </section>
-
-    <!-- 10 -->
-    <section id="logic">
-      <h2><span class="n">10</span>Logic &amp; Interaction Architecture</h2>
-      <p>The interaction tier governs how reactive state flows across client-side components, network boundaries, optimistic mutations, and resilient demo stores.</p>
-
-      <div class="grid2">
-        <div class="card">
-          <h4>1. Client State &amp; Cache Invalidation (TanStack Query)</h4>
-          <ul class="tight">
-            <li><b>Query Key Hierarchy:</b> Hierarchically structured cache keys (e.g. <code>['users', { page, limit, role, search }]</code>) ensure targeted cache invalidation when mutations succeed.</li>
-            <li><b>Stale-While-Revalidate:</b> Default <code>staleTime: 5 * 60 * 1000</code> (5 minutes) delivers instantaneous page transitions while refreshing telemetry in the background.</li>
-            <li><b>Garbage Collection:</b> Inactive query nodes are collected after 10 minutes to minimize browser memory footprint.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4>2. URL-Driven State Synchronization</h4>
-          <ul class="tight">
-            <li><b>Single Source of Truth:</b> Table filters (role, status), search queries (<code>?q=</code>), and active pagination indices (<code>?page=1</code>) serialize directly into the browser URL via <code>useSearchParams</code>.</li>
-            <li><b>Deep Linking &amp; Bookmarking:</b> Department managers can bookmark or share direct links to exact table views without state degradation.</li>
-            <li><b>Back/Forward Cache Integrity:</b> Browser history navigation updates table views without extra network overhead.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="grid2" style="margin-top: 14px;">
-        <div class="card">
-          <h4>3. Optimistic Updates &amp; Automatic Rollback</h4>
-          <p>For high-frequency administrative operations (banning accounts, toggling staff permissions, archiving projects):</p>
-          <ol class="tight">
-            <li><b>Immediate Mutation:</b> The client snapshot is saved via <code>onMutate</code> and the local cache updates instantly.</li>
-            <li><b>Background Verification:</b> The API request fires asynchronously to the server.</li>
-            <li><b>Rollback Guard:</b> Upon network failure or 4xx/5xx response, the previous cache snapshot is immediately restored and an explanatory toast notification is dispatched.</li>
-          </ol>
-        </div>
-        <div class="card">
-          <h4>4. Form Validation &amp; Mutation Lifecycles</h4>
-          <p>Managed via <b>React Hook Form</b> paired with <b>Zod Schema Resolvers</b>:</p>
-          <ul class="tight">
-            <li><b>Strict Typing:</b> Form schemas mirror server DTOs (e.g., password minimum length, Moroccan ICE 15-digit format, tax rate percentages).</li>
-            <li><b>Interactive Feedback:</b> Field errors render below inputs with accessible ARIA descriptions.</li>
-            <li><b>In-Flight Locking:</b> Submit buttons disable and display animated spinners to prevent duplicate write transactions.</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top: 14px;">
-        <h4>5. Multi-Tenant Workspace Context Switching</h4>
-        <p>Organization switching is orchestrated through the global <code>useWorkspace</code> context:</p>
-        <table>
-          <tr><th>Stage</th><th>Interaction Event</th><th>System Reaction</th></tr>
-          <tr><td>1. Selection</td><td>User switches workspace from header dropdown (e.g., from "Acme Cloud" to "FinTech Global")</td><td>Updates workspace state in localStorage and active session</td></tr>
-          <tr><td>2. Header Injection</td><td>Axios request interceptor detects workspace change</td><td>Injects <code>X-Workspace-Id: ws-fintech-global</code> into all subsequent HTTP requests</td></tr>
-          <tr><td>3. Cache Invalidation</td><td>TanStack Query triggers <code>queryClient.invalidateQueries()</code></td><td>Refetches all workspace-scoped collections (Invoices, Projects, Staffs, API Keys)</td></tr>
-          <tr><td>4. Visual Transition</td><td>UI transitions cleanly within 150ms</td><td>Displays new tenant branding, project deliverables, and compute telemetry</td></tr>
-        </table>
-      </div>
-    </section>
-
-    <!-- 11 -->
-    <section id="sequence">
-      <h2><span class="n">11</span>Sequence Diagrams</h2>
-      <h3>11.1 Self-Service Password Recovery via OTP</h3>
-      <div class="mermaid">
-sequenceDiagram
-  actor User
-  participant Client as Auth UI (Client)
-  participant API as /auth/password-reset-request
-  participant Email as Email Service (Resend)
-  participant ResetAPI as /auth/password-reset
-
-  User->>Client: Enter work email (rico@acme.com)
-  Client->>API: POST { email }
-  API->>Email: Dispatch 6-digit OTP code (123456)
-  API-->>Client: { message: "Reset code sent" }
-  Client-->>User: Transition to OTP verification screen
-  User->>Client: Enter 6-digit code
-  Client->>Client: Validate format & advance
-  User->>Client: Enter new compliant password
-  Client->>ResetAPI: POST { token, newPassword }
-  ResetAPI-->>Client: { message: "Password reset successfully" }
-  Client-->>User: Toast success & redirect to login
-      </div>
-
-      <h3>11.2 API Key Authentication &amp; Rate Limiting</h3>
-      <div class="mermaid">
-sequenceDiagram
-  actor Dev as Developer Client
-  participant Gateway as API Gateway / Proxy
-  participant Auth as Key Validator
-  participant Service as Target Microservice
-
-  Dev->>Gateway: GET /v1/workspaces (Bearer nx_live_...)
-  Gateway->>Auth: Validate SHA-256 Key Hash
-  alt Valid & Within Rate Limit (1000 req/min)
-    Auth-->>Gateway: Authorized (Tenant ID, Permissions)
-    Gateway->>Service: Forward request with tenant context
-    Service-->>Gateway: 200 OK (Data payload)
-    Gateway-->>Dev: 200 OK
-  else Rate limit exceeded
-    Auth-->>Gateway: 429 Too Many Requests
-    Gateway-->>Dev: 429 Rate Limit Exceeded (Retry-After: 60)
-  end
-      </div>
-    </section>
-
-    <!-- 12 -->
-    <section id="flowchart">
-      <h2><span class="n">12</span>Billing &amp; Invoicing Flowchart</h2>
-      <div class="mermaid">
-flowchart LR
-  A([Client Selects Tier]):::leadNode --> B{Tier Type}
-  B -->|Starter| C["<b>Free Activation</b><br/>$0 Immediate Setup"]:::stage1
-  B -->|Pro / Enterprise| D["<b>Stripe Checkout</b><br/>Hosted Payment Portal"]:::stage2
-  D --> E{Payment Status}
-  E -->|Success| F["<b>Update Database</b><br/>Apply Plan Tier"]:::stage3
-  E -->|Failed| G["<b>Display Retry Dialog</b><br/>Retain Prior Limits"]:::stageFail
-  C --> H["<b>Cluster Quotas</b><br/>Provision Dedicated Limits"]:::stage3
-  F --> H
-  H --> I["<b>PDF Invoice</b><br/>Generate Snapshot"]:::stage4
-  I --> J[("<b>Audit Ledger</b><br/>Record Event")]:::stage4
-  J --> K([Complete &amp; Active]):::leadNode
-
-  classDef leadNode fill:#eff6ff,stroke:#0f62fe,stroke-width:2px,color:#0f172a,font-weight:bold;
-  classDef stage1 fill:#ffffff,stroke:#2563eb,stroke-width:1.8px,color:#0f172a;
-  classDef stage2 fill:#ffffff,stroke:#0284c7,stroke-width:1.8px,color:#0f172a;
-  classDef stage3 fill:#ffffff,stroke:#059669,stroke-width:1.8px,color:#0f172a;
-  classDef stage4 fill:#ffffff,stroke:#7c3aed,stroke-width:1.8px,color:#0f172a;
-  classDef stageFail fill:#fff1f2,stroke:#e11d48,stroke-width:1.8px,color:#9f1239;
-      </div>
-    </section>
-
-    <!-- 13 -->
-    <section id="erd">
-      <h2><span class="n">13</span>Entity-Relationship Diagram (ERD)</h2>
-      <div class="mermaid">
+  <section id="data">
+    <h2><span class="n">19</span>Data model</h2>
+    <div class="mermaid">
 erDiagram
-  TENANT ||--o{ WORKSPACE : contains
-  WORKSPACE ||--o{ USER : employs
-  WORKSPACE ||--|| SUBSCRIPTION : maintains
-  WORKSPACE ||--o{ API_KEY : provisions
-  WORKSPACE ||--o{ WEBHOOK : registers
-  SUBSCRIPTION ||--o{ INVOICE : generates
-  USER ||--o{ AUDIT_LOG : triggers
+  WORKSPACE ||--o{ EMPLOYEE : has
+  WORKSPACE ||--o{ CLIENT : has
+  WORKSPACE ||--|| SETTINGS : has
+  DEPARTMENT ||--o{ EMPLOYEE : groups
+  EMPLOYEE ||--o{ RATE_CHANGE : history
+  CLIENT ||--o{ RATE_CARD_ENTRY : special_rates
+  CLIENT ||--o{ PROJECT : orders
+  PROJECT ||--o{ MILESTONE : has
+  PROJECT ||--o{ TASK : has
+  TASK ||--o{ COMMENT : discussion
+  EMPLOYEE ||--o{ TIME_ENTRY : logs
+  PROJECT ||--o{ TIME_ENTRY : receives
+  CLIENT ||--o{ INVOICE : billed
+  INVOICE ||--o{ INVOICE_LINE : contains
+  INVOICE ||--o{ PAYMENT : settled_by
+  INVOICE_LINE }o--o{ TIME_ENTRY : bills
+  EMPLOYEE ||--o{ EXPENSE : spends
+  EMPLOYEE ||--o{ LEAVE_REQUEST : asks
+    </div>
+    <p>Types live in <code>src/types/</code> (<code>workforce.ts</code>, <code>work-projects.ts</code>, <code>work-billing.ts</code>, <code>work-costs.ts</code>, <code>work-planning.ts</code>, <code>work-settings.ts</code>). Every record carries its <code>workspaceId</code>.</p>
+  </section>
 
-  TENANT {
-    string id PK
-    string name
-    string slug
-    datetime created_at
-  }
-  WORKSPACE {
-    string id PK
-    string tenant_id FK
-    string name
-    string plan_tier
-    string cluster_region
-  }
-  USER {
-    string id PK
-    string email UK
-    string role
-    boolean two_factor_enabled
-  }
-  SUBSCRIPTION {
-    string id PK
-    string workspace_id FK
-    decimal mrr_amount
-    string status
-    datetime current_period_end
-  }
-  API_KEY {
-    string id PK
-    string workspace_id FK
-    string key_hash UK
-    string permissions
-    datetime expires_at
-  }
-  INVOICE {
-    string id PK
-    string subscription_id FK
-    decimal amount
-    string status
-    string pdf_url
-  }
-  AUDIT_LOG {
-    string id PK
-    string user_id FK
-    string action
-    string ip_address
-    datetime timestamp
-  }
-      </div>
-    </section>
+  <section id="demo">
+    <h2><span class="n">20</span>Demo data</h2>
+    <p>Two workspaces are seeded, relative to today so the demo never looks old:</p>
+    <ul>
+      <li><b>Atlas Consulting</b> (EUR): 10 employees in 5 departments, clients Orbit Logistics, Helio Energy, Medica Health, Vela Retail (lead), Kappa Bank (archived); current projects and a year of finished ones; about 1,500 hours; monthly invoices with payments; some invoices open, partly paid and overdue (so receivables and risk alerts have content); a fixed-price share invoice.</li>
+      <li><b>Northwind Studio</b>: a smaller creative studio with its own clients, projects and invoices.</li>
+    </ul>
+  </section>
 
-    <!-- 14 -->
-    <section id="dictionary">
-      <h2><span class="n">14</span>Data Dictionary</h2>
-      <h3>Workspace (Tenant Cluster)</h3>
-      <table>
-        <tr><th>Field</th><th>Type</th><th>Req</th><th>Description</th></tr>
-        <tr><td>id</td><td>string</td><td>✔</td><td>Unique workspace identifier (e.g., <code>ws-prod-01</code>)</td></tr>
-        <tr><td>tenant_id</td><td>string</td><td>✔</td><td>Parent organization identifier</td></tr>
-        <tr><td>name</td><td>string</td><td>✔</td><td>Human-readable workspace title</td></tr>
-        <tr><td>plan_tier</td><td>enum</td><td>✔</td><td><code>starter</code> · <code>pro</code> · <code>enterprise</code></td></tr>
-        <tr><td>cluster_region</td><td>string</td><td>✔</td><td>Cloud deployment zone (<code>us-east-1</code>, <code>eu-central-1</code>)</td></tr>
-        <tr><td>created_at</td><td>datetime</td><td>✔</td><td>Creation timestamp</td></tr>
-      </table>
+  <section id="arch">
+    <h2><span class="n">21</span>Architecture</h2>
+    <div class="mermaid">
+flowchart TB
+  UI[Pages and components<br/>src/components/shared/*-chunks] --> H[React Query hooks<br/>src/hooks/workforce]
+  H --> API[API functions<br/>src/lib/api/*-api.ts]
+  API --> STORE[(Demo store<br/>browser localStorage<br/>nexora:collection:workspace)]
+  API -. Phase 7 .-> BE[(Real backend API)]
+  UI --> LOGIC[Pure business logic<br/>src/lib/workforce]
+  API --> LOGIC
+    </div>
+    <ul>
+      <li><b>Business logic is pure and tested</b> (<code>billing.ts</code>, <code>invoice-builders.ts</code>, <code>rates.ts</code>, <code>approvals.ts</code>, <code>planning.ts</code>, <code>kpis.ts</code>, <code>profitability.ts</code>, <code>analytics.ts</code>), so the backend can reuse the same rules.</li>
+      <li><b>API functions are the seam</b>: today they read and write the demo store; in Phase 7 each body becomes an HTTP call and the screens stay the same.</li>
+      <li>Stack: Next.js 16 (App Router), React 19, TypeScript strict, Tailwind v4, TanStack Query, Zustand, next-intl, Recharts, jsPDF.</li>
+    </ul>
+  </section>
 
-      <h3>Subscription (Ledger Record)</h3>
-      <table>
-        <tr><th>Field</th><th>Type</th><th>Req</th><th>Description</th></tr>
-        <tr><td>id</td><td>string</td><td>✔</td><td>Subscription identifier (<code>sub-12498</code>)</td></tr>
-        <tr><td>workspace_id</td><td>string</td><td>✔</td><td>Associated workspace reference</td></tr>
-        <tr><td>mrr_amount</td><td>decimal</td><td>✔</td><td>Normalized monthly revenue contribution ($)</td></tr>
-        <tr><td>status</td><td>enum</td><td>✔</td><td><code>active</code> · <code>past_due</code> · <code>canceled</code></td></tr>
-        <tr><td>current_period_end</td><td>datetime</td><td>✔</td><td>Next recurring renewal date</td></tr>
-      </table>
+  <section id="design">
+    <h2><span class="n">22</span>Design system</h2>
+    <ul>
+      <li>Nexora DS tokens (DS-00 to DS-02): operator gray and tech blue ramps mapped to semantic tokens; low-chroma status colors always paired with a label or icon; dark mode from the same ramps.</li>
+      <li>Radius 2/4/8/12/16/24 px, three elevation levels; Inter for the interface, Roboto Mono for codes and numbers, a serif for side-panel titles.</li>
+      <li>Layout: top tab bar with sections, icon rail with pages, page header panel, metric cards, tables, floating rounded side panels.</li>
+    </ul>
+  </section>
 
-      <h3>ApiKey (Developer Secret)</h3>
-      <table>
-        <tr><th>Field</th><th>Type</th><th>Req</th><th>Description</th></tr>
-        <tr><td>id</td><td>string</td><td>✔</td><td>Key identifier</td></tr>
-        <tr><td>key_hash</td><td>string</td><td>✔</td><td>SHA-256 hash of API key secret</td></tr>
-        <tr><td>permissions</td><td>string</td><td>✔</td><td>Comma-separated scopes (<code>read,write,admin</code>)</td></tr>
-        <tr><td>expires_at</td><td>datetime</td><td>None</td><td>Expiration date</td></tr>
-      </table>
-    </section>
+  <section id="i18n">
+    <h2><span class="n">23</span>Languages</h2>
+    <p>English, French, German, Spanish, Arabic (right to left), Urdu, Hindi, Russian and Chinese. Texts live in <code>src/messages/*.json</code>; <code>scripts/check-i18n-sync.mjs</code> fails CI if a key is missing in any language.</p>
+  </section>
 
-    <!-- 15 -->
-    <section id="interfaces">
-      <h2><span class="n">15</span>System Interface Specification (APIs)</h2>
-      <h3>Internal Endpoints</h3>
-      <table>
-        <tr><th>Endpoint</th><th>Method</th><th>Request</th><th>Response</th><th>Notes</th></tr>
-        <tr><td><code>/api/auth/login</code></td><td>POST</td><td>{email, password}</td><td>{token, user}</td><td>JWT credentials authentication</td></tr>
-        <tr><td><code>/api/auth/password-reset-request</code></td><td>POST</td><td>{email}</td><td>{message, otpId}</td><td>Dispatches 6-digit recovery OTP</td></tr>
-        <tr><td><code>/api/auth/password-reset</code></td><td>POST</td><td>{token, newPassword}</td><td>{message}</td><td>Validates and resets user password</td></tr>
-        <tr><td><code>/api/billing/plans</code></td><td>GET</td><td>None</td><td>{plans[]}</td><td>Retrieves active pricing tier matrix</td></tr>
-        <tr><td><code>/api/billing/invoices</code></td><td>GET</td><td>?workspaceId=</td><td>{invoices[]}</td><td>Returns transactional PDF invoice records</td></tr>
-        <tr><td><code>/api/developer/keys</code></td><td>GET/POST</td><td>POST {name, scopes}</td><td>{key, secret}</td><td>SHA-256 developer key generation</td></tr>
-        <tr><td><code>/api/developer/webhooks</code></td><td>POST</td><td>{url, events[]}</td><td>{webhookId}</td><td>Registers HMAC-signed webhook endpoint</td></tr>
-        <tr><td><code>/api/team/invite</code></td><td>POST</td><td>{email, role}</td><td>{inviteToken}</td><td>Dispatches team invitation</td></tr>
-      </table>
+  <section id="quality">
+    <h2><span class="n">24</span>Quality &amp; security</h2>
+    <ul>
+      <li>CI on every pull request: typecheck, lint, i18n sync, 398 unit tests, production build, Playwright end-to-end tests, dependency audit, and a check that demo mode is blocked in production builds.</li>
+      <li>CSV exports neutralise spreadsheet formulas; PDFs and HTML reports escape all text; API requests time out.</li>
+      <li>Known limit of this version: permissions are enforced in the interface only and data lives in the browser – both are solved by the backend (Phase 7).</li>
+    </ul>
+  </section>
 
-      <h3>External Integrations</h3>
-      <table>
-        <tr><th>Service</th><th>Key</th><th>Exposure</th><th>Used by</th><th>Fallback</th></tr>
-        <tr><td>Stripe</td><td>STRIPE_SECRET_KEY</td><td>server</td><td>Subscription lifecycle</td><td>Sample checkout sandbox</td></tr>
-        <tr><td>Resend</td><td>RESEND_API_KEY</td><td>server</td><td>Password reset &amp; invites</td><td>Deterministic console logging</td></tr>
-        <tr><td>IBM Carbon</td><td>Client-side</td><td>client</td><td>Typography &amp; iconography</td><td>Bundled Carbon React icons</td></tr>
-        <tr><td>Vercel / Node</td><td>Managed</td><td>server</td><td>Hosting &amp; Edge execution</td><td>Self-hosted Node.js runtime</td></tr>
-      </table>
-    </section>
+  <section id="roadmap">
+    <h2><span class="n">25</span>What is left &amp; why it matters</h2>
+    <table>
+      <thead><tr><th>Phase</th><th>Scope</th><th>Why it matters</th></tr></thead>
+      <tbody>
+        <tr><td>4</td><td>Manager and employee dashboards; standard reports (hours, utilization, revenue and margin by client, project, person); Excel export; tables as cards on phones; remaining usability items</td><td>Each role sees what to act on; month-end reporting without spreadsheets; hours logged from phones arrive on time, so invoices go out on time</td></tr>
+        <tr><td>5</td><td>Org chart, leave accrual and half-days, documents and contracts, CSV import, client portal, Gantt and dependencies, project templates, quotes, recurring invoices, payment reminders, more expense features</td><td>Closes the quote → project → invoice loop, brings cash in faster, makes moving a company into Nexora quick, looks professional to clients</td></tr>
+        <tr><td>6</td><td>KPIs/OKRs and reviews, overhead costs, scheduled reports, branding, custom fields, global search, fuller assistant</td><td>True net profit, fact-based performance reviews, what larger customers expect</td></tr>
+        <tr><td>7</td><td>Backend: database, server-side auth and permissions, file storage, email, backups, multi-company</td><td>Shared, permanent and secure data – what turns the product into something you can sell</td></tr>
+      </tbody>
+    </table>
+  </section>
 
-    <!-- 16 -->
-    <section id="backlog">
-      <h2><span class="n">16</span>Product Backlog (User Stories)</h2>
-      <table>
-        <tr><th>ID</th><th>As a…</th><th>I want…</th><th>So that…</th><th>Pri</th><th>Status</th></tr>
-        <tr><td>US-01</td><td>Executive Admin</td><td>to monitor live MRR and NRR retention</td><td>I evaluate corporate growth velocity</td><td><span class="pill p-high">High</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-02</td><td>Executive Admin</td><td>an ARR expansion bridge waterfall</td><td>I understand new vs expansion revenue</td><td><span class="pill p-high">High</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-03</td><td>Executive Admin</td><td>proactive alerts for at-risk accounts</td><td>I prevent customer churn early</td><td><span class="pill p-high">High</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-04</td><td>Developer User</td><td>a minimalist, clean login and register experience</td><td>I onboard without distraction</td><td><span class="pill p-high">High</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-05</td><td>User</td><td>to reset my forgotten password with an OTP code</td><td>I regain account access securely</td><td><span class="pill p-high">High</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-06</td><td>Developer User</td><td>to provision scoped SHA-256 API keys</td><td>I integrate programmatic microservices</td><td><span class="pill p-high">High</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-07</td><td>Developer User</td><td>to register HMAC-signed webhook listeners</td><td>I receive real-time platform event hooks</td><td><span class="pill p-med">Med</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-08</td><td>Staff Operator</td><td>to inspect SOC 2 immutable audit logs</td><td>I maintain regulatory compliance</td><td><span class="pill p-high">High</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-09</td><td>Billing Admin</td><td>to preview and download PDF invoices</td><td>I maintain corporate tax records</td><td><span class="pill p-med">Med</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-10</td><td>Executive</td><td>to ask natural language questions with Ask Victor AI</td><td>I get instant telemetry summaries</td><td><span class="pill p-med">Med</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-11</td><td>Executive</td><td>to download a formatted telemetry report</td><td>I share offline executive updates</td><td><span class="pill p-med">Med</span></td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>US-12</td><td>DevOps</td><td>58 automated tests passing on every build</td><td>regressions are caught before deployment</td><td><span class="pill p-high">High</span></td><td><span class="pill p-done">Done</span></td></tr>
-      </table>
-    </section>
-
-    <!-- 17 -->
-    <section id="ac">
-      <h2><span class="n">17</span>Acceptance Criteria (Given / When / Then)</h2>
-      <table>
-        <tr><th>Story</th><th>Acceptance criteria</th></tr>
-        <tr><td>US-01</td><td><b>Given</b> I am logged in as an Executive Admin <b>when</b> I open the Cloud Analytics Hub <b>then</b> I see Monthly Recurring Revenue, NRR, Active Workspaces, and Churn Rate with vertical bar sparklines and operational explanations.</td></tr>
-        <tr><td>US-02</td><td><b>Given</b> I am viewing the ARR Expansion Bridge <b>when</b> I inspect the waterfall <b>then</b> Starting ARR ($1,620k) reconciles to Ending ARR ($1,992k) with green expansion and red contraction bars.</td></tr>
-        <tr><td>US-04</td><td><b>Given</b> I am on <code>/auth</code> <b>when</b> the page renders <b>then</b> I see a centered minimalist card anchored by an architectural vintage city skyline engraving.</td></tr>
-        <tr><td>US-05</td><td><b>Given</b> I click "Forgot?" on login <b>when</b> I submit my work email <b>then</b> a 6-digit OTP prompt appears, and upon entering 123456 I can set a new compliant password and return to login.</td></tr>
-        <tr><td>US-06</td><td><b>Given</b> I am on the Developer page <b>when</b> I generate an API key <b>then</b> a SHA-256 secret token is displayed once with a one-click copy button.</td></tr>
-        <tr><td>US-11</td><td><b>Given</b> I click "Save as report" on the Analytics toolbar <b>when</b> the download fires <b>then</b> a formatted executive telemetry report file is saved locally.</td></tr>
-        <tr><td>US-12</td><td><b>Given</b> the test suite is executed <b>when</b> <code>npm test -- --run</code> runs <b>then</b> all 58 tests across 12 test suites must pass cleanly.</td></tr>
-      </table>
-    </section>
-
-    <!-- 18 -->
-    <section id="traceability">
-      <h2><span class="n">18</span>Requirements Traceability Matrix</h2>
-      <table>
-        <tr><th>Story</th><th>Use case</th><th>Module / route</th><th>Key files</th><th>API</th><th>Test / verification</th></tr>
-        <tr><td>US-01</td><td>UC-1</td><td>/dashboard/overview</td><td>analytics-kpi-cards.tsx</td><td>/api/analytics</td><td>Sparklines render + explanations</td></tr>
-        <tr><td>US-02</td><td>UC-1</td><td>/dashboard/overview</td><td>arr-bridge-card.tsx</td><td>Internal calc</td><td>Waterfall math checks ($1.99M)</td></tr>
-        <tr><td>US-04</td><td>UC-7</td><td>/auth</td><td>auth.tsx, login-by-email.tsx</td><td>/api/auth/login</td><td>Visual verification + demo login</td></tr>
-        <tr><td>US-05</td><td>UC-7</td><td>/auth?section=forgot</td><td>forgot-password.tsx, reset-password.tsx</td><td>/api/auth/password-reset</td><td>auth-apis.test.ts (9 tests)</td></tr>
-        <tr><td>US-06</td><td>UC-2</td><td>/dashboard/developer</td><td>api-keys-card.tsx</td><td>/api/developer/keys</td><td>developer-apis.test.ts (4 tests)</td></tr>
-        <tr><td>US-08</td><td>UC-6</td><td>/dashboard/audit-logs</td><td>audit-logs-page.tsx</td><td>/api/audit</td><td>SOC 2 severity filters work</td></tr>
-        <tr><td>US-09</td><td>UC-4</td><td>/dashboard/billing</td><td>invoice-modal.tsx</td><td>/api/billing/invoices</td><td>billing-apis.test.ts (6 tests)</td></tr>
-        <tr><td>US-11</td><td>UC-1</td><td>/dashboard/overview</td><td>analytics-toolbar.tsx</td><td>Export helper</td><td>Report file generated &amp; downloaded</td></tr>
-        <tr><td>US-12</td><td>Internal</td><td>CI / Testing</td><td>vitest.config.ts</td><td>None</td><td>58 passed tests in 3.1s</td></tr>
-      </table>
-    </section>
-
-    <!-- 19 -->
-    <section id="quality">
-      <h2><span class="n">19</span>Quality Gates &amp; NFRs (58 Passing Tests)</h2>
-      <div class="grid3">
-        <div class="card">
-          <h4>Build &amp; Type Gates</h4>
-          <ul class="tight">
-            <li><code>npx tsc --noEmit</code> exit code 0 (zero TypeScript errors)</li>
-            <li>Turbopack fast HMR and compilation</li>
-            <li>Zero secret leakage in client builds</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4>Performance &amp; A11y</h4>
-          <ul class="tight">
-            <li>Sub-50ms P99 global edge gateway latency</li>
-            <li>High-contrast IBM Carbon typography</li>
-            <li>RTL &amp; LTR multi-language support</li>
-          </ul>
-        </div>
-        <div class="card">
-          <h4>Security &amp; Compliance</h4>
-          <ul class="tight">
-            <li>Immutable SOC 2 audit logging</li>
-            <li>TOTP 2FA authenticator verification</li>
-            <li>GDPR automated data export &amp; erasure</li>
-          </ul>
-        </div>
-      </div>
-
-      <footer class="docftr">
-        <div>Nexora SaaS Enterprise Cloud Platform · Internal Reference</div>
-        <div>Rendered with Mermaid.js · Served from <code>/documentation/doc.html</code></div>
-      </footer>
-    </section>
-  </main>
+  <section id="changelog">
+    <h2><span class="n">26</span>Changelog</h2>
+    <div class="card"><h4>v3.0 · 2026-10-04</h4><ul>
+      <li>ERP Phases 0–3 delivered on demo data (settings, HR, CRM, projects, time, billing, receivables).</li>
+      <li>Analytics page rebuilt on ERP data; Executive overview and Team KPIs pages removed.</li>
+      <li>Floating side panels; a year of demo history; documentation rewritten for the ERP.</li>
+    </ul></div>
+    <div class="card"><h4>v2.x · 2026-09</h4><ul>
+      <li>Original SaaS starter: authentication, users, plans, subscriptions, platform invoices, files, developer keys, audit logs. These pages are still available under Users, Billing, Management and Support.</li>
+    </ul></div>
+  </section>
+</main>
 </div>
 <script>
   mermaid.initialize({
