@@ -12,7 +12,20 @@ export async function listClientsApi(workspaceId: string): Promise<Client[]> {
   return clients.list(workspaceId)
 }
 
+const ICE = /^\d{15}$/
+
+function validate(input: Partial<ClientInput>) {
+  if (input.ice && !ICE.test(input.ice)) throw new Error("The ICE must have exactly 15 digits")
+  const card = input.rateCard ?? []
+  if (card.some((r) => !(r.rate >= 0) || (!r.employeeId && !r.jobTitle?.trim()))) {
+    throw new Error("Each rate card line needs a person or a job title, and a rate")
+  }
+  const keys = card.map((r) => r.employeeId ?? `title:${r.jobTitle!.trim().toLowerCase()}`)
+  if (new Set(keys).size !== keys.length) throw new Error("The rate card has the same person or job title twice")
+}
+
 export async function createClientApi(workspaceId: string, input: ClientInput): Promise<Client> {
+  validate(input)
   return clients.create(workspaceId, normalizeContacts(input))
 }
 
@@ -21,10 +34,16 @@ export async function updateClientApi(
   id: string,
   input: Partial<ClientInput>
 ): Promise<Client> {
+  validate(input)
   return clients.update(workspaceId, id, input.contacts ? normalizeContacts(input) : input)
 }
 
+/** A client with invoices is archived instead (CRM-6, BR-8). */
 export async function deleteClientApi(workspaceId: string, id: string): Promise<void> {
+  const { listClientInvoicesApi } = await import("./work-billing-api")
+  if ((await listClientInvoicesApi(workspaceId)).some((inv) => inv.clientId === id)) {
+    throw new Error("This client has invoices, so it can only be archived")
+  }
   clients.remove(workspaceId, id)
 }
 

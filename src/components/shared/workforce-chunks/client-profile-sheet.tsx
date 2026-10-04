@@ -43,8 +43,12 @@ export function ClientProfileSheet({ client, employees, currency, onOpenChange }
             <div className="flex flex-col gap-6 px-4 pb-6">
               <Section title={t("billing")}>
                 <Row label={t("billingEmail")} value={client.email} />
+                {client.legalName && <Row label={t("legalName")} value={client.legalName} />}
+                {client.ice && <Row label={t("iceNumber")} value={<span className="font-mono">{client.ice}</span>} />}
                 <Row label={t("taxId")} value={client.taxId || "—"} />
                 <Row label={t("address")} value={client.address || "—"} />
+                {client.billingAddress && <Row label={t("billingAddress")} value={client.billingAddress} />}
+                {client.currency && <Row label={t("invoiceCurrency")} value={client.currency} />}
                 <Row
                   label={t("rate")}
                   value={client.hourlyRate ? `${formatMoney(client.hourlyRate, currency)}/h` : t("standardRates")}
@@ -62,6 +66,18 @@ export function ClientProfileSheet({ client, employees, currency, onOpenChange }
                   />
                 )}
               </Section>
+
+              {(client.rateCard?.length ?? 0) > 0 && (
+                <Section title={t("rateCard")}>
+                  {client.rateCard!.map((r) => (
+                    <Row
+                      key={r.id}
+                      label={r.employeeId ? (employees.find((e) => e.id === r.employeeId)?.name ?? "—") : (r.jobTitle ?? "—")}
+                      value={`${formatMoney(r.rate, client.currency ?? currency)}/h`}
+                    />
+                  ))}
+                </Section>
+              )}
 
               <Section title={t("contacts")}>
                 {client.contacts.length === 0 && <p className="text-sm text-muted-foreground">{t("noContactsYet")}</p>}

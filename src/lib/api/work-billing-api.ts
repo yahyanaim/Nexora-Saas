@@ -16,6 +16,7 @@ import { listClientsApi } from "./clients-api"
 import { DEMO_WORKSPACES } from "@/lib/workforce/demo-seed"
 import { unbilledExpenses } from "@/lib/workforce/profitability"
 import { listExpensesApi, releaseInvoiceExpenses, setExpensesInvoice } from "./expenses-api"
+import { recordAudit } from "@/lib/workforce/audit"
 
 /**
  * Timesheets, approvals and client invoices. Backed by the browser demo store
@@ -156,6 +157,14 @@ function review(workspaceId: string, ids: string[], patch: Partial<TimeEntry>) {
     count++
   }
   if (count === 0) throw new Error("Only submitted hours can be reviewed")
+  const approved = patch.status === TimeEntryStatus.APPROVED
+  recordAudit(workspaceId, {
+    action: approved ? "Hours approved" : "Hours rejected",
+    actionKey: approved ? "time.approved" : "time.rejected",
+    category: "Approvals",
+    target: `${count} time ${count === 1 ? "entry" : "entries"}`,
+    after: patch.rejectionReason,
+  })
   return count
 }
 
@@ -252,23 +261,32 @@ function assertLinesKeepHours(before: InvoiceLine[], after: InvoiceLine[]) {
 }
 
 export async function markInvoiceSentApi(workspaceId: string, id: string) {
-  return transition(workspaceId, id, [ClientInvoiceStatus.DRAFT], {
+  const invoice = await transition(workspaceId, id, [ClientInvoiceStatus.DRAFT], {
     status: ClientInvoiceStatus.SENT,
     sentAt: new Date().toISOString(),
   })
+  auditInvoice(workspaceId, invoice, "Invoice sent", "invoice.sent", "draft")
+  return invoice
 }
 
 export async function markInvoicePaidApi(workspaceId: string, id: string) {
-  return transition(workspaceId, id, [ClientInvoiceStatus.SENT], {
+  const invoice = await transition(workspaceId, id, [ClientInvoiceStatus.SENT], {
     status: ClientInvoiceStatus.PAID,
     paidAt: new Date().toISOString(),
   })
+  auditInvoice(workspaceId, invoice, "Invoice paid", "invoice.paid", "sent")
+  return invoice
+}
+
+function auditInvoice(workspaceId: string, invoice: ClientInvoice, action: string, actionKey: string, before: string) {
+  recordAudit(workspaceId, { action, actionKey, category: "Billing", target: `Invoice ${invoice.number}`, before, after: invoice.status })
 }
 
 /** Cancels a sent invoice; its hours become available to invoice again. */
 export async function voidInvoiceApi(workspaceId: string, id: string) {
   const invoice = await transition(workspaceId, id, [ClientInvoiceStatus.SENT], { status: ClientInvoiceStatus.VOID })
   releaseHours(workspaceId, invoice.id)
+  auditInvoice(workspaceId, invoice, "Invoice voided", "invoice.voided", "sent")
   return invoice
 }
 

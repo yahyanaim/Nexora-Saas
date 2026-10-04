@@ -1319,5 +1319,21 @@
   "rateReasonPlaceholder": "सालाना समीक्षा, पदोन्नति…",
   "ratesUpdated": "दरें अपडेट हुईं",
   "saveRates": "दरें सहेजें",
-  "workingDays": "कार्य दिवस"
+  "workingDays": "कार्य दिवस",
+  "yourData": "आपका डेटा",
+  "yourDataHint": "इस वर्कस्पेस का सारा डेटा डाउनलोड करें या अनुरोध पर हटाएँ।",
+  "exportAllData": "सारा डेटा एक्सपोर्ट करें (JSON)",
+  "deleteAllData": "सारा डेटा हटाएँ",
+  "deleteAllDataConfirm": "{name} के सभी कर्मचारी, क्लाइंट, प्रोजेक्ट, घंटे, इनवॉइस और सेटिंग्स हट जाएँगे। यह वापस नहीं होगा।",
+  "dataDeleted": "वर्कस्पेस डेटा हटाया गया",
+  "billingAddressOptional": "बिलिंग पता (अगर अलग हो)",
+  "billingAddress": "बिलिंग पता",
+  "invoiceCurrency": "इनवॉइस मुद्रा",
+  "invoiceLanguage": "इनवॉइस भाषा",
+  "workspaceDefault": "वर्कस्पेस डिफ़ॉल्ट",
+  "rateCard": "रेट कार्ड",
+  "rateCardHint": "किसी व्यक्ति या पद के लिए तय दरें। व्यक्ति की दर पद की दर से ऊपर।",
+  "addRate": "दर जोड़ें",
+  "anyoneWithTitle": "इस पद वाला कोई भी",
+  "person": "व्यक्ति"
 }

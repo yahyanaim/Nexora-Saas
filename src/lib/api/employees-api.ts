@@ -3,6 +3,7 @@ import { rateOn, withRateChange } from "@/lib/workforce/rates"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { seedEmployees } from "@/lib/workforce/demo-seed"
+import { recordAudit } from "@/lib/workforce/audit"
 
 /**
  * Employees of a workspace. Backed by the browser demo store for now;
@@ -35,6 +36,9 @@ export async function updateEmployeeApi(
     (hourlyCost !== undefined && hourlyCost !== current.hourlyCost) ||
     (billableRate !== undefined && billableRate !== current.billableRate)
   const updated = employees.update(workspaceId, id, rest)
+  if (rest.role && rest.role !== current.role) {
+    recordAudit(workspaceId, { action: "Role changed", actionKey: "employee.role_changed", category: "Team", target: current.name, before: current.role, after: rest.role })
+  }
   if (!ratesEdited) return updated
   // Editing rates on the profile records a change from today; past work keeps its rates
   return changeRateApi(workspaceId, id, {
@@ -64,6 +68,14 @@ export async function changeRateApi(
     ? employee.rateHistory
     : [{ effectiveFrom: employee.hireDate, hourlyCost: employee.hourlyCost, billableRate: employee.billableRate }]
   const rateHistory = withRateChange(base, { ...change, reason: change.reason?.trim() || undefined })
+  recordAudit(workspaceId, {
+    action: "Rates changed",
+    actionKey: "employee.rates_changed",
+    category: "Team",
+    target: `${employee.name}, from ${change.effectiveFrom}`,
+    before: { cost: employee.hourlyCost, rate: employee.billableRate },
+    after: { cost: change.hourlyCost, rate: change.billableRate },
+  })
   const now = rateOn({ ...employee, rateHistory }, today)
   return employees.update(workspaceId, id, { rateHistory, ...now })
 }

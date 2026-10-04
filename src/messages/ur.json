@@ -1319,5 +1319,21 @@
   "rateReasonPlaceholder": "سالانہ جائزہ، ترقی…",
   "ratesUpdated": "ریٹس اپ ڈیٹ ہو گئے",
   "saveRates": "ریٹس محفوظ کریں",
-  "workingDays": "کام کے دن"
+  "workingDays": "کام کے دن",
+  "yourData": "آپ کا ڈیٹا",
+  "yourDataHint": "اس ورک اسپیس کا سارا ڈیٹا ڈاؤن لوڈ کریں یا درخواست پر حذف کریں۔",
+  "exportAllData": "سارا ڈیٹا ایکسپورٹ کریں (JSON)",
+  "deleteAllData": "سارا ڈیٹا حذف کریں",
+  "deleteAllDataConfirm": "{name} کے تمام ملازمین، کلائنٹس، پروجیکٹس، گھنٹے، انوائسز اور سیٹنگز حذف ہو جائیں گی۔ یہ واپس نہیں ہو سکتا۔",
+  "dataDeleted": "ورک اسپیس کا ڈیٹا حذف ہو گیا",
+  "billingAddressOptional": "بلنگ ایڈریس (اگر مختلف ہو)",
+  "billingAddress": "بلنگ ایڈریس",
+  "invoiceCurrency": "انوائس کرنسی",
+  "invoiceLanguage": "انوائس کی زبان",
+  "workspaceDefault": "ورک اسپیس ڈیفالٹ",
+  "rateCard": "ریٹ کارڈ",
+  "rateCardHint": "کسی فرد یا عہدے کے لیے طے شدہ ریٹس۔ فرد کا ریٹ عہدے پر فوقیت رکھتا ہے۔",
+  "addRate": "ریٹ شامل کریں",
+  "anyoneWithTitle": "اس عہدے والا کوئی بھی",
+  "person": "فرد"
 }

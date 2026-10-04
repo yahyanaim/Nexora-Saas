@@ -1319,5 +1319,21 @@
   "rateReasonPlaceholder": "Yearly review, promotion…",
   "ratesUpdated": "Rates updated",
   "saveRates": "Save rates",
-  "workingDays": "Working days"
+  "workingDays": "Working days",
+  "yourData": "Your data",
+  "yourDataHint": "Download everything in this workspace, or delete it on request.",
+  "exportAllData": "Export all data (JSON)",
+  "deleteAllData": "Delete all data",
+  "deleteAllDataConfirm": "Every employee, client, project, hour, invoice and setting of {name} will be removed. This can't be undone.",
+  "dataDeleted": "Workspace data deleted",
+  "billingAddressOptional": "Billing address (if different)",
+  "billingAddress": "Billing address",
+  "invoiceCurrency": "Invoice currency",
+  "invoiceLanguage": "Invoice language",
+  "workspaceDefault": "Workspace default",
+  "rateCard": "Rate card",
+  "rateCardHint": "Agreed rates for a person or a job title. A person’s rate wins over their title’s.",
+  "addRate": "Add rate",
+  "anyoneWithTitle": "Anyone with the title",
+  "person": "Person"
 }

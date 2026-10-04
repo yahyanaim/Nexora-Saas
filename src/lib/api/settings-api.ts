@@ -13,6 +13,7 @@ import {
 import { createId, readCollection, readDocument, writeCollection, writeDocument } from "@/lib/workforce/demo-store"
 import { seedDepartments } from "@/lib/workforce/demo-seed"
 import { ANNUAL_VACATION_DAYS } from "@/types/work-planning"
+import { recordAudit } from "@/lib/workforce/audit"
 
 const COMPANIES: Record<string, CompanySettings> = {
   ws_atlas: {
@@ -137,6 +138,7 @@ export async function updateCompanyApi(workspaceId: string, company: CompanySett
   if (company.fiscalYearStartMonth < 1 || company.fiscalYearStartMonth > 12) throw new Error("Pick the first month of the fiscal year")
   if (!company.invoiceNumberFormat.includes("{SEQ}")) throw new Error("The invoice number format must contain {SEQ}")
   const next = { ...read(workspaceId), company: { ...company, legalName: company.legalName.trim() } }
+  recordAudit(workspaceId, { action: "Company details updated", actionKey: "settings.company", category: "Settings", target: "Workspace settings" })
   write(workspaceId, next)
   return next
 }
@@ -151,6 +153,7 @@ export async function updateApprovalsApi(workspaceId: string, approvals: Approva
     return { subject: rule.subject, mode: rule.mode, secondStepAbove: usesAmount ? rule.secondStepAbove : undefined }
   })
   const next = { ...read(workspaceId), approvals: cleaned }
+  recordAudit(workspaceId, { action: "Approval rules updated", actionKey: "settings.approvals", category: "Settings", target: "Workspace settings" })
   write(workspaceId, next)
   return next
 }
@@ -171,6 +174,7 @@ export async function updateListsApi(workspaceId: string, lists: ListsInput): Pr
     ...lists,
     taskLabels: lists.taskLabels.map((l) => ({ ...l, name: l.name.trim() })),
   }
+  recordAudit(workspaceId, { action: "Lists updated", actionKey: "settings.lists", category: "Settings", target: "Workspace settings" })
   write(workspaceId, next)
   return next
 }
@@ -183,6 +187,7 @@ export async function updateHolidaysApi(workspaceId: string, holidays: Holiday[]
   if (cleaned.some((h) => !/^\d{4}-\d{2}-\d{2}$/.test(h.date) || !h.name)) throw new Error("Each holiday needs a date and a name")
   if (new Set(cleaned.map((h) => h.date)).size !== cleaned.length) throw new Error("Two holidays are on the same date")
   const next = { ...read(workspaceId), holidays: cleaned }
+  recordAudit(workspaceId, { action: "Holidays updated", actionKey: "settings.holidays", category: "Settings", target: "Workspace settings" })
   write(workspaceId, next)
   return next
 }

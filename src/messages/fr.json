@@ -1319,5 +1319,21 @@
   "rateReasonPlaceholder": "Revue annuelle, promotion…",
   "ratesUpdated": "Taux mis à jour",
   "saveRates": "Enregistrer les taux",
-  "workingDays": "Jours travaillés"
+  "workingDays": "Jours travaillés",
+  "yourData": "Vos données",
+  "yourDataHint": "Téléchargez toutes les données de cet espace ou supprimez-les sur demande.",
+  "exportAllData": "Exporter toutes les données (JSON)",
+  "deleteAllData": "Supprimer toutes les données",
+  "deleteAllDataConfirm": "Tous les employés, clients, projets, heures, factures et paramètres de {name} seront supprimés. Action irréversible.",
+  "dataDeleted": "Données de l’espace supprimées",
+  "billingAddressOptional": "Adresse de facturation (si différente)",
+  "billingAddress": "Adresse de facturation",
+  "invoiceCurrency": "Devise de facturation",
+  "invoiceLanguage": "Langue des factures",
+  "workspaceDefault": "Par défaut de l’espace",
+  "rateCard": "Grille tarifaire",
+  "rateCardHint": "Taux convenus par personne ou par poste. Le taux d’une personne prime sur celui de son poste.",
+  "addRate": "Ajouter un taux",
+  "anyoneWithTitle": "Toute personne au poste",
+  "person": "Personne"
 }

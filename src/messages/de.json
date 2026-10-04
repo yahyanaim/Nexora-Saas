@@ -1319,5 +1319,21 @@
   "rateReasonPlaceholder": "Jahresgespräch, Beförderung…",
   "ratesUpdated": "Sätze aktualisiert",
   "saveRates": "Sätze speichern",
-  "workingDays": "Arbeitstage"
+  "workingDays": "Arbeitstage",
+  "yourData": "Ihre Daten",
+  "yourDataHint": "Alle Daten dieses Arbeitsbereichs herunterladen oder auf Wunsch löschen.",
+  "exportAllData": "Alle Daten exportieren (JSON)",
+  "deleteAllData": "Alle Daten löschen",
+  "deleteAllDataConfirm": "Alle Mitarbeitenden, Kunden, Projekte, Stunden, Rechnungen und Einstellungen von {name} werden gelöscht. Nicht umkehrbar.",
+  "dataDeleted": "Daten des Arbeitsbereichs gelöscht",
+  "billingAddressOptional": "Rechnungsadresse (falls abweichend)",
+  "billingAddress": "Rechnungsadresse",
+  "invoiceCurrency": "Rechnungswährung",
+  "invoiceLanguage": "Rechnungssprache",
+  "workspaceDefault": "Standard des Arbeitsbereichs",
+  "rateCard": "Preisliste",
+  "rateCardHint": "Vereinbarte Sätze je Person oder Position. Personensätze gehen vor.",
+  "addRate": "Satz hinzufügen",
+  "anyoneWithTitle": "Alle mit der Position",
+  "person": "Person"
 }

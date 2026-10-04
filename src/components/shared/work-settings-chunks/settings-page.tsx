@@ -12,6 +12,10 @@ import { Tabs } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2 } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
+import { useQueryClient } from "@tanstack/react-query"
+import { deleteWorkspaceDataApi, exportWorkspaceDataApi } from "@/lib/api/data-export-api"
+import { toast } from "@/lib/utils/toast"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useDepartments, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useSettingsMutations, useWorkspaceSettings } from "@/hooks/workforce/use-settings"
@@ -154,6 +158,52 @@ function CompanyTab({ initial }: { initial: CompanySettings }) {
           </Field>
         </div>
         <SaveBar onSave={() => company.mutate(form)} pending={company.isPending} />
+      </CardContent>
+    </Card>
+  )
+}
+
+/** Full export and deletion on request (PLT-14). */
+function DataCard() {
+  const t = useTranslations()
+  const workspace = useCurrentWorkspace()
+  const queryClient = useQueryClient()
+  const [confirming, setConfirming] = useState(false)
+
+  const download = async () => {
+    const data = await exportWorkspaceDataApi(workspace.id)
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `${workspace.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-export.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("yourData")}</CardTitle>
+        <CardDescription>{t("yourDataHint")}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap gap-2">
+        <Button variant="outline" onClick={download}>{t("exportAllData")}</Button>
+        <Button variant="destructive" onClick={() => setConfirming(true)}>{t("deleteAllData")}</Button>
+        <ConfirmAlertDialog
+          open={confirming}
+          onOpenChange={setConfirming}
+          title={t("deleteAllData")}
+          description={t("deleteAllDataConfirm", { name: workspace.name })}
+          confirmLabel={t("delete")}
+          destructive
+          onConfirm={async () => {
+            await deleteWorkspaceDataApi(workspace.id)
+            setConfirming(false)
+            await queryClient.invalidateQueries()
+            toast.success(t("dataDeleted"))
+          }}
+        />
       </CardContent>
     </Card>
   )
@@ -431,7 +481,16 @@ export default function SettingsPage() {
         <div key={workspace.id}>
           <Tabs
             tabs={[
-              { id: "company", label: t("company"), content: <CompanyTab initial={settings.company} /> },
+              {
+                id: "company",
+                label: t("company"),
+                content: (
+                  <div className="flex flex-col gap-6">
+                    <CompanyTab initial={settings.company} />
+                    <DataCard />
+                  </div>
+                ),
+              },
               { id: "lists", label: t("lists"), content: <ListsTab initial={settings} /> },
               { id: "approvals", label: t("approvals"), content: <ApprovalsTab initial={settings.approvals} /> },
             ]}

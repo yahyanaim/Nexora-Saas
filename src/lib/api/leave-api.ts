@@ -4,6 +4,7 @@ import { getSettingsApi } from "./settings-api"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { rangesOverlap, workingDays } from "@/lib/workforce/planning"
+import { recordAudit } from "@/lib/workforce/audit"
 
 const STAMP = "2026-01-05T09:00:00.000Z"
 
@@ -65,6 +66,14 @@ export async function decideLeaveApi(
   if (!request) throw new Error("Leave request not found")
   if (request.status !== LeaveStatus.PENDING) throw new Error("Only pending requests can be decided")
   if (!approved && !decisionNote?.trim()) throw new Error("Give a reason when declining")
+  recordAudit(workspaceId, {
+    action: approved ? "Leave approved" : "Leave declined",
+    actionKey: approved ? "leave.approved" : "leave.declined",
+    category: "Approvals",
+    target: `${request.type} ${request.startDate} → ${request.endDate}`,
+    before: request.status,
+    after: approved ? LeaveStatus.APPROVED : `${LeaveStatus.REJECTED}: ${decisionNote!.trim()}`,
+  })
   return leave.update(workspaceId, id, {
     status: approved ? LeaveStatus.APPROVED : LeaveStatus.REJECTED,
     decisionNote: decisionNote?.trim() || undefined,

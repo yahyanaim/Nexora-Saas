@@ -1319,5 +1319,21 @@
   "rateReasonPlaceholder": "مراجعة سنوية، ترقية…",
   "ratesUpdated": "تم تحديث الأسعار",
   "saveRates": "حفظ الأسعار",
-  "workingDays": "أيام العمل"
+  "workingDays": "أيام العمل",
+  "yourData": "بياناتك",
+  "yourDataHint": "نزّل كل بيانات مساحة العمل هذه أو احذفها عند الطلب.",
+  "exportAllData": "تصدير كل البيانات (JSON)",
+  "deleteAllData": "حذف كل البيانات",
+  "deleteAllDataConfirm": "سيتم حذف كل الموظفين والعملاء والمشاريع والساعات والفواتير والإعدادات في {name}. لا يمكن التراجع.",
+  "dataDeleted": "تم حذف بيانات مساحة العمل",
+  "billingAddressOptional": "عنوان الفوترة (إن اختلف)",
+  "billingAddress": "عنوان الفوترة",
+  "invoiceCurrency": "عملة الفاتورة",
+  "invoiceLanguage": "لغة الفاتورة",
+  "workspaceDefault": "افتراضي مساحة العمل",
+  "rateCard": "جدول الأسعار",
+  "rateCardHint": "أسعار متفق عليها لشخص أو مسمى وظيفي. سعر الشخص يتقدم على سعر المسمى.",
+  "addRate": "إضافة سعر",
+  "anyoneWithTitle": "أي شخص بالمسمى",
+  "person": "الشخص"
 }

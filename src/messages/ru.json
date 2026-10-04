@@ -1319,5 +1319,21 @@
   "rateReasonPlaceholder": "Ежегодный пересмотр, повышение…",
   "ratesUpdated": "Ставки обновлены",
   "saveRates": "Сохранить ставки",
-  "workingDays": "Рабочие дни"
+  "workingDays": "Рабочие дни",
+  "yourData": "Ваши данные",
+  "yourDataHint": "Скачайте все данные пространства или удалите их по запросу.",
+  "exportAllData": "Экспорт всех данных (JSON)",
+  "deleteAllData": "Удалить все данные",
+  "deleteAllDataConfirm": "Все сотрудники, клиенты, проекты, часы, счета и настройки {name} будут удалены. Отменить нельзя.",
+  "dataDeleted": "Данные пространства удалены",
+  "billingAddressOptional": "Адрес для счетов (если другой)",
+  "billingAddress": "Адрес для счетов",
+  "invoiceCurrency": "Валюта счетов",
+  "invoiceLanguage": "Язык счетов",
+  "workspaceDefault": "По умолчанию",
+  "rateCard": "Тарифная сетка",
+  "rateCardHint": "Согласованные ставки для человека или должности. Ставка человека важнее.",
+  "addRate": "Добавить ставку",
+  "anyoneWithTitle": "Любой на должности",
+  "person": "Сотрудник"
 }

@@ -133,19 +133,42 @@ export interface ClientContact {
   isPrimary: boolean
 }
 
+/**
+ * An agreed hourly rate for one person or for a job title (CRM-3). Person
+ * entries win over job-title entries (section 6.5).
+ */
+export interface RateCardEntry {
+  id: string
+  employeeId?: string
+  jobTitle?: string
+  rate: number
+}
+
 export interface Client {
   id: string
   workspaceId: string
+  /** Trade name shown across the app */
   name: string
+  /** Name on invoices when it differs from the trade name (CRM-1) */
+  legalName?: string
+  /** Morocco: 15-digit company identifier */
+  ice?: string
   industry?: string
   email: string
   phone?: string
   website?: string
   address?: string
+  /** Where invoices go when it differs from the address */
+  billingAddress?: string
   taxId?: string
+  /** Currency invoices are issued in; defaults to the workspace currency */
+  currency?: string
+  /** Language of invoices and emails sent to this client */
+  language?: string
   status: ClientStatus
   /** Hourly rate agreed with this client; overrides employee rates when set */
   hourlyRate?: number
+  rateCard?: RateCardEntry[]
   /** Days the client has to pay an invoice */
   paymentTermsDays: number
   /** Employee responsible for the relationship */

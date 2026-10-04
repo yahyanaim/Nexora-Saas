@@ -1319,5 +1319,21 @@
   "rateReasonPlaceholder": "年度评估、晋升…",
   "ratesUpdated": "费率已更新",
   "saveRates": "保存费率",
-  "workingDays": "工作日"
+  "workingDays": "工作日",
+  "yourData": "您的数据",
+  "yourDataHint": "下载此工作区的全部数据，或应要求删除。",
+  "exportAllData": "导出全部数据 (JSON)",
+  "deleteAllData": "删除全部数据",
+  "deleteAllDataConfirm": "{name} 的所有员工、客户、项目、工时、发票和设置都将被删除，且无法撤销。",
+  "dataDeleted": "工作区数据已删除",
+  "billingAddressOptional": "账单地址（如不同）",
+  "billingAddress": "账单地址",
+  "invoiceCurrency": "发票货币",
+  "invoiceLanguage": "发票语言",
+  "workspaceDefault": "工作区默认",
+  "rateCard": "费率表",
+  "rateCardHint": "为个人或职位约定的费率。个人费率优先于职位费率。",
+  "addRate": "添加费率",
+  "anyoneWithTitle": "该职位的任何人",
+  "person": "人员"
 }

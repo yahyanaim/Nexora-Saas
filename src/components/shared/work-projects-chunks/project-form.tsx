@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl"
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
-import { EmployeeStatus, type Client, type Employee } from "@/types/workforce"
+import { ClientStatus, EmployeeStatus, type Client, type Employee } from "@/types/workforce"
 import {
   BudgetType,
   Priority,
@@ -134,7 +134,10 @@ export const ProjectForm = forwardRef<ProjectFormHandle, Props>(function Project
             control={form.control}
             name="clientId"
             label={t("client")}
-            options={[{ value: NONE, label: t("internalProject") }, ...clients.map((c) => ({ value: c.id, label: c.name }))]}
+            options={[{ value: NONE, label: t("internalProject") }, ...clients
+              // Archived clients can't get new projects, but an existing project keeps its client
+              .filter((c) => c.status !== ClientStatus.ARCHIVED || c.id === project?.clientId)
+              .map((c) => ({ value: c.id, label: c.name }))]}
           />
           <SelectField
             control={form.control}

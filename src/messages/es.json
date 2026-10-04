@@ -1319,5 +1319,21 @@
   "rateReasonPlaceholder": "Revisión anual, ascenso…",
   "ratesUpdated": "Tarifas actualizadas",
   "saveRates": "Guardar tarifas",
-  "workingDays": "Días laborables"
+  "workingDays": "Días laborables",
+  "yourData": "Tus datos",
+  "yourDataHint": "Descarga todos los datos de este espacio o elimínalos a petición.",
+  "exportAllData": "Exportar todos los datos (JSON)",
+  "deleteAllData": "Eliminar todos los datos",
+  "deleteAllDataConfirm": "Se eliminarán todos los empleados, clientes, proyectos, horas, facturas y ajustes de {name}. No se puede deshacer.",
+  "dataDeleted": "Datos del espacio eliminados",
+  "billingAddressOptional": "Dirección de facturación (si es distinta)",
+  "billingAddress": "Dirección de facturación",
+  "invoiceCurrency": "Moneda de facturación",
+  "invoiceLanguage": "Idioma de facturas",
+  "workspaceDefault": "Predeterminado del espacio",
+  "rateCard": "Tarifario",
+  "rateCardHint": "Tarifas pactadas por persona o puesto. La de la persona prevalece sobre la del puesto.",
+  "addRate": "Añadir tarifa",
+  "anyoneWithTitle": "Cualquiera con el puesto",
+  "person": "Persona"
 }

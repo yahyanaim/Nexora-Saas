@@ -4,6 +4,7 @@ import { createCollection } from "@/lib/workforce/demo-store"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { listProjectsApi } from "./work-projects-api"
+import { recordAudit } from "@/lib/workforce/audit"
 
 const STAMP = "2026-01-05T09:00:00.000Z"
 
@@ -67,6 +68,14 @@ export async function reviewExpenseApi(workspaceId: string, id: string, approved
   if (!expense) throw new Error("Expense not found")
   if (expense.status !== ExpenseStatus.SUBMITTED) throw new Error("Only submitted expenses can be reviewed")
   if (!approved && !reason?.trim()) throw new Error("Give a reason when rejecting")
+  recordAudit(workspaceId, {
+    action: approved ? "Expense approved" : "Expense rejected",
+    actionKey: approved ? "expense.approved" : "expense.rejected",
+    category: "Approvals",
+    target: `${expense.description} (${expense.amount})`,
+    before: expense.status,
+    after: approved ? ExpenseStatus.APPROVED : `${ExpenseStatus.REJECTED}: ${reason!.trim()}`,
+  })
   return expenses.update(workspaceId, id, {
     status: approved ? ExpenseStatus.APPROVED : ExpenseStatus.REJECTED,
     rejectionReason: approved ? undefined : reason!.trim(),

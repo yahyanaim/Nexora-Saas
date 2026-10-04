@@ -11,9 +11,11 @@ import { Shield } from "@/components/ui/carbon/icons"
 import { Badge } from "@/components/ui/badge"
 import { FacetedFilterConfig } from "../data-table-chunks/data-table-toolbar"
 import { PageHeader } from "@/components/shared/page-header"
+import { useCurrentWorkspace } from "@/store/workspace-store"
 
 export default function AuditLogsPage() {
   const t = useTranslations()
+  const { id: workspaceId } = useCurrentWorkspace()
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -22,7 +24,7 @@ export default function AuditLogsPage() {
     async function loadLogs() {
       setIsLoading(true)
       try {
-        const res = await getAuditLogsApi()
+        const res = await getAuditLogsApi(workspaceId)
         if (mounted && res?.logs) {
           setLogs(res.logs)
         }
@@ -36,7 +38,7 @@ export default function AuditLogsPage() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [workspaceId])
 
   const columns = useMemo(() => getAuditLogsColumns(t), [t])
 
@@ -51,6 +53,8 @@ export default function AuditLogsPage() {
           { label: "Team", value: "Team" },
           { label: "API", value: "API" },
           { label: "System", value: "System" },
+          { label: "Approvals", value: "Approvals" },
+          { label: "Settings", value: "Settings" },
         ],
       },
       {

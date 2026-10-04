@@ -7,6 +7,7 @@ import { LockScreen } from "./lock-screen"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 import { ErrorBoundary } from "./error-boundary"
+import { setAuditActor } from "@/lib/workforce/audit"
 
 interface Props {
   children: React.ReactNode
@@ -17,7 +18,9 @@ interface Props {
  * small screens, around a scrollable content area on the grey canvas.
  */
 export const DashboardLayout = ({ children }: Props) => {
-  const { isPasscodeLocked } = useAuthGuard()
+  const { isPasscodeLocked, authedUser } = useAuthGuard()
+  // Audit entries name whoever is signed in (PLT-12)
+  setAuditActor(authedUser && { id: authedUser.id, name: authedUser.name, email: authedUser.email ?? "", role: String(authedUser.role) })
   const { isUnlocked } = useLockScreenStore()
   const [menuOpen, setMenuOpen] = useState(false)
 

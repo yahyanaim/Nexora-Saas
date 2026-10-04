@@ -37,10 +37,17 @@ export function weekDays(monday: string) {
 // ---------- Rates ----------
 
 /**
- * Hourly price for an entry: the client's agreed rate, else the employee's
- * billable rate in force on the entry's date (BR-4).
+ * Hourly price for an entry, first match wins (section 6.5): the client's
+ * rate card for the person, then for their job title, then the client's
+ * flat rate, then the employee's billable rate in force on the date (BR-4).
  */
 export function hourlyRate(employee: Employee | undefined, client: Client | undefined, date?: string) {
+  const card = client?.rateCard ?? []
+  const forPerson = employee && card.find((r) => r.employeeId === employee.id)
+  if (forPerson) return forPerson.rate
+  const title = employee?.jobTitle.trim().toLowerCase()
+  const forTitle = title && card.find((r) => !r.employeeId && r.jobTitle?.trim().toLowerCase() === title)
+  if (forTitle) return forTitle.rate
   if (client?.hourlyRate !== undefined) return client.hourlyRate
   if (!employee) return 0
   return date ? rateOn(employee, date).billableRate : employee.billableRate
