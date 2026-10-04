@@ -41,8 +41,12 @@ const schema = z
     dueDate: z.union([z.literal(""), isoDate]),
     budgetType: z.enum(BudgetType),
     budgetAmount: z.number().min(0).optional(),
+    retainerMonthly: z.number().min(0).optional(),
+    retainerHours: z.number().min(0).optional(),
+    retainerOverage: z.number().min(0).optional(),
   })
   .refine((v) => !v.dueDate || v.dueDate >= v.startDate, { path: ["dueDate"], message: "dueBeforeStart" })
+  .refine((v) => v.budgetType !== BudgetType.RETAINER || (v.retainerMonthly ?? 0) > 0, { path: ["retainerMonthly"], message: "required" })
 
 type FormValues = z.infer<typeof schema>
 
@@ -60,18 +64,26 @@ function toFormValues(project?: WorkProject): FormValues {
     dueDate: project?.dueDate ?? "",
     budgetType: project?.budgetType ?? BudgetType.FIXED,
     budgetAmount: project?.budgetAmount,
+    retainerMonthly: project?.retainer?.monthlyAmount,
+    retainerHours: project?.retainer?.includedHours,
+    retainerOverage: project?.retainer?.overageRate,
   }
 }
 
 function toInput(values: FormValues): WorkProjectInput {
+  const { retainerMonthly, retainerHours, retainerOverage, ...rest } = values
   return {
-    ...values,
+    ...rest,
+    retainer:
+      values.budgetType === BudgetType.RETAINER
+        ? { monthlyAmount: retainerMonthly ?? 0, includedHours: retainerHours ?? 0, overageRate: retainerOverage ?? 0 }
+        : undefined,
     code: values.code.toUpperCase(),
     description: values.description || undefined,
     clientId: values.clientId === NONE ? undefined : values.clientId,
     managerId: values.managerId === NONE ? undefined : values.managerId,
     dueDate: values.dueDate || undefined,
-    budgetAmount: values.budgetType === BudgetType.NON_BILLABLE ? undefined : values.budgetAmount,
+    budgetAmount: values.budgetType === BudgetType.NON_BILLABLE || values.budgetType === BudgetType.RETAINER ? undefined : values.budgetAmount,
   }
 }
 
@@ -192,7 +204,7 @@ export const ProjectForm = forwardRef<ProjectFormHandle, Props>(function Project
             label={t("budget")}
             options={Object.values(BudgetType).map((b) => ({ value: b, label: t(BUDGET_TYPE_LABEL[b]) }))}
           />
-          {budgetType !== BudgetType.NON_BILLABLE && (
+          {budgetType !== BudgetType.NON_BILLABLE && budgetType !== BudgetType.RETAINER && (
             <NumberField
               control={form.control}
               name="budgetAmount"
@@ -202,6 +214,14 @@ export const ProjectForm = forwardRef<ProjectFormHandle, Props>(function Project
             />
           )}
         </div>
+
+        {budgetType === BudgetType.RETAINER && (
+          <div className="grid grid-cols-3 gap-4">
+            <NumberField control={form.control} name="retainerMonthly" label={`${t("monthlyAmount")} (${currency})`} />
+            <NumberField control={form.control} name="retainerHours" label={t("includedHours")} optional />
+            <NumberField control={form.control} name="retainerOverage" label={`${t("overageRate")} (${currency})`} optional />
+          </div>
+        )}
 
         <FormField
           control={form.control}

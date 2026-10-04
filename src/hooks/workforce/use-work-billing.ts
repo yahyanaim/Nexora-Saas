@@ -7,6 +7,8 @@ import { useCurrentWorkspace } from "@/store/workspace-store"
 import {
   addHoursApi,
   createCreditNoteApi,
+  createInvoiceApi,
+  type NewInvoiceInput,
   issueInvoiceApi,
   recordPaymentApi,
   approveTimeEntriesApi,
@@ -192,6 +194,11 @@ export function useInvoiceMutations() {
     onSuccess: done(t("invoiceDeleted")),
     onError,
   })
+  const create = useMutation({
+    mutationFn: (input: NewInvoiceInput) => createInvoiceApi(workspaceId, input),
+    onSuccess: done(t("invoiceDrafted")),
+    onError,
+  })
   const issue = useMutation({
     mutationFn: (id: string) => issueInvoiceApi(workspaceId, id),
     onSuccess: done(t("invoiceIssued")),
@@ -207,5 +214,5 @@ export function useInvoiceMutations() {
     onSuccess: done(t("creditNoteIssued")),
     onError,
   })
-  return { createFromHours, updateDraft, markSent, markPaid, voidInvoice, deleteDraft, issue, recordPayment, creditNote }
+  return { createFromHours, create, updateDraft, markSent, markPaid, voidInvoice, deleteDraft, issue, recordPayment, creditNote }
 }

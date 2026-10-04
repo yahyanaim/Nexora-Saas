@@ -1,6 +1,6 @@
 import type { Client, Employee } from "@/types/workforce"
 import { BudgetType, type WorkProject, type WorkTask } from "@/types/work-projects"
-import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
+import { ClientInvoiceStatus, TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/work-billing"
 import { ExpenseStatus, type Expense, type ProjectProfit } from "@/types/work-costs"
 import { entryBillRate, entryCostRate } from "./billing"
 import { taskProgress } from "./project-metrics"
@@ -15,12 +15,13 @@ function round(n: number) {
  * Revenue, cost and profit of one project so far.
  * - Hourly projects earn approved billable hours × rate.
  * - Fixed-price projects earn the price in proportion to progress.
+ * - Retainer projects earn what has been invoiced for them.
  * - Non-billable projects earn nothing.
  * Billable expenses are re-billed, so they add to revenue as well as cost.
  */
 export function projectProfit(
   project: WorkProject,
-  data: { entries: TimeEntry[]; tasks: WorkTask[]; expenses: Expense[]; employees: Employee[]; clients: Client[] }
+  data: { entries: TimeEntry[]; tasks: WorkTask[]; expenses: Expense[]; employees: Employee[]; clients: Client[]; invoices?: ClientInvoice[] }
 ): ProjectProfit {
   const client = data.clients.find((c) => c.id === project.clientId)
   const entries = data.entries.filter((e) => e.projectId === project.id && e.status !== TimeEntryStatus.REJECTED)
@@ -34,6 +35,11 @@ export function projectProfit(
       .reduce((sum, e) => sum + e.hours * entryBillRate(e, employee(e.employeeId), client), 0)
   } else if (project.budgetType === BudgetType.FIXED && project.budgetAmount) {
     revenue = (project.budgetAmount * taskProgress(data.tasks.filter((t) => t.projectId === project.id))) / 100
+  } else if (project.budgetType === BudgetType.RETAINER) {
+    revenue = (data.invoices ?? [])
+      .filter((i) => i.status !== ClientInvoiceStatus.DRAFT && i.status !== ClientInvoiceStatus.VOID)
+      .flatMap((i) => i.lines.filter((l) => l.projectId === project.id && !l.expenseIds?.length && !l.advanceInvoiceId))
+      .reduce((sum, l) => sum + l.quantity * l.unitPrice, 0)
   }
   if (project.budgetType !== BudgetType.NON_BILLABLE) {
     revenue += expenses.filter((x) => x.billable).reduce((sum, x) => sum + x.amount, 0)

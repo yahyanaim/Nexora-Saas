@@ -15,7 +15,7 @@ import { can } from "@/lib/permissions/can"
 import { AdminPermissionsPlatform } from "@/types/roles"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
-import { useProjects } from "@/hooks/workforce/use-work-projects"
+import { useMilestones, useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useClientInvoices, useInvoiceMutations, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { unbilledExpenses } from "@/lib/workforce/profitability"
@@ -23,11 +23,12 @@ import { addDays, displayStatus, invoiceBalance, invoiceTotals, toBase, unbilled
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { ClientInvoiceStatus, InvoiceKind, type ClientInvoice, type ClientInvoiceDisplayStatus } from "@/types/work-billing"
-import type { Client } from "@/types/workforce"
+import { ClientStatus, type Client } from "@/types/workforce"
 import { formatMoney, includesFilter } from "../workforce-chunks/workforce-labels"
 import { formatShortDate } from "../work-projects-chunks/project-labels"
 import { CreateInvoiceSheet } from "./create-invoice-sheet"
 import { InvoiceSheet } from "./invoice-sheet"
+import { NewInvoiceSheet } from "./new-invoice-sheet"
 import { INVOICE_STATUS_CLASS, INVOICE_STATUS_LABEL, formatHours } from "./billing-labels"
 
 const DISPLAY_STATUSES: ClientInvoiceDisplayStatus[] = [
@@ -52,12 +53,15 @@ export default function ClientInvoicesPage() {
   const { data: clients = [] } = useClients()
   const { data: employees = [] } = useEmployees()
   const { data: projects = [] } = useProjects()
+  const { data: tasks = [] } = useTasks()
   const m = useInvoiceMutations()
   const { data: settings } = useWorkspaceSettings()
   const canCreate = can(authedUser, AdminPermissionsPlatform.INVOICES_CREATE)
   const canEdit = can(authedUser, AdminPermissionsPlatform.INVOICES_UPDATE)
 
   const [billing, setBilling] = useState<Client | null>(null)
+  const [creating, setCreating] = useState(false)
+  const { data: milestones = [] } = useMilestones()
   const [openId, setOpenId] = useState<string | null>(null)
   const opened = invoices.find((i) => i.id === openId) ?? null
 
@@ -168,7 +172,16 @@ export default function ClientInvoicesPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <PageHeader />
+      <PageHeader
+        actions={
+          canCreate && (
+            <Button onClick={() => setCreating(true)}>
+              <Plus className="size-4" />
+              {t("newInvoice")}
+            </Button>
+          )
+        }
+      />
       <MetricCardGrid cards={cards} isLoading={isLoading} />
 
       <section className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
@@ -221,6 +234,8 @@ export default function ClientInvoicesPage() {
         expenses={expenses}
         projects={projects}
         employees={employees}
+        tasks={tasks}
+        invoices={invoices}
         currency={workspace.currency}
         isSubmitting={m.createFromHours.isPending}
         onOpenChange={(open) => !open && setBilling(null)}
@@ -233,6 +248,27 @@ export default function ClientInvoicesPage() {
           })
         }
       />
+
+      {creating && (
+        <NewInvoiceSheet
+          open
+          clients={clients.filter((c) => c.status !== ClientStatus.ARCHIVED)}
+          projects={projects}
+          milestones={milestones}
+          invoices={invoices}
+          currency={workspace.currency}
+          isSubmitting={m.create.isPending}
+          onOpenChange={setCreating}
+          onCreate={(input) =>
+            m.create.mutate(input, {
+              onSuccess: (invoice) => {
+                setCreating(false)
+                setOpenId(invoice.id)
+              },
+            })
+          }
+        />
+      )}
 
       <InvoiceSheet
         key={`invoice:${opened?.id ?? ""}:${opened?.updatedAt ?? ""}`}

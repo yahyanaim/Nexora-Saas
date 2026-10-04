@@ -22,6 +22,14 @@ export enum BudgetType {
   HOURLY = "hourly",
   /** Internal work, never invoiced */
   NON_BILLABLE = "non_billable",
+  /** A fixed monthly amount covering some hours; extra hours at an overage rate (section 6.5) */
+  RETAINER = "retainer",
+}
+
+export interface RetainerTerms {
+  monthlyAmount: number
+  includedHours: number
+  overageRate: number
 }
 
 export interface WorkProject {
@@ -42,6 +50,8 @@ export interface WorkProject {
   budgetType: BudgetType
   /** Fixed price, or the hourly budget cap, in the workspace currency */
   budgetAmount?: number
+  /** Only for retainer projects */
+  retainer?: RetainerTerms
   /** Manager's call on health when the automatic one is misleading; needs a reason (PRJ-10) */
   healthOverride?: HealthOverride
   createdAt: string

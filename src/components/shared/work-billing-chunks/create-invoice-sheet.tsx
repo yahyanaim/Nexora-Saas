@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
-import { buildInvoiceLines, invoiceTotals, unbilledEntries } from "@/lib/workforce/billing"
+import { buildInvoiceLines, invoiceTotals, unbilledEntries, type InvoiceGrouping } from "@/lib/workforce/billing"
+import { openAdvances } from "@/lib/workforce/invoice-builders"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import type { Client, Employee } from "@/types/workforce"
-import type { WorkProject } from "@/types/work-projects"
-import type { TimeEntry } from "@/types/work-billing"
+import type { WorkProject, WorkTask } from "@/types/work-projects"
+import type { ClientInvoice, TimeEntry } from "@/types/work-billing"
 import type { Expense } from "@/types/work-costs"
 import { unbilledExpenses } from "@/lib/workforce/profitability"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
@@ -23,28 +25,44 @@ interface Props {
   expenses: Expense[]
   projects: WorkProject[]
   employees: Employee[]
+  tasks: WorkTask[]
+  invoices: ClientInvoice[]
   currency: string
   isSubmitting: boolean
   onOpenChange: (open: boolean) => void
-  onCreate: (input: { clientId: string; entryIds: string[]; expenseIds: string[]; taxRate: number; issueDate: string; notes?: string }) => void
+  onCreate: (input: {
+    clientId: string
+    entryIds: string[]
+    expenseIds: string[]
+    taxRate: number
+    issueDate: string
+    notes?: string
+    groupBy: InvoiceGrouping
+    deductAdvances: boolean
+  }) => void
 }
+
+const GROUPINGS: InvoiceGrouping[] = ["person", "task", "day"]
 
 /**
  * Turns a client's approved, unbilled hours into a draft invoice: one block
  * per project and person, all selected by default.
  */
-export function CreateInvoiceSheet({ client, entries, expenses, projects, employees, currency, isSubmitting, onOpenChange, onCreate }: Props) {
+export function CreateInvoiceSheet({ client, entries, expenses, projects, employees, tasks, invoices, currency, isSubmitting, onOpenChange, onCreate }: Props) {
   const t = useTranslations()
   const locale = useLocale()
   const available = useMemo(
     () => (client ? unbilledEntries(entries, projects, client.id) : []),
     [client, entries, projects]
   )
+  const [groupBy, setGroupBy] = useState<InvoiceGrouping>("person")
   // Preview lines use stable ids so selection survives re-renders
   const blocks = useMemo(() => {
     let n = 0
-    return buildInvoiceLines(available, projects, employees, client ?? undefined, () => `block_${n++}`)
-  }, [available, projects, employees, client])
+    return buildInvoiceLines(available, projects, employees, client ?? undefined, () => `${groupBy}_${n++}`, groupBy, tasks)
+  }, [available, projects, employees, client, groupBy, tasks])
+  const advances = useMemo(() => (client ? openAdvances(client.id, invoices) : []), [client, invoices])
+  const [deductAdvances, setDeductAdvances] = useState(true)
 
   const rebillable = useMemo(
     () => (client ? unbilledExpenses(expenses, projects, client.id) : []),
@@ -87,10 +105,29 @@ export function CreateInvoiceSheet({ client, entries, expenses, projects, employ
           taxRate: tax,
           issueDate,
           notes: notes.trim() || undefined,
+          groupBy,
+          deductAdvances: deductAdvances && advances.length > 0,
         })
       }}
     >
       <div className="flex flex-col gap-5">
+        <div className="flex items-center justify-between gap-3">
+          <Label>{t("groupLinesBy")}</Label>
+          <div className="w-44">
+            <Select
+              value={groupBy}
+              onValueChange={(v) => {
+                setGroupBy(v as InvoiceGrouping)
+                // Blocks change with the grouping, so start from everything selected again
+                setUnselected(new Set())
+              }}
+            >
+              <SelectTrigger className="w-full bg-card" aria-label={t("groupLinesBy")}><SelectValue>{t(`groupBy_${groupBy}`)}</SelectValue></SelectTrigger>
+              <SelectContent>{GROUPINGS.map((g) => <SelectItem key={g} value={g}>{t(`groupBy_${g}`)}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium">{t("hoursToBill")}</legend>
           {blocks.length === 0 && <p className="text-sm text-muted-foreground">{t("noHoursToBill")}</p>}
@@ -146,6 +183,14 @@ export function CreateInvoiceSheet({ client, entries, expenses, projects, employ
               </label>
             ))}
           </fieldset>
+        )}
+
+        {advances.length > 0 && (
+          <label className="flex items-center gap-3 rounded-2xl border border-border p-3 text-sm">
+            <Checkbox checked={deductAdvances} onCheckedChange={setDeductAdvances} />
+            <span className="flex-1">{t("deductAdvances", { count: advances.length })}</span>
+            <span className="tabular-nums text-muted-foreground">−{money(advances.reduce((s, a) => s + invoiceTotals(a).subtotal, 0))}</span>
+          </label>
         )}
 
         <div className="grid grid-cols-2 gap-4">

@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
-import { useTimeEntries } from "@/hooks/workforce/use-work-billing"
+import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { projectProfit } from "@/lib/workforce/profitability"
 import { WorkProjectStatus, type WorkProject } from "@/types/work-projects"
@@ -42,13 +42,14 @@ export default function ProfitabilityPage() {
   const { data: expenses = [] } = useExpenses()
   const { data: employees = [] } = useEmployees()
   const { data: clients = [] } = useClients()
+  const { data: invoices = [] } = useClientInvoices()
 
   const rows = useMemo<Row[]>(
     () =>
       projects
         .filter((p) => p.status !== WorkProjectStatus.CANCELLED)
-        .map((p) => ({ ...p, profit: projectProfit(p, { entries, tasks, expenses, employees, clients }) })),
-    [projects, entries, tasks, expenses, employees, clients]
+        .map((p) => ({ ...p, profit: projectProfit(p, { entries, tasks, expenses, employees, clients, invoices }) })),
+    [projects, entries, tasks, expenses, employees, clients, invoices]
   )
 
   const money = (n: number) => formatMoney(n, workspace.currency, locale)

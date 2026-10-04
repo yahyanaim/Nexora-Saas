@@ -98,6 +98,8 @@ export interface InvoiceLine {
   taxRate?: number
   /** Deduction of an earlier advance invoice (section 6.5) */
   advanceInvoiceId?: string
+  /** Counts against the project's fixed price: fixed-price share or milestone (BIL-18) */
+  budgetLine?: boolean
 }
 
 export interface ClientInvoice {

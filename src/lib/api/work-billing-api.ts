@@ -18,6 +18,7 @@ import {
   formatInvoiceNumber,
   hourlyRate,
   invoiceBalance,
+  type InvoiceGrouping,
   nextSequence,
   quarterHours,
   unbilledEntries,
@@ -25,7 +26,8 @@ import {
 import { assertPeriodOpen, getSettingsApi } from "./settings-api"
 import { rateOn } from "@/lib/workforce/rates"
 import { todayIso } from "@/lib/workforce/project-metrics"
-import { listProjectsApi } from "./work-projects-api"
+import { listMilestonesApi, listProjectsApi, listTasksApi } from "./work-projects-api"
+import { advanceDeductions, advanceLine, billedAgainstBudget, fixedPriceLine, milestoneLine, openAdvances, retainerLines } from "@/lib/workforce/invoice-builders"
 import { listEmployeesApi } from "./employees-api"
 import { listClientsApi } from "./clients-api"
 import { unbilledExpenses } from "@/lib/workforce/profitability"
@@ -268,7 +270,17 @@ export async function listClientInvoicesApi(workspaceId: string): Promise<Client
  */
 export async function createInvoiceFromHoursApi(
   workspaceId: string,
-  input: { clientId: string; entryIds: string[]; expenseIds?: string[]; issueDate?: string; taxRate: number; notes?: string }
+  input: {
+    clientId: string
+    entryIds: string[]
+    expenseIds?: string[]
+    issueDate?: string
+    taxRate: number
+    notes?: string
+    groupBy?: InvoiceGrouping
+    /** Subtract the client's open advances as negative lines (section 6.5) */
+    deductAdvances?: boolean
+  }
 ): Promise<ClientInvoice> {
   if (input.taxRate < 0 || input.taxRate > 100) throw new Error("Tax must be between 0 and 100%")
   const issueDate = input.issueDate ?? todayIso()
@@ -302,7 +314,7 @@ export async function createInvoiceFromHoursApi(
     dueDate: addDays(issueDate, client.paymentTermsDays),
     status: ClientInvoiceStatus.DRAFT,
     lines: [
-      ...buildInvoiceLines(selected, projects, employees, client, () => createId("ln")),
+      ...buildInvoiceLines(selected, projects, employees, client, () => createId("ln"), input.groupBy, await listTasksApi(workspaceId)),
       ...rebill.map((x) => ({
         id: createId("ln"),
         description: `${projects.find((p) => p.id === x.projectId)?.code ?? ""} · ${x.description}`,
@@ -312,12 +324,104 @@ export async function createInvoiceFromHoursApi(
         timeEntryIds: [],
         expenseIds: [x.id],
       })),
+      ...(input.deductAdvances ? advanceDeductions(openAdvances(client.id, invoices.list(workspaceId)), () => createId("ln")) : []),
     ],
     taxRate: input.taxRate,
     notes: input.notes || undefined,
   })
   for (const e of selected) entries.update(workspaceId, e.id, { invoiceId: invoice.id })
   setExpensesInvoice(workspaceId, rebill.map((x) => x.id), invoice.id)
+  return invoice
+}
+
+export type NewInvoiceInput = {
+  clientId: string
+  issueDate?: string
+  taxRate: number
+  notes?: string
+  deductAdvances?: boolean
+} & (
+  | { kind: InvoiceKind.FIXED; projectId: string; percent: number }
+  | { kind: InvoiceKind.MILESTONE; projectId: string; milestoneId: string; amount: number }
+  | { kind: InvoiceKind.RETAINER; projectId: string; month: string }
+  | { kind: InvoiceKind.ADVANCE; projectId?: string; amount: number; label?: string }
+  | { kind: InvoiceKind.FREE; lines?: InvoiceLine[] }
+)
+
+/**
+ * Drafts an invoice that isn't built from hours (BIL-3): a share of a fixed
+ * price, a milestone, a month of a retainer, a deposit, or free-form lines.
+ */
+export async function createInvoiceApi(workspaceId: string, input: NewInvoiceInput): Promise<ClientInvoice> {
+  if (input.taxRate < 0 || input.taxRate > 100) throw new Error("Tax must be between 0 and 100%")
+  const issueDate = input.issueDate ?? todayIso()
+  await assertPeriodOpen(workspaceId, issueDate)
+  const [projects, clients, { company }] = await Promise.all([listProjectsApi(workspaceId), listClientsApi(workspaceId), getSettingsApi(workspaceId)])
+  const client = clients.find((c) => c.id === input.clientId)
+  if (!client) throw new Error("Client not found")
+  const all = invoices.list(workspaceId)
+  const newId = () => createId("ln")
+  const projectOf = (id?: string) => {
+    const project = projects.find((p) => p.id === id)
+    if (id && (!project || project.clientId !== client.id)) throw new Error("Pick a project of this client")
+    return project
+  }
+
+  let lines: InvoiceLine[] = []
+  let coveredEntries: TimeEntry[] = []
+  switch (input.kind) {
+    case InvoiceKind.FIXED: {
+      const project = projectOf(input.projectId)!
+      lines = [fixedPriceLine(project, input.percent, newId(), billedAgainstBudget(project, all).billed)]
+      break
+    }
+    case InvoiceKind.MILESTONE: {
+      const project = projectOf(input.projectId)!
+      const milestone = (await listMilestonesApi(workspaceId, project.id)).find((m) => m.id === input.milestoneId)
+      if (!milestone) throw new Error("Milestone not found")
+      lines = [milestoneLine(project, milestone, input.amount, newId(), billedAgainstBudget(project, all).billed)]
+      break
+    }
+    case InvoiceKind.RETAINER: {
+      const project = projectOf(input.projectId)!
+      if (!/^\d{4}-\d{2}$/.test(input.month)) throw new Error("Pick the month to bill")
+      const billedMonth = all.some(
+        (i) => i.kind === InvoiceKind.RETAINER && i.status !== ClientInvoiceStatus.VOID && i.lines.some((l) => l.projectId === project.id && l.description.includes(input.month))
+      )
+      if (billedMonth) throw new Error("This month of the retainer is already invoiced")
+      // Approved hours of that month not yet on an invoice
+      coveredEntries = entries
+        .list(workspaceId)
+        .filter((e) => e.projectId === project.id && e.date.startsWith(input.month) && e.status === TimeEntryStatus.APPROVED && !e.invoiceId)
+      lines = retainerLines(project, coveredEntries, input.month, newId)
+      break
+    }
+    case InvoiceKind.ADVANCE: {
+      const project = projectOf(input.projectId)
+      lines = [advanceLine(input.amount, input.label?.trim() || `Advance${project ? ` · ${project.code} ${project.name}` : ""}`, newId(), project?.id)]
+      break
+    }
+    case InvoiceKind.FREE:
+      lines = input.lines ?? []
+      break
+  }
+  if (input.deductAdvances && input.kind !== InvoiceKind.ADVANCE) {
+    lines = [...lines, ...advanceDeductions(openAdvances(client.id, all), newId)]
+  }
+
+  const invoice = invoices.create(workspaceId, {
+    number: "",
+    kind: input.kind,
+    clientId: client.id,
+    currency: client.currency ?? company.baseCurrency,
+    issueDate,
+    dueDate: input.kind === InvoiceKind.ADVANCE ? issueDate : addDays(issueDate, client.paymentTermsDays),
+    status: ClientInvoiceStatus.DRAFT,
+    lines,
+    taxRate: input.taxRate,
+    notes: input.notes || undefined,
+  })
+  for (const e of coveredEntries) entries.update(workspaceId, e.id, { invoiceId: invoice.id })
   return invoice
 }
 

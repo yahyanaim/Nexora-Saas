@@ -29,7 +29,8 @@ import {
 import { automaticHealth, projectHealth, remainingHours, taskProgress } from "@/lib/workforce/project-metrics"
 import { budgetUsage } from "@/lib/workforce/profitability"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
-import { useTimeEntries } from "@/hooks/workforce/use-work-billing"
+import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-billing"
+import { billedAgainstBudget } from "@/lib/workforce/invoice-builders"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { TaskDiscussion } from "./task-discussion"
 import { TaskFilters, NO_FILTERS, applyTaskFilters, type TaskFilterValues } from "./task-filters"
@@ -71,6 +72,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const milestoneMutations = useMilestoneMutations()
   const { data: settings } = useWorkspaceSettings()
   const { data: entries = [] } = useTimeEntries()
+  const { data: invoices = [] } = useClientInvoices()
   const { data: expenses = [] } = useExpenses()
   const labels = settings?.taskLabels ?? []
   const [filters, setFilters] = useState<TaskFilterValues>(NO_FILTERS)
@@ -149,7 +151,14 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
           ? t(BUDGET_TYPE_LABEL[project.budgetType])
           : `${formatMoney(project.budgetAmount, workspace.currency, locale)} · ${t(BUDGET_TYPE_LABEL[project.budgetType])}`,
     },
-    { label: t("remainingWork"), value: `${remainingHours(tasks)} h` },
+    project.budgetType === BudgetType.FIXED && project.budgetAmount
+      ? (() => {
+          const billed = billedAgainstBudget(project, invoices)
+          return { label: t("billedSoFar"), value: `${formatMoney(billed.billed, workspace.currency, locale)} · ${billed.percent ?? 0}%` }
+        })()
+      : project.budgetType === BudgetType.RETAINER && project.retainer
+        ? { label: t("retainer"), value: t("retainerShort", { amount: formatMoney(project.retainer.monthlyAmount, workspace.currency, locale), hours: project.retainer.includedHours }) }
+        : { label: t("remainingWork"), value: `${remainingHours(tasks)} h` },
   ]
 
   return (

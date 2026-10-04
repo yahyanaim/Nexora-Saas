@@ -75,7 +75,7 @@ export default function ExecutivePage() {
     const collectedAmount = invoices.flatMap((i) => (i.payments ?? []).filter((p) => p.date >= since).map((p) => toBase(p.amount, i))).reduce((s, n) => s + n, 0)
 
     const active = projects.filter((p) => p.status !== WorkProjectStatus.CANCELLED)
-    const profits = active.map((p) => ({ project: p, ...projectProfit(p, { entries, tasks, expenses, employees, clients }) }))
+    const profits = active.map((p) => ({ project: p, ...projectProfit(p, { entries, tasks, expenses, employees, clients, invoices }) }))
     const revenue = profits.reduce((s, p) => s + p.revenue, 0)
     const profit = profits.reduce((s, p) => s + p.profit, 0)
 

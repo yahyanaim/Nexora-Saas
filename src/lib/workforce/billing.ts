@@ -1,5 +1,5 @@
 import type { Client, Employee } from "@/types/workforce"
-import { BudgetType, type WorkProject } from "@/types/work-projects"
+import { BudgetType, type WorkProject, type WorkTask } from "@/types/work-projects"
 import {
   ClientInvoiceStatus,
   InvoiceKind,
@@ -91,31 +91,41 @@ export function unbilledValueByClient(
 
 // ---------- Invoices ----------
 
+export type InvoiceGrouping = "person" | "task" | "day"
+
 /**
- * One invoice line per project and person, e.g. "ORB-01 · Lina Moreau",
- * with the hours as quantity and their rate as unit price.
+ * Invoice lines from approved hours (BIL-4), grouped by project and person
+ * (default), by task, or by day. Hours at different rates never share a line.
  */
 export function buildInvoiceLines(
   entries: TimeEntry[],
   projects: WorkProject[],
   employees: Employee[],
   client: Client | undefined,
-  createLineId: () => string
+  createLineId: () => string,
+  groupBy: InvoiceGrouping = "person",
+  tasks: Pick<WorkTask, "id" | "title">[] = []
 ): InvoiceLine[] {
   const groups = new Map<string, TimeEntry[]>()
   for (const entry of entries) {
-    // A rate change inside the period starts a new line at the new price
     const employee = employees.find((e) => e.id === entry.employeeId)
-    const key = `${entry.projectId}:${entry.employeeId}:${entryBillRate(entry, employee, client)}`
+    const by = groupBy === "task" ? entry.taskId ?? "" : groupBy === "day" ? entry.date : entry.employeeId
+    const key = `${entry.projectId}:${by}:${entryBillRate(entry, employee, client)}`
     groups.set(key, [...(groups.get(key) ?? []), entry])
   }
   return [...groups.values()].map((group) => {
     const first = group[0]!
     const project = projects.find((p) => p.id === first.projectId)
     const employee = employees.find((e) => e.id === first.employeeId)
+    const label =
+      groupBy === "task"
+        ? tasks.find((x) => x.id === first.taskId)?.title ?? "General work"
+        : groupBy === "day"
+          ? first.date
+          : employee?.name ?? "Team member"
     return {
       id: createLineId(),
-      description: `${project ? `${project.code} · ${project.name}` : "Project"} — ${employee?.name ?? "Team member"}`,
+      description: `${project ? `${project.code} · ${project.name}` : "Project"} — ${label}`,
       quantity: roundHours(group.reduce((sum, e) => sum + e.hours, 0)),
       unitPrice: entryBillRate(first, employee, client),
       projectId: first.projectId,
