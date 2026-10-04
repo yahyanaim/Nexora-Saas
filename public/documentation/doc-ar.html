@@ -20,7 +20,7 @@
     h2 .n { margin-left: 8px; margin-right: 0; }
     .mermaid { direction: ltr; }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -142,6 +142,10 @@ flowchart TB
     S8["8 · الساعات"] --> S9["9 · الفواتير"]
   end
   A --> B --> C --> D
+  style A fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
+  style B fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+  style C fill:#fef3c7,stroke:#d97706,stroke-width:2px
+  style D fill:#fce7f3,stroke:#db2777,stroke-width:2px
 </div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> السهم يعني «يحتاج إلى»: لا يمكن ملء خانة قبل وجود الخانات التي تشير إليها.</p><table><thead><tr><th>الخطوة</th><th>أين</th><th>الحقول الإلزامية</th><th>لماذا تهم</th></tr></thead><tbody><tr><td><b>1 · إعدادات الشركة</b></td><td>النظام ← إعدادات مساحة العمل ← الشركة</td><td>اسم الشركة، العملة الأساسية، بداية السنة المالية، صيغة ترقيم الفواتير</td><td>تظهر على كل فاتورة؛ اضبط الترقيم والسنة المالية قبل أول فاتورة</td></tr><tr><td><b>2 · القوائم</b></td><td>إعدادات مساحة العمل ← القوائم</td><td>قسم واحد على الأقل، العطل الرسمية، أنواع الإجازات</td><td>تخفض العطل والإجازات الساعات المتوقعة والسعة</td></tr><tr><td><b>3 · قواعد الاعتماد</b></td><td>إعدادات مساحة العمل ← الاعتمادات</td><td>من يعتمد الساعات والإجازات والمصاريف</td><td>بدون معتمد تبقى الساعات معلقة؛ لا أحد يعتمد طلباته</td></tr><tr><td><b>4 · الموظفون</b></td><td>التنظيم ← الموظفون ← إضافة موظف</td><td>الاسم، البريد، المسمى، الدور، تاريخ التعيين، التكلفة بالساعة، سعر الفوترة، السعة الأسبوعية، أيام العمل</td><td>الدور يحدد ما يراه الشخص، والمدير يحدد من يعتمد له</td></tr><tr><td><b>5 · العملاء</b></td><td>التنظيم ← العملاء ← إضافة عميل</td><td>الاسم، العملة، لغة الفاتورة، مدة الدفع، مدير الحساب</td><td>مدة الدفع تحدد تاريخ الاستحقاق؛ بطاقة الأسعار تتقدم على سعر الموظف</td></tr><tr><td><b>6 · المشاريع</b></td><td>التنظيم ← المشاريع ← مشروع جديد</td><td>الاسم، الرمز (2–12 حرفًا)، العميل، المدير، الحالة، الأولوية، نوع الميزانية</td><td>نوع الميزانية يحدد طريقة الفوترة، وأعضاء الفريق فقط يسجلون الوقت</td></tr><tr><td><b>7 · المراحل والمهام</b></td><td>المشروع ← المراحل، ثم مهمة جديدة</td><td>عنوان المهمة، الحالة، الأولوية، الساعات المقدرة</td><td>تواريخ الاستحقاق تغذي «عملي» وصحة المشروع</td></tr><tr><td><b>8 · الساعات</b></td><td>التنظيم ← سجلات الوقت</td><td>المشروع، اليوم، الساعات (تقريب 15 دقيقة)</td><td>الساعات المعتمدة هي ما يُفوتر وتُجمّد أسعارها عند الاعتماد</td></tr><tr><td><b>9 · أول فاتورة</b></td><td>المالية ← فواتير العملاء ← إنشاء من الساعات</td><td>العميل، الفترة، طريقة التجميع</td><td>الرقم يُمنح عند الإصدار؛ التصحيح بإشعار دائن</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> كل صف خطوة: مكانها في التطبيق، الحقول التي لا يُحفظ النموذج بدونها، وسبب أهميتها.</p><div class="callout good"><b>نصيحة:</b> جرّب السلسلة كاملة مرة بعميل ومشروع تجريبيين (الخطوات 5–9) ثم أرشفهما قبل بدء الفريق.</div>
 </section>
 
@@ -255,40 +259,10 @@ flowchart LR
 <script>
   mermaid.initialize({
     startOnLoad: true,
-    theme: "base",
+    theme: "default",
     themeVariables: {
-      primaryColor: "#ffffff",
-      primaryBorderColor: "#2563eb",
-      primaryTextColor: "#0f172a",
-      lineColor: "#475569",
-      textColor: "#0f172a",
-      mainBkg: "#ffffff",
-      nodeBorder: "#cbd5e1",
-      nodeTextColor: "#0f172a",
-      clusterBkg: "#f8fafc",
-      clusterBorder: "#cbd5e1",
-      titleColor: "#0f172a",
-      edgeLabelBackground: "#ffffff",
-      actorBkg: "#ffffff",
-      actorBorder: "#2563eb",
-      actorTextColor: "#0f172a",
-      actorLineColor: "#94a3b8",
-      signalColor: "#475569",
-      signalTextColor: "#0f172a",
-      labelBoxBkgColor: "#ffffff",
-      labelBoxBorderColor: "#cbd5e1",
-      labelTextColor: "#0f172a",
-      loopTextColor: "#0f172a",
-      noteBorderColor: "#cbd5e1",
-      noteBkgColor: "#ffffff",
-      noteTextColor: "#0f172a",
-      activationBorderColor: "#2563eb",
-      activationBkgColor: "#eff6ff",
-      sequenceNumberColor: "#ffffff",
-      attributeBackgroundColorOdd: "#ffffff",
-      attributeBackgroundColorEven: "#f8fafc",
       fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-      fontSize: "12px"
+      fontSize: "13px"
     },
     flowchart: {
       useMaxWidth: true,
@@ -333,7 +307,7 @@ flowchart LR
     var src = el.querySelector("svg"); if (!src) return;
     var svg = src.cloneNode(true);
     var w = naturalWidth(src), vb = src.viewBox.baseVal, h = vb && vb.height ? vb.height : src.getBoundingClientRect().height;
-    svg.setAttribute("width", w); svg.setAttribute("height", h); svg.style.maxWidth = "none";
+    svg.setAttribute("width", w); svg.setAttribute("height", h); svg.style.width = w + "px"; svg.style.height = h + "px"; svg.style.maxWidth = "none";
     var ov = document.createElement("div"); ov.className = "dz-ov";
     var bar = document.createElement("div"); bar.className = "dz-ov-bar";
     var t = document.createElement("span"); t.textContent = title(el) + " — " + L.tip;
@@ -369,16 +343,27 @@ flowchart LR
     var view = document.createElement("div"); view.className = "dz-view";
     var hint = document.createElement("span"); hint.className = "dz-hint"; hint.textContent = L.hint;
     el.parentNode.insertBefore(box, el); view.appendChild(el); box.append(bar, view);
-    var svg = el.querySelector("svg"), base = naturalWidth(svg), k = 1;
-    function fitWidth() { return Math.min(1.5, (view.clientWidth - 24) / base); }
-    function set(nk) { k = Math.min(4, Math.max(0.3, nk)); svg.style.width = base * k + "px"; svg.style.maxWidth = "none"; }
-    k = Math.max(fitWidth(), 0.3); set(k);
-    bar.append(hint, btn("−", "Zoom out", function () { set(k * 0.8); }), btn("+", "Zoom in", function () { set(k * 1.25); }),
-      btn(L.reset, "Fit width", function () { set(fitWidth()); }), btn("⤢ " + L.full, L.full, function () { openViewer(el); }));
+    // Mermaid may replace the SVG after this runs, so always work on the current one
+    var k = null, zoomed = false;
+    function svg() { return el.querySelector("svg"); }
+    function base() { var s = svg(); return s ? naturalWidth(s) : 0; }
+    function fitWidth() { var b = base(); return b ? Math.min(1.5, (view.clientWidth - 24) / b) : 1; }
+    function set(nk) {
+      var s = svg(); if (!s) return;
+      k = Math.min(4, Math.max(0.3, nk));
+      s.removeAttribute("width"); s.removeAttribute("height");
+      s.style.width = base() * k + "px"; s.style.maxWidth = "none"; s.style.height = "auto";
+    }
+    set(Math.max(fitWidth(), 0.3));
+    new MutationObserver(function () { var s = svg(); if (s && s.style.width !== base() * k + "px") set(zoomed ? k : Math.max(fitWidth(), 0.3)); }).observe(el, { childList: true, subtree: false });
+    bar.append(hint, btn("−", "Zoom out", function () { zoomed = true; set(k * 0.8); }), btn("+", "Zoom in", function () { zoomed = true; set(k * 1.25); }),
+      btn(L.reset, "Fit width", function () { zoomed = false; set(Math.max(fitWidth(), 0.3)); }), btn("⤢ " + L.full, L.full, function () { openViewer(el); }));
     view.addEventListener("click", function () { openViewer(el); });
   }
   function scan() { document.querySelectorAll(".mermaid").forEach(enhance); }
-  var tries = 0, timer = setInterval(function () { scan(); if (++tries > 40 || document.querySelectorAll(".mermaid:not([data-dz])").length === 0) clearInterval(timer); }, 250);
+  scan();
+  // Diagrams render asynchronously (and can be slow on large pages): enhance each one as soon as its SVG appears
+  new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 
