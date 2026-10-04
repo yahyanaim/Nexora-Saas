@@ -26,6 +26,10 @@ const ok = (config: InternalAxiosRequestConfig, data: unknown = {}) => ({
 })
 
 describe("apiClient configuration", () => {
+  it("times out requests instead of waiting forever", () => {
+    expect(apiClient.defaults.timeout).toBeGreaterThan(0)
+  })
+
   it("has withCredentials set to true for cookie-based sessions", () => {
     expect(apiClient.defaults.withCredentials).toBe(true)
   })
@@ -52,6 +56,16 @@ describe("apiErrorMessage", () => {
   it("extracts error.message when no backend response data exists", () => {
     const error = new Error("Network Error")
     expect(apiErrorMessage(error)).toBe("Network Error")
+  })
+
+  it("replaces axios internals with friendly messages", () => {
+    const config = { headers: {} } as InternalAxiosRequestConfig
+    expect(apiErrorMessage(new AxiosError("timeout of 20000ms exceeded", "ECONNABORTED", config))).toMatch(/too long/)
+    expect(apiErrorMessage(new AxiosError("Network Error", "ERR_NETWORK", config))).toMatch(/Can't reach/)
+    const serverError = new AxiosError("Request failed with status code 500", "ERR_BAD_RESPONSE", config, null, {
+      status: 500, data: {}, statusText: "", headers: {}, config,
+    })
+    expect(apiErrorMessage(serverError)).toMatch(/server had a problem/)
   })
 
   it("returns fallback message when error has no usable message", () => {

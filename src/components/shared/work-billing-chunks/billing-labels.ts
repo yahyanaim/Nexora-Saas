@@ -26,18 +26,24 @@ export const TIME_STATUS_CELL: Record<TimeEntryStatus, string> = {
 
 export const INVOICE_STATUS_LABEL: Record<ClientInvoiceDisplayStatus, string> = {
   [ClientInvoiceStatus.DRAFT]: "draft",
+  [ClientInvoiceStatus.ISSUED]: "issued",
   [ClientInvoiceStatus.SENT]: "sent",
   [ClientInvoiceStatus.PAID]: "paid",
-  [ClientInvoiceStatus.VOID]: "void",
+  [ClientInvoiceStatus.VOID]: "cancelled",
   overdue: "overdue",
+  partially_paid: "partiallyPaid",
+  credited: "credited",
 }
 
 export const INVOICE_STATUS_CLASS: Record<ClientInvoiceDisplayStatus, string> = {
   [ClientInvoiceStatus.DRAFT]: "bg-muted text-muted-foreground border-transparent",
+  [ClientInvoiceStatus.ISSUED]: "bg-info-soft text-info-foreground border-transparent",
   [ClientInvoiceStatus.SENT]: "bg-info-soft text-info-foreground border-transparent",
   [ClientInvoiceStatus.PAID]: "bg-success-soft text-success-foreground border-transparent",
   [ClientInvoiceStatus.VOID]: "bg-muted text-muted-foreground border-transparent line-through",
   overdue: "bg-danger-soft text-destructive border-transparent",
+  partially_paid: "bg-warning-soft text-warning-foreground border-transparent",
+  credited: "bg-muted text-muted-foreground border-transparent",
 }
 
 export function formatHours(hours: number) {

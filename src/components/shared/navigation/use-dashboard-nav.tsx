@@ -80,20 +80,6 @@ export function useDashboardNav() {
         icon: LayoutDashboard,
         items: [
           {
-            title: t("executiveOverview"),
-            url: "/dashboard/executive",
-            icon: LayoutDashboard,
-            descriptionKey: "pageDescExecutive",
-            permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
-          },
-          {
-            title: t("teamKpis"),
-            url: "/dashboard/team-kpis",
-            icon: Gauge,
-            descriptionKey: "pageDescTeamKpis",
-            permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
-          },
-          {
             title: t("analytics"),
             url: "/dashboard/overview",
             icon: ChartNoAxesCombined,
@@ -157,6 +143,13 @@ export function useDashboardNav() {
             permission: AdminPermissionsPlatform.INVOICES_READ,
           },
           {
+            title: t("receivables"),
+            url: "/dashboard/receivables",
+            icon: Receipt,
+            descriptionKey: "pageDescReceivables",
+            permission: AdminPermissionsPlatform.INVOICES_READ,
+          },
+          {
             title: t("expenses"),
             url: "/dashboard/expenses",
             icon: Receipt,
@@ -168,7 +161,7 @@ export function useDashboardNav() {
             url: "/dashboard/profitability",
             icon: TrendingUp,
             descriptionKey: "pageDescProfitability",
-            permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
+            permission: AdminPermissionsPlatform.COSTS_READ,
           },
         ],
       },
@@ -324,6 +317,13 @@ export function useDashboardNav() {
         title: t("system"),
         icon: Settings,
         items: [
+          {
+            title: t("workspaceSettings"),
+            url: "/dashboard/settings",
+            icon: Settings,
+            descriptionKey: "pageDescSettings",
+            permission: AdminPermissionsPlatform.ROLES_READ,
+          },
           {
             title: t("rolesPermissions"),
             url: "/dashboard/roles",

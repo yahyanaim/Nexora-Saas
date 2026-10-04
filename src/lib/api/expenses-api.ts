@@ -1,8 +1,10 @@
 import { ExpenseCategory, ExpenseStatus, type Expense, type ExpenseInput } from "@/types/work-costs"
+import { assertPeriodOpen, getSettingsApi } from "./settings-api"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { listProjectsApi } from "./work-projects-api"
+import { recordAudit } from "@/lib/workforce/audit"
 
 const STAMP = "2026-01-05T09:00:00.000Z"
 
@@ -38,11 +40,19 @@ export async function listExpensesApi(workspaceId: string): Promise<Expense[]> {
 export async function submitExpenseApi(workspaceId: string, input: ExpenseInput): Promise<Expense> {
   if (!(input.amount > 0) || input.amount > MAX_EXPENSE) throw new Error("Enter an amount above zero")
   if (input.date > todayIso()) throw new Error("Expenses can't be in the future")
+  await assertPeriodOpen(workspaceId, input.date)
   if (!input.description.trim()) throw new Error("Describe the expense")
   if (input.projectId) {
     const project = (await listProjectsApi(workspaceId)).find((p) => p.id === input.projectId)
     if (!project) throw new Error("Project not found")
     if (!project.memberIds.includes(input.employeeId)) throw new Error("Only the project team can add expenses to it")
+  }
+  const settings = await getSettingsApi(workspaceId)
+  if (!settings.expenseCategories.some((c) => c.category === input.category && c.enabled)) {
+    throw new Error("This category is turned off in the workspace settings")
+  }
+  if (input.amount > settings.receiptRequiredAbove && !input.receiptName) {
+    throw new Error(`Attach a receipt for expenses above ${settings.receiptRequiredAbove}`)
   }
   return expenses.create(workspaceId, {
     ...input,
@@ -59,6 +69,14 @@ export async function reviewExpenseApi(workspaceId: string, id: string, approved
   if (!expense) throw new Error("Expense not found")
   if (expense.status !== ExpenseStatus.SUBMITTED) throw new Error("Only submitted expenses can be reviewed")
   if (!approved && !reason?.trim()) throw new Error("Give a reason when rejecting")
+  recordAudit(workspaceId, {
+    action: approved ? "Expense approved" : "Expense rejected",
+    actionKey: approved ? "expense.approved" : "expense.rejected",
+    category: "Approvals",
+    target: `${expense.description} (${expense.amount})`,
+    before: expense.status,
+    after: approved ? ExpenseStatus.APPROVED : `${ExpenseStatus.REJECTED}: ${reason!.trim()}`,
+  })
   return expenses.update(workspaceId, id, {
     status: approved ? ExpenseStatus.APPROVED : ExpenseStatus.REJECTED,
     rejectionReason: approved ? undefined : reason!.trim(),
@@ -89,8 +107,9 @@ export function setExpensesInvoice(workspaceId: string, ids: string[], invoiceId
 }
 
 /** Frees every expense billed on an invoice. */
-export function releaseInvoiceExpenses(workspaceId: string, invoiceId: string) {
-  for (const x of expenses.list(workspaceId).filter((e) => e.invoiceId === invoiceId)) {
+/** Frees an invoice's re-billed expenses (all, or only the given ones). */
+export function releaseInvoiceExpenses(workspaceId: string, invoiceId: string, only?: string[]) {
+  for (const x of expenses.list(workspaceId).filter((e) => e.invoiceId === invoiceId && (!only || only.includes(e.id)))) {
     expenses.update(workspaceId, x.id, { invoiceId: undefined })
   }
 }

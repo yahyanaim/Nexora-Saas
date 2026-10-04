@@ -52,6 +52,16 @@ export function projectHealth(
   if (project.status === WorkProjectStatus.COMPLETED || project.status === WorkProjectStatus.CANCELLED) {
     return ProjectHealth.DONE
   }
+  // A manager's override (with its reason) wins over the automatic status (PRJ-10)
+  if (project.healthOverride) return project.healthOverride.health
+  return automaticHealth(project, tasks, today)
+}
+
+/** The health computed from dates and tasks alone, ignoring any override. */
+export function automaticHealth(project: WorkProject, tasks: WorkTask[], today = todayIso()): ProjectHealth {
+  if (project.status === WorkProjectStatus.COMPLETED || project.status === WorkProjectStatus.CANCELLED) {
+    return ProjectHealth.DONE
+  }
   if (project.dueDate && project.dueDate < today) return ProjectHealth.LATE
   if (tasks.some((t) => isTaskOverdue(t, today))) return ProjectHealth.AT_RISK
 

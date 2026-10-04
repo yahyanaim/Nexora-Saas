@@ -135,10 +135,18 @@ export enum AdminPermissionsPlatform {
   // Analytics
   VIEW_ANALYTICS = "analytics:view",
 
+  // Cost rates, salaries, profit and margin (BR-9, HR-6)
+  COSTS_READ = "costs:read",
+
   // Full access (super-admin only)
   ALL = "*",
 }
 export const PERMISSION_GROUPS: PermissionGroup[] = [
+  {
+    resource: "costs",
+    label: "Costs and profit",
+    permissions: [{ value: AdminPermissionsPlatform.COSTS_READ, label: "See cost rates and profit" }],
+  },
   {
     resource: "time",
     label: "Time tracking",

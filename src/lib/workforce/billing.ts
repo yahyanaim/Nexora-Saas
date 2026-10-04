@@ -1,7 +1,8 @@
 import type { Client, Employee } from "@/types/workforce"
-import { BudgetType, type WorkProject } from "@/types/work-projects"
+import { BudgetType, type WorkProject, type WorkTask } from "@/types/work-projects"
 import {
   ClientInvoiceStatus,
+  InvoiceKind,
   TimeEntryStatus,
   type ClientInvoice,
   type ClientInvoiceDisplayStatus,
@@ -9,6 +10,7 @@ import {
   type TimeEntry,
 } from "@/types/work-billing"
 import { todayIso } from "./project-metrics"
+import { rateOn } from "./rates"
 
 // ---------- Dates ----------
 
@@ -35,9 +37,21 @@ export function weekDays(monday: string) {
 
 // ---------- Rates ----------
 
-/** Hourly price for an entry: the client's agreed rate, else the employee's billable rate. */
-export function hourlyRate(employee: Employee | undefined, client: Client | undefined) {
-  return client?.hourlyRate ?? employee?.billableRate ?? 0
+/**
+ * Hourly price for an entry, first match wins (section 6.5): the client's
+ * rate card for the person, then for their job title, then the client's
+ * flat rate, then the employee's billable rate in force on the date (BR-4).
+ */
+export function hourlyRate(employee: Employee | undefined, client: Client | undefined, date?: string) {
+  const card = client?.rateCard ?? []
+  const forPerson = employee && card.find((r) => r.employeeId === employee.id)
+  if (forPerson) return forPerson.rate
+  const title = employee?.jobTitle.trim().toLowerCase()
+  const forTitle = title && card.find((r) => !r.employeeId && r.jobTitle?.trim().toLowerCase() === title)
+  if (forTitle) return forTitle.rate
+  if (client?.hourlyRate !== undefined) return client.hourlyRate
+  if (!employee) return 0
+  return date ? rateOn(employee, date).billableRate : employee.billableRate
 }
 
 /**
@@ -69,7 +83,7 @@ export function unbilledValueByClient(
     const employee = employees.find((e) => e.id === entry.employeeId)
     const current = totals.get(project.clientId!) ?? { hours: 0, amount: 0 }
     current.hours += entry.hours
-    current.amount += entry.hours * hourlyRate(employee, client)
+    current.amount += entry.hours * entryBillRate(entry, employee, client)
     totals.set(project.clientId!, current)
   }
   return totals
@@ -77,35 +91,67 @@ export function unbilledValueByClient(
 
 // ---------- Invoices ----------
 
+export type InvoiceGrouping = "person" | "task" | "day"
+
 /**
- * One invoice line per project and person, e.g. "ORB-01 · Lina Moreau",
- * with the hours as quantity and their rate as unit price.
+ * Invoice lines from approved hours (BIL-4), grouped by project and person
+ * (default), by task, or by day. Hours at different rates never share a line.
  */
 export function buildInvoiceLines(
   entries: TimeEntry[],
   projects: WorkProject[],
   employees: Employee[],
   client: Client | undefined,
-  createLineId: () => string
+  createLineId: () => string,
+  groupBy: InvoiceGrouping = "person",
+  tasks: Pick<WorkTask, "id" | "title">[] = []
 ): InvoiceLine[] {
   const groups = new Map<string, TimeEntry[]>()
   for (const entry of entries) {
-    const key = `${entry.projectId}:${entry.employeeId}`
+    const employee = employees.find((e) => e.id === entry.employeeId)
+    const by = groupBy === "task" ? entry.taskId ?? "" : groupBy === "day" ? entry.date : entry.employeeId
+    const key = `${entry.projectId}:${by}:${entryBillRate(entry, employee, client)}`
     groups.set(key, [...(groups.get(key) ?? []), entry])
   }
   return [...groups.values()].map((group) => {
     const first = group[0]!
     const project = projects.find((p) => p.id === first.projectId)
     const employee = employees.find((e) => e.id === first.employeeId)
+    const label =
+      groupBy === "task"
+        ? tasks.find((x) => x.id === first.taskId)?.title ?? "General work"
+        : groupBy === "day"
+          ? first.date
+          : employee?.name ?? "Team member"
     return {
       id: createLineId(),
-      description: `${project ? `${project.code} · ${project.name}` : "Project"} — ${employee?.name ?? "Team member"}`,
+      description: `${project ? `${project.code} · ${project.name}` : "Project"} — ${label}`,
       quantity: roundHours(group.reduce((sum, e) => sum + e.hours, 0)),
-      unitPrice: hourlyRate(employee, client),
+      unitPrice: entryBillRate(first, employee, client),
       projectId: first.projectId,
       timeEntryIds: group.map((e) => e.id),
     }
   })
+}
+
+/** Rate an entry bills at: the snapshot taken at approval, else today's resolution (TIM-9). */
+export function entryBillRate(entry: TimeEntry, employee: Employee | undefined, client: Client | undefined) {
+  return entry.billRate ?? hourlyRate(employee, client, entry.date)
+}
+
+/** Cost of an entry's hours per hour: the snapshot taken at approval, else the dated rate. */
+export function entryCostRate(entry: TimeEntry, employee: Employee | undefined) {
+  return entry.costRate ?? (employee ? rateOn(employee, entry.date).hourlyCost : 0)
+}
+
+/** Timesheet hours move in 15-minute steps (TIM-1). */
+export function quarterHours(hours: number) {
+  return Math.round(hours * 4) / 4
+}
+
+/** Shown state of an entry: approved hours on an invoice read as invoiced (TIM-5). */
+export function entryDisplayStatus(entry: TimeEntry): TimeEntryStatus | "invoiced" {
+  return entry.invoiceId ? "invoiced" : entry.status
 }
 
 export function roundHours(hours: number) {
@@ -116,13 +162,105 @@ function roundMoney(amount: number) {
   return Math.round(amount * 100) / 100
 }
 
-export function invoiceTotals(invoice: Pick<ClientInvoice, "lines" | "taxRate">) {
-  const subtotal = roundMoney(invoice.lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0))
-  const tax = roundMoney((subtotal * invoice.taxRate) / 100)
-  return { subtotal, tax, total: roundMoney(subtotal + tax) }
+export interface InvoiceTotals {
+  subtotal: number
+  /** One row per tax rate: base and tax, each rounded to the cent */
+  taxes: { rate: number; base: number; amount: number }[]
+  tax: number
+  withholding: number
+  /** Net + tax − withholding */
+  total: number
+  paid: number
 }
 
-/** Next number in the INV-<year>-<nnn> series for that year. */
+/**
+ * Totals per section 6.5: each line is quantity × price rounded to the cent;
+ * tax is computed per rate on the sum of that rate's net lines and rounded;
+ * withholding comes off the total.
+ */
+export function invoiceTotals(
+  invoice: Pick<ClientInvoice, "lines" | "taxRate"> & Partial<Pick<ClientInvoice, "withholdingRate" | "payments">>
+): InvoiceTotals {
+  const byRate = new Map<number, number>()
+  let subtotal = 0
+  for (const line of invoice.lines) {
+    const net = roundMoney(line.quantity * line.unitPrice)
+    subtotal += net
+    const rate = line.taxRate ?? invoice.taxRate
+    byRate.set(rate, roundMoney((byRate.get(rate) ?? 0) + net))
+  }
+  subtotal = roundMoney(subtotal)
+  const taxes = [...byRate.entries()]
+    .sort(([a], [b]) => b - a)
+    .map(([rate, base]) => ({ rate, base, amount: roundMoney((base * rate) / 100) }))
+  const tax = roundMoney(taxes.reduce((sum, t) => sum + t.amount, 0))
+  const withholding = roundMoney(((subtotal + tax) * (invoice.withholdingRate ?? 0)) / 100)
+  const paid = roundMoney((invoice.payments ?? []).reduce((sum, p) => sum + p.amount, 0))
+  return { subtotal, taxes, tax, withholding, total: roundMoney(subtotal + tax - withholding), paid }
+}
+
+/** Credit notes issued against an invoice, as a positive amount. */
+export function creditedAmount(invoice: ClientInvoice, all: ClientInvoice[]) {
+  return roundMoney(
+    -all
+      .filter((x) => x.creditNoteFor === invoice.id && x.status !== ClientInvoiceStatus.VOID && x.status !== ClientInvoiceStatus.DRAFT)
+      .reduce((sum, x) => sum + invoiceTotals(x).total, 0)
+  )
+}
+
+/** What the client still owes on an invoice after payments and credit notes. */
+export function invoiceBalance(invoice: ClientInvoice, all: ClientInvoice[] = []) {
+  if (
+    invoice.status === ClientInvoiceStatus.VOID ||
+    invoice.status === ClientInvoiceStatus.DRAFT ||
+    invoice.status === ClientInvoiceStatus.PAID ||
+    invoice.kind === InvoiceKind.CREDIT_NOTE
+  ) {
+    return 0
+  }
+  const { total, paid } = invoiceTotals(invoice)
+  return Math.max(0, roundMoney(total - paid - creditedAmount(invoice, all)))
+}
+
+/** Converts an invoice amount to the workspace base currency with its stored rate (BIL-7). */
+export function toBase(amount: number, invoice: Pick<ClientInvoice, "exchangeRate">) {
+  return roundMoney(amount * (invoice.exchangeRate ?? 1))
+}
+
+/** Fiscal year of a date, named by the calendar year it starts in. */
+export function fiscalYearOf(date: string, startMonth = 1) {
+  const year = Number(date.slice(0, 4))
+  const month = Number(date.slice(5, 7))
+  return month >= startMonth ? year : year - 1
+}
+
+/** Builds a number from a format like INV-{YYYY}-{SEQ}; the sequence is padded to 3 digits. */
+export function formatInvoiceNumber(format: string, fiscalYear: number, seq: number) {
+  return format.replace("{YYYY}", String(fiscalYear)).replace("{SEQ}", String(seq).padStart(3, "0"))
+}
+
+/**
+ * Next gapless sequence for a fiscal year (BR-12): one more than the highest
+ * already issued that year, cancelled ones included, so no number is reused.
+ */
+export function nextSequence(
+  invoices: Pick<ClientInvoice, "fiscalYear" | "number" | "status" | "kind" | "issueDate">[],
+  fiscalYear: number,
+  kind: "invoice" | "credit" = "invoice",
+  startMonth = 1
+) {
+  const own = invoices.filter(
+    (i) =>
+      i.status !== ClientInvoiceStatus.DRAFT &&
+      !!i.number &&
+      (i.fiscalYear ?? fiscalYearOf(i.issueDate, startMonth)) === fiscalYear &&
+      (kind === "credit") === (i.kind === InvoiceKind.CREDIT_NOTE)
+  )
+  const highest = own.reduce((max, i) => Math.max(max, Number(/(\d+)$/.exec(i.number)?.[1] ?? 0)), 0)
+  return highest + 1
+}
+
+/** Next number in the INV-<year>-<nnn> series (legacy sample data). */
 export function nextInvoiceNumber(existing: string[], year: number) {
   const prefix = `INV-${year}-`
   const highest = existing
@@ -133,7 +271,45 @@ export function nextInvoiceNumber(existing: string[], year: number) {
   return `${prefix}${String(highest + 1).padStart(3, "0")}`
 }
 
-export function displayStatus(invoice: ClientInvoice, today = todayIso()): ClientInvoiceDisplayStatus {
-  if (invoice.status === ClientInvoiceStatus.SENT && invoice.dueDate < today) return "overdue"
+const OPEN = [ClientInvoiceStatus.ISSUED, ClientInvoiceStatus.SENT]
+
+export function displayStatus(invoice: ClientInvoice, today = todayIso(), all: ClientInvoice[] = []): ClientInvoiceDisplayStatus {
+  if (!OPEN.includes(invoice.status) || invoice.kind === InvoiceKind.CREDIT_NOTE) return invoice.status
+  const { total } = invoiceTotals(invoice)
+  if (total > 0 && creditedAmount(invoice, all) >= total) return "credited"
+  if (invoice.dueDate < today) return "overdue"
+  if ((invoice.payments ?? []).length > 0) return "partially_paid"
   return invoice.status
+}
+
+export const AGING_BUCKETS = ["current", "d1_30", "d31_60", "d61_90", "d90_plus"] as const
+export type AgingBucket = (typeof AGING_BUCKETS)[number]
+
+/** Which receivables bucket an open invoice falls in on a date (BIL-16). */
+export function agingBucket(dueDate: string, today = todayIso()): AgingBucket {
+  const days = Math.floor((new Date(`${today}T00:00:00`).getTime() - new Date(`${dueDate}T00:00:00`).getTime()) / 86400000)
+  if (days <= 0) return "current"
+  if (days <= 30) return "d1_30"
+  if (days <= 60) return "d31_60"
+  if (days <= 90) return "d61_90"
+  return "d90_plus"
+}
+
+/**
+ * Receivables aging per client in the base currency: what's still owed on
+ * issued invoices, by how long it is past due (BIL-16).
+ */
+export function receivablesAging(invoices: ClientInvoice[], today = todayIso()) {
+  const rows = new Map<string, Record<AgingBucket, number> & { total: number; count: number }>()
+  for (const invoice of invoices) {
+    const balance = invoiceBalance(invoice, invoices)
+    if (balance <= 0) continue
+    const row = rows.get(invoice.clientId) ?? { current: 0, d1_30: 0, d31_60: 0, d61_90: 0, d90_plus: 0, total: 0, count: 0 }
+    const amount = toBase(balance, invoice)
+    row[agingBucket(invoice.dueDate, today)] = roundMoney(row[agingBucket(invoice.dueDate, today)] + amount)
+    row.total = roundMoney(row.total + amount)
+    row.count++
+    rows.set(invoice.clientId, row)
+  }
+  return rows
 }

@@ -1,8 +1,10 @@
 "use client"
 
 import { useMemo } from "react"
+import { useTranslations } from "next-intl"
 import { Information } from "@/components/ui/carbon/icons"
-import { useAnalyticsFilter } from "./analytics-filter-context"
+import { BudgetType } from "@/types/work-projects"
+import { RANGE_LABEL, useAnalyticsFilter } from "./analytics-filter-context"
 
 interface ProductRow {
   name: string
@@ -10,176 +12,50 @@ interface ProductRow {
   units: string
   progressPct: number
   iconEmoji: string
+  margin: number | null
 }
 
+const TYPE_ICON: Record<BudgetType, string> = {
+  [BudgetType.HOURLY]: "⏱️",
+  [BudgetType.FIXED]: "📦",
+  [BudgetType.RETAINER]: "🔁",
+  [BudgetType.NON_BILLABLE]: "🏠",
+}
+
+/** Projects ranked by revenue earned in the period, with their margin. */
 export function TopProductsCard() {
-  const { dateRange, formatCurrency } = useAnalyticsFilter()
+  const t = useTranslations()
+  const { dateRange, formatCurrency, analytics } = useAnalyticsFilter()
 
-  const products: ProductRow[] = useMemo(() => {
-    if (dateRange === "Last 7 days") {
-      return [
-        {
-          name: "Enterprise Annual Commitment",
-          revenue: formatCurrency(18200),
-          units: "42 orgs",
-          progressPct: 88,
-          iconEmoji: "🏢",
-        },
-        {
-          name: "Pro Team Workspaces",
-          revenue: formatCurrency(14100),
-          units: "310 teams",
-          progressPct: 72,
-          iconEmoji: "👥",
-        },
-        {
-          name: "Nexora AI & Compute Engine",
-          revenue: formatCurrency(5980),
-          units: "420M tok",
-          progressPct: 54,
-          iconEmoji: "⚡",
-        },
-        {
-          name: "Dedicated SOC 2 Compliance Pod",
-          revenue: formatCurrency(2950),
-          units: "18 pods",
-          progressPct: 36,
-          iconEmoji: "🛡️",
-        },
-      ]
+  const { products, note } = useMemo(() => {
+    const ranked = analytics.projects.filter((p) => p.revenue > 0).slice(0, 4)
+    const max = Math.max(1, ...ranked.map((p) => p.revenue))
+    const rows: ProductRow[] = ranked.map((p) => ({
+      name: p.name,
+      revenue: formatCurrency(p.revenue),
+      units: `${Math.round(p.hours).toLocaleString()} h`,
+      progressPct: Math.round((p.revenue / max) * 100),
+      iconEmoji: TYPE_ICON[p.budgetType] ?? "⏱️",
+      margin: p.margin,
+    }))
+    const total = analytics.current.revenue
+    const best = [...ranked].filter((p) => p.margin !== null).sort((a, b) => (b.margin ?? 0) - (a.margin ?? 0))[0]
+    const worst = [...ranked].filter((p) => p.margin !== null).sort((a, b) => (a.margin ?? 0) - (b.margin ?? 0))[0]
+    return {
+      products: rows,
+      note:
+        ranked[0] && best && worst
+          ? t("anProjectsNote", {
+              project: ranked[0].name,
+              share: total > 0 ? Math.round((ranked[0].revenue / total) * 100) : 0,
+              best: best.name,
+              bestMargin: Math.round(best.margin ?? 0),
+              worst: worst.name,
+              worstMargin: Math.round(worst.margin ?? 0),
+            })
+          : t("anNoRevenueYet"),
     }
-
-    if (dateRange === "Last 90 days") {
-      return [
-        {
-          name: "Enterprise Annual Commitment",
-          revenue: formatCurrency(222900),
-          units: "42 orgs",
-          progressPct: 88,
-          iconEmoji: "🏢",
-        },
-        {
-          name: "Pro Team Workspaces",
-          revenue: formatCurrency(174600),
-          units: "310 teams",
-          progressPct: 72,
-          iconEmoji: "👥",
-        },
-        {
-          name: "Nexora AI & Compute Engine",
-          revenue: formatCurrency(73500),
-          units: "5.4B tok",
-          progressPct: 54,
-          iconEmoji: "⚡",
-        },
-        {
-          name: "Dedicated SOC 2 Compliance Pod",
-          revenue: formatCurrency(35760),
-          units: "18 pods",
-          progressPct: 36,
-          iconEmoji: "🛡️",
-        },
-      ]
-    }
-
-    if (dateRange === "Last 1 year") {
-      return [
-        {
-          name: "Enterprise Annual Commitment",
-          revenue: formatCurrency(892000),
-          units: "48 orgs",
-          progressPct: 92,
-          iconEmoji: "🏢",
-        },
-        {
-          name: "Pro Team Workspaces",
-          revenue: formatCurrency(615000),
-          units: "410 teams",
-          progressPct: 78,
-          iconEmoji: "👥",
-        },
-        {
-          name: "Nexora AI & Compute Engine",
-          revenue: formatCurrency(284000),
-          units: "21.8B tok",
-          progressPct: 65,
-          iconEmoji: "⚡",
-        },
-        {
-          name: "Dedicated SOC 2 Compliance Pod",
-          revenue: formatCurrency(142000),
-          units: "24 pods",
-          progressPct: 45,
-          iconEmoji: "🛡️",
-        },
-      ]
-    }
-
-    if (dateRange === "Year to date") {
-      return [
-        {
-          name: "Enterprise Annual Commitment",
-          revenue: formatCurrency(745000),
-          units: "45 orgs",
-          progressPct: 90,
-          iconEmoji: "🏢",
-        },
-        {
-          name: "Pro Team Workspaces",
-          revenue: formatCurrency(520000),
-          units: "380 teams",
-          progressPct: 75,
-          iconEmoji: "👥",
-        },
-        {
-          name: "Nexora AI & Compute Engine",
-          revenue: formatCurrency(240000),
-          units: "18.5B tok",
-          progressPct: 60,
-          iconEmoji: "⚡",
-        },
-        {
-          name: "Dedicated SOC 2 Compliance Pod",
-          revenue: formatCurrency(118000),
-          units: "22 pods",
-          progressPct: 40,
-          iconEmoji: "🛡️",
-        },
-      ]
-    }
-
-    // Default: Last 30 days
-    return [
-      {
-        name: "Enterprise Annual Commitment",
-        revenue: formatCurrency(74300),
-        units: "42 orgs",
-        progressPct: 88,
-        iconEmoji: "🏢",
-      },
-      {
-        name: "Pro Team Workspaces",
-        revenue: formatCurrency(58200),
-        units: "310 teams",
-        progressPct: 72,
-        iconEmoji: "👥",
-      },
-      {
-        name: "Nexora AI & Compute Engine",
-        revenue: formatCurrency(24500),
-        units: "1.8B tok",
-        progressPct: 54,
-        iconEmoji: "⚡",
-      },
-      {
-        name: "Dedicated SOC 2 Compliance Pod",
-        revenue: formatCurrency(11920),
-        units: "18 pods",
-        progressPct: 36,
-        iconEmoji: "🛡️",
-      },
-    ]
-  }, [dateRange, formatCurrency])
+  }, [analytics, formatCurrency, t])
 
   return (
     <div className="flex h-full flex-col justify-between rounded-xl border border-border/70 bg-card p-5 shadow-2xs">
@@ -188,13 +64,14 @@ export function TopProductsCard() {
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Information className="size-3.5 text-muted-foreground/70" />
-            <span className="font-medium">Top Tiers & Cloud Add-ons</span>
+            <span className="font-medium">{t("anTopProjects")}</span>
           </div>
-          <span className="text-xs tabular-nums text-muted-foreground">{dateRange}</span>
+          <span className="text-xs tabular-nums text-muted-foreground">{t(RANGE_LABEL[dateRange])}</span>
         </div>
 
-        {/* Product Rows */}
+        {/* Project Rows */}
         <div className="space-y-4 pt-1">
+          {products.length === 0 && <p className="py-6 text-center text-xs text-muted-foreground">{t("anNoRevenueYet")}</p>}
           {products.map((prod) => (
             <div key={prod.name} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
@@ -204,6 +81,11 @@ export function TopProductsCard() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0 tabular-nums">
                   <span className="text-muted-foreground text-xs">{prod.units}</span>
+                  {prod.margin !== null && (
+                    <span className={prod.margin >= 30 ? "text-xs text-success-foreground" : "text-xs text-warning-foreground"}>
+                      {t("anMarginShort", { margin: Math.round(prod.margin) })}
+                    </span>
+                  )}
                   <span className="font-semibold text-foreground">{prod.revenue}</span>
                 </div>
               </div>
@@ -222,8 +104,8 @@ export function TopProductsCard() {
 
       {/* Operational Explanation Paragraph */}
       <div className="mt-4 border-t border-border/40 pt-3 text-xs leading-relaxed text-muted-foreground">
-        <span className="font-semibold text-foreground">Catalog Performance: </span>
-        Enterprise Annual commitments represent 44% of total volume with 88% quota attainment. AI compute token overages represent the fastest-growing velocity add-on.
+        <span className="font-semibold text-foreground">{t("anProjectPerformance")} </span>
+        {note}
       </div>
     </div>
   )

@@ -5,12 +5,14 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { useTranslations } from "next-intl"
-import { Form } from "@/components/ui/form"
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { cn } from "@/lib/utils"
 import { NumberField, SelectField, TextField } from "./form-fields"
 import {
   EmployeeStatus,
   EmploymentType,
   WorkRole,
+  DEFAULT_WORKING_DAYS,
   type Department,
   type Employee,
   type EmployeeInput,
@@ -42,6 +44,7 @@ const schema = z.object({
   hourlyCost: money,
   billableRate: money,
   weeklyCapacity: z.number({ error: "required" }).min(0).max(80),
+  workingDays: z.array(z.number().int().min(0).max(6)).min(1),
   skills: z.string(),
 })
 
@@ -62,6 +65,7 @@ function toFormValues(employee?: Employee): FormValues {
     hourlyCost: employee?.hourlyCost ?? 0,
     billableRate: employee?.billableRate ?? 0,
     weeklyCapacity: employee?.weeklyCapacity ?? 40,
+    workingDays: employee?.workingDays?.length ? employee.workingDays : DEFAULT_WORKING_DAYS,
     skills: employee?.skills.join(", ") ?? "",
   }
 }
@@ -84,11 +88,16 @@ interface Props {
   employees: Employee[]
   departments: Department[]
   currency: string
+  /** Cost rates are hidden from roles without the costs permission (HR-6) */
+  canSeeCosts: boolean
   onValid: (input: EmployeeInput) => void
 }
 
+// Monday first; values are JavaScript weekdays (0 = Sunday)
+const WEEK = [1, 2, 3, 4, 5, 6, 0]
+
 export const EmployeeForm = forwardRef<EmployeeFormHandle, Props>(function EmployeeForm(
-  { employee, employees, departments, currency, onValid },
+  { employee, employees, departments, currency, canSeeCosts, onValid },
   ref
 ) {
   const t = useTranslations()
@@ -167,11 +176,44 @@ export const EmployeeForm = forwardRef<EmployeeFormHandle, Props>(function Emplo
           <TextField control={form.control} name="hireDate" label={t("hireDate")} type="date" />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <NumberField control={form.control} name="hourlyCost" label={`${t("hourlyCost")} (${currency})`} />
+        <div className={cn("grid gap-4", canSeeCosts ? "grid-cols-3" : "grid-cols-2")}>
+          {canSeeCosts && <NumberField control={form.control} name="hourlyCost" label={`${t("hourlyCost")} (${currency})`} />}
           <NumberField control={form.control} name="billableRate" label={`${t("billableRate")} (${currency})`} />
           <NumberField control={form.control} name="weeklyCapacity" label={t("hoursPerWeek")} />
         </div>
+
+        {employee && <p className="-mt-2 text-xs text-muted-foreground">{t("rateEditHint")}</p>}
+
+        <FormField
+          control={form.control}
+          name="workingDays"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t("workingDays")}</FormLabel>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("workingDays")}>
+                {WEEK.map((day) => {
+                  const on = field.value.includes(day)
+                  const label = new Date(2026, 0, 4 + day).toLocaleDateString(undefined, { weekday: "short" })
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => field.onChange(on ? field.value.filter((d) => d !== day) : [...field.value, day].sort())}
+                      className={cn(
+                        "h-9 min-w-12 rounded-full border px-3 text-[13px] font-medium transition-colors",
+                        on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <TextField
           control={form.control}

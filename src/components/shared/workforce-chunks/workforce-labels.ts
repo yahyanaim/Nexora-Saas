@@ -22,14 +22,18 @@ export const EMPLOYMENT_TYPE_LABEL: Record<EmploymentType, string> = {
 }
 
 export const EMPLOYEE_STATUS_LABEL: Record<EmployeeStatus, string> = {
+  [EmployeeStatus.STARTING]: "startingSoon",
   [EmployeeStatus.ACTIVE]: "active",
   [EmployeeStatus.ON_LEAVE]: "onLeave",
-  [EmployeeStatus.INACTIVE]: "inactive",
+  [EmployeeStatus.NOTICE]: "noticePeriod",
+  [EmployeeStatus.INACTIVE]: "formerEmployee",
 }
 
 export const EMPLOYEE_STATUS_CLASS: Record<EmployeeStatus, string> = {
+  [EmployeeStatus.STARTING]: "bg-info-soft text-info-foreground border-transparent",
   [EmployeeStatus.ACTIVE]: "bg-success-soft text-success-foreground border-transparent",
   [EmployeeStatus.ON_LEAVE]: "bg-warning-soft text-warning-foreground border-transparent",
+  [EmployeeStatus.NOTICE]: "bg-warning-soft text-warning-foreground border-transparent",
   [EmployeeStatus.INACTIVE]: "bg-muted text-muted-foreground border-transparent",
 }
 

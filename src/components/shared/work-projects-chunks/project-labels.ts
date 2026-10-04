@@ -44,6 +44,7 @@ export const BUDGET_TYPE_LABEL: Record<BudgetType, string> = {
   [BudgetType.FIXED]: "fixedPrice",
   [BudgetType.HOURLY]: "hourlyBilling",
   [BudgetType.NON_BILLABLE]: "nonBillable",
+  [BudgetType.RETAINER]: "retainer",
 }
 
 export const HEALTH_LABEL: Record<ProjectHealth, string> = {

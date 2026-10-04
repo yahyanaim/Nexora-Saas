@@ -1,8 +1,10 @@
 import { LeaveStatus, LeaveType, type LeaveRequest, type LeaveRequestInput } from "@/types/work-planning"
 import { createCollection } from "@/lib/workforce/demo-store"
+import { getSettingsApi } from "./settings-api"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { rangesOverlap, workingDays } from "@/lib/workforce/planning"
+import { recordAudit } from "@/lib/workforce/audit"
 
 const STAMP = "2026-01-05T09:00:00.000Z"
 
@@ -37,6 +39,10 @@ export async function listLeaveApi(workspaceId: string): Promise<LeaveRequest[]>
 
 export async function requestLeaveApi(workspaceId: string, input: LeaveRequestInput): Promise<LeaveRequest> {
   if (input.endDate < input.startDate) throw new Error("The last day can't be before the first day")
+  const { leaveTypes } = await getSettingsApi(workspaceId)
+  if (!leaveTypes.some((l) => l.type === input.type && l.enabled)) {
+    throw new Error("This leave type is turned off in the workspace settings")
+  }
   if (workingDays(input.startDate, input.endDate).length === 0) throw new Error("Pick at least one working day")
   const clash = leave
     .list(workspaceId)
@@ -60,6 +66,14 @@ export async function decideLeaveApi(
   if (!request) throw new Error("Leave request not found")
   if (request.status !== LeaveStatus.PENDING) throw new Error("Only pending requests can be decided")
   if (!approved && !decisionNote?.trim()) throw new Error("Give a reason when declining")
+  recordAudit(workspaceId, {
+    action: approved ? "Leave approved" : "Leave declined",
+    actionKey: approved ? "leave.approved" : "leave.declined",
+    category: "Approvals",
+    target: `${request.type} ${request.startDate} → ${request.endDate}`,
+    before: request.status,
+    after: approved ? LeaveStatus.APPROVED : `${LeaveStatus.REJECTED}: ${decisionNote!.trim()}`,
+  })
   return leave.update(workspaceId, id, {
     status: approved ? LeaveStatus.APPROVED : LeaveStatus.REJECTED,
     decisionNote: decisionNote?.trim() || undefined,

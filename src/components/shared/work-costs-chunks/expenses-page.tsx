@@ -38,6 +38,7 @@ import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects } from "@/hooks/workforce/use-work-projects"
 import { useExpenseMutations, useExpenses } from "@/hooks/workforce/use-expenses"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { toast } from "@/lib/utils/toast"
 import { EmployeeStatus } from "@/types/workforce"
@@ -69,6 +70,10 @@ export default function ExpensesPage() {
   const { authedUser } = useAuthGuard()
   const workspace = useCurrentWorkspace()
   const { data: expenses = [], isLoading } = useExpenses()
+  const { data: settings } = useWorkspaceSettings()
+  const enabledCategories = settings
+    ? settings.expenseCategories.filter((c) => c.enabled).map((c) => c.category)
+    : Object.values(ExpenseCategory)
   const { data: employees = [] } = useEmployees()
   const { data: projects = [] } = useProjects()
   const { submit, review, reimburse, remove } = useExpenseMutations()
@@ -308,7 +313,7 @@ export default function ExpensesPage() {
               <Label>{t("category")}</Label>
               <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v as ExpenseCategory }))}>
                 <SelectTrigger className="w-full bg-card" aria-label={t("category")}><SelectValue>{t(EXPENSE_CATEGORY_LABEL[form.category])}</SelectValue></SelectTrigger>
-                <SelectContent>{Object.values(ExpenseCategory).map((c) => <SelectItem key={c} value={c}>{t(EXPENSE_CATEGORY_LABEL[c])}</SelectItem>)}</SelectContent>
+                <SelectContent>{enabledCategories.map((c) => <SelectItem key={c} value={c}>{t(EXPENSE_CATEGORY_LABEL[c])}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-2">

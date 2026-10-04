@@ -4,7 +4,9 @@ import { useState, useMemo } from "react"
 import { Information } from "@/components/ui/carbon/icons"
 import { ShieldAlert } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useAnalyticsFilter } from "./analytics-filter-context"
+import { useTranslations } from "next-intl"
+import { change } from "@/lib/workforce/analytics"
+import { RANGE_LABEL, RANGE_SHORT, formatChange, useAnalyticsFilter } from "./analytics-filter-context"
 import {
   ResponsiveContainer,
   BarChart,
@@ -22,175 +24,80 @@ interface ArrBarStep {
   numericValue: number
   delta: string
   type: "start" | "add" | "subtract" | "end"
-  color: string
+  /** Where the bar starts and ends, as a share of the tallest point (waterfall) */
+  bottom: number
+  height: number
 }
 
-const AT_RISK_ACCOUNTS = [
-  { name: "Apex Logistics", tier: "Enterprise", seats: 45, usageDrop: "-34%", riskLevel: "high" },
-  { name: "Skyline Media", tier: "Pro Team", seats: 18, usageDrop: "-22%", riskLevel: "medium" },
-  { name: "DataFlow Systems", tier: "Enterprise", seats: 60, usageDrop: "-18%", riskLevel: "medium" },
-]
-
 export function ArrBridgeCard() {
+  const t = useTranslations()
   const [activeTab, setActiveTab] = useState<"bar" | "retention">("bar")
   const [chartView, setChartView] = useState<"components" | "trajectory">("components")
-  const { dateRange, formatCurrency, currencyRate, workspaceMultiplier } = useAnalyticsFilter()
+  const { dateRange, formatCurrency, formatBucket, analytics } = useAnalyticsFilter()
 
-  const mult = currencyRate * workspaceMultiplier
-
-  const { steps, trajectoryData, netDeltaBadge, headlineAmount, explanation } = useMemo(() => {
-    if (dateRange === "Last 7 days") {
-      const stepItems: ArrBarStep[] = [
-        { label: "Starting Run-rate", shortLabel: "Start", amount: formatCurrency(1968000, { compact: true }), numericValue: 1968000 * mult, delta: "7d Baseline", type: "start", color: "#3b82f6" },
-        { label: "New Bookings", shortLabel: "+New", amount: `+${formatCurrency(14000, { compact: true })}`, numericValue: 140000 * mult, delta: "+0.7%", type: "add", color: "#10b981" },
-        { label: "Seat Expansion", shortLabel: "+Expand", amount: `+${formatCurrency(18000, { compact: true })}`, numericValue: 180000 * mult, delta: "+0.9%", type: "add", color: "#10b981" },
-        { label: "Contractions", shortLabel: "-Contr", amount: `-${formatCurrency(5000, { compact: true })}`, numericValue: 50000 * mult, delta: "-0.2%", type: "subtract", color: "#f43f5e" },
-        { label: "Logo Churn", shortLabel: "-Churn", amount: `-${formatCurrency(3000, { compact: true })}`, numericValue: 30000 * mult, delta: "-0.1%", type: "subtract", color: "#f43f5e" },
-        { label: "Ending Run-rate", shortLabel: "End", amount: formatCurrency(1992000, { compact: true }), numericValue: 1992000 * mult, delta: "+1.2% net", type: "end", color: "#6366f1" },
-      ]
-
-      const traj = [
-        { label: "Jul 22", value: Math.round(1968000 * mult), formatted: formatCurrency(1968000, { compact: true }) },
-        { label: "Jul 23", value: Math.round(1972000 * mult), formatted: formatCurrency(1972000, { compact: true }) },
-        { label: "Jul 24", value: Math.round(1978000 * mult), formatted: formatCurrency(1978000, { compact: true }) },
-        { label: "Jul 25", value: Math.round(1982000 * mult), formatted: formatCurrency(1982000, { compact: true }) },
-        { label: "Jul 26", value: Math.round(1986000 * mult), formatted: formatCurrency(1986000, { compact: true }) },
-        { label: "Jul 27", value: Math.round(1989000 * mult), formatted: formatCurrency(1989000, { compact: true }) },
-        { label: "Jul 28", value: Math.round(1992000 * mult), formatted: formatCurrency(1992000, { compact: true }) },
-      ]
-
-      return {
-        headlineAmount: formatCurrency(1992000, { compact: true }),
-        netDeltaBadge: `+${formatCurrency(24000, { compact: true })} net 7d`,
-        steps: stepItems,
-        trajectoryData: traj,
-        explanation:
-          "Past 7-day ARR expansion: Net annualized expansion added +$24k over the last 7 days driven by 2 new enterprise tier upgrades and ongoing seat additions.",
-      }
-    }
-
-    if (dateRange === "Last 90 days") {
-      const stepItems: ArrBarStep[] = [
-        { label: "Starting ARR", shortLabel: "Start", amount: formatCurrency(1450000, { compact: true }), numericValue: 1450000 * mult, delta: "Q2 Baseline", type: "start", color: "#3b82f6" },
-        { label: "New Bookings", shortLabel: "+New", amount: `+${formatCurrency(360000, { compact: true })}`, numericValue: 360000 * mult, delta: "+24.8%", type: "add", color: "#10b981" },
-        { label: "Seat Expansion", shortLabel: "+Expand", amount: `+${formatCurrency(265000, { compact: true })}`, numericValue: 265000 * mult, delta: "+18.3%", type: "add", color: "#10b981" },
-        { label: "Contractions", shortLabel: "-Contr", amount: `-${formatCurrency(55000, { compact: true })}`, numericValue: 55000 * mult, delta: "-3.8%", type: "subtract", color: "#f43f5e" },
-        { label: "Logo Churn", shortLabel: "-Churn", amount: `-${formatCurrency(28000, { compact: true })}`, numericValue: 28000 * mult, delta: "-1.9%", type: "subtract", color: "#f43f5e" },
-        { label: "Ending ARR", shortLabel: "End", amount: formatCurrency(1992000, { compact: true }), numericValue: 1992000 * mult, delta: "+37.4% net", type: "end", color: "#6366f1" },
-      ]
-
-      const traj = [
-        { label: "May W1", value: Math.round(1450000 * mult), formatted: formatCurrency(1450000, { compact: true }) },
-        { label: "May W3", value: Math.round(1520000 * mult), formatted: formatCurrency(1520000, { compact: true }) },
-        { label: "Jun W1", value: Math.round(1610000 * mult), formatted: formatCurrency(1610000, { compact: true }) },
-        { label: "Jun W3", value: Math.round(1720000 * mult), formatted: formatCurrency(1720000, { compact: true }) },
-        { label: "Jul W1", value: Math.round(1840000 * mult), formatted: formatCurrency(1840000, { compact: true }) },
-        { label: "Jul W4", value: Math.round(1992000 * mult), formatted: formatCurrency(1992000, { compact: true }) },
-      ]
-
-      return {
-        headlineAmount: formatCurrency(1992000, { compact: true }),
-        netDeltaBadge: `+${formatCurrency(542000, { compact: true })} net 90d`,
-        steps: stepItems,
-        trajectoryData: traj,
-        explanation:
-          "Trailing 90-day expansion: Strong quarterly expansion fueled by multi-year enterprise commitments and dedicated SOC 2 pod deployments.",
-      }
-    }
-
-    if (dateRange === "Last 1 year") {
-      const stepItems: ArrBarStep[] = [
-        { label: "Starting ARR", shortLabel: "Start", amount: formatCurrency(1150000, { compact: true }), numericValue: 1150000 * mult, delta: "1Y Baseline", type: "start", color: "#3b82f6" },
-        { label: "New Bookings", shortLabel: "+New", amount: `+${formatCurrency(580000, { compact: true })}`, numericValue: 580000 * mult, delta: "+50.4%", type: "add", color: "#10b981" },
-        { label: "Seat Expansion", shortLabel: "+Expand", amount: `+${formatCurrency(420000, { compact: true })}`, numericValue: 420000 * mult, delta: "+36.5%", type: "add", color: "#10b981" },
-        { label: "Contractions", shortLabel: "-Contr", amount: `-${formatCurrency(98000, { compact: true })}`, numericValue: 98000 * mult, delta: "-8.5%", type: "subtract", color: "#f43f5e" },
-        { label: "Logo Churn", shortLabel: "-Churn", amount: `-${formatCurrency(60000, { compact: true })}`, numericValue: 60000 * mult, delta: "-5.2%", type: "subtract", color: "#f43f5e" },
-        { label: "Ending ARR", shortLabel: "End", amount: formatCurrency(1992000, { compact: true }), numericValue: 1992000 * mult, delta: "+73.2% net", type: "end", color: "#6366f1" },
-      ]
-
-      const traj = [
-        { label: "Oct", value: Math.round(1150000 * mult), formatted: formatCurrency(1150000, { compact: true }) },
-        { label: "Nov", value: Math.round(1210000 * mult), formatted: formatCurrency(1210000, { compact: true }) },
-        { label: "Dec", value: Math.round(1280000 * mult), formatted: formatCurrency(1280000, { compact: true }) },
-        { label: "Jan", value: Math.round(1350000 * mult), formatted: formatCurrency(1350000, { compact: true }) },
-        { label: "Feb", value: Math.round(1440000 * mult), formatted: formatCurrency(1440000, { compact: true }) },
-        { label: "Mar", value: Math.round(1540000 * mult), formatted: formatCurrency(1540000, { compact: true }) },
-        { label: "Apr", value: Math.round(1640000 * mult), formatted: formatCurrency(1640000, { compact: true }) },
-        { label: "May", value: Math.round(1730000 * mult), formatted: formatCurrency(1730000, { compact: true }) },
-        { label: "Jun", value: Math.round(1830000 * mult), formatted: formatCurrency(1830000, { compact: true }) },
-        { label: "Jul", value: Math.round(1910000 * mult), formatted: formatCurrency(1910000, { compact: true }) },
-        { label: "Aug", value: Math.round(1950000 * mult), formatted: formatCurrency(1950000, { compact: true }) },
-        { label: "Sep", value: Math.round(1992000 * mult), formatted: formatCurrency(1992000, { compact: true }) },
-      ]
-
-      return {
-        headlineAmount: formatCurrency(1992000, { compact: true }),
-        netDeltaBadge: `+${formatCurrency(842000, { compact: true })} net 1Y`,
-        steps: stepItems,
-        trajectoryData: traj,
-        explanation:
-          "Trailing 12-month ARR expansion: Annual contract value grew by +$842k net over the past year. High-expansion accounts in enterprise tiers outpaced logo churn by 16.7x, delivering a 118.4% net revenue retention benchmark.",
-      }
-    }
-
-    if (dateRange === "Year to date") {
-      const stepItems: ArrBarStep[] = [
-        { label: "Starting ARR", shortLabel: "Start", amount: formatCurrency(1180000, { compact: true }), numericValue: 1180000 * mult, delta: "Jan 1 Baseline", type: "start", color: "#3b82f6" },
-        { label: "New Bookings", shortLabel: "+New", amount: `+${formatCurrency(540000, { compact: true })}`, numericValue: 540000 * mult, delta: "+45.8%", type: "add", color: "#10b981" },
-        { label: "Seat Expansion", shortLabel: "+Expand", amount: `+${formatCurrency(385000, { compact: true })}`, numericValue: 385000 * mult, delta: "+32.6%", type: "add", color: "#10b981" },
-        { label: "Contractions", shortLabel: "-Contr", amount: `-${formatCurrency(72000, { compact: true })}`, numericValue: 72000 * mult, delta: "-6.1%", type: "subtract", color: "#f43f5e" },
-        { label: "Logo Churn", shortLabel: "-Churn", amount: `-${formatCurrency(41000, { compact: true })}`, numericValue: 41000 * mult, delta: "-3.5%", type: "subtract", color: "#f43f5e" },
-        { label: "Ending ARR", shortLabel: "End", amount: formatCurrency(1992000, { compact: true }), numericValue: 1992000 * mult, delta: "+68.8% net", type: "end", color: "#6366f1" },
-      ]
-
-      const traj = [
-        { label: "Jan", value: Math.round(1180000 * mult), formatted: formatCurrency(1180000, { compact: true }) },
-        { label: "Feb", value: Math.round(1280000 * mult), formatted: formatCurrency(1280000, { compact: true }) },
-        { label: "Mar", value: Math.round(1410000 * mult), formatted: formatCurrency(1410000, { compact: true }) },
-        { label: "Apr", value: Math.round(1540000 * mult), formatted: formatCurrency(1540000, { compact: true }) },
-        { label: "May", value: Math.round(1680000 * mult), formatted: formatCurrency(1680000, { compact: true }) },
-        { label: "Jun", value: Math.round(1840000 * mult), formatted: formatCurrency(1840000, { compact: true }) },
-        { label: "Jul", value: Math.round(1940000 * mult), formatted: formatCurrency(1940000, { compact: true }) },
-        { label: "Aug", value: Math.round(1970000 * mult), formatted: formatCurrency(1970000, { compact: true }) },
-        { label: "Sep", value: Math.round(1992000 * mult), formatted: formatCurrency(1992000, { compact: true }) },
-      ]
-
-      return {
-        headlineAmount: formatCurrency(1992000, { compact: true }),
-        netDeltaBadge: `+${formatCurrency(812000, { compact: true })} net YTD`,
-        steps: stepItems,
-        trajectoryData: traj,
-        explanation:
-          "Year-to-date milestone: Annual recurring revenue run-rate has scaled from $1.18M to near the $2.0M milestone with minimal logo churn.",
-      }
-    }
-
-    // Default: Last 30 days
-    const stepItems: ArrBarStep[] = [
-      { label: "Starting ARR", shortLabel: "Start", amount: formatCurrency(1620000, { compact: true }), numericValue: 1620000 * mult, delta: "Baseline", type: "start", color: "#3b82f6" },
-      { label: "New Bookings", shortLabel: "+New", amount: `+${formatCurrency(240000, { compact: true })}`, numericValue: 240000 * mult, delta: "+14.8%", type: "add", color: "#10b981" },
-      { label: "Seat Expansion", shortLabel: "+Expand", amount: `+${formatCurrency(185000, { compact: true })}`, numericValue: 185000 * mult, delta: "+11.4%", type: "add", color: "#10b981" },
-      { label: "Contractions", shortLabel: "-Contr", amount: `-${formatCurrency(35000, { compact: true })}`, numericValue: 35000 * mult, delta: "-2.1%", type: "subtract", color: "#f43f5e" },
-      { label: "Logo Churn", shortLabel: "-Churn", amount: `-${formatCurrency(18000, { compact: true })}`, numericValue: 18000 * mult, delta: "-1.1%", type: "subtract", color: "#f43f5e" },
-      { label: "Ending ARR", shortLabel: "End", amount: formatCurrency(1992000, { compact: true }), numericValue: 1992000 * mult, delta: "+23.0% net", type: "end", color: "#6366f1" },
+  const { steps, trajectoryData, netDeltaBadge, netPositive, headlineAmount, explanation, risks } = useMemo(() => {
+    const { bridge, series, current, previous, risks: riskRows } = analytics
+    const amount = (key: string) => bridge.find((b) => b.key === key)?.amount ?? 0
+    const start = amount("start")
+    const growth = amount("growth")
+    const added = amount("new")
+    const decline = amount("decline")
+    const lost = amount("lost")
+    const end = amount("end")
+    const peak = Math.max(1, start, start + growth + added, end)
+    const share = (n: number) => (n / peak) * 100
+    const ofStart = (n: number) => (start > 0 ? formatChange((n / start) * 100) : "—")
+    const afterAdds = start + growth + added
+    const meta: { key: string; label: string; short: string; value: number; type: ArrBarStep["type"]; base: number }[] = [
+      { key: "start", label: t("anBridgeStart"), short: t("anBridgeStartShort"), value: start, type: "start", base: 0 },
+      { key: "growth", label: t("anBridgeGrowth"), short: t("anBridgeGrowthShort"), value: growth, type: "add", base: start },
+      { key: "new", label: t("anBridgeNew"), short: t("anBridgeNewShort"), value: added, type: "add", base: start + growth },
+      { key: "decline", label: t("anBridgeDecline"), short: t("anBridgeDeclineShort"), value: decline, type: "subtract", base: afterAdds - decline },
+      { key: "lost", label: t("anBridgeLost"), short: t("anBridgeLostShort"), value: lost, type: "subtract", base: afterAdds - decline - lost },
+      { key: "end", label: t("anBridgeEnd"), short: t("anBridgeEndShort"), value: end, type: "end", base: 0 },
     ]
+    const stepItems: ArrBarStep[] = meta.map((m) => ({
+      label: m.label,
+      shortLabel: m.short,
+      amount:
+        m.type === "add" ? formatCurrency(m.value, { compact: true, signed: true })
+        : m.type === "subtract" ? (m.value > 0 ? formatCurrency(-m.value, { compact: true }) : formatCurrency(0, { compact: true }))
+        : formatCurrency(m.value, { compact: true }),
+      numericValue: m.value,
+      delta:
+        m.type === "start" ? t("anBaseline")
+        : m.type === "end" ? t("anNetChange", { change: formatChange(change(end, start)) })
+        : m.type === "add" ? ofStart(m.value)
+        : ofStart(m.value > 0 ? -m.value : 0),
+      type: m.type,
+      bottom: share(Math.max(0, m.base)),
+      height: Math.max(m.value > 0 ? 3 : 0, share(m.value)),
+    }))
 
-    const traj = [
-      { label: "Week 1", value: Math.round(1620000 * mult), formatted: formatCurrency(1620000, { compact: true }) },
-      { label: "Week 2", value: Math.round(1710000 * mult), formatted: formatCurrency(1710000, { compact: true }) },
-      { label: "Week 3", value: Math.round(1830000 * mult), formatted: formatCurrency(1830000, { compact: true }) },
-      { label: "Week 4", value: Math.round(1992000 * mult), formatted: formatCurrency(1992000, { compact: true }) },
-    ]
-
+    const traj = series.map((s) => ({ label: formatBucket(s.from), value: Math.round(s.revenue), formatted: formatCurrency(s.revenue) }))
+    const net = end - start
+    const top = analytics.clients[0]
     return {
-      headlineAmount: formatCurrency(1992000, { compact: true }),
-      netDeltaBadge: `+${formatCurrency(372000, { compact: true })} net YoY`,
+      headlineAmount: formatCurrency(end, { compact: true }),
+      netDeltaBadge: t("anNetFor", { amount: formatCurrency(net, { compact: true, signed: true }), period: RANGE_SHORT[dateRange] }),
+      netPositive: net >= 0,
       steps: stepItems,
       trajectoryData: traj,
+      risks: riskRows,
       explanation:
-        "The ARR expansion bar measures net annual contract value flow. Expansion and new bookings outpaced churn and contraction by 10.5x, achieving a 118.4% net revenue retention benchmark.",
+        start === 0 && end === 0
+          ? t("anNoRevenueYet")
+          : t("anBridgeNote", {
+              growth: formatCurrency(growth + added, { compact: true }),
+              loss: formatCurrency(decline + lost, { compact: true }),
+              client: top?.name ?? "—",
+              margin: current.margin === null ? "—" : `${Math.round(current.margin)}%`,
+              before: previous.margin === null ? "—" : `${Math.round(previous.margin)}%`,
+            }),
     }
-  }, [dateRange, formatCurrency, mult])
+  }, [analytics, dateRange, formatBucket, formatCurrency, t])
+
+  const highRisk = risks.filter((r) => r.level === "high").length
 
   return (
     <div className="flex h-full flex-col justify-between rounded-xl border border-border/70 bg-card p-5 shadow-2xs">
@@ -199,8 +106,8 @@ export function ArrBridgeCard() {
         <div className="flex flex-wrap items-center justify-between gap-2 pb-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Information className="size-3.5 text-muted-foreground/70" />
-            <span className="font-medium">ARR Expansion Dynamics & Retention</span>
-            <span className="text-xs tabular-nums text-muted-foreground">({dateRange})</span>
+            <span className="font-medium">{t("anRevenueBridge")}</span>
+            <span className="text-xs tabular-nums text-muted-foreground">({t(RANGE_LABEL[dateRange])})</span>
           </div>
 
           <div className="flex items-center rounded-lg border border-border/60 bg-muted/30 p-0.5 text-xs">
@@ -214,7 +121,7 @@ export function ArrBridgeCard() {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              ARR Growth
+              {t("anBridgeTab")}
             </button>
             <button
               type="button"
@@ -226,7 +133,7 @@ export function ArrBridgeCard() {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              Churn Risk Matrix
+              {t("anClientsAtRisk")}
             </button>
           </div>
         </div>
@@ -239,13 +146,16 @@ export function ArrBridgeCard() {
                 <span className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
                   {headlineAmount}
                 </span>
-                <span className="ml-2 text-xs font-semibold text-success-foreground">
+                <span className={cn("ms-2 text-xs font-semibold", netPositive ? "text-success-foreground" : "text-danger-foreground")}>
                   {netDeltaBadge}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  Target: {formatCurrency(2200000, { compact: true })} (90.5%)
+                  {t("anProfitInline", {
+                    profit: formatCurrency(analytics.current.profit, { compact: true }),
+                    margin: analytics.current.margin === null ? "—" : `${Math.round(analytics.current.margin)}%`,
+                  })}
                 </span>
                 {/* View toggle pill */}
                 <div className="flex items-center rounded-md border border-border/50 bg-muted/40 p-0.5 text-xs">
@@ -259,7 +169,7 @@ export function ArrBridgeCard() {
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    Components
+                    {t("anComponents")}
                   </button>
                   <button
                     type="button"
@@ -271,7 +181,7 @@ export function ArrBridgeCard() {
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    Monthly
+                    {t("anByPeriod")}
                   </button>
                 </div>
               </div>
@@ -291,23 +201,20 @@ export function ArrBridgeCard() {
                         {step.amount}
                       </span>
                       
-                      {/* Modern Bar Container with clean rounded-top bar */}
-                      <div className="flex h-28 w-full items-end justify-center rounded-md bg-muted/30 p-1 transition-colors group-hover:bg-muted/50">
-                        <div
-                          style={{
-                            height: isAnchor
-                              ? `${step.type === "start" ? 72 : 88}%`
-                              : isPositive
-                              ? `${step.shortLabel === "+New" ? 44 : 36}%`
-                              : `${step.shortLabel === "-Contr" ? 22 : 16}%`,
-                          }}
-                          className={cn(
-                            "w-full rounded-t-md rounded-b-none transition-all duration-300 shadow-2xs",
-                            isAnchor && "bg-primary shadow-primary/20",
-                            isPositive && "bg-success shadow-emerald-500/20",
-                            isNegative && "bg-destructive shadow-rose-500/20"
-                          )}
-                        />
+                      {/* Waterfall: each change floats where the running total is */}
+                      <div className="relative h-28 w-full rounded-md bg-muted/30 transition-colors group-hover:bg-muted/50" title={step.label}>
+                        <div className="absolute inset-1">
+                          <div
+                            style={{ bottom: `${step.bottom}%`, height: `${step.height}%` }}
+                            className={cn(
+                              "absolute inset-x-0 rounded-t-md rounded-b-none transition-all duration-300 shadow-2xs",
+                              !isAnchor && "rounded-b-md",
+                              isAnchor && "bg-primary shadow-primary/20",
+                              isPositive && "bg-success shadow-emerald-500/20",
+                              isNegative && "bg-destructive shadow-rose-500/20"
+                            )}
+                          />
+                        </div>
                       </div>
 
                       <div className="flex flex-col items-center">
@@ -375,32 +282,43 @@ export function ArrBridgeCard() {
         ) : (
           <div className="mt-2 space-y-2.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-foreground">At-Risk Accounts Requiring Intervention</span>
-              <span className="text-danger-foreground font-medium text-xs">3 accounts flagged</span>
+              <span className="font-medium text-foreground">{t("anAtRiskTitle")}</span>
+              <span className={cn("font-medium text-xs", highRisk > 0 ? "text-danger-foreground" : "text-muted-foreground")}>
+                {t("anFlagged", { count: risks.length })}
+              </span>
             </div>
 
             <div className="divide-y divide-border/40 text-xs">
-              {AT_RISK_ACCOUNTS.map((account) => (
-                <div key={account.name} className="flex items-center justify-between py-2">
+              {risks.length === 0 && (
+                <p className="py-6 text-center text-muted-foreground">{t("anNoRisks")}</p>
+              )}
+              {risks.slice(0, 4).map((account) => (
+                <div key={account.clientId} className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-2">
                     <ShieldAlert
                       className={cn(
                         "size-4 shrink-0",
-                        account.riskLevel === "high" ? "text-danger-foreground" : "text-warning-foreground"
+                        account.level === "high" ? "text-danger-foreground" : "text-warning-foreground"
                       )}
                     />
                     <div>
                       <p className="font-medium text-foreground">{account.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {account.tier} · {account.seats} seats
+                        {account.reason === "overdue"
+                          ? t("anRiskOverdue", { count: account.invoices ?? 0, days: account.overdueDays ?? 0 })
+                          : account.reason === "quiet"
+                          ? t("anRiskQuiet")
+                          : t("anRiskDecline")}
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <span className="tabular-nums font-medium text-danger-foreground">
-                      {account.usageDrop}
+                      {account.reason === "overdue" ? formatCurrency(account.value) : formatChange(account.value)}
                     </span>
-                    <p className="text-xs text-muted-foreground">30d activity drop</p>
+                    <p className="text-xs text-muted-foreground">
+                      {account.reason === "overdue" ? t("anOverdueLabel") : t("anRevenueChangeLabel")}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -411,7 +329,7 @@ export function ArrBridgeCard() {
 
       {/* Operational Explanation Paragraph */}
       <div className="mt-4 border-t border-border/40 pt-3 text-xs leading-relaxed text-muted-foreground">
-        <span className="font-semibold text-foreground">Executive Growth Summary: </span>
+        <span className="font-semibold text-foreground">{t("anGrowthSummary")} </span>
         {explanation}
       </div>
     </div>

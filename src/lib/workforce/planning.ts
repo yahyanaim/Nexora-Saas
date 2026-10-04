@@ -1,7 +1,7 @@
-import type { Employee } from "@/types/workforce"
+import { DEFAULT_WORKING_DAYS, type Employee } from "@/types/workforce"
 import { TaskStatus, type WorkTask } from "@/types/work-projects"
 import { ANNUAL_VACATION_DAYS, LeaveStatus, LeaveType, type LeaveRequest } from "@/types/work-planning"
-import { addDays, weekDays } from "./billing"
+import { addDays } from "./billing"
 import { todayIso } from "./project-metrics"
 
 /** Saturday or Sunday. */
@@ -22,6 +22,27 @@ export function workingDays(start: string, end: string) {
   return datesBetween(start, end).filter((d) => !isWeekend(d))
 }
 
+/**
+ * Dates someone actually works in a range: their working weekdays (HR-4),
+ * minus public holidays.
+ */
+export function employeeWorkDays(
+  employee: Pick<Employee, "workingDays">,
+  start: string,
+  end: string,
+  holidays: Iterable<string> = []
+) {
+  const weekdays = new Set(employee.workingDays?.length ? employee.workingDays : DEFAULT_WORKING_DAYS)
+  const off = new Set(holidays)
+  return datesBetween(start, end).filter((d) => weekdays.has(new Date(`${d}T00:00:00`).getDay()) && !off.has(d))
+}
+
+/** Planned hours per working day: weekly capacity spread over the days they work. */
+export function hoursPerDay(employee: Pick<Employee, "workingDays" | "weeklyCapacity">) {
+  const days = employee.workingDays?.length ? employee.workingDays.length : DEFAULT_WORKING_DAYS.length
+  return employee.weeklyCapacity / days
+}
+
 /** Whether two inclusive date ranges share at least one day. */
 export function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
   return aStart <= bEnd && bStart <= aEnd
@@ -40,7 +61,12 @@ export function leaveDays(requests: LeaveRequest[], employeeId: string, from?: s
 }
 
 /** Vacation allowance for a year: used (approved), pending and what's left. */
-export function vacationBalance(requests: LeaveRequest[], employeeId: string, year: number) {
+export function vacationBalance(
+  requests: LeaveRequest[],
+  employeeId: string,
+  year: number,
+  allowance: number = ANNUAL_VACATION_DAYS
+) {
   const from = `${year}-01-01`
   const to = `${year}-12-31`
   const count = (status: LeaveStatus) =>
@@ -49,15 +75,14 @@ export function vacationBalance(requests: LeaveRequest[], employeeId: string, ye
       .reduce((sum, r) => sum + workingDays(r.startDate < from ? from : r.startDate, r.endDate > to ? to : r.endDate).length, 0)
   const used = count(LeaveStatus.APPROVED)
   const pending = count(LeaveStatus.PENDING)
-  return { allowance: ANNUAL_VACATION_DAYS, used, pending, remaining: ANNUAL_VACATION_DAYS - used - pending }
+  return { allowance, used, pending, remaining: allowance - used - pending }
 }
 
 /** Hours someone can be planned for in a week: capacity spread over working days, minus leave. */
-export function weeklyCapacity(employee: Employee, requests: LeaveRequest[], monday: string) {
-  const days = weekDays(monday).filter((d) => !isWeekend(d))
-  const off = leaveDays(requests, employee.id, days[0], days[days.length - 1])
-  const perDay = employee.weeklyCapacity / 5
-  return Math.round(perDay * days.filter((d) => !off.has(d)).length * 10) / 10
+export function weeklyCapacity(employee: Employee, requests: LeaveRequest[], monday: string, holidays: Iterable<string> = []) {
+  const days = employeeWorkDays(employee, monday, addDays(monday, 6), holidays)
+  const off = leaveDays(requests, employee.id, monday, addDays(monday, 6))
+  return Math.round(hoursPerDay(employee) * days.filter((d) => !off.has(d)).length * 10) / 10
 }
 
 /**

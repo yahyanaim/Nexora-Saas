@@ -37,6 +37,16 @@ const CATEGORY_CONFIG: Record<
     icon: Activity,
     className: "bg-muted text-muted-foreground border-border/50",
   },
+  Approvals: {
+    label: "Approvals",
+    icon: CheckCircle,
+    className: "bg-warning-soft text-warning-foreground border-transparent",
+  },
+  Settings: {
+    label: "Settings",
+    icon: Activity,
+    className: "bg-info-soft text-info-foreground border-transparent",
+  },
 }
 
 const STATUS_CONFIG: Record<

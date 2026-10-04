@@ -2,143 +2,90 @@
 
 import { useMemo } from "react"
 import { Information } from "@/components/ui/carbon/icons"
-import { useAnalyticsFilter } from "./analytics-filter-context"
+import { useTranslations } from "next-intl"
+import { RANGE_SHORT, formatChange, useAnalyticsFilter } from "./analytics-filter-context"
 
 interface BreakdownItem {
   label: string
   amount: string
   trend?: "up" | "down" | "none"
+  points?: number[]
 }
 
-function MiniWaveSparkline({ trend }: { trend: "up" | "down" | "none" }) {
+function MiniWaveSparkline({ trend, points }: { trend: "up" | "down" | "none"; points?: number[] }) {
   if (trend === "none") {
     return <span className="text-muted-foreground text-xs">-</span>
   }
 
   const isUp = trend === "up"
   const color = isUp ? "#10b981" : "#ef4444"
+  const values = points && points.length > 1 ? points : isUp ? [4, 6, 3, 9, 6, 12] : [11, 8, 12, 5, 7, 2]
+  const max = Math.max(...values)
+  const min = Math.min(...values)
+  const d = values
+    .map((v, i) => {
+      const x = 1 + (i / (values.length - 1)) * 26
+      const y = 12 - (max === min ? 5 : ((v - min) / (max - min)) * 10)
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`
+    })
+    .join(" ")
 
   return (
     <svg width="28" height="14" viewBox="0 0 28 14" fill="none" className="shrink-0">
-      {isUp ? (
-        <path
-          d="M1 10 L5 8 L10 11 L16 5 L21 8 L27 2"
-          stroke={color}
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      ) : (
-        <path
-          d="M1 3 L6 6 L12 2 L18 9 L23 7 L27 12"
-          stroke={color}
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      )}
+      <path d={d} stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
 
+/** Fixed order so a client keeps its colour as filters change the list */
+const SEGMENT_COLORS = ["#2563eb", "#0ea5e9", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"]
+
 export function SalesBreakdownCard() {
-  const { dateRange, formatCurrency } = useAnalyticsFilter()
+  const t = useTranslations()
+  const { dateRange, formatCurrency, analytics } = useAnalyticsFilter()
 
-  const { items, badgeText, totalAmount, explanation } = useMemo(() => {
-    if (dateRange === "Last 7 days") {
-      return {
-        badgeText: "7d Total",
-        totalAmount: formatCurrency(41280),
-        items: [
-          { label: "Enterprise Tier Subscriptions", amount: formatCurrency(23100), trend: "up" },
-          { label: "Pro Team Workspaces", amount: formatCurrency(11800), trend: "up" },
-          { label: "AI Compute & Token Overages", amount: formatCurrency(4520), trend: "up" },
-          { label: "Dedicated Cloud Pods & SLA", amount: formatCurrency(3080), trend: "up" },
-          { label: "Developer API Add-ons", amount: formatCurrency(1680), trend: "up" },
-          { label: "Expansion & Seat Upgrades", amount: formatCurrency(2010), trend: "up" },
-          { label: "Discounts & Promotional Credits", amount: formatCurrency(-2750), trend: "down" },
-          { label: "Contractions & Churned Seats", amount: formatCurrency(-2160), trend: "down" },
-        ] as BreakdownItem[],
-        explanation:
-          "Past 7-day ledger: Enterprise commitments generated 56% of total 7-day revenue, while AI token overages represent the fastest-growing weekly margin driver.",
-      }
-    }
-
-    if (dateRange === "Last 90 days") {
-      return {
-        badgeText: "90d Total",
-        totalAmount: formatCurrency(506760),
-        items: [
-          { label: "Enterprise Tier Subscriptions", amount: formatCurrency(283500), trend: "up" },
-          { label: "Pro Team Workspaces", amount: formatCurrency(144600), trend: "up" },
-          { label: "AI Compute & Token Overages", amount: formatCurrency(55350), trend: "up" },
-          { label: "Dedicated Cloud Pods & SLA", amount: formatCurrency(37800), trend: "up" },
-          { label: "Developer API Add-ons", amount: formatCurrency(20460), trend: "up" },
-          { label: "Expansion & Seat Upgrades", amount: formatCurrency(24450), trend: "up" },
-          { label: "Discounts & Promotional Credits", amount: formatCurrency(-33600), trend: "down" },
-          { label: "Contractions & Churned Seats", amount: formatCurrency(-25800), trend: "down" },
-        ] as BreakdownItem[],
-        explanation:
-          "Quarterly ledger: Enterprise commitments expanded by 34% over 90 days, with compute infrastructure scaling alongside customer traffic.",
-      }
-    }
-
-    if (dateRange === "Last 1 year") {
-      return {
-        badgeText: "1Y ARR",
-        totalAmount: formatCurrency(1992000),
-        items: [
-          { label: "Enterprise Tier Subscriptions", amount: formatCurrency(1115000), trend: "up" },
-          { label: "Pro Team Workspaces", amount: formatCurrency(568000), trend: "up" },
-          { label: "AI Compute & Token Overages", amount: formatCurrency(218000), trend: "up" },
-          { label: "Dedicated Cloud Pods & SLA", amount: formatCurrency(148000), trend: "up" },
-          { label: "Developer API Add-ons", amount: formatCurrency(81000), trend: "up" },
-          { label: "Expansion & Seat Upgrades", amount: formatCurrency(96000), trend: "up" },
-          { label: "Discounts & Promotional Credits", amount: formatCurrency(-132000), trend: "down" },
-          { label: "Contractions & Churned Seats", amount: formatCurrency(-102000), trend: "down" },
-        ] as BreakdownItem[],
-        explanation:
-          "Trailing 12-month ledger: Annual recognized contract value of $1.99M with enterprise multi-year subscriptions contributing over 56% of total ARR flow.",
-      }
-    }
-
-    if (dateRange === "Year to date") {
-      return {
-        badgeText: "YTD Total",
-        totalAmount: formatCurrency(1689200),
-        items: [
-          { label: "Enterprise Tier Subscriptions", amount: formatCurrency(945000), trend: "up" },
-          { label: "Pro Team Workspaces", amount: formatCurrency(482000), trend: "up" },
-          { label: "AI Compute & Token Overages", amount: formatCurrency(185000), trend: "up" },
-          { label: "Dedicated Cloud Pods & SLA", amount: formatCurrency(126000), trend: "up" },
-          { label: "Developer API Add-ons", amount: formatCurrency(68000), trend: "up" },
-          { label: "Expansion & Seat Upgrades", amount: formatCurrency(81500), trend: "up" },
-          { label: "Discounts & Promotional Credits", amount: formatCurrency(-112000), trend: "down" },
-          { label: "Contractions & Churned Seats", amount: formatCurrency(-86300), trend: "down" },
-        ] as BreakdownItem[],
-        explanation:
-          "Annual ledger: Cumulative subscription run-rate compounding at +4.8% MoM across enterprise accounts and usage add-ons.",
-      }
-    }
-
-    // Default: Last 30 days
+  const { items, badgeText, totalAmount, explanation, segments, mixRows } = useMemo(() => {
+    const { clients, credits, current, bridge } = analytics
+    const shown = clients.filter((c) => c.revenue > 0).slice(0, 6)
+    const others = clients.filter((c) => c.revenue > 0).slice(6).reduce((sum, c) => sum + c.revenue, 0)
+    const rows: BreakdownItem[] = shown.map((c) => ({
+      label: c.name,
+      amount: formatCurrency(c.revenue),
+      trend: c.previous === 0 && c.revenue > 0 ? "up" : c.change === null ? "none" : c.change >= 0 ? "up" : "down",
+      points: c.trend,
+    }))
+    if (others > 0) rows.push({ label: t("anOtherClients"), amount: formatCurrency(others), trend: "none" })
+    const lost = bridge.find((b) => b.key === "lost")?.amount ?? 0
+    if (credits < 0) rows.push({ label: t("anCreditNotes"), amount: formatCurrency(credits), trend: "down" })
+    if (lost > 0) rows.push({ label: t("anLostVsPrevious"), amount: formatCurrency(-lost), trend: "down" })
+    const top = shown[0]
+    const fastest = [...shown].filter((c) => c.change !== null && c.previous > 0).sort((a, b) => (b.change ?? 0) - (a.change ?? 0))[0]
+    const total = Math.max(1, clients.reduce((sum, c) => sum + c.revenue, 0))
+    const { mix } = analytics
+    const mixTotal = Math.max(1, mix.hourly + mix.fixed + mix.retainer + mix.other)
     return {
-      badgeText: "30d MRR",
-      totalAmount: formatCurrency(168920),
-      items: [
-        { label: "Enterprise Tier Subscriptions", amount: formatCurrency(94500), trend: "up" },
-        { label: "Pro Team Workspaces", amount: formatCurrency(48200), trend: "up" },
-        { label: "AI Compute & Token Overages", amount: formatCurrency(18450), trend: "up" },
-        { label: "Dedicated Cloud Pods & SLA", amount: formatCurrency(12600), trend: "up" },
-        { label: "Developer API Add-ons", amount: formatCurrency(6820), trend: "up" },
-        { label: "Expansion & Seat Upgrades", amount: formatCurrency(8150), trend: "up" },
-        { label: "Discounts & Promotional Credits", amount: formatCurrency(-11200), trend: "down" },
-        { label: "Contractions & Churned Seats", amount: formatCurrency(-8600), trend: "down" },
-      ] as BreakdownItem[],
-      explanation:
-        "Enterprise commitments generate 56% of total revenue, while AI token overages represent the fastest-growing margin driver (+38% QoQ).",
+      segments: shown.map((c, i) => ({ name: c.name, share: (c.revenue / total) * 100, color: SEGMENT_COLORS[i % SEGMENT_COLORS.length]! })),
+      mixRows: [
+        { label: t("anMixHourly"), value: mix.hourly },
+        { label: t("anMixFixed"), value: mix.fixed },
+        { label: t("anMixRetainer"), value: mix.retainer },
+        { label: t("anMixOther"), value: mix.other },
+      ]
+        .filter((r) => r.value > 0)
+        .map((r) => ({ ...r, amount: formatCurrency(r.value), share: Math.round((r.value / mixTotal) * 100) })),
+      badgeText: t("anTotalFor", { period: RANGE_SHORT[dateRange] }),
+      totalAmount: formatCurrency(current.revenue),
+      items: rows,
+      explanation: top
+        ? t("anLedgerNote", {
+            client: top.name,
+            share: Math.round(top.share ?? 0),
+            fastest: fastest?.name ?? top.name,
+            change: formatChange(fastest?.change ?? top.change),
+          })
+        : t("anNoRevenueYet"),
     }
-  }, [dateRange, formatCurrency])
+  }, [analytics, dateRange, formatCurrency, t])
 
   return (
     <div className="flex h-full flex-col justify-between rounded-xl border border-border/70 bg-card p-5 shadow-2xs">
@@ -147,15 +94,38 @@ export function SalesBreakdownCard() {
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Information className="size-3.5 text-muted-foreground/70" />
-            <span className="font-medium">SaaS Revenue Breakdown</span>
+            <span className="font-medium">{t("anRevenueByClient")}</span>
           </div>
           <span className="tabular-nums text-xs font-semibold text-primary">
             {totalAmount} ({badgeText})
           </span>
         </div>
 
+        {/* Share of revenue per client */}
+        {segments.length > 0 && (
+          <div className="mb-3 space-y-2">
+            <div className="flex h-2 w-full gap-0.5 overflow-hidden rounded-full bg-muted/40">
+              {segments.map((seg) => (
+                <div key={seg.name} title={`${seg.name} · ${Math.round(seg.share)}%`} style={{ width: `${seg.share}%`, backgroundColor: seg.color }} className="h-full first:rounded-s-full last:rounded-e-full" />
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              {segments.map((seg) => (
+                <span key={seg.name} className="inline-flex items-center gap-1.5">
+                  <span className="size-2 rounded-full" style={{ backgroundColor: seg.color }} />
+                  <span className="text-foreground/90">{seg.name}</span>
+                  <span className="tabular-nums">{Math.round(seg.share)}%</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Items List */}
         <div className="divide-y divide-border/40 text-xs">
+          {items.length === 0 && (
+            <p className="py-6 text-center text-muted-foreground">{t("anNoRevenueYet")}</p>
+          )}
           {items.map((item, index) => (
             <div
               key={index}
@@ -169,7 +139,7 @@ export function SalesBreakdownCard() {
                   {item.amount}
                 </span>
                 <div className="w-7 flex justify-end">
-                  <MiniWaveSparkline trend={item.trend ?? "none"} />
+                  <MiniWaveSparkline trend={item.trend ?? "none"} points={item.points} />
                 </div>
               </div>
             </div>
@@ -177,9 +147,29 @@ export function SalesBreakdownCard() {
         </div>
       </div>
 
+      {/* How the revenue was billed */}
+      {mixRows.length > 0 && (
+        <div className="mt-3 space-y-2 border-t border-border/40 pt-3">
+          <p className="text-xs font-medium text-foreground/80">{t("anRevenueMix")}</p>
+          {mixRows.map((r) => (
+            <div key={r.label} className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-foreground/90">{r.label}</span>
+                <span className="tabular-nums text-muted-foreground">
+                  <span className="font-medium text-foreground">{r.amount}</span> · {r.share}%
+                </span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
+                <div className="h-full rounded-full bg-primary/80" style={{ width: `${r.share}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Operational Explanation Paragraph */}
       <div className="mt-4 border-t border-border/40 pt-3 text-xs leading-relaxed text-muted-foreground">
-        <span className="font-semibold text-foreground">Ledger Analysis: </span>
+        <span className="font-semibold text-foreground">{t("anLedgerAnalysis")} </span>
         {explanation}
       </div>
     </div>

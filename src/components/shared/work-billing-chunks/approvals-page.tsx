@@ -24,7 +24,7 @@ import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useTimeEntries, useTimesheetMutations } from "@/hooks/workforce/use-work-billing"
-import { addDays, hourlyRate, weekStart } from "@/lib/workforce/billing"
+import { addDays, entryBillRate, weekStart } from "@/lib/workforce/billing"
 import { BudgetType } from "@/types/work-projects"
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
@@ -72,7 +72,7 @@ export default function ApprovalsPage() {
       const project = projects.find((p) => p.id === e.projectId)
       if (!e.billable || project?.budgetType !== BudgetType.HOURLY) return sum
       const client = clients.find((c) => c.id === project.clientId)
-      return sum + e.hours * hourlyRate(employees.find((x) => x.id === e.employeeId), client)
+      return sum + e.hours * entryBillRate(e, employees.find((x) => x.id === e.employeeId), client)
     }, 0)
 
   const formatWeek = (monday: string) =>

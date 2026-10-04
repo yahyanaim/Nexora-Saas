@@ -1,311 +1,283 @@
 "use client"
 
-import { useState } from "react"
-import {
-  ChevronSort,
-  Renew,
-  SettingsAdjust,
-  Checkmark,
-} from "@/components/ui/carbon/icons"
-import { Building2, Download, Eye, Printer, FileText } from "lucide-react"
+import { useMemo, useState } from "react"
+import { useLocale, useTranslations } from "next-intl"
+import { ChevronSort, Renew, Checkmark } from "@/components/ui/carbon/icons"
+import { Download, Eye, Printer, FileText, Receipt } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { toast } from "sonner"
-
+import { useRouter } from "@/i18n/navigation"
+import { useCurrentWorkspace } from "@/store/workspace-store"
+import { exportToCsv } from "@/lib/utils/export-data"
 import {
-  useAnalyticsFilter,
-  DateRangeOption,
-  CompareModeOption,
-  CurrencyOption,
-} from "./analytics-filter-context"
-
-import {
-  generateAnalyticsPdf,
+  downloadAnalyticsPdf,
   getAnalyticsReportHtml,
   printAnalyticsReport,
-} from "@/lib/pdf/generate-analytics-pdf"
+  type AnalyticsReportInput,
+} from "@/lib/pdf/analytics-report"
 import { PageHeader } from "@/components/shared/page-header"
 import { Badge } from "@/components/ui/badge"
+import { COMPARE_LABEL, COMPARE_MODES, DATE_RANGES, RANGE_LABEL, useAnalyticsFilter } from "./analytics-filter-context"
 
-interface AnalyticsToolbarProps {
-  onRefresh?: () => void
-}
+const PILL =
+  "inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-[13px] font-medium text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer select-none"
 
-export function AnalyticsToolbar({ onRefresh }: AnalyticsToolbarProps) {
+export function AnalyticsToolbar() {
+  const t = useTranslations()
+  const locale = useLocale()
+  const router = useRouter()
+  const workspace = useCurrentWorkspace()
   const {
     dateRange,
     setDateRange,
     compareMode,
     setCompareMode,
-    currency,
-    setCurrency,
-    workspace,
-    setWorkspace,
-    currencySymbol,
-    currencyRate,
-    workspaceMultiplier,
+    clientId,
+    setClientId,
+    departmentId,
+    setDepartmentId,
+    clients,
+    departments,
+    formatCurrency,
+    formatBucket,
+    analytics,
+    refresh,
   } = useAnalyticsFilter()
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
 
+  const clientName = clientId ? clients.find((c) => c.id === clientId)?.name : null
+  const teamName = departmentId ? departments.find((d) => d.id === departmentId)?.name : null
+
+  const report: AnalyticsReportInput = useMemo(
+    () => ({
+      analytics,
+      title: t("anReportTitle"),
+      subtitle: [t(RANGE_LABEL[dateRange]), t(COMPARE_LABEL[compareMode]), clientName ?? t("allClients"), teamName ?? t("allTeams")].join(" · "),
+      company: workspace.name,
+      generatedOn: new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date()),
+      money: (n) => formatCurrency(n),
+      bucketLabel: (d) => formatBucket(d),
+      labels: {
+        revenue: t("anRevenueEarned"),
+        margin: t("anGrossMargin"),
+        utilization: t("anUtilization"),
+        collected: t("anCashCollected"),
+        profit: t("anGrossProfit"),
+        laborCost: t("anLaborCost"),
+        expenses: t("expenses"),
+        billableHours: t("anBillableHours"),
+        avgRate: t("anAvgRate"),
+        openReceivables: t("openReceivables"),
+        overdue: t("overdue"),
+        revenueByPeriod: t("anRevenueByPeriod"),
+        period: t("anPeriod"),
+        hours: t("hours"),
+        revenueByClient: t("anRevenueByClient"),
+        client: t("client"),
+        share: t("anShare"),
+        change: t("anChange"),
+        topProjects: t("anTopProjects"),
+        project: t("project"),
+        bridge: t("anRevenueBridge"),
+        bridgeSteps: {
+          start: t("anBridgeStart"),
+          growth: t("anBridgeGrowth"),
+          new: t("anBridgeNew"),
+          decline: t("anBridgeDecline"),
+          lost: t("anBridgeLost"),
+          end: t("anBridgeEnd"),
+        },
+        clientsAtRisk: t("anClientsAtRisk"),
+        none: t("anNothingToShow"),
+      },
+    }),
+    [analytics, t, dateRange, compareMode, clientName, teamName, workspace.name, locale, formatCurrency, formatBucket]
+  )
+
   const handleRefresh = () => {
     setIsRefreshing(true)
-    onRefresh?.()
+    refresh()
     setTimeout(() => {
       setIsRefreshing(false)
-      toast.success("Cloud analytics telemetry refreshed")
+      toast.success(t("anRefreshed"))
     }, 600)
   }
 
   const handleExportReport = async () => {
     try {
-      await generateAnalyticsPdf({
-        workspace,
-        dateRange,
-        compareMode,
-        currency,
-        currencySymbol,
-        currencyRate,
-        workspaceMultiplier,
-      })
-      toast.success("Executive 2-page board-deck report downloaded")
+      await downloadAnalyticsPdf(report, `analytics-${analytics.windows.current.from}-${analytics.windows.current.to}.pdf`)
+      toast.success(t("anReportDownloaded"))
     } catch (err) {
       console.error(err)
-      toast.error("Failed to generate executive report")
+      toast.error(t("anReportFailed"))
     }
+  }
+
+  const handleExportCsv = () => {
+    exportToCsv(
+      analytics.series.map((s) => ({
+        period: s.from,
+        revenue: s.revenue,
+        laborCost: s.laborCost,
+        expenses: s.expenses,
+        profit: s.profit,
+        collected: s.collected,
+        billableHours: s.billableHours,
+        hours: s.hours,
+        utilization: s.utilization ?? "",
+        avgRate: s.avgRate ?? "",
+      })),
+      "analytics",
+      [
+        { key: "period", label: t("anPeriod") },
+        { key: "revenue", label: t("anRevenueEarned") },
+        { key: "laborCost", label: t("anLaborCost") },
+        { key: "expenses", label: t("expenses") },
+        { key: "profit", label: t("anGrossProfit") },
+        { key: "collected", label: t("anCashCollected") },
+        { key: "billableHours", label: t("anBillableHours") },
+        { key: "hours", label: t("hours") },
+        { key: "utilization", label: t("anUtilization") },
+        { key: "avgRate", label: t("anAvgRate") },
+      ]
+    )
   }
 
   return (
     <>
       <PageHeader
-        title="Cloud Analytics"
+        title={t("anPageTitle")}
         badge={
           <Badge variant="success" className="hidden sm:inline-flex">
             <span className="size-1.5 rounded-full bg-success animate-pulse" />
-            Live Telemetry
+            {t("anLiveData")}
           </Badge>
         }
         actions={
           <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toast.info("Active: 1,428 Multi-tenant Workspaces across 4 clusters")}
-                className="max-xl:hidden"
-              >
-                <Building2 className="text-muted-foreground" />
-                <span>Workspaces</span>
-              </Button>
+            <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/receivables")} className="max-xl:hidden">
+              <Receipt className="text-muted-foreground" />
+              <span>{t("receivables")}</span>
+            </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-              >
-                <Renew
-                  className={`text-muted-foreground ${
-                    isRefreshing ? "animate-spin text-primary" : ""
-                  }`}
-                />
-                <span>Refresh</span>
-              </Button>
+            <Button variant="outline" size="sm" onClick={handleRefresh}>
+              <Renew className={`text-muted-foreground ${isRefreshing ? "animate-spin text-primary" : ""}`} />
+              <span>{t("refresh")}</span>
+            </Button>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                  >
-                    <Download />
-                    <span>Save as report</span>
-                    <ChevronSort className="opacity-70" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuItem
-                    onClick={handleExportReport}
-                    className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md"
-                  >
-                    <Download className="size-3.5 text-primary shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-foreground">Download Executive PDF</span>
-                      <span className="text-xs text-muted-foreground">2-page board-deck with vector charts</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setPreviewOpen(true)}
-                    className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md"
-                  >
-                    <Eye className="size-3.5 text-primary shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-foreground">Preview Executive Brief</span>
-                      <span className="text-xs text-muted-foreground">Interactive on-screen report modal</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      printAnalyticsReport({
-                        workspace,
-                        dateRange,
-                        compareMode,
-                        currency,
-                        currencySymbol,
-                        currencyRate,
-                        workspaceMultiplier,
-                      })
-                    }}
-                    className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md"
-                  >
-                    <Printer className="size-3.5 text-primary shrink-0" />
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-foreground">Print Executive Brief</span>
-                      <span className="text-xs text-muted-foreground">Print-ready high-res document</span>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Manage metrics"
-                onClick={() => toast.info("Configure visible SaaS KPI metrics")}
-              >
-                <SettingsAdjust />
-              </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="primary" size="sm">
+                  <Download />
+                  <span>{t("anSaveReport")}</span>
+                  <ChevronSort className="opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuItem onClick={handleExportReport} className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md">
+                  <Download className="size-3.5 text-primary shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">{t("anDownloadPdf")}</span>
+                    <span className="text-xs text-muted-foreground">{t("anDownloadPdfHint")}</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPreviewOpen(true)} className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md">
+                  <Eye className="size-3.5 text-primary shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">{t("anPreviewReport")}</span>
+                    <span className="text-xs text-muted-foreground">{t("anPreviewReportHint")}</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => printAnalyticsReport(report)} className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md">
+                  <Printer className="size-3.5 text-primary shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">{t("anPrintReport")}</span>
+                    <span className="text-xs text-muted-foreground">{t("anPrintReportHint")}</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportCsv} className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md">
+                  <FileText className="size-3.5 text-primary shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-foreground">{t("exportCsv")}</span>
+                    <span className="text-xs text-muted-foreground">{t("anCsvHint")}</span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         }
       >
         <div className="flex flex-wrap items-center gap-2">
-          {/* Date Range Dropdown Pill */}
+          {/* Date range */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-[13px] font-medium text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer select-none">
-                <span>{dateRange}</span>
+              <button type="button" className={PILL}>
+                <span>{t(RANGE_LABEL[dateRange])}</span>
                 <ChevronSort className="size-3.5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-44">
-              {(["Last 7 days", "Last 30 days", "Last 90 days", "Last 1 year", "Year to date"] as DateRangeOption[]).map((option) => (
-                <DropdownMenuItem
-                  key={option}
-                  onClick={() => {
-                    setDateRange(option)
-                    toast.info(`Filtered for ${option}`)
-                  }}
-                  className="flex items-center justify-between"
-                >
-                  <span>{option}</span>
+              {DATE_RANGES.map((option) => (
+                <DropdownMenuItem key={option} onClick={() => setDateRange(option)} className="flex items-center justify-between">
+                  <span>{t(RANGE_LABEL[option])}</span>
                   {dateRange === option && <Checkmark className="size-3.5 text-primary" />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Compare Dropdown Pill */}
+          {/* Comparison */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-[13px] font-medium text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer select-none">
-                <span>{compareMode}</span>
+              <button type="button" className={PILL}>
+                <span>{t(COMPARE_LABEL[compareMode])}</span>
                 <ChevronSort className="size-3.5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              {(
-                dateRange === "Last 7 days"
-                  ? ["vs Prior 7d", "vs Same period 2025", "No comparison"]
-                  : dateRange === "Last 90 days"
-                  ? ["vs Prior 90d", "vs Same period 2025", "No comparison"]
-                  : dateRange === "Last 1 year"
-                  ? ["vs Prior year", "vs Prior period", "No comparison"]
-                  : dateRange === "Year to date"
-                  ? ["vs Prior period", "vs Same period 2025", "No comparison"]
-                  : ["vs Prior 30d", "vs Same period 2025", "No comparison"]
-              ).map((option) => (
-                <DropdownMenuItem
-                  key={option}
-                  onClick={() => {
-                    setCompareMode(option as CompareModeOption)
-                    toast.info(`Comparing ${option}`)
-                  }}
-                  className="flex items-center justify-between"
-                >
-                  <span>{option}</span>
+            <DropdownMenuContent align="start" className="w-52">
+              {COMPARE_MODES.map((option) => (
+                <DropdownMenuItem key={option} onClick={() => setCompareMode(option)} className="flex items-center justify-between">
+                  <span>{t(COMPARE_LABEL[option])}</span>
                   {compareMode === option && <Checkmark className="size-3.5 text-primary" />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Currency Dropdown Pill */}
+          {/* Client */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-[13px] font-medium text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer select-none">
-                <span className="font-semibold">{currencySymbol}</span>
-                <span>{currency}</span>
+              <button type="button" className={PILL}>
+                <span>{clientName ?? t("allClients")}</span>
                 <ChevronSort className="size-3.5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-36">
-              {[
-                { code: "USD", symbol: "$" },
-                { code: "EUR", symbol: "€" },
-                { code: "GBP", symbol: "£" },
-                { code: "JPY", symbol: "¥" },
-                { code: "CAD", symbol: "CA$" },
-              ].map((c) => (
-                <DropdownMenuItem
-                  key={c.code}
-                  onClick={() => {
-                    setCurrency(c.code as CurrencyOption)
-                    toast.info(`Switched billing currency to ${c.code}`)
-                  }}
-                  className="flex items-center justify-between"
-                >
-                  <span>{c.symbol} {c.code}</span>
-                  {currency === c.code && <Checkmark className="size-3.5 text-primary" />}
+            <DropdownMenuContent align="start" className="w-52">
+              {[{ id: null as string | null, name: t("allClients") }, ...clients].map((c) => (
+                <DropdownMenuItem key={c.id ?? "all"} onClick={() => setClientId(c.id)} className="flex items-center justify-between">
+                  <span>{c.name}</span>
+                  {clientId === c.id && <Checkmark className="size-3.5 text-primary" />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Workspaces Filter Pill */}
+          {/* Team */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-[13px] font-medium text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer select-none">
-                <span>{workspace}</span>
+              <button type="button" className={PILL}>
+                <span>{teamName ?? t("allTeams")}</span>
                 <ChevronSort className="size-3.5 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-52">
-              {[
-                "All Workspaces",
-                "Acme Corp Prod",
-                "Stark Industries",
-                "Wayne Enterprises",
-                "Cyberdyne Systems",
-              ].map((ws) => (
-                <DropdownMenuItem
-                  key={ws}
-                  onClick={() => {
-                    setWorkspace(ws)
-                    toast.info(`Scoped to workspace: ${ws}`)
-                  }}
-                  className="flex items-center justify-between"
-                >
-                  <span>{ws}</span>
-                  {workspace === ws && <Checkmark className="size-3.5 text-primary" />}
+              {[{ id: null as string | null, name: t("allTeams") }, ...departments].map((d) => (
+                <DropdownMenuItem key={d.id ?? "all"} onClick={() => setDepartmentId(d.id)} className="flex items-center justify-between">
+                  <span>{d.name}</span>
+                  {departmentId === d.id && <Checkmark className="size-3.5 text-primary" />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -313,33 +285,18 @@ export function AnalyticsToolbar({ onRefresh }: AnalyticsToolbarProps) {
         </div>
       </PageHeader>
 
-      {/* Interactive Executive Report Preview Modal */}
+      {/* Report preview */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="max-w-4xl w-[94vw] max-h-[90vh] p-5 flex flex-col gap-3">
           <DialogHeader className="flex flex-row items-center justify-between border-b border-border/80 pb-3">
             <DialogTitle className="text-sm font-bold flex items-center gap-2">
               <FileText className="size-4 text-primary" />
-              <span>Nexora Executive SaaS Intelligence & Telemetry Brief</span>
+              <span>{t("anReportTitle")}</span>
             </DialogTitle>
-            <div className="flex items-center gap-2 mr-6">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  printAnalyticsReport({
-                    workspace,
-                    dateRange,
-                    compareMode,
-                    currency,
-                    currencySymbol,
-                    currencyRate,
-                    workspaceMultiplier,
-                  })
-                }}
-                className="h-7 text-xs gap-1.5"
-              >
+            <div className="flex items-center gap-2 me-6">
+              <Button variant="outline" size="sm" onClick={() => printAnalyticsReport(report)} className="h-7 text-xs gap-1.5">
                 <Printer className="size-3" />
-                <span>Print</span>
+                <span>{t("print")}</span>
               </Button>
               <Button
                 variant="primary"
@@ -348,25 +305,15 @@ export function AnalyticsToolbar({ onRefresh }: AnalyticsToolbarProps) {
                 className="h-7 text-xs gap-1.5 bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900"
               >
                 <Download className="size-3" />
-                <span>Download PDF</span>
+                <span>{t("anDownloadPdf")}</span>
               </Button>
             </div>
           </DialogHeader>
 
           <div className="flex-1 w-full overflow-hidden rounded-lg border border-border/70 bg-muted/10">
-            <iframe
-              srcDoc={getAnalyticsReportHtml({
-                workspace,
-                dateRange,
-                compareMode,
-                currency,
-                currencySymbol,
-                currencyRate,
-                workspaceMultiplier,
-              })}
-              title="Executive Report Preview"
-              className="w-full h-[66vh] border-0"
-            />
+            {previewOpen && (
+              <iframe srcDoc={getAnalyticsReportHtml(report)} title={t("anReportTitle")} sandbox="" className="w-full h-[66vh] border-0" />
+            )}
           </div>
         </DialogContent>
       </Dialog>

@@ -6,7 +6,7 @@ export interface AuditLogActor {
   role?: string
 }
 
-export type AuditLogCategory = "Security" | "Billing" | "Team" | "API" | "System"
+export type AuditLogCategory = "Security" | "Billing" | "Team" | "API" | "System" | "Approvals" | "Settings"
 
 export type AuditLogStatus = "success" | "warning" | "error"
 

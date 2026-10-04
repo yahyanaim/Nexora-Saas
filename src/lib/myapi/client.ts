@@ -12,12 +12,17 @@ import { hasDemoSession } from "./token-storage"
  * In production, session tokens are managed exclusively via HttpOnly Secure cookies
  * forwarded automatically by the browser with withCredentials: true.
  */
+/** Upper bound for any API call before it fails with a friendly timeout message. */
+export const REQUEST_TIMEOUT_MS = 20_000
+
 export const apiClient = axios.create({
   baseURL: env.NEXT_PUBLIC_API_URL,
   headers: {
     "Content-Type": "application/json",
   },
   withCredentials: true,
+  // NFR-6: never leave a screen waiting forever on a slow backend
+  timeout: REQUEST_TIMEOUT_MS,
 })
 
 /**
@@ -159,11 +164,19 @@ export function apiErrorMessage(
   fallback: string = "An unexpected error occurred"
 ): string {
   if (axios.isAxiosError<{ message?: string }>(error)) {
-    return (
-      error.response?.data?.message ??
-      error.message ??
-      fallback
-    )
+    const serverMessage = error.response?.data?.message
+    if (typeof serverMessage === "string" && serverMessage) return serverMessage
+    // Never surface axios internals ("Network Error", "status code 500")
+    if (error.code === "ECONNABORTED" || error.code === "ETIMEDOUT") {
+      return "The server took too long to answer. Please try again."
+    }
+    if (!error.response) {
+      return "Can't reach the server. Check your connection and try again."
+    }
+    if (error.response.status >= 500) {
+      return "The server had a problem. Please try again in a moment."
+    }
+    return fallback
   }
   if (isResponseWithMessage(error)) {
     const msg = error.response.data?.message

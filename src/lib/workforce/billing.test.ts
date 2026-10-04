@@ -90,7 +90,7 @@ describe("invoice lines and totals", () => {
       taxRate: 20,
       lines: [{ id: "1", description: "", quantity: 3.33, unitPrice: 100, timeEntryIds: [] }],
     })
-    expect(totals).toEqual({ subtotal: 333, tax: 66.6, total: 399.6 })
+    expect(totals).toMatchObject({ subtotal: 333, tax: 66.6, total: 399.6, withholding: 0, paid: 0 })
   })
 })
 
@@ -101,7 +101,7 @@ describe("invoice numbers and status", () => {
   })
 
   it("shows sent invoices past due as overdue", () => {
-    const invoice = { status: ClientInvoiceStatus.SENT, dueDate: "2026-03-01" } as ClientInvoice
+    const invoice = { status: ClientInvoiceStatus.SENT, dueDate: "2026-03-01", lines: [], taxRate: 0 } as unknown as ClientInvoice
     expect(displayStatus(invoice, "2026-03-02")).toBe("overdue")
     expect(displayStatus(invoice, "2026-03-01")).toBe(ClientInvoiceStatus.SENT)
     expect(displayStatus({ ...invoice, status: ClientInvoiceStatus.PAID }, "2026-04-01")).toBe(ClientInvoiceStatus.PAID)

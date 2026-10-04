@@ -6,7 +6,8 @@ import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
-import { AlertTriangle, CheckCircle, Clock, Receipt, Plus } from "@/components/ui/carbon/icons"
+import { AlertTriangle, CheckCircle, Clock, DownloadIcon, Receipt, Plus } from "@/components/ui/carbon/icons"
+import { exportToCsv } from "@/lib/utils/export-data"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTable } from "../data-table-chunks/data-table"
 import { DataTableColumnHeader } from "../data-table-chunks/data-table-column-header"
@@ -15,25 +16,30 @@ import { can } from "@/lib/permissions/can"
 import { AdminPermissionsPlatform } from "@/types/roles"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
-import { useProjects } from "@/hooks/workforce/use-work-projects"
+import { useMilestones, useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useClientInvoices, useInvoiceMutations, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { unbilledExpenses } from "@/lib/workforce/profitability"
-import { addDays, displayStatus, invoiceTotals, unbilledValueByClient } from "@/lib/workforce/billing"
+import { addDays, displayStatus, invoiceBalance, invoiceTotals, toBase, unbilledValueByClient } from "@/lib/workforce/billing"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { todayIso } from "@/lib/workforce/project-metrics"
-import { ClientInvoiceStatus, type ClientInvoice, type ClientInvoiceDisplayStatus } from "@/types/work-billing"
-import type { Client } from "@/types/workforce"
+import { ClientInvoiceStatus, InvoiceKind, type ClientInvoice, type ClientInvoiceDisplayStatus } from "@/types/work-billing"
+import { ClientStatus, type Client } from "@/types/workforce"
 import { formatMoney, includesFilter } from "../workforce-chunks/workforce-labels"
 import { formatShortDate } from "../work-projects-chunks/project-labels"
 import { CreateInvoiceSheet } from "./create-invoice-sheet"
 import { InvoiceSheet } from "./invoice-sheet"
+import { NewInvoiceSheet } from "./new-invoice-sheet"
 import { INVOICE_STATUS_CLASS, INVOICE_STATUS_LABEL, formatHours } from "./billing-labels"
 
 const DISPLAY_STATUSES: ClientInvoiceDisplayStatus[] = [
   ClientInvoiceStatus.DRAFT,
+  ClientInvoiceStatus.ISSUED,
   ClientInvoiceStatus.SENT,
+  "partially_paid",
   "overdue",
   ClientInvoiceStatus.PAID,
+  "credited",
   ClientInvoiceStatus.VOID,
 ]
 
@@ -48,11 +54,15 @@ export default function ClientInvoicesPage() {
   const { data: clients = [] } = useClients()
   const { data: employees = [] } = useEmployees()
   const { data: projects = [] } = useProjects()
+  const { data: tasks = [] } = useTasks()
   const m = useInvoiceMutations()
+  const { data: settings } = useWorkspaceSettings()
   const canCreate = can(authedUser, AdminPermissionsPlatform.INVOICES_CREATE)
   const canEdit = can(authedUser, AdminPermissionsPlatform.INVOICES_UPDATE)
 
   const [billing, setBilling] = useState<Client | null>(null)
+  const [creating, setCreating] = useState(false)
+  const { data: milestones = [] } = useMilestones()
   const [openId, setOpenId] = useState<string | null>(null)
   const opened = invoices.find((i) => i.id === openId) ?? null
 
@@ -73,16 +83,18 @@ export default function ClientInvoicesPage() {
   const cards = useMemo<MetricCardItem[]>(() => {
     const money = (n: number) => formatMoney(n, workspace.currency, locale)
     const today = todayIso()
-    const totalOf = (list: ClientInvoice[]) => list.reduce((s, i) => s + invoiceTotals(i).total, 0)
-    const open = invoices.filter((i) => i.status === ClientInvoiceStatus.SENT)
-    const overdue = open.filter((i) => displayStatus(i, today) === "overdue")
+    // Amounts in the base currency: what's still owed, and money received (BIL-7)
+    const owed = (list: ClientInvoice[]) => list.reduce((s, i) => s + toBase(invoiceBalance(i, invoices), i), 0)
+    const open = invoices.filter((i) => invoiceBalance(i, invoices) > 0)
+    const overdue = open.filter((i) => displayStatus(i, today, invoices) === "overdue")
     const since = addDays(today, -30)
-    const paid = invoices.filter((i) => i.status === ClientInvoiceStatus.PAID && (i.paidAt ?? "").slice(0, 10) >= since)
+    const received = invoices.flatMap((i) => (i.payments ?? []).filter((p) => p.date >= since).map((p) => toBase(p.amount, i)))
+    const paidCount = invoices.filter((i) => (i.payments ?? []).some((p) => p.date >= since)).length
     const ready = [...unbilled.values()].reduce((s, v) => s + v.amount, 0)
     return [
-      { key: "outstanding", title: t("outstanding"), value: money(totalOf(open)), footer: { icon: Clock, text: t("sentInvoicesCount", { count: open.length }) } },
-      { key: "overdue", title: t("overdue"), value: money(totalOf(overdue)), valueClassName: overdue.length ? "text-destructive" : undefined, footer: { icon: AlertTriangle, text: t("pastDueCount", { count: overdue.length }) } },
-      { key: "paid", title: t("paidLast30Days"), value: money(totalOf(paid)), valueClassName: "text-success-foreground", footer: { icon: CheckCircle, text: t("invoicesCount", { count: paid.length }) } },
+      { key: "outstanding", title: t("outstanding"), value: money(owed(open)), footer: { icon: Clock, text: t("sentInvoicesCount", { count: open.length }) } },
+      { key: "overdue", title: t("overdue"), value: money(owed(overdue)), valueClassName: overdue.length ? "text-destructive" : undefined, footer: { icon: AlertTriangle, text: t("pastDueCount", { count: overdue.length }) } },
+      { key: "paid", title: t("paidLast30Days"), value: money(received.reduce((s, n) => s + n, 0)), valueClassName: "text-success-foreground", footer: { icon: CheckCircle, text: t("invoicesCount", { count: paidCount }) } },
       { key: "ready", title: t("readyToBill"), value: money(ready), valueClassName: "text-primary", footer: { icon: Receipt, text: t("approvedUnbilledHours") } },
     ]
   }, [invoices, unbilled, t, locale, workspace.currency])
@@ -98,8 +110,9 @@ export default function ClientInvoicesPage() {
           return [row.original.number, client].some((s) => s.toLowerCase().includes(q))
         },
         cell: ({ row }) => (
-          <button type="button" onClick={() => setOpenId(row.original.id)} className="font-mono text-sm font-medium hover:text-primary">
-            {row.original.number}
+          <button type="button" onClick={() => setOpenId(row.original.id)} className="flex items-center gap-2 font-mono text-sm font-medium hover:text-primary">
+            {row.original.number || <span className="font-sans text-muted-foreground">{t("draftInvoice")}</span>}
+            {row.original.kind === InvoiceKind.CREDIT_NOTE && <span className="rounded-full bg-muted px-2 py-0.5 font-sans text-[11px] text-muted-foreground">{t("creditNote")}</span>}
           </button>
         ),
       },
@@ -118,7 +131,7 @@ export default function ClientInvoicesPage() {
         accessorKey: "dueDate",
         header: ({ column }) => <DataTableColumnHeader column={column} title={t("dueDate")} />,
         cell: ({ row }) => (
-          <span className={displayStatus(row.original) === "overdue" ? "text-sm font-medium text-destructive tabular-nums" : "text-sm tabular-nums"}>
+          <span className={displayStatus(row.original, todayIso(), invoices) === "overdue" ? "text-sm font-medium text-destructive tabular-nums" : "text-sm tabular-nums"}>
             {formatShortDate(row.original.dueDate, locale)}
           </span>
         ),
@@ -130,12 +143,21 @@ export default function ClientInvoicesPage() {
         cell: ({ row }) => <span className="text-sm font-medium tabular-nums">{formatMoney(invoiceTotals(row.original).total, row.original.currency, locale)}</span>,
       },
       {
+        id: "balance",
+        accessorFn: (i) => invoiceBalance(i, invoices),
+        header: ({ column }) => <DataTableColumnHeader column={column} title={t("balanceDue")} />,
+        cell: ({ row }) => {
+          const balance = invoiceBalance(row.original, invoices)
+          return <span className="text-sm tabular-nums text-muted-foreground">{balance > 0 ? formatMoney(balance, row.original.currency, locale) : "—"}</span>
+        },
+      },
+      {
         id: "status",
-        accessorFn: (i) => displayStatus(i),
+        accessorFn: (i) => displayStatus(i, todayIso(), invoices),
         header: ({ column }) => <DataTableColumnHeader column={column} title={t("status")} />,
         filterFn: (row, id, value) => includesFilter(row.getValue(id), value),
         cell: ({ row }) => {
-          const status = displayStatus(row.original)
+          const status = displayStatus(row.original, todayIso(), invoices)
           return (
             <Badge variant="outline" className={INVOICE_STATUS_CLASS[status]}>
               {t(INVOICE_STATUS_LABEL[status])}
@@ -144,14 +166,93 @@ export default function ClientInvoicesPage() {
         },
       },
     ],
-    [t, locale, clients]
+    [t, locale, clients, invoices]
   )
 
   const readyClients = clients.filter((c) => unbilled.has(c.id))
+  const clientName = (id: string) => clients.find((c) => c.id === id)?.name ?? ""
+
+  // Invoice and payment journals for the accountant (BIL-17)
+  const exportInvoices = () => {
+    const rows = invoices
+      .filter((i) => i.status !== ClientInvoiceStatus.DRAFT)
+      .map((i) => {
+        const tot = invoiceTotals(i)
+        return {
+          number: i.number,
+          kind: i.kind ?? InvoiceKind.HOURS,
+          client: clientName(i.clientId),
+          issueDate: i.issueDate,
+          dueDate: i.dueDate,
+          status: i.status,
+          currency: i.currency ?? workspace.currency,
+          subtotal: tot.subtotal,
+          tax: tot.tax,
+          withholding: tot.withholding,
+          total: tot.total,
+          balance: invoiceBalance(i, invoices),
+        }
+      })
+    exportToCsv(rows, "invoices", [
+      { key: "number", label: t("invoiceNumber") },
+      { key: "kind", label: t("type") },
+      { key: "client", label: t("client") },
+      { key: "issueDate", label: t("issueDate") },
+      { key: "dueDate", label: t("dueDate") },
+      { key: "status", label: t("status") },
+      { key: "currency", label: t("currency") },
+      { key: "subtotal", label: t("subtotal") },
+      { key: "tax", label: t("tax") },
+      { key: "withholding", label: t("withholding") },
+      { key: "total", label: t("total") },
+      { key: "balance", label: t("balanceDue") },
+    ])
+  }
+  const exportPayments = () => {
+    const rows = invoices.flatMap((i) =>
+      (i.payments ?? []).map((p) => ({
+        date: p.date,
+        number: i.number,
+        client: clientName(i.clientId),
+        method: p.method,
+        reference: p.reference ?? "",
+        currency: i.currency ?? workspace.currency,
+        amount: p.amount,
+      }))
+    )
+    exportToCsv(rows, "payments", [
+      { key: "date", label: t("date") },
+      { key: "number", label: t("invoiceNumber") },
+      { key: "client", label: t("client") },
+      { key: "method", label: t("paymentMethod") },
+      { key: "reference", label: t("reference") },
+      { key: "currency", label: t("currency") },
+      { key: "amount", label: t("amount") },
+    ])
+  }
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <PageHeader />
+      <PageHeader
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={exportInvoices} disabled={invoices.length === 0}>
+              <DownloadIcon className="size-4" />
+              {t("exportInvoices")}
+            </Button>
+            <Button variant="outline" onClick={exportPayments} disabled={!invoices.some((i) => i.payments?.length)}>
+              <DownloadIcon className="size-4" />
+              {t("exportPayments")}
+            </Button>
+            {canCreate && (
+              <Button onClick={() => setCreating(true)}>
+                <Plus className="size-4" />
+                {t("newInvoice")}
+              </Button>
+            )}
+          </div>
+        }
+      />
       <MetricCardGrid cards={cards} isLoading={isLoading} />
 
       <section className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
@@ -204,6 +305,8 @@ export default function ClientInvoicesPage() {
         expenses={expenses}
         projects={projects}
         employees={employees}
+        tasks={tasks}
+        invoices={invoices}
         currency={workspace.currency}
         isSubmitting={m.createFromHours.isPending}
         onOpenChange={(open) => !open && setBilling(null)}
@@ -217,16 +320,42 @@ export default function ClientInvoicesPage() {
         }
       />
 
+      {creating && (
+        <NewInvoiceSheet
+          open
+          clients={clients.filter((c) => c.status !== ClientStatus.ARCHIVED)}
+          projects={projects}
+          milestones={milestones}
+          invoices={invoices}
+          currency={workspace.currency}
+          isSubmitting={m.create.isPending}
+          onOpenChange={setCreating}
+          onCreate={(input) =>
+            m.create.mutate(input, {
+              onSuccess: (invoice) => {
+                setCreating(false)
+                setOpenId(invoice.id)
+              },
+            })
+          }
+        />
+      )}
+
       <InvoiceSheet
         key={`invoice:${opened?.id ?? ""}:${opened?.updatedAt ?? ""}`}
         invoice={opened}
+        allInvoices={invoices}
         client={clients.find((c) => c.id === opened?.clientId)}
+        company={settings?.company}
         canEdit={canEdit}
-        busy={m.markSent.isPending || m.markPaid.isPending || m.voidInvoice.isPending || m.deleteDraft.isPending}
+        busy={m.markSent.isPending || m.issue.isPending || m.recordPayment.isPending || m.voidInvoice.isPending || m.deleteDraft.isPending || m.creditNote.isPending}
         onOpenChange={(open) => !open && setOpenId(null)}
         onSaveDraft={(id, input) => m.updateDraft.mutate({ id, input })}
+        onIssue={(id) => m.issue.mutate(id)}
         onSend={(id) => m.markSent.mutate(id)}
-        onPaid={(id) => m.markPaid.mutate(id)}
+        onPayment={(id, payment) => m.recordPayment.mutate({ id, payment })}
+        onCreditNote={(id, input) => m.creditNote.mutate({ id, input }, { onSuccess: (cn) => setOpenId(cn.id) })}
+        onOpenInvoice={setOpenId}
         onVoid={(id) => m.voidInvoice.mutate(id)}
         onDelete={(id) => m.deleteDraft.mutate(id, { onSuccess: () => setOpenId(null) })}
       />

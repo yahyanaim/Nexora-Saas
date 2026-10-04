@@ -13,12 +13,12 @@ import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 import { cn } from "@/lib/utils"
 import { useDashboardNav } from "./use-dashboard-nav"
 import { UserMenu } from "./user-menu"
+import { WorkspaceSwitcher } from "./workspace-switcher"
 import { navIconButton, navSurface } from "./nav-styles"
 
 /**
- * Top bar: section tabs (xl+), search, notifications and language. On phones
- * it also carries the brand and profile, which the sidebar holds from md up.
- * Below `xl` the tabs move into the drawer.
+ * Floating top bar: brand, section tabs (desktop), search, notifications,
+ * language and the profile pill. Below `xl` the tabs move into the drawer.
  */
 export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations()
@@ -43,7 +43,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           href="/dashboard/overview"
           className={cn(
             navSurface,
-            "flex h-12 shrink-0 items-center gap-2.5 py-1.5 pl-1.5 pr-4 md:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            "flex h-12 shrink-0 items-center gap-2.5 py-1.5 pl-1.5 pr-4 lg:h-14 lg:pr-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           )}
         >
           <span className="flex size-9 items-center justify-center overflow-hidden rounded-full bg-info-soft lg:size-10">
@@ -78,7 +78,8 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           })}
         </nav>
 
-        
+        <WorkspaceSwitcher className="hidden md:flex" />
+
         <div className="flex-1" />
 
         <div className={cn(navSurface, "flex h-12 items-center gap-0.5 p-1 lg:h-14 lg:p-1.5")}>
@@ -99,9 +100,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           )}
         </div>
 
-        <div className="md:hidden">
-          <UserMenu />
-        </div>
+        <UserMenu />
       </header>
 
       <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />

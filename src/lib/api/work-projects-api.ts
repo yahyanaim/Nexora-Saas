@@ -1,4 +1,5 @@
 import {
+  ProjectHealth,
   TaskStatus,
   type Milestone,
   type MilestoneInput,
@@ -9,6 +10,8 @@ import {
 } from "@/types/work-projects"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { seedMilestones, seedProjects, seedTasks } from "@/lib/workforce/project-seed"
+import { recordTaskChanges } from "./task-collab-api"
+import { getAuditActor } from "@/lib/workforce/audit"
 
 /**
  * Projects, their tasks and milestones. Backed by the browser demo store for
@@ -53,6 +56,22 @@ export async function updateProjectApi(
   return projects.update(workspaceId, id, next)
 }
 
+/** Sets or clears the manager's health override; setting one needs a reason (PRJ-10). */
+export async function setHealthOverrideApi(
+  workspaceId: string,
+  id: string,
+  override: { health: ProjectHealth; reason: string } | null
+): Promise<WorkProject> {
+  const project = projects.get(workspaceId, id)
+  if (!project) throw new Error("Project not found")
+  if (override && !override.reason.trim()) throw new Error("Say why the status differs from the automatic one")
+  return projects.update(workspaceId, id, {
+    healthOverride: override
+      ? { health: override.health, reason: override.reason.trim(), setBy: getAuditActor().name, setAt: new Date().toISOString() }
+      : undefined,
+  })
+}
+
 /** Deletes the project with its tasks and milestones. */
 export async function deleteProjectApi(workspaceId: string, id: string): Promise<void> {
   for (const task of tasks.list(workspaceId).filter((t) => t.projectId === id)) tasks.remove(workspaceId, task.id)
@@ -85,11 +104,13 @@ export async function listTasksApi(workspaceId: string, projectId?: string): Pro
 export async function createTaskApi(workspaceId: string, input: WorkTaskInput): Promise<WorkTask> {
   assertAssigneeOnTeam(workspaceId, input.projectId, input.assigneeId)
   const order = nextOrder(workspaceId, input.projectId, input.status)
-  return tasks.create(workspaceId, {
+  const task = tasks.create(workspaceId, {
     ...input,
     order,
     completedAt: input.status === TaskStatus.DONE ? new Date().toISOString() : undefined,
   })
+  recordTaskChanges(workspaceId, undefined, task)
+  return task
 }
 
 export async function updateTaskApi(
@@ -106,7 +127,9 @@ export async function updateTaskApi(
     patch.order = nextOrder(workspaceId, current.projectId, input.status)
     patch.completedAt = input.status === TaskStatus.DONE ? new Date().toISOString() : undefined
   }
-  return tasks.update(workspaceId, id, patch)
+  const updated = tasks.update(workspaceId, id, patch)
+  recordTaskChanges(workspaceId, current, updated)
+  return updated
 }
 
 /**
@@ -136,7 +159,9 @@ export async function moveTaskApi(
 
   const completedAt =
     status === TaskStatus.DONE ? (task.status === TaskStatus.DONE ? task.completedAt : new Date().toISOString()) : undefined
-  return tasks.update(workspaceId, id, { status, order: at, completedAt })
+  const moved = tasks.update(workspaceId, id, { status, order: at, completedAt })
+  recordTaskChanges(workspaceId, task, moved)
+  return moved
 }
 
 export async function deleteTaskApi(workspaceId: string, id: string): Promise<void> {

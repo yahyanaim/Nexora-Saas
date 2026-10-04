@@ -12,7 +12,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { AlertTriangle, ChevronLeft, ChevronRight, Plus, Send, Trash2 } from "@/components/ui/carbon/icons"
+import { AlertTriangle, ChevronLeft, ChevronRight, Copy, Plus, RotateCcw, Send, Trash2 } from "@/components/ui/carbon/icons"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { can } from "@/lib/permissions/can"
+import { AdminPermissionsPlatform } from "@/types/roles"
+import { useLeave } from "@/hooks/workforce/use-leave"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
+import { weeklyCapacity } from "@/lib/workforce/planning"
+import { entryDisplayStatus } from "@/lib/workforce/billing"
+import { TimerBar } from "./timer-bar"
+import { QuickLog } from "./quick-log"
 import { PageHeader } from "@/components/shared/page-header"
 import { cn } from "@/lib/utils"
 import { useEmployees } from "@/hooks/workforce/use-workforce"
@@ -26,6 +37,7 @@ import { TaskStatus, WorkProjectStatus } from "@/types/work-projects"
 import { TIME_STATUS_CELL, TIME_STATUS_CLASS, TIME_STATUS_LABEL, formatHours } from "./billing-labels"
 
 const EDITABLE = [TimeEntryStatus.DRAFT, TimeEntryStatus.REJECTED]
+const INVOICED_CLASS = "bg-muted text-foreground border-transparent"
 const NO_TASK = "__none__"
 
 interface Row {
@@ -43,7 +55,13 @@ export default function TimesheetPage() {
   const { data: projects = [] } = useProjects()
   const { data: tasks = [] } = useTasks()
   const { data: entries = [], isLoading } = useTimeEntries()
-  const { setCell, clearRow, submit } = useTimesheetMutations()
+  const { setCell, clearRow, submit, reopen, copyWeek } = useTimesheetMutations()
+  const { data: leave = [] } = useLeave()
+  const { data: settings } = useWorkspaceSettings()
+  const { authedUser } = useAuthGuard()
+  const canApprove = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE)
+  const [reopening, setReopening] = useState(false)
+  const [reopenReason, setReopenReason] = useState("")
 
   const staff = employees.filter((e) => e.status !== EmployeeStatus.INACTIVE)
   const [pickedEmployeeId, setEmployeeId] = useState<string>("")
@@ -89,9 +107,13 @@ export default function TimesheetPage() {
   const weekTotal = weekEntries.reduce((s, e) => s + e.hours, 0)
   const editableCount = weekEntries.filter((e) => EDITABLE.includes(e.status)).length
   const rejected = weekEntries.filter((e) => e.status === TimeEntryStatus.REJECTED)
-  const statusCounts = Object.values(TimeEntryStatus)
-    .map((status) => ({ status, count: weekEntries.filter((e) => e.status === status).length }))
+  const statusCounts = [...Object.values(TimeEntryStatus), "invoiced" as const]
+    .map((status) => ({ status, count: weekEntries.filter((e) => entryDisplayStatus(e) === status).length }))
     .filter((s) => s.count > 0)
+  const reopenable = weekEntries.filter((e) => e.status === TimeEntryStatus.APPROVED && !e.invoiceId)
+  // Expected hours: capacity on their working days, minus leave and public holidays (TIM-11)
+  const expected = employee ? weeklyCapacity(employee, leave, monday, settings?.holidays.map((h) => h.date) ?? []) : 0
+  const gap = Math.round((expected - weekTotal) * 100) / 100
 
   const addRow = () => {
     if (!newProject) return
@@ -107,13 +129,25 @@ export default function TimesheetPage() {
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader
         actions={
-          <Button
-            onClick={() => submit.mutate({ employeeId, from: monday, to: sunday })}
-            disabled={!editableCount || submit.isPending}
-          >
-            <Send className="size-4" />
-            {t("submitWeek")}
-          </Button>
+          <>
+            <Button variant="outline" onClick={() => copyWeek.mutate({ employeeId, monday })} disabled={!employeeId || copyWeek.isPending}>
+              <Copy className="size-4" />
+              {t("copyLastWeek")}
+            </Button>
+            {canApprove && reopenable.length > 0 && (
+              <Button variant="outline" onClick={() => setReopening(true)}>
+                <RotateCcw className="size-4" />
+                {t("reopenApproved")}
+              </Button>
+            )}
+            <Button
+              onClick={() => submit.mutate({ employeeId, from: monday, to: sunday })}
+              disabled={!editableCount || submit.isPending}
+            >
+              <Send className="size-4" />
+              {t("submitWeek")}
+            </Button>
+          </>
         }
       >
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -147,13 +181,20 @@ export default function TimesheetPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {statusCounts.map(({ status, count }) => (
-              <Badge key={status} variant="outline" className={TIME_STATUS_CLASS[status]}>
-                {t(TIME_STATUS_LABEL[status])} · {count}
+              <Badge key={status} variant="outline" className={status === "invoiced" ? INVOICED_CLASS : TIME_STATUS_CLASS[status]}>
+                {t(status === "invoiced" ? "invoiced" : TIME_STATUS_LABEL[status])} · {count}
               </Badge>
             ))}
           </div>
         </div>
       </PageHeader>
+
+      {employeeId && (
+        <div className="flex flex-col gap-3">
+          <QuickLog employeeId={employeeId} entries={entries} projects={myProjects} tasks={tasks} />
+          <TimerBar employeeId={employeeId} projects={myProjects} tasks={tasks.filter((x) => x.status !== TaskStatus.DONE)} />
+        </div>
+      )}
 
       {rejected.length > 0 && (
         <div role="alert" className="flex gap-3 rounded-2xl border border-destructive/30 bg-danger-soft p-4 text-sm">
@@ -258,7 +299,8 @@ export default function TimesheetPage() {
             {employee && (
               <tr>
                 <td colSpan={10} className="px-3 pt-1 text-xs text-muted-foreground">
-                  {t("capacityUsed", { hours: weekTotal, capacity: employee.weeklyCapacity })}
+                  {t("expectedHours", { hours: Math.round(weekTotal * 100) / 100, expected })}
+                  {gap > 0 && <span className="ms-2 font-medium text-warning-foreground">{t("hoursMissing", { hours: gap })}</span>}
                 </td>
               </tr>
             )}
@@ -299,7 +341,30 @@ export default function TimesheetPage() {
         </div>
       </section>
 
-      <p className="text-xs text-muted-foreground">{t("timesheetHint")}</p>
+      <p className="text-xs text-muted-foreground">{t("timesheetHint")} {t("quarterHourHint")}</p>
+
+      <Dialog open={reopening} onOpenChange={setReopening}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("reopenApproved")}</DialogTitle>
+            <DialogDescription>{t("reopenHint", { count: reopenable.length })}</DialogDescription>
+          </DialogHeader>
+          <Textarea rows={3} value={reopenReason} onChange={(e) => setReopenReason(e.target.value)} placeholder={t("reason")} aria-label={t("reason")} />
+          <DialogFooter>
+            <Button
+              disabled={!reopenReason.trim() || reopen.isPending}
+              onClick={() =>
+                reopen.mutate(
+                  { ids: reopenable.map((e) => e.id), reason: reopenReason },
+                  { onSuccess: () => { setReopening(false); setReopenReason("") } }
+                )
+              }
+            >
+              {t("reopen")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -334,7 +399,7 @@ function HoursCell({
   return (
     <Input
       inputMode="decimal"
-      aria-label={entry ? `${label} (${t(TIME_STATUS_LABEL[entry.status])})` : label}
+      aria-label={entry ? `${label} (${t(entry.invoiceId ? "invoiced" : TIME_STATUS_LABEL[entry.status])})` : label}
       title={entry?.rejectionReason}
       value={value}
       disabled={disabled || locked}
@@ -347,7 +412,7 @@ function HoursCell({
       placeholder="–"
       className={cn(
         "h-10 rounded-xl text-center tabular-nums disabled:opacity-100",
-        entry && TIME_STATUS_CELL[entry.status]
+        entry && (entry.invoiceId ? "bg-muted" : TIME_STATUS_CELL[entry.status])
       )}
     />
   )

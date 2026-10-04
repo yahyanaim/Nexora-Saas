@@ -35,6 +35,7 @@ import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { can } from "@/lib/permissions/can"
 import { AdminPermissionsPlatform } from "@/types/roles"
 import { useEmployees } from "@/hooks/workforce/use-workforce"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { useLeave, useLeaveMutations } from "@/hooks/workforce/use-leave"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
@@ -49,6 +50,9 @@ export default function LeavePage() {
   const locale = useLocale()
   const { authedUser } = useAuthGuard()
   const { data: requests = [], isLoading } = useLeave()
+  const { data: settings } = useWorkspaceSettings()
+  const enabledLeaveTypes = settings ? settings.leaveTypes.filter((l) => l.enabled).map((l) => l.type) : Object.values(LeaveType)
+  const vacationAllowance = settings?.leaveTypes.find((l) => l.type === LeaveType.VACATION)?.yearlyDays
   const { data: employees = [] } = useEmployees()
   const { request, decide, cancel } = useLeaveMutations()
   const canApprove = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE)
@@ -190,7 +194,7 @@ export default function LeavePage() {
         </header>
         <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {staff.map((e) => {
-            const b = vacationBalance(requests, e.id, Number(today.slice(0, 4)))
+            const b = vacationBalance(requests, e.id, Number(today.slice(0, 4)), vacationAllowance)
             return (
               <li key={e.id} className="flex items-center gap-3 rounded-2xl border border-border p-3.5">
                 <SpaceAvatar name={e.name} size="sm" />
@@ -257,7 +261,7 @@ export default function LeavePage() {
                 <SelectValue>{t(LEAVE_TYPE_LABEL[form.type])}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {Object.values(LeaveType).map((v) => <SelectItem key={v} value={v}>{t(LEAVE_TYPE_LABEL[v])}</SelectItem>)}
+                {enabledLeaveTypes.map((v) => <SelectItem key={v} value={v}>{t(LEAVE_TYPE_LABEL[v])}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -274,7 +278,7 @@ export default function LeavePage() {
           <p className="-mt-2 text-sm text-muted-foreground">{t("workingDaysSelected", { count: days })}</p>
           {form.type === LeaveType.VACATION && form.employeeId && (
             <p className="rounded-xl bg-muted/50 px-3 py-2 text-sm">
-              {t("vacationLeftAfter", { count: vacationBalance(requests, form.employeeId, Number(form.startDate.slice(0, 4))).remaining - days })}
+              {t("vacationLeftAfter", { count: vacationBalance(requests, form.employeeId, Number(form.startDate.slice(0, 4)), vacationAllowance).remaining - days })}
             </p>
           )}
           <div className="flex flex-col gap-2">

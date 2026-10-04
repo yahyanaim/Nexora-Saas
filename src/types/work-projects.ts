@@ -22,6 +22,14 @@ export enum BudgetType {
   HOURLY = "hourly",
   /** Internal work, never invoiced */
   NON_BILLABLE = "non_billable",
+  /** A fixed monthly amount covering some hours; extra hours at an overage rate (section 6.5) */
+  RETAINER = "retainer",
+}
+
+export interface RetainerTerms {
+  monthlyAmount: number
+  includedHours: number
+  overageRate: number
 }
 
 export interface WorkProject {
@@ -42,11 +50,23 @@ export interface WorkProject {
   budgetType: BudgetType
   /** Fixed price, or the hourly budget cap, in the workspace currency */
   budgetAmount?: number
+  /** Only for retainer projects */
+  retainer?: RetainerTerms
+  /** Manager's call on health when the automatic one is misleading; needs a reason (PRJ-10) */
+  healthOverride?: HealthOverride
   createdAt: string
   updatedAt: string
 }
 
 export type WorkProjectInput = Omit<WorkProject, "id" | "workspaceId" | "createdAt" | "updatedAt">
+
+export interface HealthOverride {
+  health: ProjectHealth
+  reason: string
+  setBy: string
+  /** ISO timestamp */
+  setAt: string
+}
 
 export enum TaskStatus {
   TODO = "todo",
@@ -78,6 +98,8 @@ export interface WorkTask {
   /** Position inside its status column */
   order: number
   subtasks: Subtask[]
+  /** Workspace task labels (settings) */
+  labelIds?: string[]
   completedAt?: string
   createdAt: string
   updatedAt: string
@@ -103,6 +125,32 @@ export interface Milestone {
 }
 
 export type MilestoneInput = Omit<Milestone, "id" | "workspaceId" | "createdAt" | "updatedAt" | "approvedAt">
+
+/** A comment on a task; @mentions are resolved to employee ids (PRJ-7). */
+export interface TaskComment {
+  id: string
+  workspaceId: string
+  taskId: string
+  authorName: string
+  body: string
+  mentionIds: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+/** One change in a task's history, written automatically. */
+export interface TaskActivity {
+  id: string
+  workspaceId: string
+  taskId: string
+  actorName: string
+  /** Translation key of what happened */
+  kind: "created" | "status" | "assignee" | "due" | "estimate" | "title" | "labels"
+  from?: string
+  to?: string
+  createdAt: string
+  updatedAt: string
+}
 
 export enum ProjectHealth {
   ON_TRACK = "on_track",
