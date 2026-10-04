@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nexora ERP: Product &amp; Technical Documentation</title>
+  <title>Nexora ERP: User Manual &amp; Reference</title>
   <meta name="description" content="Nexora ERP for service companies: modules, business rules, data model, architecture, setup, delivery status and roadmap." />
   <link rel="icon" type="image/png" href="app-logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,46 +15,52 @@
 <body>
 <div class="wrap">
   <aside>
-    <a href="#overview" class="brand-header">
+    <a href="#welcome" class="brand-header">
       <div class="brand-logo-box"><img src="app-logo.png" alt="Nexora" class="brand-logo-img" /></div>
       <div class="brand-text">
         <span class="brand-title">Nexora ERP</span>
         <span class="brand-subtitle">ERP for service companies</span>
       </div>
     </a>
-    <div class="sidebar-subtext">Product &amp; Technical Documentation · <b>v3.0</b> · front end delivered on demo data (Phases 0–3).</div>
+    <div class="sidebar-subtext">User manual &amp; reference · <b>v3.0</b> · for everyone who uses Nexora.</div>
     <nav>
-      <div class="grp">Start here</div>
-      <a href="#overview">1. What Nexora ERP is</a>
-      <a href="#status">2. Delivery status</a>
-      <a href="#run">3. Run it locally</a>
-      <a href="#tour">4. Navigation &amp; screens</a>
-      <div class="grp">Product</div>
-      <a href="#roles">5. Roles &amp; permissions</a>
-      <a href="#flow">6. End-to-end flow</a>
-      <a href="#m-settings">7. Workspace settings</a>
-      <a href="#m-people">8. Employees (HR)</a>
-      <a href="#m-clients">9. Clients (CRM)</a>
-      <a href="#m-projects">10. Projects &amp; tasks</a>
-      <a href="#m-time">11. Time tracking &amp; approvals</a>
-      <a href="#m-billing">12. Invoicing &amp; payments</a>
-      <a href="#m-receivables">13. Receivables</a>
-      <a href="#m-costs">14. Expenses &amp; profitability</a>
-      <a href="#m-planning">15. Planning &amp; leave</a>
-      <a href="#m-analytics">16. Analytics</a>
-      <div class="grp">Rules &amp; data</div>
-      <a href="#rules">17. Business rules</a>
-      <a href="#invoice-states">18. Invoice life cycle</a>
-      <a href="#data">19. Data model</a>
-      <a href="#demo">20. Demo data</a>
-      <div class="grp">Engineering</div>
-      <a href="#arch">21. Architecture</a>
-      <a href="#design">22. Design system</a>
-      <a href="#i18n">23. Languages</a>
-      <a href="#quality">24. Quality &amp; security</a>
-      <div class="grp">Roadmap</div>
-      <a href="#roadmap">25. What is left &amp; why</a>
-      <a href="#changelog">26. Changelog</a>
+      <div class="grp">Getting started</div>
+      <a href="#welcome">1. Welcome to Nexora</a>
+      <a href="#signin">2. Signing in and the demo</a>
+      <a href="#interface">3. The interface at a glance</a>
+      <a href="#roles">4. Roles and what each person sees</a>
+      <a href="#first-setup">5. First-time setup (checklist)</a>
+      <div class="grp">Guides by role</div>
+      <a href="#guide-employee">6. Employee guide: your day and your week</a>
+      <a href="#guide-manager">7. Manager guide: keep projects on track</a>
+      <a href="#guide-accountant">8. Accountant guide: invoicing and month-end</a>
+      <a href="#guide-director">9. Director guide: reading the business</a>
+      <div class="grp">Module guides</div>
+      <a href="#m-settings">10. Workspace settings</a>
+      <a href="#m-employees">11. Employees</a>
+      <a href="#m-clients">12. Clients</a>
+      <a href="#m-projects">13. Projects and tasks</a>
+      <a href="#m-time">14. Timesheets and timer</a>
+      <a href="#m-approvals">15. Time approvals</a>
+      <a href="#m-leave">16. Leave and planning</a>
+      <a href="#m-expenses">17. Expenses</a>
+      <a href="#m-invoices">18. Client invoices</a>
+      <a href="#m-receivables">19. Receivables</a>
+      <a href="#m-profit">20. Profitability</a>
+      <a href="#m-analytics">21. Analytics and reports</a>
+      <div class="grp">Reference</div>
+      <a href="#rules">22. Business rules</a>
+      <a href="#statuses">23. Statuses explained</a>
+      <a href="#calc">24. How figures are calculated</a>
+      <a href="#faq">25. Frequently asked questions</a>
+      <a href="#trouble">26. Troubleshooting</a>
+      <a href="#glossary">27. Glossary</a>
+      <div class="grp">Technical</div>
+      <a href="#install">28. Installation</a>
+      <a href="#arch">29. Architecture</a>
+      <a href="#security">30. Quality and security</a>
+      <a href="#roadmap">31. Roadmap</a>
+      <a href="#changelog">32. Changelog</a>
     </nav>
   </aside>
 
@@ -68,7 +74,7 @@
       </div>
       <div class="hero-status-pill"><span class="status-dot-green"></span>398/398 tests passing</div>
     </div>
-    <h1>Nexora ERP: Product &amp; Technical Documentation</h1>
+    <h1>Nexora ERP: User Manual &amp; Reference</h1>
     <p>Nexora is an ERP for service companies (agencies, consultancies, studios, IT services). It follows the whole chain of the business: <b>people → clients → projects → hours → invoices → cash → profit</b>. This document describes what has been delivered, how each module behaves, the business rules behind it, how the code is organised, and what remains to be built. It follows the <b>Nexora ERP cahier des charges</b>.</p>
     <div class="badges">
       <span class="badge">Next.js 16 · React 19 · TypeScript</span>
@@ -79,362 +85,258 @@
     </div>
   </header>
 
-  <section id="overview">
-    <h2><span class="n">01</span>What Nexora ERP is</h2>
-    <p>Service companies sell time and expertise. Their questions are always the same: <i>who works on what, how many hours, what can we bill, who has not paid, and are we making money?</i> Nexora answers them in one tool instead of spreadsheets plus separate HR, time and invoicing apps.</p>
-    <div class="grid3">
-      <div class="card"><h4>Run the team</h4><p>Employees, departments, rates that change over time, working days, holidays, leave and capacity.</p></div>
-      <div class="card"><h4>Deliver the work</h4><p>Clients, projects, tasks, milestones, budgets, health, and the hours people log on them.</p></div>
-      <div class="card"><h4>Get paid and measure</h4><p>Invoices of every type, payments, credit notes, receivables, expenses, margin and analytics.</p></div>
-    </div>
-    <div class="callout"><b>Important:</b> the current version is the complete <b>front end running on demo data</b> stored in the browser. Every screen, rule and calculation works, but data is not shared between users until the real backend (Phase 7) is connected.</div>
-  </section>
+<section id="welcome"><h2><span class="n">01</span>Welcome to Nexora</h2>
+<p>Nexora is the operating system of a service company. It connects the people who do the work, the clients who pay for it, the projects it belongs to and the hours spent on them, and turns all of that into invoices, cash and profit figures – without spreadsheets in between.</p>
+<div class="grid3">
+<div class="card"><h4>Who it is for</h4><p>Agencies, consultancies, design and video studios, IT service companies, engineering offices: any team that sells time, projects or monthly retainers.</p></div>
+<div class="card"><h4>What it replaces</h4><p>The timesheet spreadsheet, the separate invoicing tool, the HR file, the 'who owes us money' list and the end-of-month profitability workbook.</p></div>
+<div class="card"><h4>What you get</h4><p>One place where every hour is approved, billed and measured, with the rules of your company (rates, approvals, taxes, numbering) applied automatically.</p></div>
+</div>
+<h3>How to read this manual</h3>
+<table><thead><tr><th>If you are…</th><th>Start with</th></tr></thead><tbody><tr><td>The person setting Nexora up for the company</td><td><a href='#first-setup'>First-time setup</a>, then <a href='#m-settings'>Workspace settings</a></td></tr><tr><td>A manager or project manager</td><td><a href='#guide-manager'>Manager guide</a>, <a href='#m-projects'>Projects</a>, <a href='#m-approvals'>Approvals</a></td></tr><tr><td>A team member</td><td><a href='#guide-employee'>Employee guide</a>, <a href='#m-time'>Timesheets</a></td></tr><tr><td>In finance or accounting</td><td><a href='#guide-accountant'>Accountant guide</a>, <a href='#m-invoices'>Invoices</a>, <a href='#m-receivables'>Receivables</a></td></tr><tr><td>A director who wants the numbers</td><td><a href='#m-analytics'>Analytics</a> and <a href='#calc'>How figures are calculated</a></td></tr></tbody></table>
+<div class="callout "><b>About this version (v3.0).</b> Every screen and rule described here works today on <b>demo data stored in your browser</b>. Data is not yet shared between users or devices; that arrives with the server version (see <a href='#roadmap'>Roadmap</a>).</div>
+</section>
 
-  <section id="status">
-    <h2><span class="n">02</span>Delivery status</h2>
-    <table>
-      <thead><tr><th>Phase</th><th>Content</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td>Design</td><td>Top tab bar + icon rail, Nexora DS tokens, dark mode, floating side panels</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>0 – Fixes</td><td>CSV injection guard, safe PDF output, request timeouts, readable errors</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>1 – Platform, HR, CRM</td><td>Workspace settings, approval rules, period lock, data export; employee lifecycle, working days, rate history, cost visibility; client legal data, rate cards; audit log</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>2 – Projects &amp; time</td><td>Labels, comments &amp; @mentions, activity, health override, budget alerts, saved views; timer, quick log, copy week, 15-min rounding, reopening, rate freeze</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>3 – Billing</td><td>Gapless numbering, payments, multi-tax, withholding, currencies, credit notes; all invoice types; receivables aging; CSV exports</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>Analytics</td><td>Analytics page on ERP data, PDF/CSV report, assistant</td><td><span class="pill p-done">Done</span></td></tr>
-        <tr><td>4 – Dashboards &amp; reports</td><td>Manager/employee dashboards, standard reports, Excel export, phone tables</td><td><span class="pill p-plan">Next</span></td></tr>
-        <tr><td>5 – Release 2</td><td>Org chart, leave accrual, documents, CSV import, client portal, Gantt, quotes, recurring invoices, reminders</td><td><span class="pill p-plan">Planned</span></td></tr>
-        <tr><td>6 – Release 3</td><td>KPIs/OKRs, reviews, overheads, scheduled reports, branding, custom fields, search, assistant</td><td><span class="pill p-plan">Planned</span></td></tr>
-        <tr><td>7 – Backend</td><td>Database, server auth &amp; permissions, files, email, backups</td><td><span class="pill p-plan">Planned</span></td></tr>
-      </tbody>
-    </table>
-  </section>
+<section id="signin"><h2><span class="n">02</span>Signing in and the demo</h2>
+<ol><li>Open Nexora in your browser (locally: <code>http://localhost:3000</code>).</li><li>On the sign-in page, enter your work email and password, or click <b>Instant Demo Preview</b> to explore with sample companies.</li><li>You land on <b>Dashboard → Analytics</b>. Your name and photo are in the top-right corner; click them for your profile, security settings and sign out.</li></ol>
+<h3>The two demo companies</h3>
+<table><thead><tr><th>Workspace</th><th>What is inside</th></tr></thead><tbody><tr><td><b>Atlas Consulting</b> (EUR)</td><td>10 employees in 5 departments; clients Orbit Logistics, Helio Energy, Medica Health, Vela Retail (lead) and Kappa Bank (archived); current and finished projects; a full year of hours, invoices and payments, including unpaid and overdue invoices.</td></tr><tr><td><b>Northwind Studio</b></td><td>A smaller creative studio with its own team, clients, projects and invoices.</td></tr></tbody></table>
+<p>Switch between them with the <b>workspace switcher</b> (building icon) in the top bar. Each workspace is completely separate: its own people, clients, settings and numbering.</p>
+<div class="callout warn">To start the demo again from zero, clear the browser's site data for Nexora (DevTools → Application → Local Storage → delete the keys starting with <code>nexora:</code>) and reload.</div>
+</section>
 
-  <section id="run">
-    <h2><span class="n">03</span>Run it locally</h2>
-    <pre><code>git checkout main &amp;&amp; git pull
+<section id="interface"><h2><span class="n">03</span>The interface at a glance</h2>
+<div class="wf"><div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> nexora.app/en/dashboard/overview </div><div class="canvas"><div class="row"><div class="box solid"><div class="lbl">Top bar</div>Logo · <b>Dashboard</b> · Organization · Finance · Planning · Users · Billing · Management · Support · System · workspace switcher · search · notifications · language · profile</div></div><div class="row"><div class="box"><div class="lbl">Icon rail</div>Pages of the selected section, theme switch (light/dark), sign out</div><div class="box" style="flex:3"><div class="lbl">Page header</div>Breadcrumb · page title · one-line description · main actions (Add, Export…)</div></div><div class="row"><div class="box" style="flex:4"><div class="lbl">Content</div>Summary cards, tables, boards, charts</div><div class="box" style="flex:2"><div class="lbl">Side panel</div>Opens on the right for details and editing; closes with ✕, Esc or a click outside</div></div></div></div>
+<table><thead><tr><th>Element</th><th>What it does</th></tr></thead><tbody><tr><td>Section tabs (top bar)</td><td>Choose an area of the business. Clicking a tab opens its first page.</td></tr><tr><td>Icon rail (left)</td><td>The pages of that area. Hover an icon to see its name.</td></tr><tr><td>Page header</td><td>Tells you where you are and holds the page's main buttons.</td></tr><tr><td>Summary cards</td><td>The four key numbers of the page (e.g. Outstanding, Overdue, Paid last 30 days, Ready to bill).</td></tr><tr><td>Tables</td><td>Search box, filters, column sorting, export, pagination. Click a row (or its name) to open details.</td></tr><tr><td>Side panel</td><td>Detail and edit forms. Your changes are saved with the button at the bottom.</td></tr><tr><td>Language</td><td>The 文A icon in the top bar: English, Français, Deutsch, Español, العربية (right-to-left), اردو, हिन्दी, Русский, 中文.</td></tr><tr><td>Theme</td><td>Sun / moon icons in the rail switch light and dark mode.</td></tr></tbody></table>
+<h3>Where everything is</h3>
+<table><thead><tr><th>Section</th><th>Pages</th></tr></thead><tbody><tr><td>Dashboard</td><td>Analytics</td></tr><tr><td>Organization</td><td>Employees · Clients · Projects · Timesheets · Time approvals</td></tr><tr><td>Finance</td><td>Client invoices · Receivables · Expenses · Profitability</td></tr><tr><td>Planning</td><td>Timeline · Calendar · Workload · Leave</td></tr><tr><td>System</td><td>Workspace settings · Roles · Sessions · Audit logs</td></tr><tr><td>Users · Billing · Management · Support</td><td>Platform administration: user accounts, plans and subscriptions, files, developer keys, reports</td></tr></tbody></table>
+</section>
+
+<section id="roles"><h2><span class="n">04</span>Roles and what each person sees</h2>
+<p>Every member of a workspace has a role. The role decides which pages and buttons appear. Sensitive information such as hourly costs and margins is hidden from people who do not need it.</p>
+<table><thead><tr><th>Role</th><th>Can do</th><th>Cannot see / do</th></tr></thead><tbody><tr><td><b>Admin</b></td><td>Everything: settings, approval rules, period lock, data export, all people, clients, projects, invoices and costs</td><td>—</td></tr><tr><td><b>Manager</b></td><td>Projects and tasks, the team's time and leave, approvals for their people, planning; costs and margins if granted</td><td>Workspace settings and period lock (unless also admin)</td></tr><tr><td><b>Accountant</b></td><td>Invoices, payments, credit notes, receivables, expenses, profitability, exports</td><td>Editing projects and tasks</td></tr><tr><td><b>Employee</b></td><td>Own timesheet and timer, own leave and expenses, tasks assigned to them, comments</td><td>Other people's rates and costs, invoices, approvals</td></tr><tr><td><b>Client</b></td><td>Reserved for the client portal (coming in a later release)</td><td>Everything internal</td></tr></tbody></table>
+<div class="callout good"><b>Rule:</b> nobody can approve their own hours, leave or expenses – the button is not offered and the system refuses it.</div>
+</section>
+
+<section id="first-setup"><h2><span class="n">05</span>First-time setup (checklist)</h2>
+<p>Do these steps once, in this order. Allow about 30 minutes.</p>
+<ol><li><b>Company identity</b> – System → Workspace settings → Company: legal name, ICE, tax ID, trade register, address, base currency, fiscal-year start, time zone, invoice number format. These appear on every invoice.</li><li><b>Lists</b> – Settings → Lists: create your departments, the year's public holidays, leave types (annual, sick, unpaid…), expense categories and task labels.</li><li><b>Approval rules</b> – Settings → Approvals: who approves timesheets, leave and expenses (the person's manager, the project manager, or a named person), in one or two steps.</li><li><b>Team</b> – Organization → Employees → Add employee: role, department, manager, working days, weekly capacity, hourly cost and billable rate.</li><li><b>Clients</b> – Organization → Clients → Add client: legal details, billing address, currency, invoice language, payment terms, contacts, and any special rates (rate card).</li><li><b>Projects</b> – Organization → Projects → New project: client, manager, team, dates, budget type and amount, milestones.</li><li><b>Tell the team</b> to log their hours every day and submit their week on Friday.</li></ol>
+<div class="callout warn">Set your <b>invoice number format</b> and <b>fiscal year</b> before issuing the first invoice. Numbers are given in sequence per fiscal year and can never be reused.</div>
+</section>
+
+<section id="guide-employee"><h2><span class="n">06</span>Employee guide: your day and your week</h2>
+<h3>Every day (2 minutes)</h3>
+<ol><li>Start the <b>timer</b> when you begin a task (Organization → Timesheets → timer bar), choose the project and task, and stop it when you switch. Or use <b>Quick log</b> to enter hours afterwards.</li><li>Open <b>Projects</b> to see your tasks; update a task’s status when it changes; answer comments where someone @mentioned you.</li></ol>
+<h3>Every Friday</h3>
+<ol><li>Open <b>Timesheets</b> and check the week: each row is a project/task, each column a day. The bar at the top shows your total against your expected hours.</li><li>Fill any gaps (type decimal hours such as <code>1.5</code>; hours are rounded to the nearest 15 minutes).</li><li>Click <b>Submit week</b>. The hours are locked and go to your approver.</li><li>If hours come back <b>sent back</b>, read the reason, correct them and submit again.</li></ol>
+<h3>Leave and expenses</h3>
+<ul><li>Planning → Leave → <b>Request leave</b>: type, dates, note. Approved leave reduces your expected hours automatically.</li><li>Finance → Expenses → <b>Add expense</b>: date, category, project (if any), amount, receipt, and whether it should be re-billed to the client.</li></ul>
+<div class="callout good"><b>Tip:</b> <i>Copy last week</i> fills the timesheet with last week's rows (without hours) so you only type the numbers.</div>
+</section>
+
+<section id="guide-manager"><h2><span class="n">07</span>Manager guide: keep projects on track</h2>
+<h3>Weekly routine</h3>
+<ol><li><b>Monday – plan</b>: Planning → Workload shows each person's planned and logged hours against capacity. Rebalance tasks for anyone above 100%.</li><li><b>During the week – follow</b>: in each project, the board shows work in progress; health turns <i>At risk</i> or <i>Off track</i> when dates or budget slip. Budget alerts appear at 80% and 100%.</li><li><b>Friday/Monday – approve</b>: Organization → Time approvals shows one card per person and week. Check the hours per project, then <b>Approve</b> or <b>Send back</b> with a reason.</li><li><b>Leave and expenses</b>: approve them from Planning → Leave and Finance → Expenses.</li></ol>
+<h3>Running a project</h3>
+<ul><li>Break the work into <b>milestones</b> and <b>tasks</b> with estimates, assignees, due dates and labels.</li><li>Use filters (assignee, label, priority) and <b>Save view</b> to keep your favourite filters.</li><li>If the automatic health does not reflect reality, use <b>Override health</b> and give a reason – it is shown to everyone and recorded.</li><li>Use comments with <b>@Name</b> to ask a teammate something on the task itself; the history keeps every change.</li></ul>
+<div class="callout warn">Approved hours are what the client will be billed and what costs are measured on. Approve carefully: once invoiced they can no longer be reopened.</div>
+</section>
+
+<section id="guide-accountant"><h2><span class="n">08</span>Accountant guide: invoicing and month-end</h2>
+<h3>Month-end routine</h3>
+<ol><li>Check that all hours of the month are <b>approved</b> (Time approvals should be empty).</li><li>Finance → Client invoices → <b>Ready to bill</b> lists, per client, the approved hours not yet invoiced. Click <b>Create invoice</b>.</li><li>For fixed-price, milestone, retainer, deposit or free invoices use <b>New invoice</b> and pick the type.</li><li>Review the draft (lines, tax rate, due date), then <b>Issue</b> – the invoice receives its number – and <b>Send</b>.</li><li>When money arrives, open the invoice and <b>Record payment</b> (date, amount, method, reference). Partial payments are allowed.</li><li>Mistake on an issued invoice? Create a <b>credit note</b>; never delete.</li><li>Export <b>invoices</b> and <b>payments</b> as CSV for your accounting software.</li><li>Lock the month: Settings → Company → <b>Period lock</b> to the last day of the month.</li></ol>
+<h3>Following up on cash</h3>
+<p>Finance → <b>Receivables</b> shows who owes what, split by how late it is. Start with the right-hand columns (61–90 and over 90 days).</p>
+</section>
+
+<section id="guide-director"><h2><span class="n">09</span>Director guide: reading the business</h2>
+<ol><li>Open <b>Dashboard → Analytics</b>.</li><li>Pick a period (last 30 days, 90 days, 12 months or year to date) and a comparison (previous period or same period last year).</li><li>Read the four cards: <b>revenue earned</b>, <b>gross margin</b>, <b>team utilization</b>, <b>cash collected</b>.</li><li>Use the <b>revenue bridge</b> to see where growth or decline came from (existing clients, new clients, lost clients), and the <b>Clients at risk</b> tab for overdue money and sharp drops.</li><li>Filter by client or team to drill down; click <b>Save as report</b> for a PDF or CSV.</li><li>Ask <b>Victor</b> (the assistant button) questions such as <i>Which clients are late paying?</i></li></ol>
+</section>
+
+<section id="m-settings"><h2><span class="n">10</span>Workspace settings</h2>
+<p><b>Where:</b> System → Workspace settings. <b>Who:</b> admins.</p>
+<div class="wf"><div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> nexora.app/en/dashboard/settings </div><div class="canvas"><div class="row"><div class="box solid"><div class="lbl">Tabs</div><b>Company</b> · Lists · Approvals</div></div><div class="row"><div class="box" style="flex:2"><div class="lbl">Company identity</div>Legal name · Trade name · ICE · Tax ID · Trade register · Address · City · Country</div><div class="box"><div class="lbl">Defaults</div>Base currency · Fiscal year starts in · Week starts on · Time zone · Invoice number format</div></div><div class="row"><div class="box"><div class="lbl">Period lock</div>Locked through: 2026-08-31</div><div class="box"><div class="lbl">Data</div>Export workspace (JSON) · Delete demo data</div></div></div></div>
+<h3>Company tab</h3>
+<table><thead><tr><th>Field</th><th>Used for</th></tr></thead><tbody><tr><td>Legal name, trade name</td><td>Invoice header and PDF</td></tr><tr><td>ICE (15 digits)</td><td>Required on Moroccan invoices; printed under the company name</td></tr><tr><td>Tax ID, trade register, address</td><td>Printed on invoices</td></tr><tr><td>Base currency</td><td>All reports and analytics are in this currency; foreign-currency invoices are converted</td></tr><tr><td>Fiscal year starts in</td><td>Defines the year used for invoice numbering and year-to-date figures</td></tr><tr><td>Invoice number format</td><td>e.g. <code>INV-{YYYY}-{SEQ}</code> → INV-2026-001. {YYYY} is the fiscal year, {SEQ} the next number</td></tr><tr><td>Period lock</td><td>Nothing dated on or before this date can be created, changed or deleted</td></tr></tbody></table>
+<h3>Lists tab</h3>
+<ul><li><b>Departments</b> – used for employees, filters and the team filter in Analytics.</li><li><b>Holidays</b> – nobody is expected to work on these days; capacity and expected hours drop.</li><li><b>Leave types</b> – the choices offered when requesting leave.</li><li><b>Expense categories</b> – travel, meals, software, equipment…</li><li><b>Task labels</b> – Bug, Feature, Design, Client request…, with a color.</li></ul>
+<h3>Approvals tab</h3>
+<p>For each subject (timesheets, leave, expenses) choose the approver – the person's manager, the project's manager, or a named person – and whether a second step is required.</p>
+</section>
+
+<section id="m-employees"><h2><span class="n">11</span>Employees</h2>
+<p><b>Where:</b> Organization → Employees.</p>
+<div class="wf"><div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> nexora.app/en/dashboard/employees </div><div class="canvas"><div class="row"><div class="box"><div class="lbl">Total employees</div>10</div><div class="box"><div class="lbl">Active</div>8</div><div class="box"><div class="lbl">On leave</div>1</div><div class="box"><div class="lbl">Weekly capacity</div>290 h</div></div><div class="row"><div class="box" style="flex:1"><div class="lbl">Employees table</div>Name · Department · Access role · Employment type · Billable rate · Status · ⋯</div></div></div></div>
+<h3>Add or edit an employee</h3>
+<ol><li>Click <b>Add employee</b> (or ⋯ → Edit on a row).</li><li>Fill identity, job title, department, manager and role.</li><li>Set <b>employment type</b>, <b>status</b>, <b>working days</b> (e.g. Mon–Wed for a part-timer) and <b>weekly capacity</b>.</li><li>Enter the <b>hourly cost</b> and <b>billable rate</b>.</li><li>Save.</li></ol>
+<h3>Change a rate</h3>
+<ol><li>Open the employee's profile.</li><li>In <b>Rate history</b>, click <b>Change rate</b>.</li><li>Enter the new cost and/or billable rate, the <b>effective date</b> and a reason (e.g. yearly review).</li><li>Save. Work done before the date keeps the old rate.</li></ol>
+<table><thead><tr><th>Status</th><th>Meaning</th></tr></thead><tbody><tr><td>Starting</td><td>Hired, not yet started</td></tr><tr><td>Active</td><td>Working normally</td></tr><tr><td>On leave</td><td>Away for a longer period</td></tr><tr><td>Notice</td><td>Leaving; still working until the end date</td></tr><tr><td>Inactive</td><td>Has left; kept for history</td></tr></tbody></table>
+<div class="callout ">Hourly costs and margins are only visible to people with the <b>costs</b> permission.</div>
+</section>
+
+<section id="m-clients"><h2><span class="n">12</span>Clients</h2>
+<p><b>Where:</b> Organization → Clients.</p>
+<ol><li>Click <b>Add client</b>.</li><li>Enter the name, industry, status (lead, active, archived) and account manager.</li><li>Fill the <b>legal details</b>: legal name, ICE, tax ID, billing address.</li><li>Choose <b>currency</b>, <b>invoice language</b> and <b>payment terms</b> (days).</li><li>Add <b>contacts</b> and mark the primary one.</li><li>Optional: add a <b>rate card</b> – a special rate for a person or for a job title for this client.</li><li>Save.</li></ol>
+<h3>Which rate is used?</h3>
+<p>When hours are billed, Nexora looks for a rate in this order and uses the first it finds:</p>
+<ol><li>This person on the client's rate card</li><li>This person's job title on the client's rate card</li><li>The client's default hourly rate</li><li>The employee's billable rate valid on the day of the work</li></ol>
+<div class="callout warn">A client with invoices cannot be deleted – <b>archive</b> it instead. Archived clients disappear from pickers but keep their history.</div>
+</section>
+
+<section id="m-projects"><h2><span class="n">13</span>Projects and tasks</h2>
+<p><b>Where:</b> Organization → Projects.</p>
+<div class="wf"><div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> nexora.app/en/dashboard/projects/orbit </div><div class="canvas"><div class="row"><div class="box solid"><div class="lbl">Orbit fleet portal</div>ORB-01 <span class="pill p-done">Active</span> <span class="pill p-high">At risk</span> · progress 33% · Client Orbit Logistics · Aug 20 → Nov 3 · Budget €48,000 fixed</div></div><div class="row"><div class="box"><div class="lbl">Tabs</div><b>Board</b> · List · Milestones · Team</div></div><div class="row"><div class="box"><div class="lbl">Filters</div>All assignees · All labels · All priorities · Save view</div></div><div class="row"><div class="box"><div class="lbl">To do</div>Load testing · User guide</div><div class="box"><div class="lbl">In progress</div>Shipment tracking API · Tracking page UI</div><div class="box"><div class="lbl">In review</div>Invoice download</div><div class="box"><div class="lbl">Done</div>Wireframes · Design system</div></div></div></div>
+<h3>Create a project</h3>
+<ol><li>Click <b>New project</b>.</li><li>Choose the client, the project manager and the team members (only they can log hours).</li><li>Set the start and due dates, priority and code (e.g. ORB-01).</li><li>Choose the <b>budget type</b> and amount (see below).</li><li>Add milestones, then tasks.</li></ol>
+<table><thead><tr><th>Budget type</th><th>Billed how</th><th>Example</th></tr></thead><tbody><tr><td>Hourly</td><td>Approved hours × rate</td><td>Support, consulting by the hour</td></tr><tr><td>Fixed price</td><td>Shares of the price (e.g. 30% at start) or milestones</td><td>Website for €48,000</td></tr><tr><td>Retainer</td><td>A monthly amount including N hours; extra hours at an overage rate</td><td>€4,000/month incl. 30 h, then €140/h</td></tr><tr><td>Non-billable</td><td>Not billed; counts as internal time</td><td>Internal website, training</td></tr></tbody></table>
+<h3>Work with tasks</h3>
+<ul><li>Open a task to edit status, priority, assignee, milestone, due date, estimate, <b>labels</b> and <b>subtasks</b>.</li><li>Write <b>comments</b>; type <b>@</b> and a name to mention a colleague.</li><li>The <b>activity</b> list records every change (who, what, when).</li><li>Change a task’s status from its panel or the card menu; the board moves it to the right column.</li></ul>
+<h3>Health and budget</h3>
+<table><thead><tr><th>Signal</th><th>When</th></tr></thead><tbody><tr><td><span class="pill p-done">On track</span></td><td>Dates and budget are fine</td></tr><tr><td><span class="pill p-high">At risk</span></td><td>Behind schedule or budget above 80%</td></tr><tr><td><span class="pill p-crit">Off track</span></td><td>Overdue or budget above 100%</td></tr><tr><td>Override</td><td>A manager sets the health manually with a reason</td></tr></tbody></table>
+</section>
+
+<section id="m-time"><h2><span class="n">14</span>Timesheets and timer</h2>
+<p><b>Where:</b> Organization → Timesheets.</p>
+<div class="wf"><div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> nexora.app/en/dashboard/timesheets </div><div class="canvas"><div class="row"><div class="box solid"><div class="lbl">Timer</div>▶ Orbit fleet portal · Tracking page UI · 01:24:10 · Stop</div><div class="box"><div class="lbl">Quick log</div>Project · Task · Hours · Add</div></div><div class="row"><div class="box" style="flex:3"><div class="lbl">Week of Sep 28</div>Mon · Tue · Wed · Thu · Fri · Sat · Sun · Total</div><div class="box"><div class="lbl">This week</div>32 h of 40 h expected · 8 h to go</div></div><div class="row"><div class="box" style="flex:1"><div class="lbl">Rows</div>ORB-01 Tracking page UI: 4 · 4 · 3.5 · 4 · – <br/>HEL-02 Site data ingestion: 3 · 3 · 4 · 3 · –</div></div><div class="row"><div class="box"><div class="lbl">Actions</div>Copy last week · Submit week</div></div></div></div>
+<h3>Log time</h3>
+<ol><li>Choose the week with the arrows.</li><li>Click <b>Add row</b> and choose a project (and task).</li><li>Type the hours in each day's cell; they save automatically.</li><li>Or use the <b>timer</b> / <b>Quick log</b> – the hours land in the right cell.</li><li>On Friday click <b>Submit week</b>.</li></ol>
+<table><thead><tr><th>Status</th><th>Meaning</th><th>Can you edit?</th></tr></thead><tbody><tr><td>Draft</td><td>Entered, not submitted</td><td>Yes</td></tr><tr><td>Submitted</td><td>Waiting for approval</td><td>No</td></tr><tr><td>Approved</td><td>Accepted; rate frozen; ready to bill</td><td>No (a manager can reopen if not invoiced)</td></tr><tr><td>Sent back</td><td>Rejected with a reason</td><td>Yes, then resubmit</td></tr><tr><td>Invoiced</td><td>Billed on an invoice</td><td>No</td></tr></tbody></table>
+<h3>Rules that protect your data</h3>
+<ul><li>Hours are rounded to <b>15 minutes</b>; at most 24 hours per day.</li><li>Only members of a project can log time on it; finished or cancelled projects refuse new hours.</li><li>Days inside a locked period cannot be changed.</li><li>Hours on non-billable projects are automatically marked non-billable.</li></ul>
+</section>
+
+<section id="m-approvals"><h2><span class="n">15</span>Time approvals</h2>
+<p><b>Where:</b> Organization → Time approvals.</p>
+<div class="wf"><div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> nexora.app/en/dashboard/time-approvals </div><div class="canvas"><div class="row"><div class="box"><div class="lbl">Hours to review</div>48 h</div><div class="box"><div class="lbl">Timesheets waiting</div>3</div><div class="box"><div class="lbl">People</div>3</div><div class="box"><div class="lbl">Billable value</div>€6,210</div></div><div class="row"><div class="box" style="flex:1"><div class="lbl">Lina Moreau · week of Sep 21</div>Orbit fleet portal · Tracking page UI 16 h<br/>Helio dashboard 12 h<br/>Billable value €3,360 · <b>Send back</b> · <b>Approve</b></div><div class="box" style="flex:1"><div class="lbl">Karim Haddad · week of Sep 21</div>…</div></div></div></div>
+<ol><li>Review each card: hours per project and task, total against capacity, billable value.</li><li>Click <b>Approve</b>, or <b>Send back</b> and type a reason the person will see.</li><li>Use <b>Approve all</b> when everything is in order.</li></ol>
+<div class="callout ">On approval, the person's bill rate and cost rate are stored on each hour. Later rate changes never change approved or invoiced work.</div>
+</section>
+
+<section id="m-leave"><h2><span class="n">16</span>Leave and planning</h2>
+<h3>Leave (Planning → Leave)</h3>
+<ol><li>Click <b>Request leave</b>, choose the type and the dates, add a note.</li><li>The approver accepts or declines.</li><li>Approved leave appears in the calendar and lowers the person's capacity and expected hours.</li></ol>
+<h3>Planning views</h3>
+<table><thead><tr><th>Page</th><th>Shows</th></tr></thead><tbody><tr><td>Timeline</td><td>Projects and milestones over time</td></tr><tr><td>Calendar</td><td>Leave, holidays and due dates by day</td></tr><tr><td>Workload</td><td>For each person: capacity, planned and logged hours, overload in red</td></tr></tbody></table>
+</section>
+
+<section id="m-expenses"><h2><span class="n">17</span>Expenses</h2>
+<p><b>Where:</b> Finance → Expenses.</p>
+<ol><li>Click <b>Add expense</b>.</li><li>Enter date, category, description, amount and project (optional).</li><li>Attach the receipt.</li><li>Tick <b>Billable</b> if the client should pay it back.</li><li>Submit. The approver approves or rejects (with a reason); finance marks it <b>reimbursed</b> once paid back.</li></ol>
+<p>Approved billable expenses appear in <b>Ready to bill</b> for the project's client and can be added to the next invoice.</p>
+</section>
+
+<section id="m-invoices"><h2><span class="n">18</span>Client invoices</h2>
+<p><b>Where:</b> Finance → Client invoices.</p>
+<div class="wf"><div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> nexora.app/en/dashboard/client-invoices <nav><span>Export invoices</span><span>Export payments</span><span>New invoice</span></nav></div><div class="canvas"><div class="row"><div class="box"><div class="lbl">Outstanding</div>€45,601</div><div class="box"><div class="lbl">Overdue</div>€43,666</div><div class="box"><div class="lbl">Paid, last 30 days</div>€45,544</div><div class="box"><div class="lbl">Ready to bill</div>€6,210</div></div><div class="row"><div class="box" style="flex:1"><div class="lbl">Ready to bill</div>Helio Energy · 48 h · €6,210 · <b>Create invoice</b></div></div><div class="row"><div class="box" style="flex:1"><div class="lbl">Invoices</div>Invoice · Client · Issue date · Due date · Total · Balance due · Status</div></div></div></div>
+<h3>Create an invoice from hours</h3>
+<ol><li>In <b>Ready to bill</b>, click <b>Create invoice</b> on the client.</li><li>Select the hours to include and how to group the lines: <b>by person</b>, <b>by task</b> or <b>by day</b>.</li><li>Choose the tax rate and issue date; the due date follows the client's payment terms.</li><li>Deposits already paid by the client are offered for deduction.</li><li>Create – you get a <b>draft</b> you can still edit.</li></ol>
+<h3>Other invoice types (New invoice)</h3>
+<table><thead><tr><th>Type</th><th>How to use it</th></tr></thead><tbody><tr><td>Fixed share</td><td>Enter a percentage of a fixed-price project; Nexora refuses to bill more than the price</td></tr><tr><td>Milestone</td><td>Choose a milestone and the amount due</td></tr><tr><td>Retainer</td><td>Choose the month; the monthly amount is billed, plus hours beyond the included ones at the overage rate</td></tr><tr><td>Deposit</td><td>An advance before the work; deducted on the final invoice</td></tr><tr><td>Free</td><td>Any lines you type</td></tr></tbody></table>
+<h3>From draft to paid</h3>
+<ol><li><b>Draft</b> – edit lines, taxes (one rate per line if needed), withholding, notes.</li><li><b>Issue</b> – the invoice receives its number and is locked.</li><li><b>Send</b> – recorded with date and recipient.</li><li><b>Record payment</b> – one or several payments; the balance updates.</li><li><b>Paid</b> – automatically when the balance reaches zero.</li></ol>
+<h3>Correcting an invoice</h3>
+<ul><li>A <b>draft</b> can be edited or deleted freely (it has no number yet).</li><li>An <b>issued</b> invoice is never deleted. Create a <b>credit note</b> (full or partial). Credit notes have their own numbering (CN-…) and can free the hours so they can be billed again.</li><li>An invoice with no payments can be <b>voided</b>; one with payments must be credited.</li></ul>
+<h3>Currencies and taxes</h3>
+<p>Each invoice uses the client's currency; an exchange rate converts it to your base currency for reports. Several VAT rates can appear on one invoice (a tax line per rate), and a withholding tax can be deducted from the total.</p>
+</section>
+
+<section id="m-receivables"><h2><span class="n">19</span>Receivables</h2>
+<p><b>Where:</b> Finance → Receivables.</p>
+<div class="wf"><div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> nexora.app/en/dashboard/receivables </div><div class="canvas"><div class="row"><div class="box"><div class="lbl">Open receivables</div>€45,601</div><div class="box"><div class="lbl">Not yet due</div>€3,978</div><div class="box"><div class="lbl">Overdue</div>€41,623</div><div class="box"><div class="lbl">Over 90 days</div>€0</div></div><div class="row"><div class="box" style="flex:1"><div class="lbl">Client · Not yet due · 1–30 · 31–60 · 61–90 · Over 90 · Total</div>Medica Health · — · €5,647 · €16,101 · — · — · €21,748<br/>Orbit Logistics · — · €21,918 · — · — · — · €21,918</div></div></div></div>
+<ol><li>Sort by the oldest columns first.</li><li>Open the client's invoices from Client invoices to see each one and its payments.</li><li>Contact the client; record payments as they arrive.</li><li>Export the table as CSV for follow-up.</li></ol>
+</section>
+
+<section id="m-profit"><h2><span class="n">20</span>Profitability</h2>
+<p><b>Where:</b> Finance → Profitability. For each project: revenue, cost of the hours (people's hourly cost), expenses, <b>margin</b> and budget usage. Use it to spot projects that are sold too cheaply or overrun.</p>
+</section>
+
+<section id="m-analytics"><h2><span class="n">21</span>Analytics and reports</h2>
+<p><b>Where:</b> Dashboard → Analytics.</p>
+<div class="wf"><div class="bar"><span class="dot"></span><span class="dot g"></span><span class="dot y"></span> nexora.app/en/dashboard/overview <nav><span>Receivables</span><span>Refresh</span><span>Save as report</span></nav></div><div class="canvas"><div class="row"><div class="box solid"><div class="lbl">Filters</div>Last 90 days · vs previous period · All clients · All teams</div></div><div class="row"><div class="box"><div class="lbl">Revenue earned</div>€111,783 −19%</div><div class="box"><div class="lbl">Gross margin</div>42% −17 pts</div><div class="box"><div class="lbl">Team utilization</div>40% +4 pts</div><div class="box"><div class="lbl">Cash collected</div>€159,980 −13%</div></div><div class="row"><div class="box" style="flex:2"><div class="lbl">Revenue earned over time</div>Cumulative line vs comparison period · run-rate</div><div class="box"><div class="lbl">Revenue by client</div>Share bar · amounts with trend · billing mix</div></div><div class="row"><div class="box"><div class="lbl">Revenue bridge</div>Before → +Growth → +New → −Down → −Lost → Now · tab Clients at risk</div><div class="box"><div class="lbl">Team capacity</div>Billable hours · utilization vs 75% · non-billable · hours by project</div></div><div class="row"><div class="box"><div class="lbl">Top projects</div>Revenue · hours · margin</div><div class="box"><div class="lbl">Utilization over time</div>With the 75% target line</div><div class="box"><div class="lbl">Average billing rate</div>Per hour, over time</div></div></div></div>
+<table><thead><tr><th>Card</th><th>Question it answers</th></tr></thead><tbody><tr><td>Revenue earned</td><td>How much value did we produce in the period?</td></tr><tr><td>Gross margin</td><td>What is left after salaries (cost of hours) and expenses?</td></tr><tr><td>Team utilization</td><td>What share of available time was billable?</td></tr><tr><td>Cash collected</td><td>How much money actually came in?</td></tr><tr><td>Revenue bridge</td><td>Why did revenue change – existing clients, new ones, lost ones?</td></tr><tr><td>Clients at risk</td><td>Who owes money for more than a month, or dropped sharply?</td></tr><tr><td>Team capacity</td><td>Where did the hours go, and how much time was not logged?</td></tr><tr><td>Top projects</td><td>Which projects bring the most, with which margin?</td></tr></tbody></table>
+<h3>Reports</h3>
+<ul><li><b>Save as report → Download PDF</b>: an A4 report with key figures, revenue chart, clients, projects and risks.</li><li><b>Preview</b> and <b>Print</b> (or save as PDF from the print dialog).</li><li><b>Export CSV</b>: the figures per period, for Excel.</li></ul>
+<h3>Ask Victor</h3>
+<p>The assistant button answers from your live figures: why revenue changed, who pays late, a forecast for next month and quarter, how busy the team is.</p>
+</section>
+
+<section id="rules"><h2><span class="n">22</span>Business rules</h2><table><thead><tr><th>Rule</th><th>What happens</th></tr></thead><tbody><tr><td>Rate choice</td><td>Person on rate card → job title on rate card → client rate → employee rate on the date</td></tr><tr><td>Rate freeze</td><td>Approval stores bill and cost rate on each hour</td></tr><tr><td>Invoice numbering</td><td>Given at issue, in sequence per fiscal year, never reused; drafts have none</td></tr><tr><td>No deletion</td><td>Issued invoices are credited, not deleted; clients with invoices are archived</td></tr><tr><td>Period lock</td><td>No change on or before the lock date</td></tr><tr><td>Self-approval</td><td>Not allowed for hours, leave or expenses</td></tr><tr><td>Time rounding</td><td>15 minutes; max 24 h per day; members only; closed projects refuse hours</td></tr><tr><td>Money rounding</td><td>To the cent per line; tax per rate</td></tr><tr><td>Fixed price</td><td>Never billed above the project price</td></tr><tr><td>Deposits</td><td>Deducted automatically on the next final invoice of the client</td></tr></tbody></table></section>
+
+<section id="statuses"><h2><span class="n">23</span>Statuses explained</h2><table><thead><tr><th>Object</th><th>Statuses</th></tr></thead><tbody><tr><td>Time entry</td><td>Draft → Submitted → Approved → Invoiced; or Sent back</td></tr><tr><td>Invoice</td><td>Draft → Issued → Sent → Paid; Void; shown as Overdue, Partly paid or Credited when relevant</td></tr><tr><td>Expense</td><td>Submitted → Approved / Rejected → Reimbursed</td></tr><tr><td>Leave</td><td>Pending → Approved / Declined</td></tr><tr><td>Project</td><td>Planning → Active → On hold → Completed / Cancelled</td></tr><tr><td>Task</td><td>To do → In progress → In review → Done</td></tr><tr><td>Employee</td><td>Starting, Active, On leave, Notice, Inactive</td></tr><tr><td>Client</td><td>Lead, Active, Archived</td></tr></tbody></table><div class="mermaid">
+stateDiagram-v2
+  [*] --> Draft
+  Draft --> Issued: issue - number assigned
+  Draft --> [*]: delete
+  Issued --> Sent: send
+  Issued --> Paid: fully paid
+  Sent --> Paid: fully paid
+  Issued --> Void: cancel without payments
+  Sent --> Void: cancel without payments
+  Sent --> Credited: credit note
+  Paid --> Credited: credit note
+</div></section>
+
+<section id="calc"><h2><span class="n">24</span>How figures are calculated</h2><table><thead><tr><th>Figure</th><th>Formula</th></tr></thead><tbody><tr><td>Revenue earned</td><td>Approved billable hours on hourly projects × frozen rate + fixed, milestone and retainer invoices − credit notes</td></tr><tr><td>Cost of hours</td><td>All logged hours × the person's hourly cost on that date</td></tr><tr><td>Gross margin</td><td>(Revenue − cost of hours − approved expenses) ÷ revenue</td></tr><tr><td>Available hours</td><td>Working days × hours per day, minus approved leave and holidays</td></tr><tr><td>Utilization</td><td>Billable hours ÷ available hours (target 75%)</td></tr><tr><td>Average billing rate</td><td>Revenue from hourly work ÷ those hours</td></tr><tr><td>Balance due</td><td>Invoice total − payments − credit notes</td></tr><tr><td>Days late</td><td>Today − due date, for unpaid balances</td></tr></tbody></table></section>
+
+<section id="faq"><h2><span class="n">25</span>Frequently asked questions</h2><h4>Why can't I edit my hours?</h4><p>They are submitted, approved or invoiced, or the day is in a locked period. Ask your manager to send them back or reopen them.</p><h4>Why does an invoice have no number?</h4><p>It is still a draft. The number is given when you click Issue, so deleted drafts never leave gaps.</p><h4>How do I cancel an invoice I already sent?</h4><p>Create a credit note from the invoice. If no payment was recorded you can also void it.</p><h4>A client paid only part of the invoice.</h4><p>Record the payment with the amount received; the invoice shows Partly paid and the balance due.</p><h4>A rate changed – will old invoices change?</h4><p>No. Approved hours keep the rate frozen at approval, and issued invoices never change.</p><h4>Why is someone's utilization low?</h4><p>Hours not logged, non-billable work, or leave. Check Team capacity on Analytics and the person's timesheet.</p><h4>Can a client see Nexora?</h4><p>Not yet; the client portal is planned for a later release.</p><h4>Why don't my colleagues see my data?</h4><p>In this version data is stored in your browser only. Shared data arrives with the server version.</p></section>
+
+<section id="trouble"><h2><span class="n">26</span>Troubleshooting</h2><table><thead><tr><th>Problem</th><th>Solution</th></tr></thead><tbody><tr><td>A page shows <i>404 – This page could not be found</i></td><td>You are on an old version. Run <code>git checkout main &amp;&amp; git pull</code>, stop the server, delete <code>.next</code>, start again.</td></tr><tr><td>The screens look old after an update</td><td>Hard-refresh the browser (Ctrl/Cmd + Shift + R).</td></tr><tr><td>Numbers look strange after an update</td><td>Old demo data is still in the browser. Delete the <code>nexora:</code> keys in Local Storage and reload.</td></tr><tr><td>The app does not start: <i>NEXT_PUBLIC_API_URL</i> missing</td><td>Create <code>.env.local</code> (see <a href='#install'>Installation</a>).</td></tr><tr><td>Build fails with a demo-mode error</td><td>Intended: production builds must not use demo mode. Use <code>npm run dev</code> for the demo.</td></tr></tbody></table></section>
+
+<section id="glossary"><h2><span class="n">27</span>Glossary</h2><table><thead><tr><th>Term</th><th>Meaning</th></tr></thead><tbody><tr><td>Workspace</td><td>One company in Nexora, with its own data and settings</td></tr><tr><td>Rate card</td><td>Special rates agreed with a client for a person or job title</td></tr><tr><td>Billable</td><td>Work or expense the client pays for</td></tr><tr><td>Utilization</td><td>Share of available time spent on billable work</td></tr><tr><td>Retainer</td><td>A monthly fee that includes a number of hours</td></tr><tr><td>Deposit (advance)</td><td>Money invoiced before the work, deducted later</td></tr><tr><td>Credit note</td><td>A negative invoice that cancels all or part of an issued one</td></tr><tr><td>Withholding</td><td>Tax deducted by the client from the amount paid</td></tr><tr><td>ICE</td><td>Moroccan company identifier (15 digits) required on invoices</td></tr><tr><td>Period lock</td><td>Date before which the accounts are closed and nothing can change</td></tr><tr><td>Receivables</td><td>Money clients owe you</td></tr><tr><td>Revenue bridge</td><td>Chart explaining the change in revenue between two periods</td></tr></tbody></table></section>
+
+<section id="install"><h2><span class="n">28</span>Installation</h2>
+<pre><code>git clone https://github.com/yahyanaim/Nexora-Saas.git
+cd Nexora-Saas
 npm install
 
 # .env.local
 NEXT_PUBLIC_API_URL=http://localhost:4000/api
 NEXT_PUBLIC_DEMO_MODE=true
 
-npm run dev</code></pre>
-    <p>Open <code>http://localhost:3000</code> and click <b>Instant Demo Preview</b> on the login page. Use the workspace switcher in the top bar to move between the two demo companies (Atlas Consulting, Northwind Studio).</p>
-    <ul>
-      <li>Pages look old after a pull → stop the server, <code>rm -rf .next</code>, start again, hard-refresh the browser.</li>
-      <li>Reset the demo → DevTools → Application → Local Storage → delete the <code>nexora:</code> keys.</li>
-      <li><code>npm run build</code> refuses <code>NEXT_PUBLIC_DEMO_MODE=true</code> on purpose, so a demo never reaches production by accident.</li>
-      <li>Checks: <code>npx tsc --noEmit</code>, <code>npm run lint</code>, <code>npx vitest run</code>, <code>node scripts/check-i18n-sync.mjs</code>, <code>npm run e2e</code>.</li>
-    </ul>
-  </section>
+npm run dev        # http://localhost:3000</code></pre>
+<table><thead><tr><th>Command</th><th>Purpose</th></tr></thead><tbody><tr><td><code>npm run dev</code></td><td>Start the app with demo data</td></tr><tr><td><code>npx tsc --noEmit</code></td><td>Type check</td></tr><tr><td><code>npm run lint</code></td><td>Lint</td></tr><tr><td><code>npx vitest run</code></td><td>Unit tests (398)</td></tr><tr><td><code>node scripts/check-i18n-sync.mjs</code></td><td>Check all 9 languages are complete</td></tr><tr><td><code>npm run e2e</code></td><td>End-to-end tests (needs a production build, see playwright.config)</td></tr></tbody></table>
+</section>
 
-  <section id="tour">
-    <h2><span class="n">04</span>Navigation &amp; screens</h2>
-    <p>The top bar holds the main sections; the icon rail on the left lists the pages of the selected section. Detail and edit forms open in a floating side panel.</p>
-    <table>
-      <thead><tr><th>Section</th><th>Pages</th></tr></thead>
-      <tbody>
-        <tr><td>Dashboard</td><td>Analytics</td></tr>
-        <tr><td>Organization</td><td>Employees · Clients · Projects · Timesheets · Time approvals</td></tr>
-        <tr><td>Finance</td><td>Client invoices · Receivables · Expenses · Profitability</td></tr>
-        <tr><td>Planning</td><td>Timeline · Calendar · Workload · Leave</td></tr>
-        <tr><td>System</td><td>Workspace settings · Roles · Sessions · Audit logs</td></tr>
-        <tr><td>Users, Billing, Management, Support</td><td>Platform pages kept from the original product (accounts, plans, subscriptions, files, developer, reports)</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section id="roles">
-    <h2><span class="n">05</span>Roles &amp; permissions</h2>
-    <p>Each workspace member has a role; screens show or hide actions with permissions. In this front-end version permissions only control the interface; Phase 7 enforces them on the server.</p>
-    <table>
-      <thead><tr><th>Role</th><th>Typical rights</th></tr></thead>
-      <tbody>
-        <tr><td>Admin</td><td>Everything, including settings, period lock, costs and data export</td></tr>
-        <tr><td>Manager</td><td>Projects, team, approvals of their people, costs if granted</td></tr>
-        <tr><td>Accountant</td><td>Invoices, payments, credit notes, receivables, expenses, costs</td></tr>
-        <tr><td>Employee</td><td>Own timesheet, timer, leave and expenses; assigned tasks</td></tr>
-        <tr><td>Client</td><td>Reserved for the client portal (Phase 5)</td></tr>
-      </tbody>
-    </table>
-    <p>Key permissions: <code>employees:*</code>, <code>clients:*</code>, <code>projects:*</code>, <code>time:track</code>, <code>time:approve</code>, <code>invoices:*</code>, <code>costs:read</code> (hourly costs and margins are hidden without it), <code>analytics:view</code>.</p>
-  </section>
-
-  <section id="flow">
-    <h2><span class="n">06</span>End-to-end flow</h2>
-    <div class="mermaid">
-flowchart LR
-  A[Client and rate card] --> B[Project and budget]
-  B --> C[Tasks and team]
-  C --> D[Hours logged<br/>timer / timesheet]
-  D --> E{Manager approval}
-  E -- sent back --> D
-  E -- approved: rate frozen --> F[Ready to bill]
-  F --> G[Invoice draft]
-  G --> H[Issued: number given]
-  H --> I[Sent]
-  I --> J[Payments]
-  J --> K[Paid]
-  H --> L[Credit note]
-  I --> M[Receivables and reminders]
-  D --> N[Cost of hours]
-  F --> O[Analytics: revenue, margin, utilization]
-  N --> O
-    </div>
-  </section>
-
-  <section id="m-settings">
-    <h2><span class="n">07</span>Workspace settings</h2>
-    <ul>
-      <li><b>Company</b>: legal name, trade name, ICE (15 digits, required on Moroccan invoices), tax ID, trade register, address, base currency, fiscal-year start, week start, time zone, invoice number format (e.g. <code>INV-{YYYY}-{SEQ}</code>).</li>
-      <li><b>Period lock</b>: a date on or before which nothing can be changed (hours, invoices, expenses), for closed accounting periods.</li>
-      <li><b>Data</b>: export all workspace data as JSON; delete the workspace's demo data.</li>
-      <li><b>Lists</b>: departments, public holidays, leave types, expense categories, task labels.</li>
-      <li><b>Approvals</b>: who approves timesheets, leave and expenses (manager, project manager or a named person; one or two steps).</li>
-    </ul>
-  </section>
-
-  <section id="m-people">
-    <h2><span class="n">08</span>Employees (HR)</h2>
-    <ul>
-      <li>Profile: job title, department, manager, role, employment type, hire date, skills.</li>
-      <li>Statuses: starting, active, on leave, notice, inactive.</li>
-      <li><b>Working days</b> and weekly capacity (e.g. a part-timer working Mon–Wed, 20 h) – used for capacity and utilization.</li>
-      <li><b>Rate history</b>: hourly cost and billable rate with an effective date and a reason. Past work keeps the rate valid on its date.</li>
-      <li>Costs and margins are only visible with the <code>costs:read</code> permission.</li>
-    </ul>
-  </section>
-
-  <section id="m-clients">
-    <h2><span class="n">09</span>Clients (CRM)</h2>
-    <ul>
-      <li>Legal name, ICE, tax ID, billing address, currency, invoice language, payment terms, account manager, contacts, status (lead, active, archived).</li>
-      <li><b>Rate card</b>: special rates for a person or a job title for this client.</li>
-      <li>A client with invoices cannot be deleted (archive it instead). Changes are written to the audit log.</li>
-    </ul>
-  </section>
-
-  <section id="m-projects">
-    <h2><span class="n">10</span>Projects &amp; tasks</h2>
-    <ul>
-      <li>Budget types: <b>hourly</b> (time &amp; materials), <b>fixed price</b>, <b>retainer</b> (monthly amount with included hours and an overage rate), <b>non-billable</b> (internal).</li>
-      <li>Views: board (Kanban), list, milestones, team. Filters by assignee, label and priority; filters can be saved as named views.</li>
-      <li>Tasks: status, priority, assignee, milestone, due date, estimate, labels, subtasks, <b>comments with @mentions</b> and an <b>activity history</b> of every change.</li>
-      <li>Health is calculated from schedule and budget; a manager can <b>override</b> it with a reason.</li>
-      <li><b>Budget alerts</b> at 80% and 100% of the budget; fixed-price projects show the share already billed.</li>
-    </ul>
-  </section>
-
-  <section id="m-time">
-    <h2><span class="n">11</span>Time tracking &amp; approvals</h2>
-    <ul>
-      <li>Weekly timesheet per person and project/task; <b>timer</b> in the top area and a <b>quick log</b>; <b>copy last week</b>.</li>
-      <li>Hours are rounded to <b>15 minutes</b>; max 24 h per day; only team members of the project can log; closed projects refuse hours; the gap to expected hours (capacity less leave and holidays) is shown.</li>
-      <li>Statuses: draft → submitted → approved, or sent back with a reason. Approved hours can be <b>reopened</b> by a manager if not yet invoiced.</li>
-      <li>On approval, the bill rate and cost rate are <b>frozen</b> on each entry.</li>
-      <li>Approvals page: one card per person and week with hours per project and billable value; approve all at once.</li>
-    </ul>
-  </section>
-
-  <section id="m-billing">
-    <h2><span class="n">12</span>Invoicing &amp; payments</h2>
-    <table>
-      <thead><tr><th>Invoice type</th><th>How it is built</th></tr></thead>
-      <tbody>
-        <tr><td>Hours</td><td>From approved, unbilled hours; lines grouped by person, task or day</td></tr>
-        <tr><td>Fixed share</td><td>A percentage of a fixed price; never more than the price</td></tr>
-        <tr><td>Milestone</td><td>The amount due when a milestone is reached</td></tr>
-        <tr><td>Retainer</td><td>Monthly amount, plus hours beyond the included ones at the overage rate</td></tr>
-        <tr><td>Deposit</td><td>An advance; deducted automatically on the next final invoice</td></tr>
-        <tr><td>Free</td><td>Any manual lines</td></tr>
-        <tr><td>Credit note</td><td>Cancels all or part of an issued invoice (own <code>CN-</code> numbering); can free the hours for rebilling</td></tr>
-      </tbody>
-    </table>
-    <ul>
-      <li>Several tax rates per invoice (one per line), withholding tax, invoice currency with exchange rate to the base currency.</li>
-      <li><b>Partial payments</b> (date, amount, method, reference); balance due after payments and credit notes; marked paid automatically when fully paid.</li>
-      <li>PDF with company identity (ICE, tax ID, trade register), tax breakdown and balance; delivery log when sent.</li>
-      <li>CSV exports of invoices and of payments for the accountant.</li>
-    </ul>
-  </section>
-
-  <section id="m-receivables">
-    <h2><span class="n">13</span>Receivables</h2>
-    <p>Open balances per client, split by lateness: <b>not yet due, 1–30, 31–60, 61–90, over 90 days</b>, in the base currency, with totals and CSV export. Clients with money over 30 days late are flagged as high risk on the Analytics page.</p>
-  </section>
-
-  <section id="m-costs">
-    <h2><span class="n">14</span>Expenses &amp; profitability</h2>
-    <ul>
-      <li>Expenses with category, project, receipt, billable flag; submitted → approved / rejected → reimbursed; billable expenses can be re-billed on the next invoice.</li>
-      <li>Profitability per project: revenue, cost of hours, expenses, margin and budget usage.</li>
-    </ul>
-  </section>
-
-  <section id="m-planning">
-    <h2><span class="n">15</span>Planning &amp; leave</h2>
-    <ul>
-      <li>Timeline and calendar of projects, milestones and leave.</li>
-      <li>Workload: planned and logged hours against each person's capacity.</li>
-      <li>Leave requests with types from settings and approval; approved leave reduces capacity.</li>
-    </ul>
-  </section>
-
-  <section id="m-analytics">
-    <h2><span class="n">16</span>Analytics</h2>
-    <p>Filters: period (7 days, 30 days, 90 days, 12 months, year to date), comparison (previous period, same period last year, none), client and team.</p>
-    <table>
-      <thead><tr><th>Card</th><th>Shows</th></tr></thead>
-      <tbody>
-        <tr><td>KPI cards</td><td>Revenue earned, gross margin, team utilization, cash collected – each with trend bars and change</td></tr>
-        <tr><td>Revenue over time</td><td>Cumulative revenue vs the comparison period, annual run-rate</td></tr>
-        <tr><td>Revenue by client</td><td>Share bar, amounts with trend lines, split by billing type</td></tr>
-        <tr><td>Revenue bridge</td><td>Waterfall: previous period → growth, new clients → decline, lost clients → now; tab <i>Clients at risk</i> (overdue money, sharp drops, no recent work)</td></tr>
-        <tr><td>Team capacity</td><td>Billable hours, utilization vs 75% target, non-billable share, hours by project</td></tr>
-        <tr><td>Top projects</td><td>Revenue, hours and margin per project</td></tr>
-        <tr><td>Utilization / average rate</td><td>Over time, with the target line</td></tr>
-        <tr><td>Report &amp; assistant</td><td>A4 PDF, preview, print, CSV; Ask Victor answers from the live figures</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section id="rules">
-    <h2><span class="n">17</span>Business rules</h2>
-    <table>
-      <thead><tr><th>Rule</th><th>Behaviour</th></tr></thead>
-      <tbody>
-        <tr><td>Bill rate</td><td>Person on the client's rate card → job title on the rate card → client rate → employee's rate on the date of the work</td></tr>
-        <tr><td>Rate freeze</td><td>Approval stores the bill and cost rate on each entry; later rate changes never change approved work</td></tr>
-        <tr><td>Invoice numbers</td><td>Given at issue, gapless per fiscal year; drafts have no number; issued invoices are never deleted, only credited</td></tr>
-        <tr><td>Period lock</td><td>No create, edit or delete on or before the lock date</td></tr>
-        <tr><td>Self-approval</td><td>Nobody approves their own hours, leave or expenses</td></tr>
-        <tr><td>Rounding</td><td>Hours to 15 minutes; amounts to the cent per line; tax computed per rate</td></tr>
-        <tr><td>Voiding</td><td>An invoice with payments cannot be voided; use a credit note</td></tr>
-        <tr><td>Revenue (analytics)</td><td>Approved billable hours on hourly projects × frozen rate + fixed, milestone and retainer invoices − credit notes</td></tr>
-        <tr><td>Gross margin</td><td>Revenue − cost of all logged hours − approved expenses</td></tr>
-        <tr><td>Utilization</td><td>Billable hours ÷ available hours (working days × hours per day, less leave and holidays); target 75%</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section id="invoice-states">
-    <h2><span class="n">18</span>Invoice life cycle</h2>
-    <div class="mermaid">
-stateDiagram-v2
-  [*] --> Draft
-  Draft --> Issued: issue (number assigned)
-  Draft --> [*]: delete (no gap)
-  Issued --> Sent: send (delivery logged)
-  Issued --> Paid: payments = total
-  Sent --> Paid: payments = total
-  Issued --> Void: cancel (no payments)
-  Sent --> Void: cancel (no payments)
-  Sent --> Credited: credit note
-  Paid --> Credited: credit note
-    </div>
-    <p>Shown statuses also include <b>overdue</b> (past due date with a balance) and <b>partly paid</b>, derived from dates and payments.</p>
-  </section>
-
-  <section id="data">
-    <h2><span class="n">19</span>Data model</h2>
-    <div class="mermaid">
+<section id="arch"><h2><span class="n">29</span>Architecture</h2>
+<div class="mermaid">
+flowchart TB
+  UI[Screens<br/>src/components/shared] --> H[Data hooks<br/>src/hooks/workforce]
+  H --> API[API functions<br/>src/lib/api]
+  API --> STORE[(Demo store<br/>browser local storage)]
+  API -. server version .-> BE[(Nexora backend)]
+  UI --> LOGIC[Business rules<br/>src/lib/workforce]
+  API --> LOGIC
+</div>
+<ul>
+<li><b>Business rules</b> (billing, invoice builders, rates, approvals, planning, KPIs, profitability, analytics) are plain, fully tested functions, so the server will apply exactly the same rules.</li>
+<li><b>API functions</b> are the only place that reads or writes data. Today they use the browser; for the server version each one becomes a call to the backend – the screens do not change.</li>
+<li>Stack: Next.js 16, React 19, TypeScript, Tailwind CSS v4, TanStack Query, Zustand, next-intl, Recharts, jsPDF.</li>
+</ul>
+<div class="mermaid">
 erDiagram
   WORKSPACE ||--o{ EMPLOYEE : has
   WORKSPACE ||--o{ CLIENT : has
-  WORKSPACE ||--|| SETTINGS : has
-  DEPARTMENT ||--o{ EMPLOYEE : groups
   EMPLOYEE ||--o{ RATE_CHANGE : history
-  CLIENT ||--o{ RATE_CARD_ENTRY : special_rates
+  CLIENT ||--o{ RATE_CARD_ENTRY : rates
   CLIENT ||--o{ PROJECT : orders
-  PROJECT ||--o{ MILESTONE : has
   PROJECT ||--o{ TASK : has
-  TASK ||--o{ COMMENT : discussion
+  PROJECT ||--o{ MILESTONE : has
   EMPLOYEE ||--o{ TIME_ENTRY : logs
   PROJECT ||--o{ TIME_ENTRY : receives
   CLIENT ||--o{ INVOICE : billed
   INVOICE ||--o{ INVOICE_LINE : contains
   INVOICE ||--o{ PAYMENT : settled_by
-  INVOICE_LINE }o--o{ TIME_ENTRY : bills
   EMPLOYEE ||--o{ EXPENSE : spends
   EMPLOYEE ||--o{ LEAVE_REQUEST : asks
-    </div>
-    <p>Types live in <code>src/types/</code> (<code>workforce.ts</code>, <code>work-projects.ts</code>, <code>work-billing.ts</code>, <code>work-costs.ts</code>, <code>work-planning.ts</code>, <code>work-settings.ts</code>). Every record carries its <code>workspaceId</code>.</p>
-  </section>
+</div>
+</section>
 
-  <section id="demo">
-    <h2><span class="n">20</span>Demo data</h2>
-    <p>Two workspaces are seeded, relative to today so the demo never looks old:</p>
-    <ul>
-      <li><b>Atlas Consulting</b> (EUR): 10 employees in 5 departments, clients Orbit Logistics, Helio Energy, Medica Health, Vela Retail (lead), Kappa Bank (archived); current projects and a year of finished ones; about 1,500 hours; monthly invoices with payments; some invoices open, partly paid and overdue (so receivables and risk alerts have content); a fixed-price share invoice.</li>
-      <li><b>Northwind Studio</b>: a smaller creative studio with its own clients, projects and invoices.</li>
-    </ul>
-  </section>
+<section id="security"><h2><span class="n">30</span>Quality and security</h2><ul><li>Every change is checked automatically: type check, lint, translations, 398 unit tests, production build, end-to-end tests, dependency audit, and a guard that blocks demo mode in production.</li><li>Spreadsheet exports neutralise formulas; PDFs and reports escape all text; network requests time out.</li><li><b>Current limits</b>: permissions are applied in the screens only and data lives in the browser. The server version enforces permissions on the server and stores data securely with backups.</li></ul></section>
 
-  <section id="arch">
-    <h2><span class="n">21</span>Architecture</h2>
-    <div class="mermaid">
-flowchart TB
-  UI[Pages and components<br/>src/components/shared/*-chunks] --> H[React Query hooks<br/>src/hooks/workforce]
-  H --> API[API functions<br/>src/lib/api/*-api.ts]
-  API --> STORE[(Demo store<br/>browser localStorage<br/>nexora:collection:workspace)]
-  API -. Phase 7 .-> BE[(Real backend API)]
-  UI --> LOGIC[Pure business logic<br/>src/lib/workforce]
-  API --> LOGIC
-    </div>
-    <ul>
-      <li><b>Business logic is pure and tested</b> (<code>billing.ts</code>, <code>invoice-builders.ts</code>, <code>rates.ts</code>, <code>approvals.ts</code>, <code>planning.ts</code>, <code>kpis.ts</code>, <code>profitability.ts</code>, <code>analytics.ts</code>), so the backend can reuse the same rules.</li>
-      <li><b>API functions are the seam</b>: today they read and write the demo store; in Phase 7 each body becomes an HTTP call and the screens stay the same.</li>
-      <li>Stack: Next.js 16 (App Router), React 19, TypeScript strict, Tailwind v4, TanStack Query, Zustand, next-intl, Recharts, jsPDF.</li>
-    </ul>
-  </section>
+<section id="roadmap"><h2><span class="n">31</span>Roadmap</h2><table><thead><tr><th>Release</th><th>What comes</th><th>Why it matters</th></tr></thead><tbody><tr><td>Phase 4</td><td>Manager and employee home dashboards, standard reports, Excel export, mobile-friendly tables</td><td>Everyone sees what to act on; month-end without spreadsheets; time logged on phones</td></tr><tr><td>Phase 5</td><td>Org chart, leave balances and half-days, documents and contracts, CSV import, client portal, Gantt, templates, quotes, recurring invoices, payment reminders</td><td>Quote-to-cash in one place, faster payment, quick onboarding</td></tr><tr><td>Phase 6</td><td>Goals and KPIs, performance reviews, overhead costs, scheduled reports, branding, custom fields, global search, assistant</td><td>Real net profit, fair reviews, enterprise readiness</td></tr><tr><td>Phase 7</td><td>Server version: database, secure sign-in and permissions, files, email, backups</td><td>Shared, permanent, secure data for every user</td></tr></tbody></table></section>
 
-  <section id="design">
-    <h2><span class="n">22</span>Design system</h2>
-    <ul>
-      <li>Nexora DS tokens (DS-00 to DS-02): operator gray and tech blue ramps mapped to semantic tokens; low-chroma status colors always paired with a label or icon; dark mode from the same ramps.</li>
-      <li>Radius 2/4/8/12/16/24 px, three elevation levels; Inter for the interface, Roboto Mono for codes and numbers, a serif for side-panel titles.</li>
-      <li>Layout: top tab bar with sections, icon rail with pages, page header panel, metric cards, tables, floating rounded side panels.</li>
-    </ul>
-  </section>
-
-  <section id="i18n">
-    <h2><span class="n">23</span>Languages</h2>
-    <p>English, French, German, Spanish, Arabic (right to left), Urdu, Hindi, Russian and Chinese. Texts live in <code>src/messages/*.json</code>; <code>scripts/check-i18n-sync.mjs</code> fails CI if a key is missing in any language.</p>
-  </section>
-
-  <section id="quality">
-    <h2><span class="n">24</span>Quality &amp; security</h2>
-    <ul>
-      <li>CI on every pull request: typecheck, lint, i18n sync, 398 unit tests, production build, Playwright end-to-end tests, dependency audit, and a check that demo mode is blocked in production builds.</li>
-      <li>CSV exports neutralise spreadsheet formulas; PDFs and HTML reports escape all text; API requests time out.</li>
-      <li>Known limit of this version: permissions are enforced in the interface only and data lives in the browser – both are solved by the backend (Phase 7).</li>
-    </ul>
-  </section>
-
-  <section id="roadmap">
-    <h2><span class="n">25</span>What is left &amp; why it matters</h2>
-    <table>
-      <thead><tr><th>Phase</th><th>Scope</th><th>Why it matters</th></tr></thead>
-      <tbody>
-        <tr><td>4</td><td>Manager and employee dashboards; standard reports (hours, utilization, revenue and margin by client, project, person); Excel export; tables as cards on phones; remaining usability items</td><td>Each role sees what to act on; month-end reporting without spreadsheets; hours logged from phones arrive on time, so invoices go out on time</td></tr>
-        <tr><td>5</td><td>Org chart, leave accrual and half-days, documents and contracts, CSV import, client portal, Gantt and dependencies, project templates, quotes, recurring invoices, payment reminders, more expense features</td><td>Closes the quote → project → invoice loop, brings cash in faster, makes moving a company into Nexora quick, looks professional to clients</td></tr>
-        <tr><td>6</td><td>KPIs/OKRs and reviews, overhead costs, scheduled reports, branding, custom fields, global search, fuller assistant</td><td>True net profit, fact-based performance reviews, what larger customers expect</td></tr>
-        <tr><td>7</td><td>Backend: database, server-side auth and permissions, file storage, email, backups, multi-company</td><td>Shared, permanent and secure data – what turns the product into something you can sell</td></tr>
-      </tbody>
-    </table>
-  </section>
-
-  <section id="changelog">
-    <h2><span class="n">26</span>Changelog</h2>
-    <div class="card"><h4>v3.0 · 2026-10-04</h4><ul>
-      <li>ERP Phases 0–3 delivered on demo data (settings, HR, CRM, projects, time, billing, receivables).</li>
-      <li>Analytics page rebuilt on ERP data; Executive overview and Team KPIs pages removed.</li>
-      <li>Floating side panels; a year of demo history; documentation rewritten for the ERP.</li>
-    </ul></div>
-    <div class="card"><h4>v2.x · 2026-09</h4><ul>
-      <li>Original SaaS starter: authentication, users, plans, subscriptions, platform invoices, files, developer keys, audit logs. These pages are still available under Users, Billing, Management and Support.</li>
-    </ul></div>
-  </section>
+<section id="changelog"><h2><span class="n">32</span>Changelog</h2><div class="card"><h4>v3.0 · October 2026</h4><ul><li>Nexora ERP: settings, employees, clients, projects, time, approvals, leave, expenses, invoicing, receivables, profitability.</li><li>Analytics on live ERP data with PDF/CSV reports and the Victor assistant.</li><li>New interface: top bar with icon rail, Nexora design system, floating side panels, 9 languages.</li></ul></div><div class="card"><h4>v2.x · September 2026</h4><ul><li>Platform foundation: authentication, users, plans and subscriptions, files, developer keys, audit logs.</li></ul></div></section>
 </main>
 </div>
 <script>
