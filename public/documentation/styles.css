@@ -805,3 +805,20 @@ footer.docftr {
   }
 }
 
+
+/* ===== PHONES: keep everything inside the screen ===== */
+.wrap > main { min-width: 0; }
+@media (max-width: 640px) {
+  main { padding: 20px 14px 60px; }
+  .hero-top-row { flex-wrap: wrap; gap: 8px; }
+  .hero-brand-pill, .hero-status-pill { max-width: 100%; flex-wrap: wrap; }
+  .hero h1 { font-size: 1.6rem; }
+  table { display: block; overflow-x: auto; max-width: 100%; }
+  pre { overflow-x: auto; max-width: 100%; }
+  code { overflow-wrap: anywhere; word-break: break-word; }
+  .wf { max-width: 100%; overflow-x: auto; }
+  .wf .row { flex-wrap: wrap; }
+  .wf .bar nav { display: none; }
+  .badges { flex-wrap: wrap; }
+  .dz-bar .dz-hint { display: none; }
+}
