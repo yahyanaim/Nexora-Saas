@@ -1,6 +1,6 @@
-import type { Department, Employee, EmployeeInput } from "@/types/workforce"
+import type { Employee, EmployeeInput } from "@/types/workforce"
 import { createCollection } from "@/lib/workforce/demo-store"
-import { seedDepartments, seedEmployees } from "@/lib/workforce/demo-seed"
+import { seedEmployees } from "@/lib/workforce/demo-seed"
 
 /**
  * Employees of a workspace. Backed by the browser demo store for now;
@@ -35,9 +35,7 @@ export async function deleteEmployeeApi(workspaceId: string, id: string): Promis
   employees.remove(workspaceId, id)
 }
 
-export async function listDepartmentsApi(workspaceId: string): Promise<Department[]> {
-  return seedDepartments(workspaceId)
-}
+export { listDepartmentsApi } from "./settings-api"
 
 function assertUniqueEmail(workspaceId: string, email: string, exceptId?: string) {
   const normalized = email.trim().toLowerCase()

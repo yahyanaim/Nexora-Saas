@@ -40,7 +40,12 @@ export function leaveDays(requests: LeaveRequest[], employeeId: string, from?: s
 }
 
 /** Vacation allowance for a year: used (approved), pending and what's left. */
-export function vacationBalance(requests: LeaveRequest[], employeeId: string, year: number) {
+export function vacationBalance(
+  requests: LeaveRequest[],
+  employeeId: string,
+  year: number,
+  allowance: number = ANNUAL_VACATION_DAYS
+) {
   const from = `${year}-01-01`
   const to = `${year}-12-31`
   const count = (status: LeaveStatus) =>
@@ -49,7 +54,7 @@ export function vacationBalance(requests: LeaveRequest[], employeeId: string, ye
       .reduce((sum, r) => sum + workingDays(r.startDate < from ? from : r.startDate, r.endDate > to ? to : r.endDate).length, 0)
   const used = count(LeaveStatus.APPROVED)
   const pending = count(LeaveStatus.PENDING)
-  return { allowance: ANNUAL_VACATION_DAYS, used, pending, remaining: ANNUAL_VACATION_DAYS - used - pending }
+  return { allowance, used, pending, remaining: allowance - used - pending }
 }
 
 /** Hours someone can be planned for in a week: capacity spread over working days, minus leave. */

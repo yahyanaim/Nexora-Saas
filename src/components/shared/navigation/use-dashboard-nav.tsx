@@ -325,6 +325,13 @@ export function useDashboardNav() {
         icon: Settings,
         items: [
           {
+            title: t("workspaceSettings"),
+            url: "/dashboard/settings",
+            icon: Settings,
+            descriptionKey: "pageDescSettings",
+            permission: AdminPermissionsPlatform.ROLES_READ,
+          },
+          {
             title: t("rolesPermissions"),
             url: "/dashboard/roles",
             icon: KeyRound,

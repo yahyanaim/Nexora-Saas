@@ -1,5 +1,6 @@
 import { LeaveStatus, LeaveType, type LeaveRequest, type LeaveRequestInput } from "@/types/work-planning"
 import { createCollection } from "@/lib/workforce/demo-store"
+import { getSettingsApi } from "./settings-api"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { rangesOverlap, workingDays } from "@/lib/workforce/planning"
@@ -37,6 +38,10 @@ export async function listLeaveApi(workspaceId: string): Promise<LeaveRequest[]>
 
 export async function requestLeaveApi(workspaceId: string, input: LeaveRequestInput): Promise<LeaveRequest> {
   if (input.endDate < input.startDate) throw new Error("The last day can't be before the first day")
+  const { leaveTypes } = await getSettingsApi(workspaceId)
+  if (!leaveTypes.some((l) => l.type === input.type && l.enabled)) {
+    throw new Error("This leave type is turned off in the workspace settings")
+  }
   if (workingDays(input.startDate, input.endDate).length === 0) throw new Error("Pick at least one working day")
   const clash = leave
     .list(workspaceId)

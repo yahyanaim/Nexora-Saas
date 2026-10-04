@@ -110,3 +110,33 @@ export function createCollection<T extends Identified & { workspaceId: string; c
     },
   }
 }
+
+/** Reads a single per-workspace document (settings), seeding it when absent. */
+export function readDocument<T extends object>(name: string, workspaceId: string, seed: () => T): T {
+  if (typeof window === "undefined") return seed()
+  const key = storageKey(name, workspaceId)
+  try {
+    const raw = localStorage.getItem(key)
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw)
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        // Keys added after the document was first saved fall back to the seed
+        return { ...seed(), ...(parsed as Partial<T>) }
+      }
+    }
+  } catch {
+    // Unreadable storage falls through to a fresh seed
+  }
+  const seeded = seed()
+  writeDocument(name, workspaceId, seeded)
+  return seeded
+}
+
+export function writeDocument<T extends object>(name: string, workspaceId: string, value: T) {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.setItem(storageKey(name, workspaceId), JSON.stringify(value))
+  } catch {
+    // Storage full or blocked: keep working in memory for this session
+  }
+}
