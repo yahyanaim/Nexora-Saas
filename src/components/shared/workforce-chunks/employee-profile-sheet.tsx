@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRateChange } from "@/hooks/workforce/use-workforce"
+import { useDocuments } from "@/hooks/workforce/use-documents"
+import { currentContract, documentStatus, latestDocuments } from "@/lib/workforce/documents"
+import { Link } from "@/i18n/navigation"
+import { CONTRACT_TYPE_LABEL, DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_CLASS, DOCUMENT_STATUS_LABEL } from "../work-hr-chunks/hr-labels"
+import { formatShortDate } from "../work-projects-chunks/project-labels"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { DEFAULT_WORKING_DAYS } from "@/types/workforce"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -27,17 +32,23 @@ interface Props {
   currency: string
   canSeeCosts: boolean
   canEditRates: boolean
+  /** HR documents and contracts are shown to people who can edit employees */
+  canSeeDocuments?: boolean
   onOpenChange: (open: boolean) => void
   onSelect: (employee: Employee) => void
 }
 
 /** Read-only employee profile: details, rates and the reporting line. */
-export function EmployeeProfileSheet({ employee, employees, departments, currency, canSeeCosts, canEditRates, onOpenChange, onSelect }: Props) {
+export function EmployeeProfileSheet({ employee, employees, departments, currency, canSeeCosts, canEditRates, canSeeDocuments = false, onOpenChange, onSelect }: Props) {
   const t = useTranslations()
   const locale = useLocale()
   const manager = employee?.managerId ? employees.find((e) => e.id === employee.managerId) : undefined
   const reports = employee ? employees.filter((e) => e.managerId === employee.id) : []
   const department = departments.find((d) => d.id === employee?.departmentId)
+  const { data: allDocs = [] } = useDocuments()
+  const today = todayIso()
+  const docs = employee && canSeeDocuments ? latestDocuments(allDocs.filter((d) => d.employeeId === employee.id)) : []
+  const contract = employee ? currentContract(docs, employee.id, today) : undefined
 
   return (
     <Sheet open={!!employee} onOpenChange={onOpenChange}>
@@ -111,6 +122,35 @@ export function EmployeeProfileSheet({ employee, employees, departments, currenc
               )}
 
               {canEditRates && <RateChangeForm key={employee.id} employeeId={employee.id} hireDate={employee.hireDate} currency={currency} initial={employee} />}
+
+              {canSeeDocuments && (
+                <Section title={t("documentsAndContracts")}>
+                  <Row
+                    label={t("currentContract")}
+                    value={contract?.contractType ? `${t(CONTRACT_TYPE_LABEL[contract.contractType])}${contract.expiryDate ? ` · ${t("until")} ${formatShortDate(contract.expiryDate, locale)}` : ""}` : t("noContract")}
+                  />
+                  {docs.length > 0 && (
+                    <ul className="flex flex-col divide-y divide-border rounded-xl border border-border">
+                      {docs.map((d) => {
+                        const status = documentStatus(d, today)
+                        return (
+                          <li key={d.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                            <span className="min-w-0">
+                              <span className="block truncate font-medium">{d.title}</span>
+                              <span className="block truncate text-xs text-muted-foreground">
+                                {t(DOCUMENT_KIND_LABEL[d.kind])}
+                                {d.expiryDate ? ` · ${formatShortDate(d.expiryDate, locale)}` : ""}
+                              </span>
+                            </span>
+                            <Badge variant="outline" className={DOCUMENT_STATUS_CLASS[status]}>{t(DOCUMENT_STATUS_LABEL[status])}</Badge>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                  <Link href="/dashboard/documents" className="text-sm text-primary hover:underline">{t("manageDocuments")}</Link>
+                </Section>
+              )}
 
               <Section title={t("reportingLine")}>
                 <Row

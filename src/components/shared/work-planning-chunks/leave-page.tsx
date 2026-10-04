@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
@@ -39,9 +39,11 @@ import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { useLeave, useLeaveMutations } from "@/hooks/workforce/use-leave"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
-import { rangesOverlap, vacationBalance, workingDays } from "@/lib/workforce/planning"
+import { rangesOverlap, workingDays } from "@/lib/workforce/planning"
+import { leaveBalances, requestDays } from "@/lib/workforce/leave-balances"
+import { cn } from "@/lib/utils"
 import { EmployeeStatus } from "@/types/workforce"
-import { LeaveStatus, LeaveType, type LeaveRequest } from "@/types/work-planning"
+import { HalfDay, LeaveStatus, LeaveType, type LeaveRequest } from "@/types/work-planning"
 import { includesFilter } from "../workforce-chunks/workforce-labels"
 import { LEAVE_STATUS_CLASS, LEAVE_STATUS_LABEL, LEAVE_TYPE_LABEL, formatRange } from "./planning-labels"
 
@@ -52,7 +54,7 @@ export default function LeavePage() {
   const { data: requests = [], isLoading } = useLeave()
   const { data: settings } = useWorkspaceSettings()
   const enabledLeaveTypes = settings ? settings.leaveTypes.filter((l) => l.enabled).map((l) => l.type) : Object.values(LeaveType)
-  const vacationAllowance = settings?.leaveTypes.find((l) => l.type === LeaveType.VACATION)?.yearlyDays
+  const holidays = useMemo(() => settings?.holidays.map((h) => h.date) ?? [], [settings])
   const { data: employees = [] } = useEmployees()
   const { request, decide, cancel } = useLeaveMutations()
   const canApprove = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE)
@@ -62,7 +64,7 @@ export default function LeavePage() {
   const monday = weekStart(today)
 
   const [formOpen, setFormOpen] = useState(false)
-  const [form, setForm] = useState({ employeeId: "", type: LeaveType.VACATION, startDate: today, endDate: today, note: "" })
+  const [form, setForm] = useState({ employeeId: "", type: LeaveType.VACATION, startDate: today, endDate: today, note: "", halfDay: "" as "" | HalfDay })
   const [declining, setDeclining] = useState<LeaveRequest | null>(null)
   const [reason, setReason] = useState("")
 
@@ -78,10 +80,23 @@ export default function LeavePage() {
   ]
 
   const openForm = () => {
-    setForm({ employeeId: staff[0]?.id ?? "", type: LeaveType.VACATION, startDate: today, endDate: today, note: "" })
+    setForm({ employeeId: staff[0]?.id ?? "", type: LeaveType.VACATION, startDate: today, endDate: today, note: "", halfDay: "" })
     setFormOpen(true)
   }
-  const days = form.endDate >= form.startDate ? workingDays(form.startDate, form.endDate).length : 0
+  const singleDay = form.startDate === form.endDate
+  const formPerson = employees.find((e) => e.id === form.employeeId)
+  const days =
+    form.endDate >= form.startDate && formPerson
+      ? requestDays({ startDate: form.startDate, endDate: form.endDate, halfDay: singleDay ? form.halfDay || undefined : undefined }, formPerson, holidays)
+      : 0
+  const daysOf = useCallback(
+    (r: LeaveRequest) => {
+      const person = employees.find((e) => e.id === r.employeeId)
+      return person ? requestDays(r, person, holidays) : workingDays(r.startDate, r.endDate).length
+    },
+    [employees, holidays]
+  )
+  const formBalance = formPerson && settings ? leaveBalances(requests, formPerson, settings.leaveTypes, Number(form.startDate.slice(0, 4)), holidays).find((b) => b.type === form.type) : undefined
 
   const columns = useMemo<ColumnDef<LeaveRequest>[]>(
     () => [
@@ -111,7 +126,7 @@ export default function LeavePage() {
       {
         id: "days",
         header: () => <span>{t("workingDaysCount")}</span>,
-        cell: ({ row }) => <span className="text-sm tabular-nums">{workingDays(row.original.startDate, row.original.endDate).length}</span>,
+        cell: ({ row }) => <span className="text-sm tabular-nums">{daysOf(row.original)}{row.original.halfDay ? ` · ${t(row.original.halfDay === HalfDay.MORNING ? "morning" : "afternoon")}` : ""}</span>,
       },
       {
         accessorKey: "status",
@@ -138,7 +153,7 @@ export default function LeavePage() {
         },
       },
     ],
-    [t, locale, employees, today, cancel]
+    [t, locale, employees, today, cancel, daysOf]
   )
 
   return (
@@ -164,7 +179,7 @@ export default function LeavePage() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{nameOf(r.employeeId)}</p>
                     <p className="text-sm text-muted-foreground">
-                      {t(LEAVE_TYPE_LABEL[r.type])} · {formatRange(r.startDate, r.endDate, locale)} · {t("daysCount", { count: workingDays(r.startDate, r.endDate).length })}
+                      {t(LEAVE_TYPE_LABEL[r.type])} · {formatRange(r.startDate, r.endDate, locale)} · {t("daysCount", { count: daysOf(r) })}{r.halfDay ? ` (${t(r.halfDay === HalfDay.MORNING ? "morning" : "afternoon")})` : ""}
                     </p>
                   </div>
                 </div>
@@ -189,23 +204,30 @@ export default function LeavePage() {
 
       <section className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
         <header>
-          <h2 className="text-base font-semibold">{t("vacationBalances")}</h2>
-          <p className="text-sm text-muted-foreground">{t("vacationBalancesHint", { year: today.slice(0, 4) })}</p>
+          <h2 className="text-base font-semibold">{t("leaveBalances")}</h2>
+          <p className="text-sm text-muted-foreground">{t("leaveBalancesHint", { year: today.slice(0, 4) })}</p>
         </header>
         <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {staff.map((e) => {
-            const b = vacationBalance(requests, e.id, Number(today.slice(0, 4)), vacationAllowance)
+            const balances = settings ? leaveBalances(requests, e, settings.leaveTypes, Number(today.slice(0, 4)), holidays) : []
             return (
-              <li key={e.id} className="flex items-center gap-3 rounded-2xl border border-border p-3.5">
-                <SpaceAvatar name={e.name} size="sm" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="truncate text-sm font-medium">{e.name}</span>
-                    <span className="text-xs text-muted-foreground tabular-nums">{t("daysLeft", { count: b.remaining })}</span>
-                  </div>
-                  <Progress value={((b.used + b.pending) / b.allowance) * 100} aria-label={t("vacationUsed")} className="mt-1.5 h-1.5" />
-                  <p className="mt-1 text-xs text-muted-foreground">{t("usedPending", { used: b.used, pending: b.pending })}</p>
+              <li key={e.id} className="flex flex-col gap-3 rounded-2xl border border-border p-3.5">
+                <div className="flex items-center gap-3">
+                  <SpaceAvatar name={e.name} size="sm" />
+                  <span className="min-w-0 truncate text-sm font-medium">{e.name}</span>
                 </div>
+                {balances.map((b) => (
+                  <div key={b.type}>
+                    <div className="flex items-baseline justify-between gap-2 text-xs">
+                      <span className="font-medium">{t(LEAVE_TYPE_LABEL[b.type])}</span>
+                      <span className={cn("tabular-nums", b.remaining < 0 ? "text-destructive" : "text-muted-foreground")}>{t("daysLeft", { count: b.remaining })}</span>
+                    </div>
+                    <Progress value={b.entitled ? Math.min(100, ((b.used + b.pending) / b.entitled) * 100) : 0} aria-label={t(LEAVE_TYPE_LABEL[b.type])} className="mt-1.5 h-1.5" />
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {t("balanceBreakdown", { allowance: b.allowance, carried: b.carried, used: b.used, pending: b.pending })}
+                    </p>
+                  </div>
+                ))}
               </li>
             )
           })}
@@ -237,7 +259,7 @@ export default function LeavePage() {
         isSubmitting={request.isPending}
         onSubmit={() =>
           request.mutate(
-            { employeeId: form.employeeId, type: form.type, startDate: form.startDate, endDate: form.endDate, note: form.note.trim() || undefined },
+            { employeeId: form.employeeId, type: form.type, startDate: form.startDate, endDate: form.endDate, note: form.note.trim() || undefined, halfDay: singleDay ? form.halfDay || undefined : undefined },
             { onSuccess: () => setFormOpen(false) }
           )
         }
@@ -275,10 +297,25 @@ export default function LeavePage() {
               <Input id="leave-end" type="date" min={form.startDate} value={form.endDate} onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))} />
             </div>
           </div>
+          {singleDay && (
+            <div className="flex flex-col gap-2">
+              <Label>{t("duration")}</Label>
+              <Select value={form.halfDay || "full"} onValueChange={(v) => setForm((f) => ({ ...f, halfDay: v === "full" ? "" : (v as HalfDay) }))}>
+                <SelectTrigger className="w-full bg-card" aria-label={t("duration")}>
+                  <SelectValue>{t(form.halfDay === HalfDay.MORNING ? "morning" : form.halfDay === HalfDay.AFTERNOON ? "afternoon" : "fullDay")}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="full">{t("fullDay")}</SelectItem>
+                  <SelectItem value={HalfDay.MORNING}>{t("morning")}</SelectItem>
+                  <SelectItem value={HalfDay.AFTERNOON}>{t("afternoon")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <p className="-mt-2 text-sm text-muted-foreground">{t("workingDaysSelected", { count: days })}</p>
-          {form.type === LeaveType.VACATION && form.employeeId && (
-            <p className="rounded-xl bg-muted/50 px-3 py-2 text-sm">
-              {t("vacationLeftAfter", { count: vacationBalance(requests, form.employeeId, Number(form.startDate.slice(0, 4)), vacationAllowance).remaining - days })}
+          {formBalance && (
+            <p className={cn("rounded-xl px-3 py-2 text-sm", formBalance.remaining - days < 0 ? "bg-danger-soft text-destructive" : "bg-muted/50")}>
+              {t("balanceLeftAfter", { count: formBalance.remaining - days, type: t(LEAVE_TYPE_LABEL[form.type]) })}
             </p>
           )}
           <div className="flex flex-col gap-2">

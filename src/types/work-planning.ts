@@ -14,6 +14,11 @@ export enum LeaveStatus {
   CANCELLED = "cancelled",
 }
 
+export enum HalfDay {
+  MORNING = "am",
+  AFTERNOON = "pm",
+}
+
 export interface LeaveRequest {
   id: string
   workspaceId: string
@@ -23,6 +28,8 @@ export interface LeaveRequest {
   startDate: string
   endDate: string
   note?: string
+  /** One-day requests can cover only the morning or the afternoon (counts as half a day) */
+  halfDay?: HalfDay
   status: LeaveStatus
   /** Why a manager declined */
   decisionNote?: string
@@ -30,7 +37,10 @@ export interface LeaveRequest {
   updatedAt: string
 }
 
-export type LeaveRequestInput = Pick<LeaveRequest, "employeeId" | "type" | "startDate" | "endDate" | "note">
+export type LeaveRequestInput = Pick<LeaveRequest, "employeeId" | "type" | "startDate" | "endDate" | "note" | "halfDay">
 
 /** Paid vacation days per employee per calendar year. */
 export const ANNUAL_VACATION_DAYS = 25
+
+/** Unused vacation days that move to the next year by default. */
+export const DEFAULT_CARRY_OVER_DAYS = 5

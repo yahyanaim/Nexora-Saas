@@ -1,10 +1,12 @@
-import { LeaveStatus, LeaveType, type LeaveRequest, type LeaveRequestInput } from "@/types/work-planning"
+import { HalfDay, LeaveStatus, LeaveType, type LeaveRequest, type LeaveRequestInput } from "@/types/work-planning"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { getSettingsApi } from "./settings-api"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { rangesOverlap, workingDays } from "@/lib/workforce/planning"
 import { recordAudit } from "@/lib/workforce/audit"
+import { balanceProblem } from "@/lib/workforce/leave-balances"
+import { listEmployeesApi } from "./employees-api"
 
 const STAMP = "2026-01-05T09:00:00.000Z"
 
@@ -18,6 +20,7 @@ function seedLeave(workspaceId: string): LeaveRequest[] {
           { id: "lv_2", employeeId: "emp_julia", type: LeaveType.VACATION, startDate: addDays(monday, 14), endDate: addDays(monday, 18), status: LeaveStatus.PENDING },
           { id: "lv_3", employeeId: "emp_lina", type: LeaveType.SICK, startDate: addDays(monday, -9), endDate: addDays(monday, -8), status: LeaveStatus.APPROVED },
           { id: "lv_4", employeeId: "emp_noah", type: LeaveType.PERSONAL, startDate: addDays(monday, 4), endDate: addDays(monday, 4), status: LeaveStatus.PENDING, note: "Moving house" },
+          { id: "lv_5", employeeId: "emp_karim", type: LeaveType.VACATION, startDate: addDays(monday, 9), endDate: addDays(monday, 9), halfDay: HalfDay.AFTERNOON, status: LeaveStatus.APPROVED, note: "School event" },
         ]
       : workspaceId === "ws_northwind"
         ? [{ id: "lv_10", employeeId: "emp_chloe", type: LeaveType.VACATION, startDate: addDays(monday, 7), endDate: addDays(monday, 11), status: LeaveStatus.APPROVED }]
@@ -43,6 +46,7 @@ export async function requestLeaveApi(workspaceId: string, input: LeaveRequestIn
   if (!leaveTypes.some((l) => l.type === input.type && l.enabled)) {
     throw new Error("This leave type is turned off in the workspace settings")
   }
+  if (input.halfDay && input.startDate !== input.endDate) throw new Error("A half day must start and end on the same day")
   if (workingDays(input.startDate, input.endDate).length === 0) throw new Error("Pick at least one working day")
   const clash = leave
     .list(workspaceId)
@@ -50,10 +54,18 @@ export async function requestLeaveApi(workspaceId: string, input: LeaveRequestIn
       (r) =>
         r.employeeId === input.employeeId &&
         ACTIVE.includes(r.status) &&
-        rangesOverlap(r.startDate, r.endDate, input.startDate, input.endDate)
+        rangesOverlap(r.startDate, r.endDate, input.startDate, input.endDate) &&
+        // A morning and an afternoon on the same day do not clash
+        !(r.halfDay && input.halfDay && r.halfDay !== input.halfDay)
     )
   if (clash) throw new Error("This overlaps another leave request")
-  return leave.create(workspaceId, { ...input, note: input.note || undefined, status: LeaveStatus.PENDING })
+  const settings = await getSettingsApi(workspaceId)
+  const person = (await listEmployeesApi(workspaceId)).find((e) => e.id === input.employeeId)
+  if (person) {
+    const problem = balanceProblem(leave.list(workspaceId), person, settings.leaveTypes, input, settings.holidays.map((h) => h.date))
+    if (problem) throw new Error(problem)
+  }
+  return leave.create(workspaceId, { ...input, note: input.note || undefined, halfDay: input.halfDay || undefined, status: LeaveStatus.PENDING })
 }
 
 export async function decideLeaveApi(

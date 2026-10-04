@@ -21,6 +21,7 @@ import { useDepartments, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useSettingsMutations, useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { createId } from "@/lib/workforce/demo-store"
 import { LEAVE_TYPE_LABEL } from "../work-planning-chunks/planning-labels"
+import { DEFAULT_CARRY_OVER_DAYS, LeaveType } from "@/types/work-planning"
 import { EXPENSE_CATEGORY_LABEL } from "../work-costs-chunks/cost-labels"
 import {
   AMOUNT_SUBJECTS,
@@ -369,6 +370,17 @@ function ListsTab({ initial }: { initial: WorkspaceSettings }) {
                     onChange={(e) => setLeaveTypes((list) => list.map((x, j) => (j === i ? { ...x, yearlyDays: Number(e.target.value) } : x)))}
                   />
                   <span className="w-16 text-xs text-muted-foreground">{t("daysPerYear")}</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={l.yearlyDays}
+                    disabled={l.yearlyDays === 0}
+                    className="h-9 w-16 text-right tabular-nums"
+                    aria-label={t("carryOverDays")}
+                    value={l.carryOverMax ?? (l.type === LeaveType.VACATION ? DEFAULT_CARRY_OVER_DAYS : 0)}
+                    onChange={(e) => setLeaveTypes((list) => list.map((x, j) => (j === i ? { ...x, carryOverMax: Number(e.target.value) } : x)))}
+                  />
+                  <span className="w-16 text-xs text-muted-foreground">{t("carryOverDays")}</span>
                 </li>
               ))}
             </ul>

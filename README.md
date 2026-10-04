@@ -4,7 +4,7 @@
 [![React](https://img.shields.io/badge/React-19-blue?style=flat&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38bdf8?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
-[![Tests](https://img.shields.io/badge/Tests-410%20passing-brightgreen?style=flat&logo=vitest)](https://vitest.dev/)
+[![Tests](https://img.shields.io/badge/Tests-426%20passing-brightgreen?style=flat&logo=vitest)](https://vitest.dev/)
 [![Languages](https://img.shields.io/badge/Languages-9%20incl.%20Arabic-0f62fe?style=flat)](#languages)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=flat)](LICENSE)
 
@@ -19,7 +19,7 @@ It replaces several separate tools:
 - the "who owes us money" list
 - the end-of-month profitability workbook
 
-> **Current version (v3.1):** the complete front end, running on demo data stored in the browser. Every screen, rule and calculation works. Shared multi-user data comes with the server version (Phase 7).
+> **Current version (v3.2):** the complete front end, running on demo data stored in the browser. Every screen, rule and calculation works. Shared multi-user data comes with the server version (Phase 7).
 
 📘 **Full documentation:** open [`documentation/doc.html`](documentation/doc.html) (English) or [`documentation/doc-ar.html`](documentation/doc-ar.html) (العربية). It covers:
 - the user manual and role guides
@@ -69,13 +69,14 @@ It replaces several separate tools:
 | **Team** | A manager's home page: projects needing attention and the tasks causing it, team workload, pending approvals (hours, leave, expenses), budget usage, last-updated time and refresh |
 | **Workspace settings** | Company identity (ICE, tax ID, trade register), base currency, fiscal year, invoice number format, departments, holidays, leave types, expense categories, labels, approval rules, period lock, data export |
 | **Employees** | Roles, departments, managers, statuses (starting → inactive), working days, weekly capacity, rate history with effective dates, cost figures hidden from people without permission |
+| **Org chart & documents** | Reporting tree from each person's manager (search, department filter, away badges). Register of contracts, IDs, permits, certificates and medical checks with expiry statuses and alerts on the Team dashboard |
 | **Clients** | Legal details, billing address, currency, invoice language, payment terms, contacts, client rate cards, archive |
 | **Projects & tasks** | Hourly, fixed-price, retainer and internal projects. Board, list, milestones and team views. Labels, subtasks, comments with @mentions, activity history. Automatic health with manual override. Budget alerts at 80% and 100%. Saved filters |
 | **Time** | Weekly timesheet, timer, quick log, copy last week, 15-minute rounding, submit → approve or send back, reopening. Rates are frozen at approval |
 | **Invoicing** | Invoices from approved hours (grouped by person, task or day), fixed-price share, milestone, retainer, deposit and free-form invoices. Gapless numbering at issue. Several tax rates, withholding tax, multiple currencies, partial payments, credit notes, PDF and CSV |
 | **Receivables** | Open balances by days overdue: not due, 1–30, 31–60, 61–90 and 90+ days |
 | **Expenses & profitability** | Expenses with receipts and approval, re-billing to clients. Margin and budget use per project |
-| **Planning** | Timeline, calendar, workload against capacity, leave requests and approval |
+| **Planning** | Timeline, calendar, workload against capacity, leave requests and approval, leave balances per type with half-days, carry-over and pro-rating for new hires |
 | **Analytics** | Revenue earned, gross margin, utilization and cash collected. Revenue over time against a comparison period, revenue by client, revenue bridge, clients at risk, team capacity and top projects. PDF and CSV report, and the **Victor** assistant |
 | **Reports** | 7 standard reports: timesheet detail, utilization, unbilled hours, invoices, receivables aging, expenses and project profitability. Filter by period, client, project, employee and department. Export to **Excel (.xlsx), CSV and PDF**. Cost columns are hidden from people without permission |
 
@@ -170,7 +171,7 @@ Variables are validated with Zod at startup. A production build with demo mode o
 | :--- | :--- |
 | `npm run dev` | Development server (Turbopack) |
 | `npm run build` / `npm start` | Production build and server |
-| `npm test` | Unit tests (Vitest, 410 tests) |
+| `npm test` | Unit tests (Vitest, 426 tests) |
 | `npm run test:watch` | Unit tests in watch mode |
 | `npm run typecheck` | TypeScript check |
 | `npm run lint` | ESLint, zero warnings allowed |
@@ -264,7 +265,7 @@ All texts live in `src/messages/<locale>.json`. A missing key in any language fa
 Every pull request runs the following checks (`.github/workflows/ci.yml`):
 
 - type check, lint and translation sync
-- 410 unit tests
+- 426 unit tests
 - production build
 - Playwright end-to-end tests
 - dependency audit
@@ -298,7 +299,8 @@ Security already in place:
 | 0–3 | Fixes, settings, HR, CRM, projects, time, billing, receivables | ✅ Done |
 | Analytics | Analytics on ERP data, PDF/CSV report, assistant | ✅ Done |
 | 4 | My work and Team dashboards, standard reports, Excel/CSV/PDF export, freshness indicator, phone cards and empty/loading states on every list | ✅ Done |
-| 5 | Org chart, leave balances, documents and contracts, CSV import, client portal, Gantt, quotes, recurring invoices, reminders | Planned |
+| 5a | Org chart, documents and contracts with expiry alerts, leave balances with half-days and carry-over | ✅ Done |
+| 5 (rest) | CSV import, templates, client portal, Gantt, quotes, recurring invoices, payment reminders | Planned |
 | 6 | Goals and KPIs, reviews, overhead costs, scheduled reports, branding, custom fields, global search | Planned |
 | 7 | Server version: database, secure sign-in, permissions enforced on the server, files, email, backups | Planned |
 
