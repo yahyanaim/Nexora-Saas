@@ -1,5 +1,6 @@
 "use client"
 
+import { DEMO_USERS } from "@/lib/api/auth-apis"
 import { Input } from "@/components/ui/input"
 import { resolveAfterLoginPath } from "@/lib/auth/safe-redirect"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -142,26 +143,39 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
         </button>
 
         {isDemoMode() && (
-          <button
-            type="button"
-            onClick={async () => {
-              if (typeof window !== "undefined") {
-                sessionStorage.removeItem("saas_demo_logged_out")
-                tokenStorage.set(DEMO_SESSION_TOKEN)
-              }
-              toast.success("Welcome! Exploring SaaS as Demo Administrator.")
-              // Full page load so the edge guard sees the new demo session cookie
-              // and no stale client redirect can keep the user on /auth.
-              const target = new URL(
-                `/${locale}${resolveAfterLoginPath(window.location.search)}`,
-                window.location.origin
-              )
-              window.location.replace(target.toString())
-            }}
-            className="w-full text-center text-xs text-muted-foreground hover:text-foreground py-1 cursor-pointer transition-colors"
-          >
-            Or continue with Instant Demo Preview →
-          </button>
+          <div className="flex flex-col gap-1">
+            {(
+              [
+                { label: "Or continue with Instant Demo Preview →", user: null, welcome: "Welcome! Exploring Nexora as the company administrator." },
+                { label: "Platform console demo (Nexora team) →", user: DEMO_USERS["sophia.v@nexora.io"], welcome: "Welcome! Exploring the Nexora platform console." },
+              ] as const
+            ).map((demo) => (
+              <button
+                key={demo.label}
+                type="button"
+                onClick={async () => {
+                  if (typeof window !== "undefined") {
+                    sessionStorage.removeItem("saas_demo_logged_out")
+                    // A previous employee or platform sign-in must not leak into this one
+                    if (demo.user) sessionStorage.setItem("saas_demo_user", JSON.stringify(demo.user))
+                    else sessionStorage.removeItem("saas_demo_user")
+                    tokenStorage.set(DEMO_SESSION_TOKEN)
+                  }
+                  toast.success(demo.welcome)
+                  // Full page load so the edge guard sees the new demo session cookie
+                  // and no stale client redirect can keep the user on /auth.
+                  const target = new URL(`/${locale}${resolveAfterLoginPath(window.location.search)}`, window.location.origin)
+                  window.location.replace(target.toString())
+                }}
+                className="w-full text-center text-xs text-muted-foreground hover:text-foreground py-1 cursor-pointer transition-colors"
+              >
+                {demo.label}
+              </button>
+            ))}
+            <p className="text-center text-[11px] text-muted-foreground">
+              Employees can also sign in with their work email (e.g. lina@atlas.example) once they have access.
+            </p>
+          </div>
         )}
 
         <p className="pt-1 text-center text-xs text-muted-foreground">

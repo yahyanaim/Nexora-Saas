@@ -42,6 +42,7 @@ export const DEMO_USERS: Record<string, AuthUser> = {
     name: "Sophia Vance",
     email: "sophia.v@nexora.io",
     role: "admin",
+    platformOperator: true,
     emailVerified: true,
     avatar: "/avatars/sophia-vance.jpg",
   },
@@ -53,6 +54,28 @@ export const DEMO_USERS: Record<string, AuthUser> = {
     emailVerified: true,
     avatar: "/avatars/sarah-chen.jpg",
   },
+}
+
+/** A demo user for an employee account found in the browser demo store. */
+async function employeeDemoUser(email: string): Promise<AuthUser | undefined> {
+  if (typeof window === "undefined" || !email) return undefined
+  const { findAccountForSignInApi } = await import("./access-api")
+  const { DEMO_WORKSPACES } = await import("@/lib/workforce/demo-seed")
+  const { permissionsFor } = await import("@/lib/workforce/access")
+  const found = await findAccountForSignInApi(email, DEMO_WORKSPACES.map((w) => w.id))
+  if (!found) return undefined
+  const { useWorkspaceStore } = await import("@/store/workspace-store")
+  useWorkspaceStore.getState().setCurrent(found.workspaceId)
+  return {
+    id: `usr-${found.employee.id}`,
+    name: found.employee.name,
+    email: found.employee.email,
+    role: "user",
+    emailVerified: true,
+    workspaceId: found.workspaceId,
+    employeeId: found.employee.id,
+    permissions: permissionsFor(found.employee),
+  }
 }
 
 export const loginApi = async (
@@ -68,7 +91,8 @@ export const loginApi = async (
     // Demo fallback only when demo mode is on AND the backend is unreachable,
     // and only for the known demo accounts — never for arbitrary credentials.
     const emailKey = payload.email?.toLowerCase?.() ?? ""
-    const demoUser = DEMO_USERS[emailKey]
+    // Employees with an account sign in with their work email (rights from their role)
+    const demoUser = DEMO_USERS[emailKey] ?? (shouldUseDemoFallback(err) ? await employeeDemoUser(emailKey) : undefined)
     if (demoUser && shouldUseDemoFallback(err)) {
       logger.warn(
         `[AUTH WARNING] Demo mode fallback used in loginApi: Logged in as ${demoUser.name}. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production.`

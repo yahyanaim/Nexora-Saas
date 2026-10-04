@@ -81,7 +81,10 @@ It replaces several separate tools:
 | **Analytics** | Revenue earned, gross margin, utilization and cash collected. Revenue over time against a comparison period, revenue by client, revenue bridge, clients at risk, team capacity and top projects. PDF and CSV report, and the **Victor** assistant |
 | **Reports** | 7 standard reports: timesheet detail, utilization, unbilled hours, invoices, receivables aging, expenses and project profitability. Filter by period, client, project, employee and department. Export to **Excel (.xlsx), CSV and PDF**. Cost columns are hidden from people without permission |
 
-The platform pages from the original starter are still available: users, plans, subscriptions, files, developer keys, audit logs and sessions.
+| **Team access** | Every login belongs to an employee: give access, resend the invitation, remove access, change the role (the role sets the permissions). Each account uses a seat of the plan; at least one admin always remains |
+| **My subscription** | The company's own Nexora plan, renewal date, seats used, payment method, monthly/yearly switch, upgrade/downgrade (never below the seats in use) and Nexora invoices as PDF |
+
+**Platform console.** The pages from the original starter that manage Nexora itself (all users, staff, banned users, plans, subscriptions, transactions, invoices, taxes, reports, system issues, roles, sessions) are shown only to the Nexora platform team (`platformOperator`). Company users never see them in the menu, and a typed URL shows a "Reserved for the Nexora platform team" screen (`src/lib/permissions/platform.ts`). Employee accounts only see their own workspace, and pages their role does not include show "You don't have access".
 
 ---
 

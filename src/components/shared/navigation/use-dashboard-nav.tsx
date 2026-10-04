@@ -42,7 +42,8 @@ import {
 import { usePathname } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { AdminPermissionsPlatform } from "@/types/roles"
-import { can } from "@/lib/permissions/can"
+import { can, isPlatformOperator } from "@/lib/permissions/can"
+import { isPlatformPath } from "@/lib/permissions/platform"
 import { isUnderPath } from "@/lib/auth/safe-redirect"
 
 export interface NavItem {
@@ -136,6 +137,13 @@ export function useDashboardNav() {
             url: "/dashboard/documents",
             icon: FileBadge,
             descriptionKey: "pageDescDocuments",
+            permission: AdminPermissionsPlatform.EMPLOYEES_UPDATE,
+          },
+          {
+            title: t("teamAccess"),
+            url: "/dashboard/access",
+            icon: KeyRound,
+            descriptionKey: "pageDescAccess",
             permission: AdminPermissionsPlatform.EMPLOYEES_UPDATE,
           },
           {
@@ -370,6 +378,13 @@ export function useDashboardNav() {
             permission: AdminPermissionsPlatform.ROLES_READ,
           },
           {
+            title: t("mySubscription"),
+            url: "/dashboard/subscription",
+            icon: CreditCard,
+            descriptionKey: "pageDescMySubscription",
+            permission: AdminPermissionsPlatform.ROLES_READ,
+          },
+          {
             title: t("rolesPermissions"),
             url: "/dashboard/roles",
             icon: KeyRound,
@@ -399,9 +414,13 @@ export function useDashboardNav() {
   const groups = useMemo(
     () =>
       allGroups
-        .map((group) => ({ ...group, items: group.items.filter((item) => hasPermission(item.permission)) }))
+        .map((group) => ({
+          ...group,
+          // Platform console pages are only for the Nexora team, never for ERP companies
+          items: group.items.filter((item) => hasPermission(item.permission) && (!isPlatformPath(item.url) || isPlatformOperator(authedUser))),
+        }))
         .filter((group) => group.items.length > 0),
-    [allGroups, hasPermission]
+    [allGroups, hasPermission, authedUser]
   )
 
   const { activeGroup, activeItem } = useMemo(() => {

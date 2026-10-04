@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useRateChange } from "@/hooks/workforce/use-workforce"
 import { useDocuments } from "@/hooks/workforce/use-documents"
+import { useQuery } from "@tanstack/react-query"
+import { listAccountsApi } from "@/lib/api/access-api"
+import { useCurrentWorkspace } from "@/store/workspace-store"
 import { currentContract, documentStatus, latestDocuments } from "@/lib/workforce/documents"
 import { Link } from "@/i18n/navigation"
 import { CONTRACT_TYPE_LABEL, DOCUMENT_KIND_LABEL, DOCUMENT_STATUS_CLASS, DOCUMENT_STATUS_LABEL } from "../work-hr-chunks/hr-labels"
@@ -46,6 +49,9 @@ export function EmployeeProfileSheet({ employee, employees, departments, currenc
   const reports = employee ? employees.filter((e) => e.managerId === employee.id) : []
   const department = departments.find((d) => d.id === employee?.departmentId)
   const { data: allDocs = [] } = useDocuments()
+  const { id: wsId } = useCurrentWorkspace()
+  const { data: accounts = [] } = useQuery({ queryKey: ["accounts", wsId], queryFn: () => listAccountsApi(wsId), enabled: canSeeDocuments })
+  const account = employee ? accounts.find((a) => a.employeeId === employee.id) : undefined
   const today = todayIso()
   const docs = employee && canSeeDocuments ? latestDocuments(allDocs.filter((d) => d.employeeId === employee.id)) : []
   const contract = employee ? currentContract(docs, employee.id, today) : undefined
@@ -149,6 +155,7 @@ export function EmployeeProfileSheet({ employee, employees, departments, currenc
                     </ul>
                   )}
                   <Link href="/dashboard/documents" className="text-sm text-primary hover:underline">{t("manageDocuments")}</Link>
+                  <Row label={t("signInAccess")} value={<Link href="/dashboard/access" className="text-primary hover:underline">{t(`access_${account?.status ?? "none"}`)}</Link>} />
                 </Section>
               )}
 

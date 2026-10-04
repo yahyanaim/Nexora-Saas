@@ -35,6 +35,8 @@ export function getUserPermissions(user: User | undefined): Set<AdminPermissions
  */
 export function isSuperUser(user: User | undefined): boolean {
   if (!user) return false
+  // Employee accounts get exactly the rights of their work role
+  if ((user as unknown as { employeeId?: string }).employeeId) return false
   const record = user as unknown as Record<string, unknown>
   return (
     user.role === "admin" ||
@@ -91,4 +93,14 @@ export function canAny(
   if (!user || (!user.role && !user.userType)) return false
   if (isSuperUser(user)) return true
   return permissions.some((p) => can(user, p))
+}
+
+/**
+ * UI-ONLY — enforced by backend per request
+ * Members of the Nexora platform team. Only they see the platform console
+ * (plans, subscriptions, transactions, all users, moderation); companies
+ * using Nexora as their ERP never do, whatever their role.
+ */
+export function isPlatformOperator(user: User | undefined): boolean {
+  return !!(user as unknown as { platformOperator?: boolean } | undefined)?.platformOperator
 }

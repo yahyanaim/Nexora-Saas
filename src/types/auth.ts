@@ -1,3 +1,4 @@
+import type { AdminPermissionsPlatform } from "./roles"
 import { User, UserRole } from "./users"
 import { Session } from "./sessions"
 
@@ -18,6 +19,13 @@ export interface AuthUser {
   avatar?: string | null
   profileColor?: string
   isPasscodeLocked?: boolean
+  /** Member of the Nexora platform team: sees the platform console (plans, subscriptions, all users) */
+  platformOperator?: boolean
+  /** Signed in through an employee account: the company and employee it belongs to */
+  workspaceId?: string
+  employeeId?: string
+  /** Rights from the employee's work role */
+  permissions?: AdminPermissionsPlatform[]
   createdAt?: string
   updatedAt?: string
 }

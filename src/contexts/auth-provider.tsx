@@ -103,7 +103,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
   }, [myAccount, localOverrides])
   const isAuthenticated = !!user
 
-  // 1. Plan gate handler: 403 upgrade_required -> route to /dashboard/plans
+  // 1. Plan gate handler: 403 upgrade_required -> route to the company's subscription page
   // Parallel requests can all fail with upgrade_required; show one toast and
   // navigate once instead of once per request.
   const lastUpgradePromptRef = useRef(0)
@@ -116,8 +116,8 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
       toast.error("Your current plan does not include this feature. Upgrade to continue.", {
         id: "upgrade-required",
       })
-      if (!isUnderPath(pathnameRef.current, "/dashboard/plans")) {
-        router.push("/dashboard/plans")
+      if (!isUnderPath(pathnameRef.current, "/dashboard/subscription")) {
+        router.push("/dashboard/subscription")
       }
     }
     window.addEventListener(UPGRADE_REQUIRED_EVENT, goPricing)

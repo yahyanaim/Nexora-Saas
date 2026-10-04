@@ -8,7 +8,7 @@ import { useDashboardNav } from "./use-dashboard-nav"
 import { PageHeader } from "../page-header"
 
 let mockPathname = "/dashboard/invoices"
-let mockUser: Partial<User> = { id: "u1", role: "admin" }
+let mockUser: Partial<User> = { id: "u1", role: "admin", platformOperator: true } as Partial<User>
 
 vi.mock("@/i18n/navigation", () => ({
   usePathname: () => mockPathname,
@@ -34,7 +34,7 @@ const renderIntl = (ui: React.ReactElement) => render(<IntlWrapper>{ui}</IntlWra
 describe("useDashboardNav", () => {
   beforeEach(() => {
     mockPathname = "/dashboard/invoices"
-    mockUser = { id: "u1", role: "admin" }
+    mockUser = { id: "u1", role: "admin", platformOperator: true } as Partial<User>
   })
 
   it("shows every section to an admin and resolves the active page", () => {
@@ -60,15 +60,15 @@ describe("useDashboardNav", () => {
       permissions: [AdminPermissionsPlatform.USERS_READ, AdminPermissionsPlatform.INVOICES_READ],
     }
     renderIntl(<NavProbe />)
-    // Invoice readers also see client invoices under Finance
-    expect(screen.getByTestId("groups").textContent).toBe("finance,users,billing")
+    // Invoice readers also see client invoices under Finance; platform sections stay hidden for non-operators
+    expect(screen.getByTestId("groups").textContent).toBe("finance")
   })
 })
 
 describe("PageHeader", () => {
   beforeEach(() => {
     mockPathname = "/dashboard/invoices"
-    mockUser = { id: "u1", role: "admin" }
+    mockUser = { id: "u1", role: "admin", platformOperator: true } as Partial<User>
   })
 
   it("defaults to the current page's breadcrumb, title and description", () => {
