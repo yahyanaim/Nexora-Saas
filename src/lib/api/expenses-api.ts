@@ -1,5 +1,5 @@
 import { ExpenseCategory, ExpenseStatus, type Expense, type ExpenseInput } from "@/types/work-costs"
-import { getSettingsApi } from "./settings-api"
+import { assertPeriodOpen, getSettingsApi } from "./settings-api"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
@@ -40,6 +40,7 @@ export async function listExpensesApi(workspaceId: string): Promise<Expense[]> {
 export async function submitExpenseApi(workspaceId: string, input: ExpenseInput): Promise<Expense> {
   if (!(input.amount > 0) || input.amount > MAX_EXPENSE) throw new Error("Enter an amount above zero")
   if (input.date > todayIso()) throw new Error("Expenses can't be in the future")
+  await assertPeriodOpen(workspaceId, input.date)
   if (!input.description.trim()) throw new Error("Describe the expense")
   if (input.projectId) {
     const project = (await listProjectsApi(workspaceId)).find((p) => p.id === input.projectId)
@@ -106,8 +107,9 @@ export function setExpensesInvoice(workspaceId: string, ids: string[], invoiceId
 }
 
 /** Frees every expense billed on an invoice. */
-export function releaseInvoiceExpenses(workspaceId: string, invoiceId: string) {
-  for (const x of expenses.list(workspaceId).filter((e) => e.invoiceId === invoiceId)) {
+/** Frees an invoice's re-billed expenses (all, or only the given ones). */
+export function releaseInvoiceExpenses(workspaceId: string, invoiceId: string, only?: string[]) {
+  for (const x of expenses.list(workspaceId).filter((e) => e.invoiceId === invoiceId && (!only || only.includes(e.id)))) {
     expenses.update(workspaceId, x.id, { invoiceId: undefined })
   }
 }

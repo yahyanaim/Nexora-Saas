@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import {
+  issueInvoiceApi,
   approveTimeEntriesApi,
   createInvoiceFromHoursApi,
   deleteInvoiceDraftApi,
@@ -79,17 +80,19 @@ describe("client invoices", () => {
     expect((await unbilledHelio()).length).toBeGreaterThan(0)
   })
 
-  it("drafts an invoice from hours, numbers it and marks the hours invoiced", async () => {
+  it("drafts an invoice from hours, numbers it when issued and marks the hours invoiced", async () => {
     const hours = await unbilledHelio()
     const invoice = await createInvoiceFromHoursApi(WS, { clientId: "cli_helio", entryIds: hours.map((e) => e.id), taxRate: 20, issueDate: "2030-02-01" })
-    expect(invoice.number).toBe("INV-2030-001")
+    // Drafts have no number yet, so deleting one never leaves a gap (BR-12)
+    expect(invoice.number).toBe("")
+    expect((await issueInvoiceApi(WS, invoice.id)).number).toBe("INV-2030-001")
     expect(invoice.dueDate).toBe("2030-03-18") // Helio pays at 45 days
     expect(invoice.lines.flatMap((l) => l.timeEntryIds).sort()).toEqual(hours.map((e) => e.id).sort())
     expect(await unbilledHelio()).toEqual([])
     await expect(createInvoiceFromHoursApi(WS, { clientId: "cli_helio", entryIds: [hours[0]!.id], taxRate: 20 })).rejects.toThrow(/no longer available/)
   })
 
-  it("frees the hours when a draft is deleted or a sent invoice voided", async () => {
+  it("frees the hours when a draft is deleted or a sent invoice cancelled", async () => {
     const hours = await unbilledHelio()
     const draft = await createInvoiceFromHoursApi(WS, { clientId: "cli_helio", entryIds: hours.map((e) => e.id), taxRate: 0 })
     await deleteInvoiceDraftApi(WS, draft.id)
@@ -97,7 +100,7 @@ describe("client invoices", () => {
 
     const sent = await createInvoiceFromHoursApi(WS, { clientId: "cli_helio", entryIds: hours.map((e) => e.id), taxRate: 0 })
     await markInvoiceSentApi(WS, sent.id)
-    await expect(deleteInvoiceDraftApi(WS, sent.id)).rejects.toThrow(/void/)
+    await expect(deleteInvoiceDraftApi(WS, sent.id)).rejects.toThrow(/cancel/)
     await voidInvoiceApi(WS, sent.id)
     expect((await unbilledHelio()).length).toBe(hours.length)
   })
@@ -105,7 +108,7 @@ describe("client invoices", () => {
   it("follows draft → sent → paid and locks after sending", async () => {
     const hours = await unbilledHelio()
     const inv = await createInvoiceFromHoursApi(WS, { clientId: "cli_helio", entryIds: hours.map((e) => e.id), taxRate: 20 })
-    await expect(markInvoicePaidApi(WS, inv.id)).rejects.toThrow(/status/)
+    await expect(markInvoicePaidApi(WS, inv.id)).rejects.toThrow(/issued/)
     await markInvoiceSentApi(WS, inv.id)
     await expect(updateInvoiceDraftApi(WS, inv.id, { taxRate: 10 })).rejects.toThrow(/draft/)
     const paid = await markInvoicePaidApi(WS, inv.id)

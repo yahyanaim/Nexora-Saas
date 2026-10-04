@@ -81,6 +81,8 @@ export interface WorkspaceSettings {
   receiptRequiredAbove: number
   /** Public holidays for the company's country; religious dates are editable (HR-4) */
   holidays: Holiday[]
+  /** Nothing dated on or before this day can be created or changed (BR-7) */
+  lockedThrough?: string
 }
 
 /** Subjects whose second step can depend on an amount. */

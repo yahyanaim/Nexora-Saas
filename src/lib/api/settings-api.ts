@@ -179,6 +179,30 @@ export async function updateListsApi(workspaceId: string, lists: ListsInput): Pr
   return next
 }
 
+/** Locks every record dated on or before a day (BR-7); null unlocks. */
+export async function updatePeriodLockApi(workspaceId: string, lockedThrough: string | null): Promise<WorkspaceSettings> {
+  if (lockedThrough && !/^\d{4}-\d{2}-\d{2}$/.test(lockedThrough)) throw new Error("Pick a date")
+  recordAudit(workspaceId, {
+    action: lockedThrough ? "Period locked" : "Period unlocked",
+    actionKey: "settings.period_lock",
+    category: "Settings",
+    target: "Accounting period",
+    before: read(workspaceId).lockedThrough,
+    after: lockedThrough ?? undefined,
+  })
+  const next = { ...read(workspaceId), lockedThrough: lockedThrough ?? undefined }
+  write(workspaceId, next)
+  return next
+}
+
+/** Throws when a date falls inside the locked period (BR-7). */
+export async function assertPeriodOpen(workspaceId: string, date: string) {
+  const { lockedThrough } = read(workspaceId)
+  if (lockedThrough && date <= lockedThrough) {
+    throw new Error(`The period up to ${lockedThrough} is locked`)
+  }
+}
+
 /** Saves the holiday calendar; one holiday per date. */
 export async function updateHolidaysApi(workspaceId: string, holidays: Holiday[]): Promise<WorkspaceSettings> {
   const cleaned = holidays

@@ -37,13 +37,51 @@ export interface TimeEntry {
 
 export enum ClientInvoiceStatus {
   DRAFT = "draft",
+  /** Numbered and locked; can no longer be edited or deleted (BIL-8) */
+  ISSUED = "issued",
   SENT = "sent",
   PAID = "paid",
   VOID = "void",
 }
 
-/** Shown status: a sent invoice past its due date reads as overdue. */
-export type ClientInvoiceDisplayStatus = ClientInvoiceStatus | "overdue"
+/** Shown status: overdue, partly paid and credited are derived from dates, payments and credit notes. */
+export type ClientInvoiceDisplayStatus = ClientInvoiceStatus | "overdue" | "partially_paid" | "credited"
+
+/** How an invoice was built (BIL-3). */
+export enum InvoiceKind {
+  HOURS = "hours",
+  FIXED = "fixed",
+  MILESTONE = "milestone",
+  RETAINER = "retainer",
+  ADVANCE = "advance",
+  FREE = "free",
+  CREDIT_NOTE = "credit_note",
+}
+
+export enum PaymentMethod {
+  BANK_TRANSFER = "bank_transfer",
+  CARD = "card",
+  CASH = "cash",
+  CHEQUE = "cheque",
+  OTHER = "other",
+}
+
+/** Money received against an invoice (BIL-12). */
+export interface Payment {
+  id: string
+  /** yyyy-mm-dd */
+  date: string
+  amount: number
+  method: PaymentMethod
+  reference?: string
+}
+
+/** One email of the invoice to the client (BIL-11). */
+export interface InvoiceDelivery {
+  to: string
+  /** ISO timestamp */
+  at: string
+}
 
 export interface InvoiceLine {
   id: string
@@ -56,6 +94,10 @@ export interface InvoiceLine {
   timeEntryIds: string[]
   /** Expenses re-billed by this line; freed the same way */
   expenseIds?: string[]
+  /** Tax rate for this line in percent; the invoice rate applies when unset (BIL-6) */
+  taxRate?: number
+  /** Deduction of an earlier advance invoice (section 6.5) */
+  advanceInvoiceId?: string
 }
 
 export interface ClientInvoice {
@@ -70,11 +112,24 @@ export interface ClientInvoice {
   dueDate: string
   status: ClientInvoiceStatus
   lines: InvoiceLine[]
-  /** Percent, e.g. 20 for 20% */
+  /** Default tax rate in percent, e.g. 20 for 20% */
   taxRate: number
   notes?: string
   sentAt?: string
   paidAt?: string
+  kind?: InvoiceKind
+  /** Set when the invoice is issued; the number comes from the gapless sequence */
+  issuedAt?: string
+  fiscalYear?: number
+  payments?: Payment[]
+  /** Percent withheld at source from the total, when the client must withhold (BIL-6) */
+  withholdingRate?: number
+  /** Units of base currency per unit of invoice currency, 6 decimals (BIL-7) */
+  exchangeRate?: number
+  exchangeRateDate?: string
+  /** The invoice a credit note corrects (BIL-10) */
+  creditNoteFor?: string
+  deliveries?: InvoiceDelivery[]
   createdAt: string
   updatedAt: string
 }

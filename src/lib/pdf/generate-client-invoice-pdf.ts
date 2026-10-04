@@ -1,6 +1,7 @@
 import type { JsPDFWithAutoTable } from "@/types/pdf"
 import type { Client, Workspace } from "@/types/workforce"
-import type { ClientInvoice } from "@/types/work-billing"
+import { InvoiceKind, type ClientInvoice } from "@/types/work-billing"
+import type { CompanySettings } from "@/types/work-settings"
 import { displayStatus, invoiceTotals } from "@/lib/workforce/billing"
 
 /** Labels printed on the PDF, passed in already translated. */
@@ -19,6 +20,11 @@ export interface InvoicePdfLabels {
   total: string
   notes: string
   paymentTerms: string
+  creditNote: string
+  draft: string
+  withholding: string
+  paid: string
+  balanceDue: string
 }
 
 async function loadLogo(): Promise<HTMLImageElement | null> {
@@ -41,7 +47,11 @@ export async function downloadClientInvoicePdf(
   workspace: Workspace,
   labels: InvoicePdfLabels,
   statusLabel: string,
-  locale?: string
+  locale?: string,
+  /** Legal identity printed under the company name (spec 12.3: ICE, tax ID, trade register) */
+  company?: CompanySettings,
+  /** What the client still owes, after payments and credit notes */
+  balance?: number
 ) {
   const { jsPDF } = await import("jspdf")
   const autoTable = (await import("jspdf-autotable")).default
@@ -72,14 +82,25 @@ export async function downloadClientInvoicePdf(
   doc.setFont("helvetica", "bold")
   doc.setFontSize(14)
   doc.setTextColor(...navy)
-  doc.text(workspace.name, margin + 16, y + 1)
+  doc.text(company?.legalName ?? workspace.name, margin + 16, y + 1)
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(7.5)
+  doc.setTextColor(...muted)
+  const identity = [
+    [company?.address, company?.city, company?.country].filter(Boolean).join(", "),
+    [company?.ice && `ICE ${company.ice}`, company?.taxId && `IF ${company.taxId}`, company?.tradeRegister && `RC ${company.tradeRegister}`].filter(Boolean).join(" · "),
+  ].filter(Boolean)
+  identity.forEach((line, i) => doc.text(line, margin + 16, y + 5.5 + i * 3.6))
 
+  const isCredit = invoice.kind === InvoiceKind.CREDIT_NOTE
+  doc.setFont("helvetica", "bold")
   doc.setFontSize(20)
-  doc.text(labels.invoice.toUpperCase(), pageWidth - margin, y, { align: "right" })
+  doc.setTextColor(...navy)
+  doc.text((isCredit ? labels.creditNote : labels.invoice).toUpperCase(), pageWidth - margin, y, { align: "right" })
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(...muted)
-  doc.text(invoice.number, pageWidth - margin, y + 6, { align: "right" })
+  doc.text(invoice.number || labels.draft, pageWidth - margin, y + 6, { align: "right" })
 
   // Bill to + dates
   y += 22
@@ -93,7 +114,12 @@ export async function downloadClientInvoicePdf(
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(...muted)
-  const clientLines = [client?.address, client?.email, client?.taxId].filter(Boolean) as string[]
+  const clientLines = [
+    client?.legalName,
+    client?.billingAddress ?? client?.address,
+    client?.email,
+    [client?.ice && `ICE ${client.ice}`, client?.taxId].filter(Boolean).join(" · "),
+  ].filter(Boolean) as string[]
   clientLines.forEach((line, i) => doc.text(line, margin, y + 11 + i * 4.5))
 
   const meta: [string, string][] = [
@@ -138,15 +164,18 @@ export async function downloadClientInvoicePdf(
   const totals = invoiceTotals(invoice)
   const rows: [string, string, boolean][] = [
     [labels.subtotal, money(totals.subtotal), false],
-    [`${labels.tax} (${invoice.taxRate}%)`, money(totals.tax), false],
+    ...totals.taxes.map((tx): [string, string, boolean] => [`${labels.tax} ${tx.rate}% (${money(tx.base)})`, money(tx.amount), false]),
+    ...(totals.withholding ? [[`${labels.withholding} (${invoice.withholdingRate}%)`, `−${money(totals.withholding)}`, false] as [string, string, boolean]] : []),
     [labels.total, money(totals.total), true],
+    ...(totals.paid ? [[labels.paid, `−${money(totals.paid)}`, false] as [string, string, boolean]] : []),
+    ...(balance !== undefined && !isCredit && balance !== totals.total ? [[labels.balanceDue, money(balance), true] as [string, string, boolean]] : []),
   ]
   rows.forEach(([k, v, strong], i) => {
     const rowY = y + i * 7
     doc.setFont("helvetica", strong ? "bold" : "normal")
     doc.setFontSize(strong ? 11 : 9)
     doc.setTextColor(...(strong ? navy : muted))
-    doc.text(k, pageWidth - margin - 60, rowY)
+    doc.text(k, pageWidth - margin - 75, rowY)
     doc.setTextColor(...navy)
     doc.text(v, pageWidth - margin, rowY, { align: "right" })
   })
@@ -163,5 +192,15 @@ export async function downloadClientInvoicePdf(
     doc.text(doc.splitTextToSize(invoice.notes, pageWidth - margin * 2), margin, y + 13)
   }
 
-  doc.save(`${invoice.number}${displayStatus(invoice) === "void" ? "-void" : ""}.pdf`)
+  if (invoice.exchangeRate && company && invoice.currency !== company.baseCurrency) {
+    doc.setFontSize(8)
+    doc.setTextColor(...muted)
+    doc.text(
+      `1 ${invoice.currency} = ${invoice.exchangeRate} ${company.baseCurrency}${invoice.exchangeRateDate ? ` (${date(invoice.exchangeRateDate)})` : ""}`,
+      margin,
+      doc.internal.pageSize.getHeight() - 12
+    )
+  }
+
+  doc.save(`${invoice.number || "draft"}${displayStatus(invoice) === "void" ? "-cancelled" : ""}.pdf`)
 }

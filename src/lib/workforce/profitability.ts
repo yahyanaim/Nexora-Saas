@@ -50,7 +50,7 @@ export function projectProfit(
     hours: round(entries.reduce((sum, e) => sum + e.hours, 0)),
     expenses: round(expenseTotal),
     profit: round(profit),
-    margin: revenue > 0 ? Math.round((profit / revenue) * 100) : null,
+    margin: revenue > 0 ? Math.round((profit / revenue) * 1000) / 10 : null,
   }
 }
 

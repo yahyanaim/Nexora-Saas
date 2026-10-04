@@ -1,10 +1,12 @@
 import {
   ClientInvoiceStatus,
+  InvoiceKind,
+  PaymentMethod,
   TimeEntryStatus,
   type ClientInvoice,
   type TimeEntry,
 } from "@/types/work-billing"
-import { addDays, buildInvoiceLines, weekStart } from "./billing"
+import { addDays, buildInvoiceLines, invoiceTotals, weekStart } from "./billing"
 import { todayIso } from "./project-metrics"
 import { seedEmployees, seedClients, DEMO_WORKSPACES } from "./demo-seed"
 import { seedProjects } from "./project-seed"
@@ -83,10 +85,16 @@ function build(workspaceId: string) {
       taxRate: 20,
       sentAt: `${issueDate}T09:00:00.000Z`,
       paidAt: `${addDays(issueDate, 12)}T09:00:00.000Z`,
+      kind: InvoiceKind.HOURS,
+      issuedAt: `${issueDate}T09:00:00.000Z`,
+      fiscalYear: Number(issueDate.slice(0, 4)),
       createdAt: STAMP,
       updatedAt: STAMP,
     })
     for (const entry of billed) entry.invoiceId = invoiceId
+    // Record the payment that settled it, so payment history and "paid in 30 days" add up
+    const seeded = invoices[0]!
+    seeded.payments = [{ id: "pay_seed_1", date: addDays(issueDate, 12), amount: invoiceTotals(seeded).total, method: PaymentMethod.BANK_TRANSFER, reference: "VIR-2026-0412" }]
   }
 
   return { entries, invoices }

@@ -6,6 +6,9 @@ import { toast } from "@/lib/utils/toast"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import {
   addHoursApi,
+  createCreditNoteApi,
+  issueInvoiceApi,
+  recordPaymentApi,
   approveTimeEntriesApi,
   copyPreviousWeekApi,
   reopenTimeEntriesApi,
@@ -23,7 +26,7 @@ import {
   voidInvoiceApi,
   type TimesheetCell,
 } from "@/lib/api/work-billing-api"
-import type { ClientInvoice } from "@/types/work-billing"
+import type { Payment } from "@/types/work-billing"
 import { discardTimerApi, getTimerApi, startTimerApi, stopTimerApi, type RunningTimer } from "@/lib/api/timer-api"
 
 export function useTimeEntries() {
@@ -164,7 +167,7 @@ export function useInvoiceMutations() {
     onError,
   })
   const updateDraft = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: Partial<Pick<ClientInvoice, "taxRate" | "notes" | "issueDate" | "dueDate" | "lines">> }) =>
+    mutationFn: ({ id, input }: { id: string; input: Parameters<typeof updateInvoiceDraftApi>[2] }) =>
       updateInvoiceDraftApi(workspaceId, id, input),
     onSuccess: done(t("invoiceSaved")),
     onError,
@@ -189,5 +192,20 @@ export function useInvoiceMutations() {
     onSuccess: done(t("invoiceDeleted")),
     onError,
   })
-  return { createFromHours, updateDraft, markSent, markPaid, voidInvoice, deleteDraft }
+  const issue = useMutation({
+    mutationFn: (id: string) => issueInvoiceApi(workspaceId, id),
+    onSuccess: done(t("invoiceIssued")),
+    onError,
+  })
+  const recordPayment = useMutation({
+    mutationFn: ({ id, payment }: { id: string; payment: Omit<Payment, "id"> }) => recordPaymentApi(workspaceId, id, payment),
+    onSuccess: done(t("paymentRecorded")),
+    onError,
+  })
+  const creditNote = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: Parameters<typeof createCreditNoteApi>[2] }) => createCreditNoteApi(workspaceId, id, input),
+    onSuccess: done(t("creditNoteIssued")),
+    onError,
+  })
+  return { createFromHours, updateDraft, markSent, markPaid, voidInvoice, deleteDraft, issue, recordPayment, creditNote }
 }

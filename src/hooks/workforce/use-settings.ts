@@ -12,6 +12,7 @@ import {
   updateApprovalsApi,
   updateCompanyApi,
   updateHolidaysApi,
+  updatePeriodLockApi,
   updateListsApi,
 } from "@/lib/api/settings-api"
 import type { ApprovalRule, CompanySettings, Holiday, WorkspaceSettings } from "@/types/work-settings"
@@ -39,6 +40,7 @@ export function useSettingsMutations() {
     company: useMutation({ mutationFn: (c: CompanySettings) => updateCompanyApi(workspaceId, c), onSuccess: saved, onError }),
     approvals: useMutation({ mutationFn: (a: ApprovalRule[]) => updateApprovalsApi(workspaceId, a), onSuccess: saved, onError }),
     holidays: useMutation({ mutationFn: (h: Holiday[]) => updateHolidaysApi(workspaceId, h), onSuccess: saved, onError }),
+    periodLock: useMutation({ mutationFn: (date: string | null) => updatePeriodLockApi(workspaceId, date), onSuccess: saved, onError }),
     lists: useMutation({ mutationFn: (l: Lists) => updateListsApi(workspaceId, l), onSuccess: saved, onError }),
     createDepartment: useMutation({
       mutationFn: (name: string) => createDepartmentApi(workspaceId, name),

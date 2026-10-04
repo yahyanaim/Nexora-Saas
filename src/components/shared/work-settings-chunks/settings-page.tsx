@@ -163,6 +163,35 @@ function CompanyTab({ initial }: { initial: CompanySettings }) {
   )
 }
 
+/** Locks every record dated on or before a day (BR-7). */
+function PeriodLockCard({ initial }: { initial?: string }) {
+  const t = useTranslations()
+  const { periodLock } = useSettingsMutations()
+  const [date, setDate] = useState(initial ?? "")
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("periodLock")}</CardTitle>
+        <CardDescription>{initial ? t("periodLockedThrough", { date: initial }) : t("periodLockHint")}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="lock-date">{t("lockThrough")}</Label>
+          <Input id="lock-date" type="date" className="w-44" value={date} onChange={(e) => setDate(e.target.value)} />
+        </div>
+        <Button variant="outline" disabled={!date || date === initial || periodLock.isPending} onClick={() => periodLock.mutate(date)}>
+          {t("lockPeriod")}
+        </Button>
+        {initial && (
+          <Button variant="ghost" disabled={periodLock.isPending} onClick={() => periodLock.mutate(null, { onSuccess: () => setDate("") })}>
+            {t("unlock")}
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 /** Full export and deletion on request (PLT-14). */
 function DataCard() {
   const t = useTranslations()
@@ -487,6 +516,7 @@ export default function SettingsPage() {
                 content: (
                   <div className="flex flex-col gap-6">
                     <CompanyTab initial={settings.company} />
+                    <PeriodLockCard initial={settings.lockedThrough} />
                     <DataCard />
                   </div>
                 ),

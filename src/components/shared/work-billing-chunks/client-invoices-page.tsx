@@ -19,9 +19,10 @@ import { useProjects } from "@/hooks/workforce/use-work-projects"
 import { useClientInvoices, useInvoiceMutations, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { unbilledExpenses } from "@/lib/workforce/profitability"
-import { addDays, displayStatus, invoiceTotals, unbilledValueByClient } from "@/lib/workforce/billing"
+import { addDays, displayStatus, invoiceBalance, invoiceTotals, toBase, unbilledValueByClient } from "@/lib/workforce/billing"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { todayIso } from "@/lib/workforce/project-metrics"
-import { ClientInvoiceStatus, type ClientInvoice, type ClientInvoiceDisplayStatus } from "@/types/work-billing"
+import { ClientInvoiceStatus, InvoiceKind, type ClientInvoice, type ClientInvoiceDisplayStatus } from "@/types/work-billing"
 import type { Client } from "@/types/workforce"
 import { formatMoney, includesFilter } from "../workforce-chunks/workforce-labels"
 import { formatShortDate } from "../work-projects-chunks/project-labels"
@@ -31,9 +32,12 @@ import { INVOICE_STATUS_CLASS, INVOICE_STATUS_LABEL, formatHours } from "./billi
 
 const DISPLAY_STATUSES: ClientInvoiceDisplayStatus[] = [
   ClientInvoiceStatus.DRAFT,
+  ClientInvoiceStatus.ISSUED,
   ClientInvoiceStatus.SENT,
+  "partially_paid",
   "overdue",
   ClientInvoiceStatus.PAID,
+  "credited",
   ClientInvoiceStatus.VOID,
 ]
 
@@ -49,6 +53,7 @@ export default function ClientInvoicesPage() {
   const { data: employees = [] } = useEmployees()
   const { data: projects = [] } = useProjects()
   const m = useInvoiceMutations()
+  const { data: settings } = useWorkspaceSettings()
   const canCreate = can(authedUser, AdminPermissionsPlatform.INVOICES_CREATE)
   const canEdit = can(authedUser, AdminPermissionsPlatform.INVOICES_UPDATE)
 
@@ -73,16 +78,18 @@ export default function ClientInvoicesPage() {
   const cards = useMemo<MetricCardItem[]>(() => {
     const money = (n: number) => formatMoney(n, workspace.currency, locale)
     const today = todayIso()
-    const totalOf = (list: ClientInvoice[]) => list.reduce((s, i) => s + invoiceTotals(i).total, 0)
-    const open = invoices.filter((i) => i.status === ClientInvoiceStatus.SENT)
-    const overdue = open.filter((i) => displayStatus(i, today) === "overdue")
+    // Amounts in the base currency: what's still owed, and money received (BIL-7)
+    const owed = (list: ClientInvoice[]) => list.reduce((s, i) => s + toBase(invoiceBalance(i, invoices), i), 0)
+    const open = invoices.filter((i) => invoiceBalance(i, invoices) > 0)
+    const overdue = open.filter((i) => displayStatus(i, today, invoices) === "overdue")
     const since = addDays(today, -30)
-    const paid = invoices.filter((i) => i.status === ClientInvoiceStatus.PAID && (i.paidAt ?? "").slice(0, 10) >= since)
+    const received = invoices.flatMap((i) => (i.payments ?? []).filter((p) => p.date >= since).map((p) => toBase(p.amount, i)))
+    const paidCount = invoices.filter((i) => (i.payments ?? []).some((p) => p.date >= since)).length
     const ready = [...unbilled.values()].reduce((s, v) => s + v.amount, 0)
     return [
-      { key: "outstanding", title: t("outstanding"), value: money(totalOf(open)), footer: { icon: Clock, text: t("sentInvoicesCount", { count: open.length }) } },
-      { key: "overdue", title: t("overdue"), value: money(totalOf(overdue)), valueClassName: overdue.length ? "text-destructive" : undefined, footer: { icon: AlertTriangle, text: t("pastDueCount", { count: overdue.length }) } },
-      { key: "paid", title: t("paidLast30Days"), value: money(totalOf(paid)), valueClassName: "text-success-foreground", footer: { icon: CheckCircle, text: t("invoicesCount", { count: paid.length }) } },
+      { key: "outstanding", title: t("outstanding"), value: money(owed(open)), footer: { icon: Clock, text: t("sentInvoicesCount", { count: open.length }) } },
+      { key: "overdue", title: t("overdue"), value: money(owed(overdue)), valueClassName: overdue.length ? "text-destructive" : undefined, footer: { icon: AlertTriangle, text: t("pastDueCount", { count: overdue.length }) } },
+      { key: "paid", title: t("paidLast30Days"), value: money(received.reduce((s, n) => s + n, 0)), valueClassName: "text-success-foreground", footer: { icon: CheckCircle, text: t("invoicesCount", { count: paidCount }) } },
       { key: "ready", title: t("readyToBill"), value: money(ready), valueClassName: "text-primary", footer: { icon: Receipt, text: t("approvedUnbilledHours") } },
     ]
   }, [invoices, unbilled, t, locale, workspace.currency])
@@ -98,8 +105,9 @@ export default function ClientInvoicesPage() {
           return [row.original.number, client].some((s) => s.toLowerCase().includes(q))
         },
         cell: ({ row }) => (
-          <button type="button" onClick={() => setOpenId(row.original.id)} className="font-mono text-sm font-medium hover:text-primary">
-            {row.original.number}
+          <button type="button" onClick={() => setOpenId(row.original.id)} className="flex items-center gap-2 font-mono text-sm font-medium hover:text-primary">
+            {row.original.number || <span className="font-sans text-muted-foreground">{t("draftInvoice")}</span>}
+            {row.original.kind === InvoiceKind.CREDIT_NOTE && <span className="rounded-full bg-muted px-2 py-0.5 font-sans text-[11px] text-muted-foreground">{t("creditNote")}</span>}
           </button>
         ),
       },
@@ -118,7 +126,7 @@ export default function ClientInvoicesPage() {
         accessorKey: "dueDate",
         header: ({ column }) => <DataTableColumnHeader column={column} title={t("dueDate")} />,
         cell: ({ row }) => (
-          <span className={displayStatus(row.original) === "overdue" ? "text-sm font-medium text-destructive tabular-nums" : "text-sm tabular-nums"}>
+          <span className={displayStatus(row.original, todayIso(), invoices) === "overdue" ? "text-sm font-medium text-destructive tabular-nums" : "text-sm tabular-nums"}>
             {formatShortDate(row.original.dueDate, locale)}
           </span>
         ),
@@ -130,12 +138,21 @@ export default function ClientInvoicesPage() {
         cell: ({ row }) => <span className="text-sm font-medium tabular-nums">{formatMoney(invoiceTotals(row.original).total, row.original.currency, locale)}</span>,
       },
       {
+        id: "balance",
+        accessorFn: (i) => invoiceBalance(i, invoices),
+        header: ({ column }) => <DataTableColumnHeader column={column} title={t("balanceDue")} />,
+        cell: ({ row }) => {
+          const balance = invoiceBalance(row.original, invoices)
+          return <span className="text-sm tabular-nums text-muted-foreground">{balance > 0 ? formatMoney(balance, row.original.currency, locale) : "—"}</span>
+        },
+      },
+      {
         id: "status",
-        accessorFn: (i) => displayStatus(i),
+        accessorFn: (i) => displayStatus(i, todayIso(), invoices),
         header: ({ column }) => <DataTableColumnHeader column={column} title={t("status")} />,
         filterFn: (row, id, value) => includesFilter(row.getValue(id), value),
         cell: ({ row }) => {
-          const status = displayStatus(row.original)
+          const status = displayStatus(row.original, todayIso(), invoices)
           return (
             <Badge variant="outline" className={INVOICE_STATUS_CLASS[status]}>
               {t(INVOICE_STATUS_LABEL[status])}
@@ -144,7 +161,7 @@ export default function ClientInvoicesPage() {
         },
       },
     ],
-    [t, locale, clients]
+    [t, locale, clients, invoices]
   )
 
   const readyClients = clients.filter((c) => unbilled.has(c.id))
@@ -220,13 +237,18 @@ export default function ClientInvoicesPage() {
       <InvoiceSheet
         key={`invoice:${opened?.id ?? ""}:${opened?.updatedAt ?? ""}`}
         invoice={opened}
+        allInvoices={invoices}
         client={clients.find((c) => c.id === opened?.clientId)}
+        company={settings?.company}
         canEdit={canEdit}
-        busy={m.markSent.isPending || m.markPaid.isPending || m.voidInvoice.isPending || m.deleteDraft.isPending}
+        busy={m.markSent.isPending || m.issue.isPending || m.recordPayment.isPending || m.voidInvoice.isPending || m.deleteDraft.isPending || m.creditNote.isPending}
         onOpenChange={(open) => !open && setOpenId(null)}
         onSaveDraft={(id, input) => m.updateDraft.mutate({ id, input })}
+        onIssue={(id) => m.issue.mutate(id)}
         onSend={(id) => m.markSent.mutate(id)}
-        onPaid={(id) => m.markPaid.mutate(id)}
+        onPayment={(id, payment) => m.recordPayment.mutate({ id, payment })}
+        onCreditNote={(id, input) => m.creditNote.mutate({ id, input }, { onSuccess: (cn) => setOpenId(cn.id) })}
+        onOpenInvoice={setOpenId}
         onVoid={(id) => m.voidInvoice.mutate(id)}
         onDelete={(id) => m.deleteDraft.mutate(id, { onSuccess: () => setOpenId(null) })}
       />

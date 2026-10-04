@@ -30,13 +30,13 @@ import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-bi
 import { useLeave } from "@/hooks/workforce/use-leave"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
-import { addDays, displayStatus, invoiceTotals, weekStart } from "@/lib/workforce/billing"
+import { addDays, displayStatus, invoiceBalance, toBase, weekStart } from "@/lib/workforce/billing"
 import { MilestoneState, milestoneState, projectStatsById, todayIso } from "@/lib/workforce/project-metrics"
 import { projectProfit } from "@/lib/workforce/profitability"
 import { employeeKpis, periodRange, teamKpis, weeklyRevenue } from "@/lib/workforce/kpis"
 import { EmployeeStatus } from "@/types/workforce"
 import { ProjectHealth, WorkProjectStatus } from "@/types/work-projects"
-import { ClientInvoiceStatus, TimeEntryStatus } from "@/types/work-billing"
+import { TimeEntryStatus } from "@/types/work-billing"
 import { LeaveStatus } from "@/types/work-planning"
 import { ExpenseStatus } from "@/types/work-costs"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
@@ -67,11 +67,12 @@ export default function ExecutivePage() {
   const money = (n: number) => formatMoney(n, workspace.currency, locale)
 
   const figures = useMemo(() => {
-    const open = invoices.filter((i) => i.status === ClientInvoiceStatus.SENT)
-    const overdue = open.filter((i) => displayStatus(i, today) === "overdue")
-    const total = (list: typeof invoices) => list.reduce((s, i) => s + invoiceTotals(i).total, 0)
+    // What clients still owe, in the base currency, after payments and credit notes
+    const open = invoices.filter((i) => invoiceBalance(i, invoices) > 0)
+    const overdue = open.filter((i) => displayStatus(i, today, invoices) === "overdue")
+    const total = (list: typeof invoices) => list.reduce((s, i) => s + toBase(invoiceBalance(i, invoices), i), 0)
     const since = addDays(today, -29)
-    const collected = invoices.filter((i) => i.status === ClientInvoiceStatus.PAID && (i.paidAt ?? "").slice(0, 10) >= since)
+    const collectedAmount = invoices.flatMap((i) => (i.payments ?? []).filter((p) => p.date >= since).map((p) => toBase(p.amount, i))).reduce((s, n) => s + n, 0)
 
     const active = projects.filter((p) => p.status !== WorkProjectStatus.CANCELLED)
     const profits = active.map((p) => ({ project: p, ...projectProfit(p, { entries, tasks, expenses, employees, clients }) }))
@@ -107,7 +108,7 @@ export default function ExecutivePage() {
       openCount: open.length,
       overdue: total(overdue),
       overdueCount: overdue.length,
-      collected: total(collected),
+      collected: collectedAmount,
       revenue,
       profit,
       margin: revenue > 0 ? Math.round((profit / revenue) * 100) : null,

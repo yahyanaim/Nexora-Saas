@@ -2,6 +2,7 @@ import type { Client, Employee } from "@/types/workforce"
 import { BudgetType, type WorkProject } from "@/types/work-projects"
 import {
   ClientInvoiceStatus,
+  InvoiceKind,
   TimeEntryStatus,
   type ClientInvoice,
   type ClientInvoiceDisplayStatus,
@@ -151,13 +152,105 @@ function roundMoney(amount: number) {
   return Math.round(amount * 100) / 100
 }
 
-export function invoiceTotals(invoice: Pick<ClientInvoice, "lines" | "taxRate">) {
-  const subtotal = roundMoney(invoice.lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0))
-  const tax = roundMoney((subtotal * invoice.taxRate) / 100)
-  return { subtotal, tax, total: roundMoney(subtotal + tax) }
+export interface InvoiceTotals {
+  subtotal: number
+  /** One row per tax rate: base and tax, each rounded to the cent */
+  taxes: { rate: number; base: number; amount: number }[]
+  tax: number
+  withholding: number
+  /** Net + tax − withholding */
+  total: number
+  paid: number
 }
 
-/** Next number in the INV-<year>-<nnn> series for that year. */
+/**
+ * Totals per section 6.5: each line is quantity × price rounded to the cent;
+ * tax is computed per rate on the sum of that rate's net lines and rounded;
+ * withholding comes off the total.
+ */
+export function invoiceTotals(
+  invoice: Pick<ClientInvoice, "lines" | "taxRate"> & Partial<Pick<ClientInvoice, "withholdingRate" | "payments">>
+): InvoiceTotals {
+  const byRate = new Map<number, number>()
+  let subtotal = 0
+  for (const line of invoice.lines) {
+    const net = roundMoney(line.quantity * line.unitPrice)
+    subtotal += net
+    const rate = line.taxRate ?? invoice.taxRate
+    byRate.set(rate, roundMoney((byRate.get(rate) ?? 0) + net))
+  }
+  subtotal = roundMoney(subtotal)
+  const taxes = [...byRate.entries()]
+    .sort(([a], [b]) => b - a)
+    .map(([rate, base]) => ({ rate, base, amount: roundMoney((base * rate) / 100) }))
+  const tax = roundMoney(taxes.reduce((sum, t) => sum + t.amount, 0))
+  const withholding = roundMoney(((subtotal + tax) * (invoice.withholdingRate ?? 0)) / 100)
+  const paid = roundMoney((invoice.payments ?? []).reduce((sum, p) => sum + p.amount, 0))
+  return { subtotal, taxes, tax, withholding, total: roundMoney(subtotal + tax - withholding), paid }
+}
+
+/** Credit notes issued against an invoice, as a positive amount. */
+export function creditedAmount(invoice: ClientInvoice, all: ClientInvoice[]) {
+  return roundMoney(
+    -all
+      .filter((x) => x.creditNoteFor === invoice.id && x.status !== ClientInvoiceStatus.VOID && x.status !== ClientInvoiceStatus.DRAFT)
+      .reduce((sum, x) => sum + invoiceTotals(x).total, 0)
+  )
+}
+
+/** What the client still owes on an invoice after payments and credit notes. */
+export function invoiceBalance(invoice: ClientInvoice, all: ClientInvoice[] = []) {
+  if (
+    invoice.status === ClientInvoiceStatus.VOID ||
+    invoice.status === ClientInvoiceStatus.DRAFT ||
+    invoice.status === ClientInvoiceStatus.PAID ||
+    invoice.kind === InvoiceKind.CREDIT_NOTE
+  ) {
+    return 0
+  }
+  const { total, paid } = invoiceTotals(invoice)
+  return Math.max(0, roundMoney(total - paid - creditedAmount(invoice, all)))
+}
+
+/** Converts an invoice amount to the workspace base currency with its stored rate (BIL-7). */
+export function toBase(amount: number, invoice: Pick<ClientInvoice, "exchangeRate">) {
+  return roundMoney(amount * (invoice.exchangeRate ?? 1))
+}
+
+/** Fiscal year of a date, named by the calendar year it starts in. */
+export function fiscalYearOf(date: string, startMonth = 1) {
+  const year = Number(date.slice(0, 4))
+  const month = Number(date.slice(5, 7))
+  return month >= startMonth ? year : year - 1
+}
+
+/** Builds a number from a format like INV-{YYYY}-{SEQ}; the sequence is padded to 3 digits. */
+export function formatInvoiceNumber(format: string, fiscalYear: number, seq: number) {
+  return format.replace("{YYYY}", String(fiscalYear)).replace("{SEQ}", String(seq).padStart(3, "0"))
+}
+
+/**
+ * Next gapless sequence for a fiscal year (BR-12): one more than the highest
+ * already issued that year, cancelled ones included, so no number is reused.
+ */
+export function nextSequence(
+  invoices: Pick<ClientInvoice, "fiscalYear" | "number" | "status" | "kind" | "issueDate">[],
+  fiscalYear: number,
+  kind: "invoice" | "credit" = "invoice",
+  startMonth = 1
+) {
+  const own = invoices.filter(
+    (i) =>
+      i.status !== ClientInvoiceStatus.DRAFT &&
+      !!i.number &&
+      (i.fiscalYear ?? fiscalYearOf(i.issueDate, startMonth)) === fiscalYear &&
+      (kind === "credit") === (i.kind === InvoiceKind.CREDIT_NOTE)
+  )
+  const highest = own.reduce((max, i) => Math.max(max, Number(/(\d+)$/.exec(i.number)?.[1] ?? 0)), 0)
+  return highest + 1
+}
+
+/** Next number in the INV-<year>-<nnn> series (legacy sample data). */
 export function nextInvoiceNumber(existing: string[], year: number) {
   const prefix = `INV-${year}-`
   const highest = existing
@@ -168,7 +261,13 @@ export function nextInvoiceNumber(existing: string[], year: number) {
   return `${prefix}${String(highest + 1).padStart(3, "0")}`
 }
 
-export function displayStatus(invoice: ClientInvoice, today = todayIso()): ClientInvoiceDisplayStatus {
-  if (invoice.status === ClientInvoiceStatus.SENT && invoice.dueDate < today) return "overdue"
+const OPEN = [ClientInvoiceStatus.ISSUED, ClientInvoiceStatus.SENT]
+
+export function displayStatus(invoice: ClientInvoice, today = todayIso(), all: ClientInvoice[] = []): ClientInvoiceDisplayStatus {
+  if (!OPEN.includes(invoice.status) || invoice.kind === InvoiceKind.CREDIT_NOTE) return invoice.status
+  const { total } = invoiceTotals(invoice)
+  if (total > 0 && creditedAmount(invoice, all) >= total) return "credited"
+  if (invoice.dueDate < today) return "overdue"
+  if ((invoice.payments ?? []).length > 0) return "partially_paid"
   return invoice.status
 }
