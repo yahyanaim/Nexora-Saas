@@ -52,12 +52,22 @@ export function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd
 export function leaveDays(requests: LeaveRequest[], employeeId: string, from?: string, to?: string) {
   const days = new Set<string>()
   for (const r of requests) {
-    if (r.employeeId !== employeeId || r.status !== LeaveStatus.APPROVED) continue
+    // Half-day leave never removes a whole day (see halfLeaveDays)
+    if (r.employeeId !== employeeId || r.status !== LeaveStatus.APPROVED || r.halfDay) continue
     for (const d of workingDays(r.startDate, r.endDate)) {
       if ((!from || d >= from) && (!to || d <= to)) days.add(d)
     }
   }
   return days
+}
+
+/** Approved half-day leave dates of one employee in a range. */
+export function halfLeaveDays(requests: LeaveRequest[], employeeId: string, from: string, to: string) {
+  return new Set(
+    requests
+      .filter((r) => r.employeeId === employeeId && r.status === LeaveStatus.APPROVED && r.halfDay && r.startDate >= from && r.startDate <= to)
+      .map((r) => r.startDate)
+  )
 }
 
 /** Vacation allowance for a year: used (approved), pending and what's left. */
@@ -72,7 +82,10 @@ export function vacationBalance(
   const count = (status: LeaveStatus) =>
     requests
       .filter((r) => r.employeeId === employeeId && r.type === LeaveType.VACATION && r.status === status)
-      .reduce((sum, r) => sum + workingDays(r.startDate < from ? from : r.startDate, r.endDate > to ? to : r.endDate).length, 0)
+      .reduce((sum, r) => {
+        const days = workingDays(r.startDate < from ? from : r.startDate, r.endDate > to ? to : r.endDate).length
+        return sum + (r.halfDay ? Math.min(days, 0.5) : days)
+      }, 0)
   const used = count(LeaveStatus.APPROVED)
   const pending = count(LeaveStatus.PENDING)
   return { allowance, used, pending, remaining: allowance - used - pending }
@@ -82,7 +95,9 @@ export function vacationBalance(
 export function weeklyCapacity(employee: Employee, requests: LeaveRequest[], monday: string, holidays: Iterable<string> = []) {
   const days = employeeWorkDays(employee, monday, addDays(monday, 6), holidays)
   const off = leaveDays(requests, employee.id, monday, addDays(monday, 6))
-  return Math.round(hoursPerDay(employee) * days.filter((d) => !off.has(d)).length * 10) / 10
+  const half = halfLeaveDays(requests, employee.id, monday, addDays(monday, 6))
+  const worked = days.reduce((n, d) => n + (off.has(d) ? 0 : half.has(d) ? 0.5 : 1), 0)
+  return Math.round(hoursPerDay(employee) * worked * 10) / 10
 }
 
 /**

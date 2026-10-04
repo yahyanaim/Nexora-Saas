@@ -20,6 +20,10 @@ import { useLeave } from "@/hooks/workforce/use-leave"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { teamOverview } from "@/lib/workforce/dashboards"
+import { useDocuments } from "@/hooks/workforce/use-documents"
+import { documentsNeedingAction } from "@/lib/workforce/documents"
+import { todayIso } from "@/lib/workforce/project-metrics"
+import { EmployeeStatus } from "@/types/workforce"
 import { cn } from "@/lib/utils"
 import { HEALTH_CLASS, HEALTH_LABEL, formatShortDate } from "../work-projects-chunks/project-labels"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
@@ -43,6 +47,7 @@ export default function TeamPage() {
   const { data: leave = [] } = useLeave()
   const { data: expenses = [] } = useExpenses()
   const { data: settings } = useWorkspaceSettings()
+  const { data: documents = [] } = useDocuments()
   const [managerId, setManagerId] = useState(ALL)
   const [computedAt, setComputedAt] = useState(() => new Date())
 
@@ -55,6 +60,13 @@ export default function TeamPage() {
       employeeIds: [...new Set([...employees.filter((e) => e.managerId === managerId).map((e) => e.id), ...own.flatMap((p) => p.memberIds)])],
     }
   }, [managerId, projects, employees])
+
+  const canSeeDocs = can(authedUser, AdminPermissionsPlatform.EMPLOYEES_UPDATE)
+  const hrAlerts = useMemo(() => {
+    if (!canSeeDocs) return []
+    const people = scope?.employeeIds ?? employees.filter((e) => e.status !== EmployeeStatus.INACTIVE).map((e) => e.id)
+    return documentsNeedingAction(documents, people, todayIso())
+  }, [canSeeDocs, scope, employees, documents])
 
   const overview = useMemo(
     () => teamOverview({ projects, tasks, entries, employees, clients, expenses, leave, holidays: (settings?.holidays ?? []).map((h) => h.date) }, scope),
@@ -219,6 +231,26 @@ export default function TeamPage() {
               </li>
             ))}
           </ul>
+          {hrAlerts.length > 0 && (
+            <>
+              <h2 className="mb-3 mt-6 font-semibold">{t("dashDocsExpiring")}</h2>
+              <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border">
+                {hrAlerts.slice(0, 5).map(({ doc, status, days }) => (
+                  <li key={doc.id}>
+                    <Link href="/dashboard/documents" className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm hover:bg-muted/40">
+                      <span className="min-w-0">
+                        <span className="block truncate">{doc.title}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{employees.find((e) => e.id === doc.employeeId)?.name}</span>
+                      </span>
+                      <span className={cn("shrink-0 text-xs font-medium tabular-nums", status === "expired" ? "text-destructive" : "text-warning-foreground")}>
+                        {days < 0 ? t("expiredDaysAgo", { count: -days }) : t("expiresInDays", { count: days })}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </section>
       </div>
     </div>

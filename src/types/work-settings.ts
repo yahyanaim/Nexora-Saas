@@ -52,6 +52,8 @@ export interface LeaveTypeSetting {
   enabled: boolean
   /** Days granted per year; 0 means not counted against a balance */
   yearlyDays: number
+  /** Unused days that may move to the next year (0 = none) */
+  carryOverMax?: number
 }
 
 export interface ExpenseCategorySetting {

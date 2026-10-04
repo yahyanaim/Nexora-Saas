@@ -12,7 +12,7 @@ import {
 } from "@/types/work-settings"
 import { createId, readCollection, readDocument, writeCollection, writeDocument } from "@/lib/workforce/demo-store"
 import { seedDepartments } from "@/lib/workforce/demo-seed"
-import { ANNUAL_VACATION_DAYS } from "@/types/work-planning"
+import { ANNUAL_VACATION_DAYS, DEFAULT_CARRY_OVER_DAYS } from "@/types/work-planning"
 import { recordAudit } from "@/lib/workforce/audit"
 
 const COMPANIES: Record<string, CompanySettings> = {
@@ -108,7 +108,7 @@ export function seedSettings(workspaceId: string): WorkspaceSettings {
       invoiceNumberFormat: "INV-{YYYY}-{SEQ}",
     },
     approvals: DEFAULT_APPROVALS,
-    leaveTypes: Object.values(LeaveType).map((type) => ({ type, enabled: true, yearlyDays: LEAVE_DAYS[type] })),
+    leaveTypes: Object.values(LeaveType).map((type) => ({ type, enabled: true, yearlyDays: LEAVE_DAYS[type], carryOverMax: type === LeaveType.VACATION ? DEFAULT_CARRY_OVER_DAYS : 0 })),
     expenseCategories: Object.values(ExpenseCategory).map((category) => ({ category, enabled: true })),
     taskLabels: [
       { id: "lbl_bug", name: "Bug" },
@@ -165,6 +165,7 @@ export async function updateListsApi(workspaceId: string, lists: ListsInput): Pr
   if (!lists.leaveTypes.some((l) => l.enabled)) throw new Error("Keep at least one leave type")
   if (!lists.expenseCategories.some((c) => c.enabled)) throw new Error("Keep at least one expense category")
   if (lists.leaveTypes.some((l) => l.yearlyDays < 0 || l.yearlyDays > 366)) throw new Error("Yearly days must be between 0 and 366")
+  if (lists.leaveTypes.some((l) => (l.carryOverMax ?? 0) < 0 || (l.carryOverMax ?? 0) > l.yearlyDays)) throw new Error("Carry-over must be between 0 and the yearly days")
   if (lists.receiptRequiredAbove < 0) throw new Error("Amounts can't be negative")
   const names = lists.taskLabels.map((l) => l.name.trim().toLowerCase())
   if (names.some((n) => !n)) throw new Error("Labels need a name")

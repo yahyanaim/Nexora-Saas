@@ -142,6 +142,7 @@ export default function EmployeesPage() {
         currency={workspace.currency}
         canSeeCosts={canSeeCosts}
         canEditRates={canEdit && canSeeCosts}
+        canSeeDocuments={canEdit}
         onOpenChange={(open) => !open && setViewing(null)}
         onSelect={setViewing}
       />
