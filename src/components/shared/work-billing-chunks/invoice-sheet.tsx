@@ -20,6 +20,8 @@ import type { CompanySettings } from "@/types/work-settings"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { downloadClientInvoicePdf } from "@/lib/pdf/generate-client-invoice-pdf"
 import { useProjects } from "@/hooks/workforce/use-work-projects"
+import { useQuotes } from "@/hooks/workforce/use-quotes"
+import { Link } from "@/i18n/navigation"
 import { ClientInvoiceStatus, InvoiceKind, PaymentMethod, type ClientInvoice, type InvoiceLine, type Payment } from "@/types/work-billing"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 import { formatShortDate } from "../work-projects-chunks/project-labels"
@@ -57,6 +59,8 @@ export function InvoiceSheet(props: Props) {
   const workspace = useCurrentWorkspace()
   const [downloading, setDownloading] = useState(false)
   const { data: projects = [] } = useProjects()
+  const { data: quotes = [] } = useQuotes()
+  const sourceQuote = invoice?.quoteId ? quotes.find((q) => q.id === invoice.quoteId) : undefined
   const [confirm, setConfirm] = useState<"void" | "delete" | null>(null)
   const [crediting, setCrediting] = useState(false)
   const [lineDesc, setLineDesc] = useState("")
@@ -101,7 +105,7 @@ export function InvoiceSheet(props: Props) {
   const download = async () => {
     setDownloading(true)
     try {
-      await downloadClientInvoicePdf({ invoice, allInvoices, client, workspace, company, projects, balance, locale })
+      await downloadClientInvoicePdf({ invoice, allInvoices, client, workspace, company, projects, balance, locale, quoteNumber: sourceQuote?.number })
     } finally {
       setDownloading(false)
     }
@@ -128,6 +132,11 @@ export function InvoiceSheet(props: Props) {
         </SheetHeader>
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
+          {sourceQuote && (
+            <Link href="/dashboard/quotes" className="rounded-xl bg-muted/60 px-3 py-2 text-left text-sm hover:bg-muted">
+              {t("invoiceFromQuote", { number: sourceQuote.number })}
+            </Link>
+          )}
           {original && (
             <button type="button" onClick={() => onOpenInvoice(original.id)} className="rounded-xl bg-muted/60 px-3 py-2 text-left text-sm hover:bg-muted">
               {t("creditNoteFor", { number: original.number })}

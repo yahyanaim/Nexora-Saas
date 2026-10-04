@@ -30,6 +30,8 @@ const COMPANIES: Record<string, CompanySettings> = {
     weekStart: "monday",
     timeZone: "Africa/Casablanca",
     invoiceNumberFormat: "INV-{YYYY}-{SEQ}",
+    quoteNumberFormat: "DEV-{YYYY}-{SEQ}",
+    documentStyle: "classic",
     phone: "+212 522 00 00 00",
     email: "billing@atlas.example",
     website: "atlas-consulting.example",
@@ -52,6 +54,8 @@ const COMPANIES: Record<string, CompanySettings> = {
     weekStart: "monday",
     timeZone: "America/Los_Angeles",
     invoiceNumberFormat: "NW-{YYYY}-{SEQ}",
+    quoteNumberFormat: "NWQ-{YYYY}-{SEQ}",
+    documentStyle: "modern",
     phone: "+1 415 555 0142",
     email: "accounts@northwind.example",
     website: "northwind.example",
@@ -123,6 +127,8 @@ export function seedSettings(workspaceId: string): WorkspaceSettings {
       weekStart: "monday",
       timeZone: "Africa/Casablanca",
       invoiceNumberFormat: "INV-{YYYY}-{SEQ}",
+      quoteNumberFormat: "DEV-{YYYY}-{SEQ}",
+      documentStyle: "classic",
     },
     approvals: DEFAULT_APPROVALS,
     leaveTypes: Object.values(LeaveType).map((type) => ({ type, enabled: true, yearlyDays: LEAVE_DAYS[type], carryOverMax: type === LeaveType.VACATION ? DEFAULT_CARRY_OVER_DAYS : 0 })),
@@ -162,6 +168,7 @@ export async function updateCompanyApi(workspaceId: string, company: CompanySett
   if (!/^[A-Z]{3}$/.test(company.baseCurrency)) throw new Error("Pick a base currency")
   if (company.fiscalYearStartMonth < 1 || company.fiscalYearStartMonth > 12) throw new Error("Pick the first month of the fiscal year")
   if (!company.invoiceNumberFormat.includes("{SEQ}")) throw new Error("The invoice number format must contain {SEQ}")
+  if (company.quoteNumberFormat && !company.quoteNumberFormat.includes("{SEQ}")) throw new Error("The quote number format must contain {SEQ}")
   if (company.logoDataUrl && (!/^data:image\/(png|jpeg);base64,/.test(company.logoDataUrl) || company.logoDataUrl.length > 400_000)) throw new Error("The logo must be a PNG or JPEG under 300 KB")
   if (company.brandColor && !/^#[0-9a-fA-F]{6}$/.test(company.brandColor)) throw new Error("The brand colour must look like #2563eb")
   if (company.email && !/^\S+@\S+\.\S+$/.test(company.email)) throw new Error("Enter a valid billing email")

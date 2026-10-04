@@ -7,6 +7,8 @@ import { todayIso } from "@/lib/workforce/project-metrics"
 import { companyLines, hexToRgb, legalLine, loadLogo, type Tone } from "./pdf-kit"
 import { renderInvoiceDocument, type InvoiceDocument } from "./invoice-template"
 import { getPdfTranslator } from "./pdf-i18n"
+import { renderClassicDocument, type ClassicDocument } from "./classic-template"
+import { bankRows, buyerRows, clientNumber, docFormat, sellerRows } from "./generate-quote-pdf"
 
 const STATUS: Record<ClientInvoiceDisplayStatus, { key: string; tone: Tone }> = {
   [ClientInvoiceStatus.DRAFT]: { key: "draft", tone: "neutral" },
@@ -152,7 +154,81 @@ export async function buildClientInvoiceDocument(input: ClientInvoicePdfInput): 
   }
 }
 
-/** Builds and downloads a client invoice or credit note as a branded A4 PDF. */
-export async function downloadClientInvoicePdf(input: ClientInvoicePdfInput) {
-  await renderInvoiceDocument(await buildClientInvoiceDocument(input))
+/** The classic (French / Moroccan devis) layout of an invoice or credit note. */
+export async function buildClassicInvoice(input: ClientInvoicePdfInput & { quoteNumber?: string }): Promise<ClassicDocument> {
+  const { invoice, client, workspace, company } = input
+  const { t, locale } = await getPdfTranslator(input.locale)
+  const f = docFormat(locale, invoice.currency)
+  const cur = invoice.currency
+  const isCredit = invoice.kind === InvoiceKind.CREDIT_NOTE
+  const status = displayStatus(invoice, todayIso(), input.allInvoices ?? [])
+  const totals = invoiceTotals(invoice)
+  const balance = input.balance ?? totals.total - totals.paid
+  const original = isCredit ? input.allInvoices?.find((x) => x.id === invoice.creditNoteFor) : undefined
+  const projectOf = (id?: string) => input.projects?.find((p) => p.id === id)
+  const subject = invoice.subject || [...new Set(invoice.lines.map((l) => projectOf(l.projectId)).filter(Boolean).map((p) => `${p!.code} · ${p!.name}`))].join(", ")
+  return {
+    brand: hexToRgb(company?.brandColor),
+    logo: await loadLogo(company?.logoDataUrl),
+    companyName: company?.tradeName || company?.legalName || workspace.name,
+    title: isCredit ? t("creditNote") : t("invoice"),
+    status: { label: t(STATUS[status].key), tone: STATUS[status].tone },
+    stamp:
+      invoice.status === ClientInvoiceStatus.DRAFT
+        ? { text: t("draft"), tone: "neutral" }
+        : invoice.status === ClientInvoiceStatus.VOID
+          ? { text: t("cancelled"), tone: "danger" }
+          : status === ClientInvoiceStatus.PAID
+            ? { text: t("paid"), tone: "success" }
+            : undefined,
+    refs: [
+      [t("docClientNo"), clientNumber(client)],
+      [t("docInvoiceDate"), f.date(invoice.issueDate)],
+      [t("docInvoiceNo"), invoice.number || t("draft")],
+      ...(!isCredit ? ([[t("dueDate"), f.date(invoice.dueDate)]] as [string, string][]) : []),
+      ...(input.quoteNumber ? ([[t("docQuoteNo"), input.quoteNumber]] as [string, string][]) : []),
+      ...(original ? ([[t("pdfCorrects"), original.number]] as [string, string][]) : []),
+    ],
+    from: { heading: t("docOnBehalfOf"), rows: sellerRows(t, company, workspace.name) },
+    to: { heading: t("docAddressedTo"), rows: buyerRows(t, client) },
+    subject: subject ? { heading: t("docProjectDescription"), text: subject } : undefined,
+    columns: { description: t("docTask"), unitPrice: t("docUnitPriceExcl", { currency: cur }), quantity: t("docQtyUnit"), total: t("docTotalExcl", { currency: cur }) },
+    items: invoice.lines.map((l) => {
+      const flat = l.unit === "flat"
+      return {
+        description: l.description,
+        unitPrice: f.num(l.unitPrice),
+        quantity: flat ? t("docFlat") : f.num(l.quantity),
+        unit: flat ? "-" : l.unit || (l.timeEntryIds.length ? "h" : "-"),
+        total: f.num(l.quantity * l.unitPrice),
+      }
+    }),
+    notes: {
+      heading: t("docNotes"),
+      rows: [
+        ...bankRows(t, company, client && !isCredit ? t("pdfNetDays", { days: client.paymentTermsDays }) : undefined),
+        [t("pdfReference"), invoice.number || ""],
+        [t("notes"), invoice.notes ?? ""],
+      ],
+    },
+    totals: [
+      { label: t("docSubtotal", { currency: cur }), value: f.money(totals.subtotal) },
+      { label: t("docVatRate"), value: totals.taxes.map((x) => `${f.num(x.rate)} %`).join(" / ") || "-" },
+      { label: t("docVatTotal", { currency: cur }), value: f.money(totals.tax) },
+      { label: t("docTotalIncl", { currency: cur }), value: f.money(totals.subtotal + totals.tax), strong: true },
+      ...(totals.withholding ? [{ label: `${t("withholding")} ${invoice.withholdingRate}%`, value: `-${f.money(totals.withholding)}` }] : []),
+      ...(totals.paid ? [{ label: t("paid"), value: `-${f.money(totals.paid)}` }] : []),
+    ],
+    net: { label: t("docNetToPay", { currency: cur }), value: f.money(isCredit ? totals.total : balance) },
+    legal: [company?.ice && `ICE: ${company.ice}`, company?.tradeRegister && `RC: ${company.tradeRegister}`, company?.taxId && `IF: ${company.taxId}`].filter(Boolean).join(" | ") || legalLine(company, workspace.name),
+    terms: company?.invoiceFooter,
+    pageLabel: (page, total) => t("pdfPageOf", { page, total }),
+    filename: `${invoice.number || "draft"}${invoice.status === ClientInvoiceStatus.VOID ? "-cancelled" : ""}.pdf`,
+  }
+}
+
+/** Builds and downloads a client invoice or credit note in the workspace's document style. */
+export async function downloadClientInvoicePdf(input: ClientInvoicePdfInput & { quoteNumber?: string }) {
+  if (input.company?.documentStyle === "modern") await renderInvoiceDocument(await buildClientInvoiceDocument(input))
+  else await renderClassicDocument(await buildClassicInvoice(input))
 }

@@ -155,6 +155,18 @@ function CompanyTab({ initial }: { initial: CompanySettings }) {
               </SelectContent>
             </Select>
           </Field>
+          <Field label={t("quoteNumberFormat")} hint={t("invoiceNumberFormatHint", { YYYY: "{YYYY}", SEQ: "{SEQ}" })}>
+            <Input className="font-mono" value={form.quoteNumberFormat ?? "DEV-{YYYY}-{SEQ}"} onChange={(e) => set("quoteNumberFormat", e.target.value)} />
+          </Field>
+          <Field label={t("documentStyle")} hint={t("documentStyleHint")}>
+            <Select value={form.documentStyle ?? "classic"} onValueChange={(v) => set("documentStyle", v as "classic" | "modern")}>
+              <SelectTrigger><SelectValue>{t(form.documentStyle === "modern" ? "styleModern" : "styleClassic")}</SelectValue></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="classic">{t("styleClassic")}</SelectItem>
+                <SelectItem value="modern">{t("styleModern")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
           <Field label={t("invoiceNumberFormat")} hint={t("invoiceNumberFormatHint", { YYYY: "{YYYY}", SEQ: "{SEQ}" })}>
             <Input className="font-mono" value={form.invoiceNumberFormat} onChange={(e) => set("invoiceNumberFormat", e.target.value)} />
           </Field>

@@ -339,6 +339,8 @@ export type NewInvoiceInput = {
   issueDate?: string
   taxRate: number
   notes?: string
+  subject?: string
+  quoteId?: string
   deductAdvances?: boolean
 } & (
   | { kind: InvoiceKind.FIXED; projectId: string; percent: number }
@@ -420,6 +422,8 @@ export async function createInvoiceApi(workspaceId: string, input: NewInvoiceInp
     lines,
     taxRate: input.taxRate,
     notes: input.notes || undefined,
+    subject: input.subject || undefined,
+    quoteId: input.quoteId,
   })
   for (const e of coveredEntries) entries.update(workspaceId, e.id, { invoiceId: invoice.id })
   return invoice

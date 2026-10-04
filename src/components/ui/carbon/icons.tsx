@@ -149,6 +149,7 @@ import {
   Trash2 as LTrash2,
   TreePalm as LTreePalm,
   FileBadge as LFileBadge,
+  FileSignature as LFileSignature,
   TrendingDown as LTrendingDown,
   TrendingUp as LTrendingUp,
   TriangleAlert as LTriangleAlert,
@@ -274,6 +275,7 @@ export const Trash = icon(LTrash, "Trash")
 export const Trash2 = icon(LTrash2, "Trash2")
 export const TreePalm = icon(LTreePalm, "TreePalm")
 export const FileBadge = icon(LFileBadge, "FileBadge")
+export const FileSignature = icon(LFileSignature, "FileSignature")
 export const TrendingDown = icon(LTrendingDown, "TrendingDown")
 export const TrendingUp = icon(LTrendingUp, "TrendingUp")
 export const TriangleAlertIcon = icon(LTriangleAlert, "TriangleAlertIcon")
