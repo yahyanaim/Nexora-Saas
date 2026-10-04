@@ -23,6 +23,7 @@
       </div>
     </a>
     <div class="sidebar-subtext">User manual &amp; reference · <b>v3.0</b> · for everyone who uses Nexora.</div>
+    <div class="lang-switch" style="display:flex;gap:6px;margin:10px 0 4px"><a href="doc.html" style="padding:4px 10px;border-radius:999px;background:#2563eb;color:#fff;font-weight:600;font-size:12px">English</a><a href="doc-ar.html" style="padding:4px 10px;border-radius:999px;border:1px solid #475569;color:#e2e8f0;font-size:12px">العربية</a></div>
     <nav>
       <div class="grp">Getting started</div>
       <a href="#welcome">1. Welcome to Nexora</a>
@@ -55,6 +56,15 @@
       <a href="#faq">25. Frequently asked questions</a>
       <a href="#trouble">26. Troubleshooting</a>
       <a href="#glossary">27. Glossary</a>
+      <div class="grp">Developer &amp; integration guide</div>
+      <a href="#g-intro">G1. Who this guide is for</a>
+      <a href="#g-idea">G2. The core idea: rules first, everything else is a detail</a>
+      <a href="#g-start">G3. Quick start</a>
+      <a href="#g-how">G4. How it works</a>
+      <a href="#g-fit">G5. When Nexora fits</a>
+      <a href="#g-extend">G6. Add a new module, step by step</a>
+      <a href="#g-prod">G7. Going to production</a>
+      <a href="#g-res">G8. Resources</a>
       <div class="grp">Analysis &amp; design</div>
       <a href="#d-process">D1. Business process map (time to cash)</a>
       <a href="#d-usecase">D2. Use-case diagram</a>
@@ -302,6 +312,168 @@ stateDiagram-v2
 <section id="trouble"><h2><span class="n">26</span>Troubleshooting</h2><table><thead><tr><th>Problem</th><th>Solution</th></tr></thead><tbody><tr><td>A page shows <i>404 – This page could not be found</i></td><td>You are on an old version. Run <code>git checkout main &amp;&amp; git pull</code>, stop the server, delete <code>.next</code>, start again.</td></tr><tr><td>The screens look old after an update</td><td>Hard-refresh the browser (Ctrl/Cmd + Shift + R).</td></tr><tr><td>Numbers look strange after an update</td><td>Old demo data is still in the browser. Delete the <code>nexora:</code> keys in Local Storage and reload.</td></tr><tr><td>The app does not start: <i>NEXT_PUBLIC_API_URL</i> missing</td><td>Create <code>.env.local</code> (see <a href='#install'>Installation</a>).</td></tr><tr><td>Build fails with a demo-mode error</td><td>Intended: production builds must not use demo mode. Use <code>npm run dev</code> for the demo.</td></tr></tbody></table></section>
 
 <section id="glossary"><h2><span class="n">27</span>Glossary</h2><table><thead><tr><th>Term</th><th>Meaning</th></tr></thead><tbody><tr><td>Workspace</td><td>One company in Nexora, with its own data and settings</td></tr><tr><td>Rate card</td><td>Special rates agreed with a client for a person or job title</td></tr><tr><td>Billable</td><td>Work or expense the client pays for</td></tr><tr><td>Utilization</td><td>Share of available time spent on billable work</td></tr><tr><td>Retainer</td><td>A monthly fee that includes a number of hours</td></tr><tr><td>Deposit (advance)</td><td>Money invoiced before the work, deducted later</td></tr><tr><td>Credit note</td><td>A negative invoice that cancels all or part of an issued one</td></tr><tr><td>Withholding</td><td>Tax deducted by the client from the amount paid</td></tr><tr><td>ICE</td><td>Moroccan company identifier (15 digits) required on invoices</td></tr><tr><td>Period lock</td><td>Date before which the accounts are closed and nothing can change</td></tr><tr><td>Receivables</td><td>Money clients owe you</td></tr><tr><td>Revenue bridge</td><td>Chart explaining the change in revenue between two periods</td></tr></tbody></table></section>
+
+<section id="g-intro"><h2><span class="n">G1</span>Who this guide is for</h2>
+<p>This part is for the <b>IT team of a company that buys Nexora</b>, and for developers who extend or host it. It explains how the product is built, how to run it, how a request travels through the code, how to add a module of your own, and what to do before going to production with real users.</p>
+<table><thead><tr><th>Section</th><th>What you will learn</th></tr></thead><tbody><tr><td>G2 The core idea</td><td>How Nexora separates business rules from screens and storage</td></tr><tr><td>G3 Quick start</td><td>Install, run and explore in 5 minutes</td></tr><tr><td>G4 How it works</td><td>Every folder explained, and the life of one request</td></tr><tr><td>G5 When it fits</td><td>Which companies Nexora suits, and where it needs adapting</td></tr><tr><td>G6 Add a module</td><td>Step by step, with real code, following the project's pattern</td></tr><tr><td>G7 Go to production</td><td>Server, authentication, database, security, logs, tests, hosting</td></tr><tr><td>G8 Resources</td><td>Official documentation of every technology used</td></tr></tbody></table>
+</section>
+
+<section id="g-idea"><h2><span class="n">G2</span>The core idea: rules first, everything else is a detail</h2>
+<p><b>Nexora's business rules do not depend on the screens or on where data is stored.</b> "An invoice number is never reused", "nobody approves their own hours", "a fixed price can never be over-billed" are plain TypeScript functions. They do not know about React, the browser or a database.</p>
+<div class="callout "><b>The rule of dependencies:</b> dependencies point inwards. Screens call hooks, hooks call API functions, API functions call the business rules and the store. The rules never call outwards.</div>
+<div class="mermaid">
+flowchart LR
+  UI[Screens<br/>components] --> HK[Hooks<br/>React Query]
+  HK --> API[API functions<br/>src/lib/api]
+  API --> RULES[Business rules<br/>src/lib/workforce]
+  API --> STORE[(Storage<br/>demo store today<br/>server tomorrow)]
+</div>
+<h3>The four layers</h3>
+<table><thead><tr><th>Layer</th><th>Think of it as</th><th>Folders</th></tr></thead><tbody><tr><td>Business rules (domain)</td><td>The brain: pure logic, no tools</td><td><code>src/lib/workforce/</code> – billing.ts, invoice-builders.ts, rates.ts, approvals.ts, planning.ts, kpis.ts, profitability.ts, analytics.ts</td></tr><tr><td>Data access</td><td>The plumbing: reads and writes</td><td><code>src/lib/api/*-api.ts</code> (one file per module) and <code>src/lib/workforce/demo-store.ts</code></td></tr><tr><td>State &amp; hooks</td><td>The wiring between data and screens</td><td><code>src/hooks/workforce/</code> (React Query), <code>src/store/</code> (Zustand: current workspace)</td></tr><tr><td>Interface</td><td>What people see and use</td><td><code>src/app/[locale]/dashboard/*</code> (routes), <code>src/components/shared/*-chunks</code> (pages), <code>src/components/ui</code> (design system)</td></tr></tbody></table>
+<h3>Why it matters to a buyer</h3>
+<table><thead><tr><th>Without this structure</th><th>With it</th></tr></thead><tbody><tr><td>Moving from the demo store to your database means rewriting screens</td><td>Only the API functions change; screens and rules stay</td></tr><tr><td>Testing needs a browser and a server</td><td>Rules are tested in milliseconds (398 tests today)</td></tr><tr><td>A new developer reads everything to change anything</td><td>One module = one types file, one API file, one hooks file, one page folder</td></tr><tr><td>Rules drift into buttons and forms</td><td>Rules live in one place and are reused by the future server</td></tr></tbody></table>
+</section>
+
+<section id="g-start"><h2><span class="n">G3</span>Quick start</h2>
+<h3>Prerequisites</h3>
+<ul><li><b>Node.js 20</b> or newer (<code>node --version</code>)</li><li><b>npm 10</b> or newer</li><li>Git, a terminal and an editor (VS Code recommended)</li></ul>
+<h3>Install and run</h3>
+<pre><code># 1. Get the code
+git clone https://github.com/yahyanaim/Nexora-Saas.git
+cd Nexora-Saas
+
+# 2. Install dependencies
+npm install
+
+# 3. Configure (demo mode, no backend needed)
+cp .env.example .env.local
+#   then set in .env.local:
+#   NEXT_PUBLIC_API_URL=http://localhost:4000/api
+#   NEXT_PUBLIC_DEMO_MODE=true
+
+# 4. Start
+npm run dev</code></pre>
+<div class="callout good"><b>What you should see:</b> the app on <code>http://localhost:3000</code>. Click <b>Instant Demo Preview</b>, then explore Analytics, Projects, Timesheets and Client invoices.</div>
+<h3>Commands</h3>
+<table><thead><tr><th>Command</th><th>What it does</th></tr></thead><tbody><tr><td><code>npm run dev</code></td><td>Development server with hot reload</td></tr><tr><td><code>npm run build</code> / <code>npm start</code></td><td>Production build and server (refuses demo mode on purpose)</td></tr><tr><td><code>npx vitest run</code></td><td>Unit tests (business rules, APIs)</td></tr><tr><td><code>npx tsc --noEmit</code></td><td>Type check</td></tr><tr><td><code>npm run lint</code></td><td>Lint</td></tr><tr><td><code>node scripts/check-i18n-sync.mjs</code></td><td>Checks the 9 language files have the same keys</td></tr><tr><td><code>npm run e2e</code></td><td>Playwright end-to-end tests against a production build</td></tr></tbody></table>
+</section>
+
+<section id="g-how"><h2><span class="n">G4</span>How it works</h2>
+<h3>The life of a request: an employee submits an expense</h3>
+<table><thead><tr><th>Step</th><th>Where</th><th>What happens</th></tr></thead><tbody><tr><td>1</td><td><code>expenses-page.tsx</code></td><td>The person fills the form and clicks Submit</td></tr><tr><td>2</td><td><code>use-expenses.ts</code></td><td>A React Query mutation calls the API function for the current workspace</td></tr><tr><td>3</td><td><code>expenses-api.ts</code> → <code>submitExpenseApi</code></td><td>Validates: amount, date not in the future, <b>period not locked</b>, project membership</td></tr><tr><td>4</td><td><code>settings-api.ts</code> / <code>approvals.ts</code></td><td>Reads the approval rule to know who must approve</td></tr><tr><td>5</td><td><code>demo-store.ts</code></td><td>Saves the record (today in the browser, tomorrow on the server)</td></tr><tr><td>6</td><td><code>audit.ts</code></td><td>Records who did what, when</td></tr><tr><td>7</td><td>Back in the hook</td><td>Shows a success message and refreshes the list; every screen using expenses updates</td></tr></tbody></table>
+<p><i>Every feature follows exactly this path.</i></p>
+<h3>Business rules (src/lib/workforce)</h3>
+<div class="callout warn"><b>Golden rule:</b> files here never import React, Next.js, the browser or a database client. If you need one of those, you are in the wrong layer.</div>
+<table><thead><tr><th>File</th><th>Responsibility</th></tr></thead><tbody><tr><td>billing.ts</td><td>Rates, totals per tax rate, balances, aging buckets, numbering, invoice lines from hours</td></tr><tr><td>invoice-builders.ts</td><td>Fixed share, milestone, retainer, deposit and deduction lines</td></tr><tr><td>rates.ts</td><td>Rate valid on a date, rate history</td></tr><tr><td>approvals.ts</td><td>Who approves, how many steps, no self-approval</td></tr><tr><td>planning.ts</td><td>Working days, capacity, leave days</td></tr><tr><td>kpis.ts / profitability.ts / analytics.ts</td><td>Utilization, margins, budget alerts, analytics figures</td></tr><tr><td>project-metrics.ts</td><td>Progress and health</td></tr></tbody></table>
+<h3>Data access (src/lib/api)</h3>
+<p>One file per module (<code>employees-api.ts</code>, <code>clients-api.ts</code>, <code>work-projects-api.ts</code>, <code>work-billing-api.ts</code>, <code>expenses-api.ts</code>, <code>leave-api.ts</code>, <code>settings-api.ts</code>…). Each exported function is an <b>async contract</b> the screens rely on. Today the bodies use the demo store:</p>
+<pre><code>// src/lib/workforce/demo-store.ts
+// Each collection lives per workspace under nexora:&lt;collection&gt;:&lt;workspaceId&gt;
+// and is seeded on first read.
+const expenses = createCollection&lt;Expense&gt;(&quot;expenses&quot;, &quot;ex&quot;, seedExpenses)
+
+export async function listExpensesApi(workspaceId: string): Promise&lt;Expense[]&gt; {
+  return expenses.list(workspaceId).sort((a, b) =&gt; b.date.localeCompare(a.date))
+}</code></pre>
+<h3>Hooks (src/hooks/workforce)</h3>
+<pre><code>export function useExpenses() {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: [&quot;expenses&quot;, id], queryFn: () =&gt; listExpensesApi(id) })
+}</code></pre>
+<h3>Interface</h3>
+<table><thead><tr><th>Folder</th><th>Content</th></tr></thead><tbody><tr><td><code>src/app/[locale]/dashboard/&lt;page&gt;/page.tsx</code></td><td>Route; renders one page component</td></tr><tr><td><code>src/components/shared/&lt;module&gt;-chunks/</code></td><td>The page, its tables, side panels and forms</td></tr><tr><td><code>src/components/ui/</code></td><td>Design-system components (button, sheet, table, card, select…)</td></tr><tr><td><code>src/components/shared/navigation/use-dashboard-nav.tsx</code></td><td>Menu sections, pages, icons and required permissions</td></tr><tr><td><code>src/messages/*.json</code></td><td>All texts in 9 languages</td></tr><tr><td><code>src/types/</code></td><td>Shared types for every module</td></tr></tbody></table>
+</section>
+
+<section id="g-fit"><h2><span class="n">G5</span>When Nexora fits</h2><table><thead><tr><th>Company type</th><th>Why it fits</th><th>How to use it</th></tr></thead><tbody><tr><td>Agency or studio (design, video, marketing)</td><td>Projects, retainers, fixed prices and hours in one place</td><td>Use retainers for monthly clients, fixed shares for campaigns</td></tr><tr><td>Consultancy / IT services</td><td>Rate cards per client, approvals, utilization</td><td>Set rate cards and approval rules first</td></tr><tr><td>Engineering or architecture office</td><td>Milestone billing, budgets, health</td><td>Bill by milestone, watch budget alerts</td></tr><tr><td>Multi-company group</td><td>One workspace per company, separate numbering</td><td>Create a workspace per legal entity</td></tr></tbody></table><h3>Where it needs adapting</h3><table><thead><tr><th>Situation</th><th>What to do</th></tr></thead><tbody><tr><td>Product companies selling goods (stock, delivery)</td><td>Nexora is service-oriented; add an inventory module or integrate an existing ERP</td></tr><tr><td>Payroll</td><td>Not included; export hours and leave to your payroll provider</td></tr><tr><td>Full accounting (ledger, VAT returns)</td><td>Export invoices and payments (CSV) to your accounting software</td></tr><tr><td>Very large teams (1,000+ users)</td><td>Requires the server version (Phase 7) with a real database</td></tr></tbody></table></section>
+
+<section id="g-extend"><h2><span class="n">G6</span>Add a new module, step by step</h2>
+<p>Example: a <b>Contracts</b> module (contracts signed with clients). Every module follows the same order.</p>
+<h3>Step 1 – Types</h3>
+<pre><code>// src/types/work-contracts.ts
+export enum ContractStatus { DRAFT = &quot;draft&quot;, SIGNED = &quot;signed&quot;, EXPIRED = &quot;expired&quot; }
+export interface Contract {
+  id: string
+  workspaceId: string
+  clientId: string
+  title: string
+  startDate: string   // yyyy-mm-dd
+  endDate?: string
+  value: number
+  status: ContractStatus
+  createdAt: string
+  updatedAt: string
+}</code></pre>
+<h3>Step 2 – Business rules (pure, tested)</h3>
+<pre><code>// src/lib/workforce/contracts.ts
+export function contractState(c: Contract, today: string): ContractStatus {
+  if (c.status === ContractStatus.SIGNED &amp;&amp; c.endDate &amp;&amp; c.endDate &lt; today) return ContractStatus.EXPIRED
+  return c.status
+}</code></pre>
+<h3>Step 3 – Data access</h3>
+<pre><code>// src/lib/api/contracts-api.ts
+const contracts = createCollection&lt;Contract&gt;(&quot;contracts&quot;, &quot;ct&quot;, () =&gt; [])
+
+export async function listContractsApi(workspaceId: string) {
+  return contracts.list(workspaceId)
+}
+export async function createContractApi(workspaceId: string, input: ContractInput) {
+  if (!(input.value &gt; 0)) throw new Error(&quot;Enter the contract value&quot;)
+  await assertPeriodOpen(workspaceId, input.startDate)
+  return contracts.create(workspaceId, { ...input, status: ContractStatus.DRAFT })
+}</code></pre>
+<h3>Step 4 – Hooks</h3>
+<pre><code>// src/hooks/workforce/use-contracts.ts
+export function useContracts() {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: [&quot;contracts&quot;, id], queryFn: () =&gt; listContractsApi(id) })
+}</code></pre>
+<h3>Step 5 – Page, route and menu</h3>
+<ol>
+<li>Create <code>src/components/shared/work-contracts-chunks/contracts-page.tsx</code> using <code>PageHeader</code>, <code>MetricCardGrid</code>, <code>DataTable</code> and a <code>Sheet</code> for the form.</li>
+<li>Create the route <code>src/app/[locale]/dashboard/contracts/page.tsx</code>.</li>
+<li>Add the page to <code>use-dashboard-nav.tsx</code> with its icon and permission.</li>
+<li>Add the texts to all 9 files in <code>src/messages/</code> and run the i18n check.</li>
+</ol>
+<h3>Step 6 – Tests</h3>
+<pre><code>// src/lib/workforce/contracts.test.ts
+it(&quot;expires signed contracts after their end date&quot;, () =&gt; {
+  expect(contractState({ ...c, status: ContractStatus.SIGNED, endDate: &quot;2026-01-31&quot; }, &quot;2026-02-01&quot;))
+    .toBe(ContractStatus.EXPIRED)
+})</code></pre>
+<div class="callout good"><b>The pattern:</b> Types → Rules → API → Hooks → Page → Route &amp; menu → Texts → Tests. Always in this order, for every module.</div>
+</section>
+
+<section id="g-prod"><h2><span class="n">G7</span>Going to production</h2>
+<p>The current version runs on demo data in the browser. Before real users, the following must be in place. This is <b>Phase 7</b> of the roadmap.</p>
+<h3>1. Server and database (first)</h3>
+<div class="callout warn">Today each user's data stays in their own browser. Production needs a server and a database so data is shared, permanent and backed up.</div>
+<ol>
+<li>Build the API following <a href="#d-api">D13 System interface specification</a> (one endpoint per API function).</li>
+<li>Use <b>PostgreSQL</b> with an ORM (Drizzle or Prisma) and migrations; one <code>workspaceId</code> column on every table.</li>
+<li>Reuse the business rules from <code>src/lib/workforce</code> on the server (same TypeScript).</li>
+<li>Replace the body of each function in <code>src/lib/api/*-api.ts</code> by a call to the server with the existing <code>apiClient</code>. The screens do not change.</li>
+</ol>
+<h3>2. Authentication and permissions</h3>
+<ul>
+<li>Sign-in with secure HttpOnly cookies (the app already supports a same-origin API proxy, see <code>.env.example</code>).</li>
+<li>Check the role and permission of every request <b>on the server</b>; the interface checks are only for display.</li>
+<li>Optional: single sign-on (Microsoft Entra ID, Google Workspace) for enterprise customers.</li>
+</ul>
+<h3>3. Environment variables</h3>
+<table><thead><tr><th>Variable</th><th>Purpose</th><th>Example</th></tr></thead><tbody><tr><td>NEXT_PUBLIC_APP_URL</td><td>Public address of the app</td><td>https://erp.company.com</td></tr><tr><td>NEXT_PUBLIC_API_URL</td><td>Address of the API</td><td>https://erp.company.com/api</td></tr><tr><td>API_PROXY_TARGET</td><td>Server API behind the same-origin proxy</td><td>https://api.internal</td></tr><tr><td>JWT_SECRET</td><td>Token signing (server)</td><td>a long random value</td></tr><tr><td>NEXT_PUBLIC_DEMO_MODE</td><td>Must be false in production</td><td>false</td></tr><tr><td>DATABASE_URL</td><td>Database (server)</td><td>postgres://user:pass@host:5432/nexora</td></tr><tr><td>SENTRY_DSN</td><td>Error tracking</td><td>https://…@sentry.io/…</td></tr></tbody></table>
+<h3>4. Security checklist</h3>
+<table><thead><tr><th>Item</th><th>Status today</th><th>Action for production</th></tr></thead><tbody><tr><td>Demo mode in production</td><td>Blocked by a build guard</td><td>Keep it; never set NEXT_PUBLIC_DEMO_MODE=true</td></tr><tr><td>Permissions</td><td>Interface only</td><td>Enforce on the server for every endpoint</td></tr><tr><td>Data storage</td><td>Browser</td><td>Database with encryption at rest and daily backups</td></tr><tr><td>CSV / PDF exports</td><td>Formula injection and HTML escaping handled</td><td>Keep the tests in CI</td></tr><tr><td>Dependencies</td><td>npm audit runs in CI</td><td>Enable Dependabot</td></tr><tr><td>Security headers</td><td>Set in next.config</td><td>Review CSP for your domains</td></tr></tbody></table>
+<h3>5. Logs, monitoring and tests</h3>
+<ul>
+<li>Structured logs on the server with a request ID; errors to Sentry; uptime monitoring.</li>
+<li>Keep the existing CI: type check, lint, translations, unit tests, build, end-to-end tests, dependency audit.</li>
+<li>Add API integration tests for each endpoint.</li>
+</ul>
+<h3>6. Hosting</h3>
+<table><thead><tr><th>What</th><th>Recommendation</th></tr></thead><tbody><tr><td>Front end</td><td>Vercel, or Docker (Node 20) behind Nginx/Caddy; a Fly.io configuration is already in the dependencies</td></tr><tr><td>API and database</td><td>Managed PostgreSQL (Neon, Supabase, AWS RDS, Azure Database)</td></tr><tr><td>Deployment</td><td>GitHub Actions: test → build → deploy on merge to main</td></tr><tr><td>Data residency</td><td>Choose a region that matches your customers (e.g. EU for European companies)</td></tr></tbody></table>
+</section>
+
+<section id="g-res"><h2><span class="n">G8</span>Resources</h2><table><thead><tr><th>Technology</th><th>Official documentation</th><th>Used for</th></tr></thead><tbody><tr><td>Next.js 16</td><td>nextjs.org/docs</td><td>Routing, rendering, build</td></tr><tr><td>React 19</td><td>react.dev</td><td>Components and hooks</td></tr><tr><td>TypeScript</td><td>typescriptlang.org/docs</td><td>Types</td></tr><tr><td>Tailwind CSS v4</td><td>tailwindcss.com/docs</td><td>Styling and design tokens</td></tr><tr><td>TanStack Query</td><td>tanstack.com/query</td><td>Data fetching and caching</td></tr><tr><td>Zustand</td><td>zustand.docs.pmnd.rs</td><td>Small global state (current workspace)</td></tr><tr><td>next-intl</td><td>next-intl.dev</td><td>Translations, 9 languages</td></tr><tr><td>Recharts</td><td>recharts.org</td><td>Charts</td></tr><tr><td>jsPDF</td><td>github.com/parallax/jsPDF</td><td>PDF invoices and reports</td></tr><tr><td>Vitest / Playwright</td><td>vitest.dev · playwright.dev</td><td>Unit and end-to-end tests</td></tr></tbody></table><p>Author: <b>Yahia Naim</b> · Code: <code>github.com/yahyanaim/Nexora-Saas</code></p></section>
 
 <section id="d-process"><h2><span class="n">D1</span>Business process map (time to cash)</h2><p>The core process of a service company, by who does what.</p><div class="mermaid">
 flowchart LR
