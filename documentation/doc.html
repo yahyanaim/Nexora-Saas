@@ -25,9 +25,10 @@
         <span class="brand-subtitle">Enterprise Cloud Platform</span>
       </div>
     </a>
-    <div class="sidebar-subtext">Product &amp; Technical Documentation · <b>v2.4</b> · single end-to-end reference. <a href="#whatsnew">What's new →</a></div>
+    <div class="sidebar-subtext">Product &amp; Technical Documentation · <b>v3.0</b> · single end-to-end reference. <a href="#whatsnew">What's new →</a></div>
     <nav>
       <div class="grp">Start here</div>
+      <a href="#erp" class="nav-highlight">★ Nexora ERP v3.0 (current)</a>
       <a href="#whatsnew">🆕 What's new (per deployment)</a>
       <a href="#changelog">🗒️ Changelog</a>
       <a href="#wireframes">🧩 Wireframes (every view + admin)</a>
@@ -84,7 +85,7 @@
         </div>
         <div class="hero-status-pill">
           <span class="status-dot-green"></span>
-          58/58 Tests Passing
+          398/398 Tests Passing
         </div>
       </div>
       <h1>Nexora SaaS: Product &amp; Technical Documentation</h1>
@@ -93,11 +94,82 @@
         <span class="badge">Next.js 16.1.6 · React 19.2.4</span>
         <span class="badge">IBM Carbon Design System</span>
         <span class="badge">Tailwind CSS v4</span>
-        <span class="badge">58 Passing Vitest Tests</span>
+        <span class="badge">398 Passing Vitest Tests</span>
+        <span class="badge">9 languages (incl. Arabic RTL)</span>
         <span class="badge">Dual-Mode Demo Fallback</span>
         <span class="badge">SOC 2 / GDPR Compliant</span>
       </div>
     </header>
+
+    <!-- Nexora ERP v3.0 -->
+    <section id="erp">
+      <h2><span class="n">★</span>Nexora ERP v3.0: services-company ERP (front end on demo data)</h2>
+      <p>Nexora is now an ERP for service companies (agencies, consultancies, studios): it follows people, clients, projects and hours all the way to invoices, cash and profit. This section describes what is built, how it works, how to run it, and what is left. It follows the <b>Nexora ERP cahier des charges</b>; the front end is built first on demo data, the real backend comes last.</p>
+
+      <div class="card" style="border-left:4px solid #2563eb">
+        <h4>2026-10-04 · Release v3.0: ERP Phases 0–3, analytics on ERP data, new side panels <span class="badge">latest</span></h4>
+        <ul>
+          <li><b>Design:</b> top tab bar with icon rail; Nexora DS tokens (colors, dark mode, radius, elevation, Inter + Roboto Mono); floating rounded side panels with serif titles.</li>
+          <li><b>Phase 0 – fixes:</b> CSV formula-injection guard, HTML escaping in PDFs, request timeouts, clear API errors.</li>
+          <li><b>Phase 1 – settings, HR, clients:</b> company identity (ICE, tax ID, trade register), departments, holidays, leave types, expense categories, labels, approval rules, period lock, data export; employee lifecycle statuses, working days, dated rate history, cost visibility by permission; client legal details, billing address, currency, language, rate card; audit log.</li>
+          <li><b>Phase 2 – projects &amp; time:</b> task labels, comments with @mentions, activity history, manual health override, budget alerts (80% / 100%), saved filters; timer, quick log, copy last week, 15-minute steps, expected-hours gap, reopening, rates frozen at approval, closed projects refuse hours.</li>
+          <li><b>Phase 3 – billing:</b> gapless numbering at issue (drafts have no number), issued/sent/paid, partial payments, several tax rates, withholding, currencies with exchange rate, credit notes (CN- series); hours, fixed share, milestone, retainer, deposit and free invoices; grouping by person/task/day; deposit deduction; billed share of a fixed price; receivables aging; invoice and payment CSV exports.</li>
+          <li><b>Analytics:</b> the Analytics page now reads ERP data – revenue earned, gross margin, utilization, cash collected, cumulative revenue vs a comparison period, revenue by client and billing type, revenue waterfall, clients at risk, capacity, top projects, utilization and average rate over time; filters by period, comparison, client and team; PDF / print / CSV report; Ask Victor answers from live figures. Executive overview and Team KPIs pages were removed.</li>
+          <li><b>Demo data:</b> a year of history (finished projects, monthly invoices, payments, open and overdue balances).</li>
+        </ul>
+      </div>
+
+      <h3>Modules and where to find them</h3>
+      <table>
+        <thead><tr><th>Menu</th><th>Page</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>Dashboard</td><td>Analytics</td><td>Revenue, margin, utilization, cash, clients at risk; report export</td></tr>
+          <tr><td>Organization</td><td>Employees · Clients · Projects · Timesheets · Time approvals</td><td>People and rates, clients and rate cards, projects (board, list, milestones, team), weekly hours, approvals</td></tr>
+          <tr><td>Finance</td><td>Client invoices · Receivables · Expenses · Profitability</td><td>Invoicing and payments, who owes what by lateness, expenses, margin per project</td></tr>
+          <tr><td>Planning</td><td>Timeline · Calendar · Workload · Leave</td><td>Schedule, capacity per person, leave requests</td></tr>
+          <tr><td>System</td><td>Workspace settings · Roles · Sessions · Audit logs</td><td>Company, lists, approval rules, period lock, data export, permissions</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Key business rules</h3>
+      <ul>
+        <li><b>Rates:</b> a person's bill rate is resolved person on the client's rate card → job title on the rate card → client rate → the employee's rate on that date. Rates are frozen on each hour when it is approved, so later rate changes never alter approved work.</li>
+        <li><b>Invoice numbers</b> are given when an invoice is issued, gapless per fiscal year (format set in settings, e.g. <code>INV-{YYYY}-{SEQ}</code>). Deleting a draft never leaves a gap; issued invoices are cancelled with a credit note, never deleted.</li>
+        <li><b>Period lock:</b> nothing dated on or before the lock date can be changed.</li>
+        <li><b>Approvals:</b> nobody approves their own hours, leave or expenses.</li>
+        <li><b>Rounding:</b> hours to 15 minutes; money to the cent per line; tax per rate.</li>
+        <li><b>Revenue (analytics):</b> approved billable hours on hourly projects × frozen rate, plus fixed-price, milestone and retainer invoices, less credit notes. Gross margin = revenue − cost of all hours − approved expenses. Utilization = billable hours ÷ available hours (capacity less leave and holidays), target 75%.</li>
+      </ul>
+
+      <h3>How it is built</h3>
+      <ul>
+        <li><b>Stack:</b> Next.js 16, React 19, TypeScript strict, Tailwind v4, react-query, next-intl (9 languages incl. Arabic right-to-left).</li>
+        <li><b>Pure business logic</b> lives in <code>src/lib/workforce/</code> (billing, invoice builders, rates, approvals, planning, KPIs, analytics) and is fully unit-tested, so the backend can reuse the same rules.</li>
+        <li><b>Demo data layer:</b> <code>src/lib/api/*-api.ts</code> functions read and write the browser's local storage per workspace (<code>nexora:&lt;collection&gt;:&lt;workspace&gt;</code>). Each function is the seam to replace with a real API call in Phase 7; screens do not change.</li>
+        <li><b>Quality:</b> typecheck, lint, 398 unit tests, i18n sync check, production build and Playwright end-to-end tests run in CI on every pull request.</li>
+      </ul>
+
+      <h3>Run it locally</h3>
+      <pre><code>npm install
+# .env.local
+NEXT_PUBLIC_API_URL=http://localhost:4000/api
+NEXT_PUBLIC_DEMO_MODE=true
+
+npm run dev     # then "Instant Demo Preview" on the login page</code></pre>
+      <p>If pages look outdated after a pull: stop the dev server, <code>rm -rf .next</code>, start again. Old demo data can be cleared in the browser (DevTools → Application → Local Storage → <code>nexora:</code> keys). A production build refuses <code>NEXT_PUBLIC_DEMO_MODE=true</code> on purpose.</p>
+
+      <h3>Roadmap: what is left and why it matters</h3>
+      <table>
+        <thead><tr><th>Phase</th><th>Scope</th><th>Why it matters</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>0–3</td><td>Fixes, settings, HR, clients, projects, time, billing, receivables, analytics</td><td>The core: work is tracked, billed and collected</td><td><b>Done</b></td></tr>
+          <tr><td>4</td><td>Manager and employee dashboards, standard reports, Excel export, phone layout</td><td>Each role sees what to act on; month-end reports without spreadsheets; time logged from phones arrives on time</td><td>Next</td></tr>
+          <tr><td>5 (R2)</td><td>Org chart, leave accrual and half-days, documents and contracts, CSV import, client portal, Gantt and dependencies, templates, quotes, recurring invoices, reminders</td><td>Closes the sales → project → invoice loop, brings cash in faster, makes onboarding a new company quick</td><td>Planned</td></tr>
+          <tr><td>6 (R3)</td><td>KPIs/OKRs and reviews, overhead costs, scheduled reports, branding, custom fields, global search, assistant</td><td>True net profit, fact-based reviews, what larger customers expect</td><td>Planned</td></tr>
+          <tr><td>7</td><td>Real backend: database, server-side auth and permissions, files, email, backups</td><td>Shared, permanent and secure data – what makes it a product you can sell</td><td>Planned</td></tr>
+        </tbody>
+      </table>
+    </section>
 
     <!-- What's new -->
     <section id="whatsnew">
@@ -105,7 +177,7 @@
       <p>Every deployment is summarised here and linked to the phase that delivered it, the wireframes, and the acceptance criteria. Full history is in the <a href="#changelog">changelog</a>.</p>
       
       <div class="card" style="border-left:4px solid #ffd166">
-        <h4>2026-09-14 · Release v2.4: Executive Analytics Overhaul &amp; Minimalist Auth Suite <span class="badge">latest</span></h4>
+        <h4>2026-09-14 · Release v2.4: Executive Analytics Overhaul &amp; Minimalist Auth Suite </h4>
         <ul>
           <li><b>Adapted Executive Cloud Analytics Hub</b>: Converted retail metrics into core B2B SaaS telemetry: Monthly Recurring Revenue (<b>$168,920 MRR</b>), Net Revenue Retention (<b>118.4%</b>), Active Multi-tenant Workspaces (<b>1,428</b>), and Churn Rate (<b>1.2%</b>) with vertical bar sparklines.</li>
           <li><b>Explanatory Operational Summaries</b>: Embedded executive guidance underneath every single analytics card, graph, and breakdown table detailing calculation logic and action triggers.</li>
