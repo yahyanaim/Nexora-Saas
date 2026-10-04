@@ -31,6 +31,7 @@
       <a href="#interface">3. The interface at a glance</a>
       <a href="#roles">4. Roles and what each person sees</a>
       <a href="#first-setup">5. First-time setup (checklist)</a>
+      <a href="#your-data">5B. Enter your data, step by step</a>
       <div class="grp">Guides by role</div>
       <a href="#guide-employee">6. Employee guide: your day and your week</a>
       <a href="#guide-manager">7. Manager guide: keep projects on track</a>
@@ -158,6 +159,35 @@
 <ol><li><b>Company identity</b> – System → Workspace settings → Company: legal name, ICE, tax ID, trade register, address, base currency, fiscal-year start, time zone, invoice number format. These appear on every invoice.</li><li><b>Lists</b> – Settings → Lists: create your departments, the year's public holidays, leave types (annual, sick, unpaid…), expense categories and task labels.</li><li><b>Approval rules</b> – Settings → Approvals: who approves timesheets, leave and expenses (the person's manager, the project manager, or a named person), in one or two steps.</li><li><b>Team</b> – Organization → Employees → Add employee: role, department, manager, working days, weekly capacity, hourly cost and billable rate.</li><li><b>Clients</b> – Organization → Clients → Add client: legal details, billing address, currency, invoice language, payment terms, contacts, and any special rates (rate card).</li><li><b>Projects</b> – Organization → Projects → New project: client, manager, team, dates, budget type and amount, milestones.</li><li><b>Tell the team</b> to log their hours every day and submit their week on Friday.</li></ol>
 <div class="callout warn">Set your <b>invoice number format</b> and <b>fiscal year</b> before issuing the first invoice. Numbers are given in sequence per fiscal year and can never be reused.</div>
 </section>
+
+<section id="your-data"><h2><span class="n">05B</span>Enter your company's data, step by step</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Nexora is only as useful as the data you put in. This section walks through every entity – company, lists, approvals, employees, clients, projects, tasks, hours and invoices – in the order they depend on each other, with the fields each form requires and a quick check after each step.</p>
+<p>Follow these nine steps in order: each one uses what the previous steps created (an employee needs a department, a project needs a client and a manager, an invoice needs approved hours). The diagram shows the dependencies; click it to zoom.</p><div class="mermaid">
+flowchart TB
+  subgraph A["Foundation"]
+    direction LR
+    S1["1 · Company settings<br/>name, ICE, currency,<br/>fiscal year, numbering"] --> S2["2 · Lists<br/>departments, holidays,<br/>leave types, categories"] --> S3["3 · Approval rules<br/>who validates what"]
+  end
+  subgraph B["People and clients"]
+    direction LR
+    S4["4 · Employees<br/>role, department, manager,<br/>cost &amp; billable rate"] --> S5["5 · Clients<br/>legal details, terms,<br/>contacts, rate card"]
+  end
+  subgraph C["Work"]
+    direction LR
+    S6["6 · Projects<br/>client, manager, team,<br/>budget type"] --> S7["7 · Milestones &amp; tasks<br/>assignee, due date,<br/>estimate"]
+  end
+  subgraph D["Money"]
+    direction LR
+    S8["8 · Hours<br/>timesheet → submit<br/>→ approve"] --> S9["9 · Invoices<br/>from approved hours"]
+  end
+  A --> B --> C --> D
+  style A fill:#f8fafc,stroke:#cbd5e1
+  style B fill:#f8fafc,stroke:#cbd5e1
+  style C fill:#f8fafc,stroke:#cbd5e1
+  style D fill:#f8fafc,stroke:#cbd5e1
+</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read the four bands from top to bottom and each band from left to right. A step can only be done once the steps before it exist.</p><h3>Step 1 – Company settings</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>System → Workspace settings → Company</td></tr><tr><td><b>Required</b></td><td>Company name, base currency, fiscal-year start, invoice number format</td></tr><tr><td><b>Optional</b></td><td>Legal name, ICE (15 digits), tax ID, trade register, address, time zone, logo</td></tr><tr><td><b>Why it matters</b></td><td>Printed on every invoice. Numbering and fiscal year must be right <b>before the first invoice</b>: issued numbers are never reused.</td></tr><tr><td><b>Check it worked</b></td><td>Open Finance → Client invoices → New invoice and look at the preview header.</td></tr></tbody></table><h3>Step 2 – Lists</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Workspace settings → Lists</td></tr><tr><td><b>Required</b></td><td>At least one department; this year's public holidays; leave types</td></tr><tr><td><b>Optional</b></td><td>Expense categories, task labels</td></tr><tr><td><b>Why it matters</b></td><td>Departments group people and filter reports; holidays and leave reduce expected hours and capacity.</td></tr><tr><td><b>Check it worked</b></td><td>My work shows the right expected hours for this week.</td></tr></tbody></table><h3>Step 3 – Approval rules</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Workspace settings → Approvals</td></tr><tr><td><b>Required</b></td><td>Who approves timesheets, leave and expenses</td></tr><tr><td><b>Optional</b></td><td>Two-step approval, a named approver</td></tr><tr><td><b>Why it matters</b></td><td>Without an approver, submitted hours wait forever. Nobody can approve their own requests.</td></tr><tr><td><b>Check it worked</b></td><td>Submit a test week as an employee and check it appears in Time approvals.</td></tr></tbody></table><h3>Step 4 – Employees</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Employees → Add employee</td></tr><tr><td><b>Required</b></td><td>Name (2+ letters), email, job title, role, employment type, status, hire date, hourly cost, billable rate, weekly capacity, at least one working day</td></tr><tr><td><b>Optional</b></td><td>Phone, department, manager, skills</td></tr><tr><td><b>Why it matters</b></td><td>The <b>role</b> decides what the person sees; the <b>manager</b> decides who approves them; the <b>billable rate</b> is the default bill rate and the <b>hourly cost</b> feeds margins. Change rates later with a dated rate change, never by editing old work.</td></tr><tr><td><b>Check it worked</b></td><td>Planning → Workload lists the person with the right capacity.</td></tr></tbody></table><h3>Step 5 – Clients</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Clients → Add client</td></tr><tr><td><b>Required</b></td><td>Name, currency, invoice language, payment terms (days), account manager</td></tr><tr><td><b>Optional</b></td><td>Legal name, ICE, tax ID, billing address, industry, contacts, client hourly rate, rate card</td></tr><tr><td><b>Why it matters</b></td><td>Payment terms set due dates and the aging; the rate card overrides employee rates for this client (person → job title → client rate → employee rate).</td></tr><tr><td><b>Check it worked</b></td><td>Open the client panel: contacts and rate card are listed.</td></tr></tbody></table><h3>Step 6 – Projects</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Projects → New project</td></tr><tr><td><b>Required</b></td><td>Name, code (2–12 characters, e.g. HEL-02), client, manager, status, priority, budget type</td></tr><tr><td><b>Optional</b></td><td>Description, team members, dates, budget amount, retainer monthly fee/hours/overage</td></tr><tr><td><b>Why it matters</b></td><td>The <b>budget type</b> (hourly, fixed price, retainer, internal) decides how the project is invoiced; the budget drives the 80%/100% alerts; only team members can log time on it.</td></tr><tr><td><b>Check it worked</b></td><td>The project appears on Projects with health <i>On track</i>.</td></tr></tbody></table><h3>Step 7 – Milestones and tasks</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Open the project → Milestones, then Board or List → New task</td></tr><tr><td><b>Required</b></td><td>Task title, status, priority, estimated hours</td></tr><tr><td><b>Optional</b></td><td>Assignee, milestone, due date, labels, subtasks</td></tr><tr><td><b>Why it matters</b></td><td>Due dates feed My work and project health; estimates feed workload; milestones can be invoiced on their own.</td></tr><tr><td><b>Check it worked</b></td><td>The assignee sees the task in My work → My day.</td></tr></tbody></table><h3>Step 8 – Hours</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Timesheets (or the timer / quick log)</td></tr><tr><td><b>Required</b></td><td>Project, day, hours (rounded to 15 minutes)</td></tr><tr><td><b>Optional</b></td><td>Task, note, billable flag</td></tr><tr><td><b>Why it matters</b></td><td>Approved hours are what clients are billed and what costs are measured on; the bill and cost rate are frozen at approval.</td></tr><tr><td><b>Check it worked</b></td><td>Submit the week, approve it in Time approvals; status becomes <i>Approved</i>.</td></tr></tbody></table><h3>Step 9 – First invoice</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Finance → Client invoices → Create from hours (or New invoice)</td></tr><tr><td><b>Required</b></td><td>Client, period, grouping</td></tr><tr><td><b>Optional</b></td><td>Taxes, withholding, notes, other invoice types (fixed, milestone, retainer, deposit, free)</td></tr><tr><td><b>Why it matters</b></td><td>Draft first; the number is given at issue. Corrections use a credit note.</td></tr><tr><td><b>Check it worked</b></td><td>Issue it, record a payment and check Receivables and Reports → Invoices.</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Each step is one table: where to click, which fields the form refuses to save without, which can wait, why it matters, and how to verify.</p><h3>Bringing existing data</h3><ul><li><b>Many employees or clients:</b> enter the first few by hand to check your lists and rates, then the rest. A CSV import arrives in Phase 5.</li><li><b>Open invoices from your old tool:</b> create them as <i>free</i> invoices dated on their original issue date so Receivables shows the real balance.</li><li><b>Past hours:</b> only the current month is useful for billing; older history is optional.</li></ul>
+<div class="callout good"><b>Tip:</b> do the whole chain once with a test client and a test project (steps 5–9), then delete or archive them before the team starts.</div>
+</section>
+
 
 <section id="guide-employee"><h2><span class="n">06</span>Employee guide: your day and your week</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">For a team member, Nexora asks for very little: log hours as you work, submit your week, and keep your tasks up to date. Doing it every day takes two minutes and avoids the Friday-afternoon guesswork that makes invoices wrong. This guide describes the daily and weekly routine.</p>
 <h3>Every day (2 minutes)</h3>
@@ -572,33 +602,44 @@ flowchart LR
   ADM([Admin]):::actor
   MGR([Manager]):::actor
   EMP([Employee]):::actor
+  subgraph SYS["Nexora"]
+    direction TB
+    U1("Configure workspace<br/>and approval rules")
+    U2("Manage employees<br/>and rates")
+    U3("Manage clients<br/>and rate cards")
+    U4("Plan projects, tasks<br/>and milestones")
+    U12("See my day<br/>(My work)")
+    U5("Log time / timer")
+    U7("Request leave<br/>and expenses")
+    U13("Follow the team<br/>(Team dashboard)")
+    U6("Approve time,<br/>leave, expenses")
+    U8("Create invoices<br/>and credit notes")
+    U9("Record payments")
+    U10("Follow receivables")
+    U11("Read analytics<br/>and reports")
+    U14("Export reports<br/>Excel / CSV / PDF")
+  end
   ACC([Accountant]):::actor
   DIR([Director]):::actor
-  U1((Configure workspace))
-  U2((Manage employees and rates))
-  U3((Manage clients and rate cards))
-  U4((Plan projects and tasks))
-  U5((Log time / timer))
-  U6((Approve time, leave, expenses))
-  U7((Request leave / expenses))
-  U8((Invoice and credit))
-  U9((Record payments))
-  U10((Follow receivables))
-  U11((Read analytics and reports))
   ADM --- U1
   ADM --- U2
   ADM --- U3
   MGR --- U4
+  MGR --- U13
   MGR --- U6
+  EMP --- U12
   EMP --- U5
   EMP --- U7
-  ACC --- U8
-  ACC --- U9
-  ACC --- U10
-  DIR --- U11
+  U8 --- ACC
+  U9 --- ACC
+  U10 --- ACC
+  U14 --- ACC
+  U11 --- DIR
+  U14 --- DIR
   MGR --- U11
   classDef actor fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#0f172a;
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Blue ovals are roles; the circles they connect to are what that role does in Nexora. A role linked to a circle is responsible for it.</p></section>
+  style SYS fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3
+</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Blue ovals are roles (people on the left, finance and direction on the right); the dashed box is Nexora, and each rounded box inside it is something a role does. A line means that role uses that feature. Click the diagram to zoom.</p></section>
 
 <section id="d-sitemap"><h2><span class="n">D3</span>Site map</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">The site map shows every section and page of Nexora and how they are reached, as a single tree.</p><div class="mermaid">
 flowchart TB
@@ -930,5 +971,87 @@ erDiagram
     }
   });
 </script>
+<style>
+  .dz{position:relative;border:1px solid #e2e8f0;border-radius:12px;background:#fff;margin:10px 0 6px}
+  .dz-bar{position:sticky;top:0;display:flex;gap:6px;justify-content:flex-end;padding:8px;border-bottom:1px solid #eef2f7;background:#f8fafc;border-radius:12px 12px 0 0;z-index:2}
+  .dz-bar button,.dz-ov-bar button{font:600 12px/1 system-ui,sans-serif;border:1px solid #cbd5e1;background:#fff;color:#0f172a;border-radius:8px;padding:7px 10px;cursor:pointer}
+  .dz-bar button:hover,.dz-ov-bar button:hover{background:#eff6ff;border-color:#2563eb}
+  .dz-bar .dz-hint{margin-inline-end:auto;align-self:center;font:12px system-ui,sans-serif;color:#64748b}
+  .dz-view{overflow:auto;max-height:640px;padding:12px;cursor:zoom-in}
+  .dz{max-width:100%;overflow:hidden}
+  .dz-view .mermaid{margin:0!important;border:0!important;box-shadow:none!important;display:block!important;overflow:visible!important;padding:0!important;width:max-content;min-width:100%}
+  .dz-view .mermaid svg{margin:0 auto!important}
+  .dz-view svg,.dz-ov-stage svg{max-width:none!important;max-height:none!important;height:auto!important}
+  .dz-ov{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.88);display:flex;flex-direction:column}
+  .dz-ov-bar{display:flex;gap:6px;align-items:center;padding:10px 14px;background:#0f172a;color:#e2e8f0;font:13px system-ui,sans-serif}
+  .dz-ov-bar span{margin-inline-end:auto}
+  .dz-ov-stage{flex:1;overflow:hidden;cursor:grab;touch-action:none;background:#fff;margin:12px;border-radius:12px}
+  .dz-ov-stage.drag{cursor:grabbing}
+  .dz-ov-stage svg{transform-origin:0 0;max-width:none!important}
+  @media print{.dz-bar{display:none}.dz-view{max-height:none;overflow:visible}}
+</style>
+<script>
+/* Diagram zoom: toolbar on every diagram + full-screen viewer with wheel/pinch zoom and drag to pan */
+(function () {
+  var L = document.documentElement.lang === "ar"
+    ? { hint: "انقر على المخطط لعرضه بملء الشاشة", full: "ملء الشاشة", reset: "إعادة", close: "إغلاق ✕", tip: "عجلة الفأرة أو القرص للتكبير · اسحب للتحريك · Esc للإغلاق" }
+    : { hint: "Click the diagram to open it full screen", full: "Full screen", reset: "Reset", close: "Close ✕", tip: "Scroll or pinch to zoom · drag to move · Esc to close" };
+  function btn(label, title, fn) { var b = document.createElement("button"); b.type = "button"; b.textContent = label; b.title = title || label; b.onclick = fn; return b; }
+  function naturalWidth(svg) { var vb = svg.viewBox && svg.viewBox.baseVal; return vb && vb.width ? vb.width : svg.getBoundingClientRect().width; }
+  function title(el) { var s = el.closest("section"); var h = s && s.querySelector("h2"); return h ? h.textContent : ""; }
+
+  function openViewer(el) {
+    var src = el.querySelector("svg"); if (!src) return;
+    var svg = src.cloneNode(true);
+    var w = naturalWidth(src), vb = src.viewBox.baseVal, h = vb && vb.height ? vb.height : src.getBoundingClientRect().height;
+    svg.setAttribute("width", w); svg.setAttribute("height", h); svg.style.maxWidth = "none";
+    var ov = document.createElement("div"); ov.className = "dz-ov";
+    var bar = document.createElement("div"); bar.className = "dz-ov-bar";
+    var t = document.createElement("span"); t.textContent = title(el) + " — " + L.tip;
+    var stage = document.createElement("div"); stage.className = "dz-ov-stage";
+    stage.appendChild(svg);
+    var k = 1, x = 0, y = 0;
+    function apply() { svg.style.transform = "translate(" + x + "px," + y + "px) scale(" + k + ")"; }
+    function fit() { var r = stage.getBoundingClientRect(); k = Math.min((r.width - 40) / w, (r.height - 40) / h, 4); x = (r.width - w * k) / 2; y = (r.height - h * k) / 2; apply(); }
+    function zoomAt(f, cx, cy) { var nk = Math.min(12, Math.max(0.2, k * f)); x = cx - (cx - x) * (nk / k); y = cy - (cy - y) * (nk / k); k = nk; apply(); }
+    function center(f) { var r = stage.getBoundingClientRect(); zoomAt(f, r.width / 2, r.height / 2); }
+    function close() { document.removeEventListener("keydown", key); ov.remove(); document.body.style.overflow = ""; }
+    function key(e) { if (e.key === "Escape") close(); if (e.key === "+" || e.key === "=") center(1.25); if (e.key === "-") center(0.8); if (e.key === "0") fit(); }
+    bar.append(t, btn("−", "Zoom out", function () { center(0.8); }), btn("+", "Zoom in", function () { center(1.25); }), btn(L.reset, "Fit", fit), btn(L.close, "Esc", close));
+    stage.addEventListener("wheel", function (e) { e.preventDefault(); var r = stage.getBoundingClientRect(); zoomAt(e.deltaY < 0 ? 1.15 : 0.87, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+    var pts = new Map(), last = null, pinch = 0;
+    stage.addEventListener("pointerdown", function (e) { stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, e); stage.classList.add("drag"); last = { x: e.clientX, y: e.clientY }; });
+    stage.addEventListener("pointermove", function (e) {
+      if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, e);
+      if (pts.size === 2) { var a = Array.from(pts.values()), d = Math.hypot(a[0].clientX - a[1].clientX, a[0].clientY - a[1].clientY), r = stage.getBoundingClientRect();
+        if (pinch) zoomAt(d / pinch, (a[0].clientX + a[1].clientX) / 2 - r.left, (a[0].clientY + a[1].clientY) / 2 - r.top); pinch = d; return; }
+      x += e.clientX - last.x; y += e.clientY - last.y; last = { x: e.clientX, y: e.clientY }; apply();
+    });
+    function up(e) { pts.delete(e.pointerId); pinch = 0; if (!pts.size) stage.classList.remove("drag"); else { var p = pts.values().next().value; last = { x: p.clientX, y: p.clientY }; } }
+    stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+    ov.append(bar, stage); document.body.appendChild(ov); document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", key); fit();
+  }
+
+  function enhance(el) {
+    if (el.dataset.dz || !el.querySelector("svg")) return; el.dataset.dz = "1";
+    var box = document.createElement("div"); box.className = "dz";
+    var bar = document.createElement("div"); bar.className = "dz-bar";
+    var view = document.createElement("div"); view.className = "dz-view";
+    var hint = document.createElement("span"); hint.className = "dz-hint"; hint.textContent = L.hint;
+    el.parentNode.insertBefore(box, el); view.appendChild(el); box.append(bar, view);
+    var svg = el.querySelector("svg"), base = naturalWidth(svg), k = 1;
+    function fitWidth() { return Math.min(1.5, (view.clientWidth - 24) / base); }
+    function set(nk) { k = Math.min(4, Math.max(0.3, nk)); svg.style.width = base * k + "px"; svg.style.maxWidth = "none"; }
+    k = Math.max(fitWidth(), 0.3); set(k);
+    bar.append(hint, btn("−", "Zoom out", function () { set(k * 0.8); }), btn("+", "Zoom in", function () { set(k * 1.25); }),
+      btn(L.reset, "Fit width", function () { set(fitWidth()); }), btn("⤢ " + L.full, L.full, function () { openViewer(el); }));
+    view.addEventListener("click", function () { openViewer(el); });
+  }
+  function scan() { document.querySelectorAll(".mermaid").forEach(enhance); }
+  var tries = 0, timer = setInterval(function () { scan(); if (++tries > 40 || document.querySelectorAll(".mermaid:not([data-dz])").length === 0) clearInterval(timer); }, 250);
+})();
+</script>
+
 </body>
 </html>
