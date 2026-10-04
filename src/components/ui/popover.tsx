@@ -2,11 +2,13 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { FloatingLayer } from "./floating"
 
 interface PopoverContextType {
   open: boolean
   setOpen: (open: boolean | ((prev: boolean) => boolean)) => void
   triggerRef: React.RefObject<HTMLDivElement | null>
+  contentRef: React.RefObject<HTMLDivElement | null>
 }
 
 const PopoverContext = React.createContext<PopoverContextType | undefined>(undefined)
@@ -24,6 +26,7 @@ export function Popover({
   const isControlled = controlledOpen !== undefined
   const open = isControlled ? controlledOpen : internalOpen
   const triggerRef = React.useRef<HTMLDivElement | null>(null)
+  const contentRef = React.useRef<HTMLDivElement | null>(null)
 
   const setOpen = React.useCallback(
     (nextOpen: boolean | ((prev: boolean) => boolean)) => {
@@ -44,7 +47,8 @@ export function Popover({
   React.useEffect(() => {
     if (!open) return
     const handleClickOutside = (e: MouseEvent) => {
-      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (triggerRef.current && !triggerRef.current.contains(target) && !contentRef.current?.contains(target) && !(target as Element).closest?.("[data-select-menu]")) {
         setOpen(false)
       }
     }
@@ -60,7 +64,7 @@ export function Popover({
   }, [open, setOpen])
 
   return (
-    <PopoverContext.Provider value={{ open, setOpen, triggerRef }}>
+    <PopoverContext.Provider value={{ open, setOpen, triggerRef, contentRef }}>
       <div ref={triggerRef} className="relative inline-block text-left">
         {children}
       </div>
@@ -121,18 +125,18 @@ export function PopoverContent({
   if (!context?.open) return null
 
   return (
-    <div
-      role="dialog"
-      className={cn(
-        "absolute z-50 min-w-[14rem] rounded-2xl border border-border bg-popover p-4 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 duration-150",
-        align === "end" ? "right-0" : align === "center" ? "left-1/2 -translate-x-1/2" : "left-0",
-        side === "top" ? "bottom-full mb-2" : "top-full mt-2",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
+    <FloatingLayer anchorRef={context.triggerRef} contentRef={context.contentRef} side={side} align={align} offset={8}>
+      <div
+        role="dialog"
+        className={cn(
+          "min-w-[14rem] rounded-2xl border border-border bg-popover p-4 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 duration-150",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    </FloatingLayer>
   )
 }
 

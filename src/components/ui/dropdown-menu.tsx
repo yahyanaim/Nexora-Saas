@@ -2,11 +2,13 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { FloatingLayer } from "./floating"
 
 interface DropdownContextType {
   open: boolean
   setOpen: (open: boolean) => void
   triggerRef: React.RefObject<HTMLDivElement | null>
+  contentRef: React.RefObject<HTMLDivElement | null>
 }
 
 const DropdownContext = React.createContext<DropdownContextType | undefined>(undefined)
@@ -24,6 +26,7 @@ export function DropdownMenu({
   const isControlled = controlledOpen !== undefined
   const open = isControlled ? controlledOpen : internalOpen
   const triggerRef = React.useRef<HTMLDivElement | null>(null)
+  const contentRef = React.useRef<HTMLDivElement | null>(null)
 
   const setOpen = React.useCallback(
     (nextOpen: boolean) => {
@@ -36,7 +39,8 @@ export function DropdownMenu({
   React.useEffect(() => {
     if (!open) return
     const handleClickOutside = (e: MouseEvent) => {
-      if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (triggerRef.current && !triggerRef.current.contains(target) && !contentRef.current?.contains(target) && !(target as Element).closest?.("[data-select-menu]")) {
         setOpen(false)
       }
     }
@@ -52,7 +56,7 @@ export function DropdownMenu({
   }, [open, setOpen])
 
   return (
-    <DropdownContext.Provider value={{ open, setOpen, triggerRef }}>
+    <DropdownContext.Provider value={{ open, setOpen, triggerRef, contentRef }}>
       <div ref={triggerRef} className="relative inline-block text-left">
         {children}
       </div>
@@ -106,21 +110,17 @@ export function DropdownMenuContent({
   if (!context?.open) return null
 
   return (
-    <div
-      role="menu"
-      className={cn(
-        "absolute z-50 min-w-[12rem] overflow-hidden rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 duration-150",
-        side === "right"
-          ? cn("left-full ms-2", align === "end" ? "bottom-0" : "top-0")
-          : cn(
-              align === "end" ? "right-0" : align === "center" ? "left-1/2 -translate-x-1/2" : "left-0",
-              side === "top" ? "bottom-full mb-1" : "top-full mt-1"
-            ),
-        className
-      )}
-    >
-      {children}
-    </div>
+    <FloatingLayer anchorRef={context.triggerRef} contentRef={context.contentRef} side={side} align={align} offset={side === "right" ? 8 : 4}>
+      <div
+        role="menu"
+        className={cn(
+          "min-w-[12rem] overflow-hidden rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 duration-150",
+          className
+        )}
+      >
+        {children}
+      </div>
+    </FloatingLayer>
   )
 }
 

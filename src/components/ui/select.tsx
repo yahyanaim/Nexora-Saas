@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { ChevronDown, Check as Checkmark } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 
@@ -12,6 +13,8 @@ interface SelectContextType {
   setOpen: (open: boolean) => void
   selectedLabel: string
   setSelectedLabel: (label: string) => void
+  trigger: HTMLButtonElement | null
+  setTrigger: (el: HTMLButtonElement | null) => void
 }
 
 const SelectContext = React.createContext<SelectContextType | undefined>(undefined)
@@ -30,6 +33,7 @@ export function Select({
   const [internalValue, setInternalValue] = React.useState(defaultValue || "")
   const [open, setOpen] = React.useState(false)
   const [selectedLabel, setSelectedLabel] = React.useState("")
+  const [trigger, setTrigger] = React.useState<HTMLButtonElement | null>(null)
 
   const currentValue = value !== undefined ? value : internalValue
 
@@ -52,9 +56,11 @@ export function Select({
         setOpen,
         selectedLabel,
         setSelectedLabel,
+        trigger,
+        setTrigger,
       }}
     >
-      <div className="relative w-full inline-block">{children}</div>
+      <div className="contents">{children}</div>
     </SelectContext.Provider>
   )
 }
@@ -67,12 +73,14 @@ export function SelectTrigger({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { size?: "sm" | "default" }) {
   const context = React.useContext(SelectContext)
   if (!context) return null
+  const { open, setOpen, setTrigger } = context
 
   return (
     <button
+      ref={setTrigger}
       type="button"
-      onClick={() => context.setOpen(!context.open)}
-      aria-expanded={context.open}
+      onClick={() => setOpen(!open)}
+      aria-expanded={open}
       className={cn(
         "flex h-10 w-full items-center justify-between gap-2 rounded-xl border border-border bg-input px-3.5 py-2 text-sm text-foreground shadow-xs transition-colors hover:bg-muted/40 focus:outline-none focus:ring-4 focus:ring-primary/15 focus:border-primary disabled:cursor-not-allowed disabled:opacity-50",
         size === "sm" ? "h-8 text-xs" : "h-9",
@@ -84,7 +92,7 @@ export function SelectTrigger({
       <ChevronDown
         className={cn(
           "size-4 shrink-0 text-muted-foreground transition-transform duration-200",
-          context.open && "rotate-180 text-foreground"
+          open && "rotate-180 text-foreground"
         )}
       />
     </button>
@@ -123,24 +131,52 @@ export function SelectContent({
   align?: string
 }) {
   const context = React.useContext(SelectContext)
-  if (!context || !context.open) return null
+  const [rect, setRect] = React.useState<DOMRect | null>(null)
+  const open = !!context?.open
+  const trigger = context?.trigger
 
-  return (
+  // The menu is portalled to <body> so cards with overflow hidden never clip it
+  React.useLayoutEffect(() => {
+    if (!open) return
+    const update = () => setRect(trigger?.getBoundingClientRect() ?? null)
+    update()
+    window.addEventListener("resize", update)
+    window.addEventListener("scroll", update, true)
+    return () => {
+      window.removeEventListener("resize", update)
+      window.removeEventListener("scroll", update, true)
+    }
+  }, [open, trigger])
+
+  if (!context || !open || !rect || typeof document === "undefined") return null
+
+  const MENU_MAX = 240
+  const below = window.innerHeight - rect.bottom
+  const placeTop = side === "top" ? rect.top > MENU_MAX || rect.top > below : below < MENU_MAX + 12 && rect.top > below
+  const width = Math.max(rect.width, 128)
+  const left = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8)
+
+  return createPortal(
     <>
+      <div data-select-menu className="fixed inset-0 z-[96]" onClick={() => context.setOpen(false)} />
       <div
-        className="fixed inset-0 z-40"
-        onClick={() => context.setOpen(false)}
-      />
-      <div
+        role="listbox"
+        data-select-menu
+        style={{
+          position: "fixed",
+          left,
+          width,
+          ...(placeTop ? { bottom: window.innerHeight - rect.top + 6 } : { top: rect.bottom + 6 }),
+        }}
         className={cn(
-          "absolute z-50 max-h-60 min-w-[8rem] w-full overflow-auto rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
-          side === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5",
+          "z-[97] max-h-60 overflow-auto rounded-2xl border border-border bg-popover p-1.5 text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95",
           className
         )}
       >
         {children}
       </div>
-    </>
+    </>,
+    document.body
   )
 }
 
