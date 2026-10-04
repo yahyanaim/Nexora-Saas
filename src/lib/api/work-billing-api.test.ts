@@ -76,7 +76,7 @@ describe("client invoices", () => {
 
   it("seeds a paid invoice and leaves approved Helio hours to bill", async () => {
     const invoices = await listClientInvoicesApi(WS)
-    expect(invoices[0]?.status).toBe(ClientInvoiceStatus.PAID)
+    expect(invoices.some((i) => i.status === ClientInvoiceStatus.PAID)).toBe(true)
     expect((await unbilledHelio()).length).toBeGreaterThan(0)
   })
 

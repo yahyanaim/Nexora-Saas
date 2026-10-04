@@ -1,79 +1,42 @@
 "use client"
 
 import { useMemo } from "react"
+import { useTranslations } from "next-intl"
 import { Information } from "@/components/ui/carbon/icons"
-import { Cpu, Globe, Zap } from "lucide-react"
-import { useAnalyticsFilter } from "./analytics-filter-context"
+import { Clock3, Gauge, Coffee } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { UTILIZATION_TARGET } from "@/lib/workforce/analytics"
+import { RANGE_LABEL, useAnalyticsFilter } from "./analytics-filter-context"
 
-const EDGE_REGIONS = [
-  { region: "US-East (N. Virginia)", latency: "28ms", uptime: "99.99%", status: "optimal" },
-  { region: "EU-Central (Frankfurt)", latency: "34ms", uptime: "99.98%", status: "optimal" },
-  { region: "AP-South (Singapore)", latency: "62ms", uptime: "99.95%", status: "optimal" },
-]
-
+/** Team capacity and where the hours went (keeps the original telemetry card's layout). */
 export function AiComputeMeteringCard() {
-  const { dateRange } = useAnalyticsFilter()
+  const t = useTranslations()
+  const { dateRange, analytics } = useAnalyticsFilter()
 
-  const { tokenBurn, tokenUnit, cacheHit, cacheSaving, p99Latency, explanation } = useMemo(() => {
-    if (dateRange === "Last 7 days") {
-      return {
-        tokenBurn: "420M",
-        tokenUnit: "tokens / 7d",
-        cacheHit: "85.8%",
-        cacheSaving: "-19% token cost",
-        p99Latency: "38ms",
-        explanation:
-          "Past 7-day compute telemetry: 420M tokens processed with 85.8% prompt prefix cache reuse, delivering sub-40ms P99 responses across all edge regions.",
-      }
-    }
-
-    if (dateRange === "Last 90 days") {
-      return {
-        tokenBurn: "5.46B",
-        tokenUnit: "tokens / 90d",
-        cacheHit: "83.1%",
-        cacheSaving: "-17% token cost",
-        p99Latency: "44ms",
-        explanation:
-          "Quarterly compute telemetry: 5.46B tokens metered across enterprise workspaces with 83.1% shared prefix caching.",
-      }
-    }
-
-    if (dateRange === "Last 1 year") {
-      return {
-        tokenBurn: "21.8B",
-        tokenUnit: "tokens / yr",
-        cacheHit: "84.5%",
-        cacheSaving: "-19% token cost",
-        p99Latency: "41ms",
-        explanation:
-          "Trailing 12-month compute telemetry: 21.8B tokens executed across global edge networks with 84.5% shared prefix prompt caching, saving an estimated $410k in raw LLM compute costs.",
-      }
-    }
-
-    if (dateRange === "Year to date") {
-      return {
-        tokenBurn: "18.5B",
-        tokenUnit: "tokens / YTD",
-        cacheHit: "83.8%",
-        cacheSaving: "-18% token cost",
-        p99Latency: "42ms",
-        explanation:
-          "Year-to-date cumulative compute: 18.5B tokens processed globally with 99.99% edge gateway availability and sub-45ms global P99 latency.",
-      }
-    }
-
-    // Default: Last 30 days
+  const { billable, billableUnit, utilization, utilizationNote, onTarget, nonBillable, nonBillableNote, rows, explanation } = useMemo(() => {
+    const { current, previous, projects } = analytics
+    const util = current.utilization
+    const top = projects.filter((p) => p.hours > 0).slice(0, 3)
+    const idle = Math.max(0, current.availableHours - current.hours)
     return {
-      tokenBurn: "1.82B",
-      tokenUnit: "tokens / mo",
-      cacheHit: "84.2%",
-      cacheSaving: "-18% token cost",
-      p99Latency: "42ms",
+      billable: `${Math.round(current.billableHours).toLocaleString()} h`,
+      billableUnit: t("anOfLogged", { hours: Math.round(current.hours).toLocaleString() }),
+      utilization: util === null ? "—" : `${Math.round(util)}%`,
+      utilizationNote: t("anTargetIs", { target: UTILIZATION_TARGET }),
+      onTarget: util !== null && util >= UTILIZATION_TARGET,
+      nonBillable: current.nonBillableShare === null ? "—" : `${Math.round(current.nonBillableShare)}%`,
+      nonBillableNote: t("anOfLoggedShort"),
+      rows: top,
       explanation:
-        "AI compute token metering tracks LLM token burn across all workspace members. Shared prefix caching achieves an 84.2% hit ratio, reducing raw model inference bills by 18%. Global edge gateways ensure sub-45ms responses worldwide.",
+        current.hours === 0
+          ? t("anNoHoursYet")
+          : t("anCapacityNote", {
+              idle: Math.round(idle).toLocaleString(),
+              before: previous.utilization === null ? "—" : `${Math.round(previous.utilization)}%`,
+              now: util === null ? "—" : `${Math.round(util)}%`,
+            }),
     }
-  }, [dateRange])
+  }, [analytics, t])
 
   return (
     <div className="flex h-full flex-col justify-between rounded-xl border border-border/70 bg-card p-5 shadow-2xs">
@@ -82,62 +45,69 @@ export function AiComputeMeteringCard() {
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Information className="size-3.5 text-muted-foreground/70" />
-            <span className="font-medium">AI Compute & Edge Gateway Health</span>
-            <span className="text-xs tabular-nums text-muted-foreground">({dateRange})</span>
+            <span className="font-medium">{t("anCapacityTitle")}</span>
+            <span className="text-xs tabular-nums text-muted-foreground">({t(RANGE_LABEL[dateRange])})</span>
           </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2 py-0.5 text-xs font-medium text-success-foreground">
-            <span className="size-1.5 rounded-full bg-success animate-pulse" />
-            Edge Clusters Normal
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+              onTarget ? "bg-success-soft text-success-foreground" : "bg-warning-soft text-warning-foreground"
+            )}
+          >
+            <span className={cn("size-1.5 rounded-full animate-pulse", onTarget ? "bg-success" : "bg-warning")} />
+            {onTarget ? t("anOnTarget") : t("anBelowTarget")}
           </span>
         </div>
 
-        {/* Compute & Token Metrics Grid */}
+        {/* Capacity metrics grid */}
         <div className="mt-2 grid grid-cols-3 gap-2">
           <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Cpu className="size-3 text-primary" />
-              <span>Token Burn</span>
+              <Clock3 className="size-3 text-primary" />
+              <span>{t("anBillableHours")}</span>
             </div>
-            <p className="mt-1 text-base font-bold tabular-nums text-foreground">
-              {tokenBurn}
-            </p>
-            <p className="text-xs text-muted-foreground">{tokenUnit}</p>
+            <p className="mt-1 text-base font-bold tabular-nums text-foreground">{billable}</p>
+            <p className="text-xs text-muted-foreground">{billableUnit}</p>
           </div>
 
           <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Zap className="size-3 text-warning-foreground" />
-              <span>Cache Hit</span>
+              <Gauge className="size-3 text-warning-foreground" />
+              <span>{t("anUtilization")}</span>
             </div>
-            <p className="mt-1 text-base font-bold tabular-nums text-foreground">
-              {cacheHit}
-            </p>
-            <p className="text-xs text-success-foreground">{cacheSaving}</p>
+            <p className="mt-1 text-base font-bold tabular-nums text-foreground">{utilization}</p>
+            <p className={cn("text-xs", onTarget ? "text-success-foreground" : "text-warning-foreground")}>{utilizationNote}</p>
           </div>
 
           <div className="rounded-lg border border-border/50 bg-muted/20 p-2.5">
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Globe className="size-3 text-indigo-500" />
-              <span>Median P99</span>
+              <Coffee className="size-3 text-indigo-500" />
+              <span>{t("anNonBillable")}</span>
             </div>
-            <p className="mt-1 text-base font-bold tabular-nums text-foreground">
-              {p99Latency}
-            </p>
-            <p className="text-xs text-muted-foreground">global edge</p>
+            <p className="mt-1 text-base font-bold tabular-nums text-foreground">{nonBillable}</p>
+            <p className="text-xs text-muted-foreground">{nonBillableNote}</p>
           </div>
         </div>
 
-        {/* Regional Gateway Table */}
+        {/* Where the hours went */}
         <div className="mt-3 space-y-1.5">
-          <p className="text-xs font-medium text-foreground/80">Regional Ingress Gateways</p>
+          <p className="text-xs font-medium text-foreground/80">{t("anHoursByProject")}</p>
           <div className="divide-y divide-border/40 text-xs">
-            {EDGE_REGIONS.map((r) => (
-              <div key={r.region} className="flex items-center justify-between py-1.5">
-                <span className="text-foreground/90 font-normal">{r.region}</span>
-                <div className="flex items-center gap-2 tabular-nums text-xs">
-                  <span className="text-muted-foreground">{r.uptime}</span>
-                  <span className="rounded-xs bg-success-soft px-1.5 py-0.5 text-xs font-semibold text-success-foreground">
-                    {r.latency}
+            {rows.length === 0 && <p className="py-3 text-center text-muted-foreground">{t("anNoHoursYet")}</p>}
+            {rows.map((r) => (
+              <div key={r.projectId} className="flex items-center justify-between py-1.5">
+                <span className="truncate pe-2 font-normal text-foreground/90">
+                  <span className="font-mono text-muted-foreground">{r.code}</span> {r.name}
+                </span>
+                <div className="flex shrink-0 items-center gap-2 tabular-nums text-xs">
+                  <span className="text-muted-foreground">{Math.round(r.hours).toLocaleString()} h</span>
+                  <span
+                    className={cn(
+                      "rounded-xs px-1.5 py-0.5 text-xs font-semibold",
+                      (r.billableShare ?? 0) >= 80 ? "bg-success-soft text-success-foreground" : "bg-warning-soft text-warning-foreground"
+                    )}
+                  >
+                    {t("anBillableShare", { share: Math.round(r.billableShare ?? 0) })}
                   </span>
                 </div>
               </div>
@@ -148,7 +118,7 @@ export function AiComputeMeteringCard() {
 
       {/* Operational Explanation Paragraph */}
       <div className="mt-4 border-t border-border/40 pt-3 text-xs leading-relaxed text-muted-foreground">
-        <span className="font-semibold text-foreground">Infrastructure Telemetry: </span>
+        <span className="font-semibold text-foreground">{t("anCapacitySummary")} </span>
         {explanation}
       </div>
     </div>
