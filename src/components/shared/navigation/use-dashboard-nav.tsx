@@ -100,6 +100,13 @@ export function useDashboardNav() {
             descriptionKey: "pageDescOverview",
             permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
           },
+          {
+            title: t("erpReports"),
+            url: "/dashboard/reports",
+            icon: FileText,
+            descriptionKey: "pageDescErpReports",
+            permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
+          },
         ],
       },
       {

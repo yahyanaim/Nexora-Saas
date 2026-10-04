@@ -1,0 +1,338 @@
+import type { Client, Department, Employee } from "@/types/workforce"
+import { BudgetType, type WorkProject, type WorkTask } from "@/types/work-projects"
+import { ClientInvoiceStatus, InvoiceKind, TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/work-billing"
+import { ExpenseStatus, type Expense } from "@/types/work-costs"
+import type { LeaveRequest } from "@/types/work-planning"
+import { AGING_BUCKETS, displayStatus, entryBillRate, entryCostRate, invoiceBalance, invoiceTotals, receivablesAging, toBase } from "./billing"
+import { employeeKpis } from "./kpis"
+import { todayIso } from "./project-metrics"
+
+/**
+ * The standard reports (RPT-4). Every report takes the same filters and
+ * returns typed columns and rows, ready for the screen, Excel, CSV or PDF.
+ * Cost, profit and margin columns are marked `sensitive` and removed here,
+ * before anything is displayed or exported, for people without the cost
+ * permission (RPT-8).
+ */
+
+export type ReportId = "timesheet" | "billable" | "unbilled" | "invoices" | "aging" | "expenses" | "profitability"
+export const REPORT_IDS: ReportId[] = ["timesheet", "billable", "unbilled", "invoices", "aging", "expenses", "profitability"]
+
+export type ColumnType = "text" | "date" | "hours" | "money" | "percent" | "number"
+export interface ReportColumn {
+  key: string
+  /** Translation key of the header */
+  label: string
+  type: ColumnType
+  sensitive?: boolean
+}
+export type ReportRow = Record<string, string | number | null>
+
+export interface ReportFilters {
+  from: string
+  to: string
+  clientId?: string
+  projectId?: string
+  employeeId?: string
+  departmentId?: string
+}
+
+export interface ReportData {
+  entries: TimeEntry[]
+  invoices: ClientInvoice[]
+  projects: WorkProject[]
+  clients: Client[]
+  employees: Employee[]
+  departments: Department[]
+  expenses: Expense[]
+  tasks: WorkTask[]
+  leave: LeaveRequest[]
+  holidays?: string[]
+}
+
+export interface Report {
+  id: ReportId
+  columns: ReportColumn[]
+  rows: ReportRow[]
+  /** Sums of the numeric columns, for the total line */
+  totals: ReportRow
+}
+
+const r2 = (n: number) => Math.round(n * 100) / 100
+const r1 = (n: number) => Math.round(n * 10) / 10
+
+export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, opts: { canSeeCosts: boolean; today?: string }): Report {
+  const today = opts.today ?? todayIso()
+  const projectById = new Map(data.projects.map((p) => [p.id, p]))
+  const clientById = new Map(data.clients.map((c) => [c.id, c]))
+  const employeeById = new Map(data.employees.map((e) => [e.id, e]))
+  const deptName = (id?: string) => data.departments.find((d) => d.id === id)?.name ?? ""
+  const inPeriod = (d: string) => d >= f.from && d <= f.to
+  const personOk = (employeeId: string) => {
+    if (f.employeeId && employeeId !== f.employeeId) return false
+    if (f.departmentId && employeeById.get(employeeId)?.departmentId !== f.departmentId) return false
+    return true
+  }
+  const projectOk = (projectId?: string) => {
+    if (f.projectId && projectId !== f.projectId) return false
+    if (f.clientId && (!projectId || projectById.get(projectId)?.clientId !== f.clientId)) return false
+    return true
+  }
+  const entries = data.entries.filter((e) => inPeriod(e.date) && e.status !== TimeEntryStatus.REJECTED && personOk(e.employeeId) && projectOk(e.projectId))
+  const rateOf = (e: TimeEntry) => {
+    const project = projectById.get(e.projectId)
+    return entryBillRate(e, employeeById.get(e.employeeId), project?.clientId ? clientById.get(project.clientId) : undefined)
+  }
+  const isHourlyBillable = (e: TimeEntry) => e.billable && projectById.get(e.projectId)?.budgetType === BudgetType.HOURLY
+
+  let columns: ReportColumn[] = []
+  let rows: ReportRow[] = []
+
+  switch (id) {
+    case "timesheet": {
+      columns = [
+        { key: "date", label: "date", type: "date" },
+        { key: "employee", label: "repEmployee", type: "text" },
+        { key: "department", label: "repDepartment", type: "text" },
+        { key: "client", label: "client", type: "text" },
+        { key: "project", label: "project", type: "text" },
+        { key: "hours", label: "hours", type: "hours" },
+        { key: "billable", label: "repBillable", type: "text" },
+        { key: "status", label: "status", type: "text" },
+        { key: "cost", label: "repCost", type: "money", sensitive: true },
+      ]
+      rows = entries
+        .slice()
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((e) => {
+          const employee = employeeById.get(e.employeeId)
+          const project = projectById.get(e.projectId)
+          return {
+            date: e.date,
+            employee: employee?.name ?? "",
+            department: deptName(employee?.departmentId),
+            client: project?.clientId ? (clientById.get(project.clientId)?.name ?? "") : "",
+            project: project ? `${project.code} · ${project.name}` : "",
+            hours: e.hours,
+            billable: e.billable ? "yes" : "no",
+            status: e.invoiceId ? "invoiced" : e.status,
+            cost: r2(e.hours * entryCostRate(e, employee)),
+          }
+        })
+      break
+    }
+    case "billable": {
+      columns = [
+        { key: "employee", label: "repEmployee", type: "text" },
+        { key: "department", label: "repDepartment", type: "text" },
+        { key: "available", label: "repAvailableHours", type: "hours" },
+        { key: "logged", label: "repLoggedHours", type: "hours" },
+        { key: "billableHours", label: "anBillableHours", type: "hours" },
+        { key: "utilization", label: "anUtilization", type: "percent" },
+        { key: "value", label: "repBillableValue", type: "money" },
+        { key: "cost", label: "repCost", type: "money", sensitive: true },
+      ]
+      rows = data.employees
+        .filter((e) => e.billableRate > 0 && personOk(e.id))
+        .map((employee) => {
+          const k = employeeKpis(employee, { entries: entries, tasks: data.tasks, projects: data.projects, clients: data.clients, leave: data.leave, holidays: data.holidays }, f.from, f.to)
+          const mine = entries.filter((e) => e.employeeId === employee.id)
+          return {
+            employee: employee.name,
+            department: deptName(employee.departmentId),
+            available: k.availableHours,
+            logged: k.loggedHours,
+            billableHours: k.billableHours,
+            utilization: k.utilization,
+            value: r2(mine.filter(isHourlyBillable).reduce((s, e) => s + e.hours * rateOf(e), 0)),
+            cost: r2(mine.reduce((s, e) => s + e.hours * entryCostRate(e, employee), 0)),
+          }
+        })
+      break
+    }
+    case "unbilled": {
+      columns = [
+        { key: "client", label: "client", type: "text" },
+        { key: "project", label: "project", type: "text" },
+        { key: "entries", label: "repEntries", type: "number" },
+        { key: "hours", label: "hours", type: "hours" },
+        { key: "value", label: "repValue", type: "money" },
+        { key: "oldest", label: "repOldest", type: "date" },
+      ]
+      const groups = new Map<string, TimeEntry[]>()
+      for (const e of entries) {
+        if (e.status !== TimeEntryStatus.APPROVED || e.invoiceId || !isHourlyBillable(e)) continue
+        groups.set(e.projectId, [...(groups.get(e.projectId) ?? []), e])
+      }
+      rows = [...groups.entries()].map(([projectId, list]) => {
+        const project = projectById.get(projectId)
+        return {
+          client: project?.clientId ? (clientById.get(project.clientId)?.name ?? "") : "",
+          project: project ? `${project.code} · ${project.name}` : "",
+          entries: list.length,
+          hours: r2(list.reduce((s, e) => s + e.hours, 0)),
+          value: r2(list.reduce((s, e) => s + e.hours * rateOf(e), 0)),
+          oldest: list.map((e) => e.date).sort()[0] ?? null,
+        }
+      })
+      rows.sort((a, b) => Number(b.value) - Number(a.value))
+      break
+    }
+    case "invoices": {
+      columns = [
+        { key: "number", label: "invoiceNumber", type: "text" },
+        { key: "client", label: "client", type: "text" },
+        { key: "issueDate", label: "issueDate", type: "date" },
+        { key: "dueDate", label: "dueDate", type: "date" },
+        { key: "status", label: "status", type: "text" },
+        { key: "subtotal", label: "subtotal", type: "money" },
+        { key: "tax", label: "tax", type: "money" },
+        { key: "total", label: "total", type: "money" },
+        { key: "balance", label: "balanceDue", type: "money" },
+      ]
+      rows = data.invoices
+        .filter((i) => i.status !== ClientInvoiceStatus.DRAFT && inPeriod(i.issueDate))
+        .filter((i) => !f.clientId || i.clientId === f.clientId)
+        .filter((i) => !f.projectId || i.lines.some((l) => l.projectId === f.projectId))
+        .sort((a, b) => a.issueDate.localeCompare(b.issueDate))
+        .map((i) => {
+          const t = invoiceTotals(i)
+          const sign = i.kind === InvoiceKind.CREDIT_NOTE ? -1 : 1
+          return {
+            number: i.number,
+            client: clientById.get(i.clientId)?.name ?? "",
+            issueDate: i.issueDate,
+            dueDate: i.dueDate,
+            status: displayStatus(i, today, data.invoices),
+            subtotal: toBase(sign * Math.abs(t.subtotal), i),
+            tax: toBase(sign * Math.abs(t.tax), i),
+            total: toBase(sign * Math.abs(t.total), i),
+            balance: toBase(invoiceBalance(i, data.invoices), i),
+          }
+        })
+      break
+    }
+    case "aging": {
+      columns = [
+        { key: "client", label: "client", type: "text" },
+        { key: "count", label: "invoices", type: "number" },
+        { key: "current", label: "agingCurrent", type: "money" },
+        { key: "d1_30", label: "aging1to30", type: "money" },
+        { key: "d31_60", label: "aging31to60", type: "money" },
+        { key: "d61_90", label: "aging61to90", type: "money" },
+        { key: "d90_plus", label: "aging90plus", type: "money" },
+        { key: "total", label: "total", type: "money" },
+      ]
+      // Aging is a snapshot as of the end of the period
+      const scope = data.invoices.filter((i) => i.issueDate <= f.to && (!f.clientId || i.clientId === f.clientId))
+      rows = [...receivablesAging(scope, f.to).entries()]
+        .map(([clientId, b]) => ({ client: clientById.get(clientId)?.name ?? "", count: b.count, ...Object.fromEntries(AGING_BUCKETS.map((k) => [k, b[k]])), total: b.total }))
+        .sort((a, b) => Number(b.total) - Number(a.total))
+      break
+    }
+    case "expenses": {
+      columns = [
+        { key: "date", label: "date", type: "date" },
+        { key: "employee", label: "repEmployee", type: "text" },
+        { key: "project", label: "project", type: "text" },
+        { key: "category", label: "repCategory", type: "text" },
+        { key: "description", label: "repDescription", type: "text" },
+        { key: "status", label: "status", type: "text" },
+        { key: "billable", label: "repBillable", type: "text" },
+        { key: "amount", label: "amount", type: "money" },
+      ]
+      rows = data.expenses
+        .filter((x) => inPeriod(x.date) && personOk(x.employeeId) && (f.projectId || f.clientId ? projectOk(x.projectId) : true))
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map((x) => {
+          const project = x.projectId ? projectById.get(x.projectId) : undefined
+          return {
+            date: x.date,
+            employee: employeeById.get(x.employeeId)?.name ?? "",
+            project: project ? `${project.code} · ${project.name}` : "",
+            category: x.category,
+            description: x.description,
+            status: x.status,
+            billable: x.billable ? "yes" : "no",
+            amount: x.amount,
+          }
+        })
+      break
+    }
+    case "profitability": {
+      columns = [
+        { key: "project", label: "project", type: "text" },
+        { key: "client", label: "client", type: "text" },
+        { key: "hours", label: "hours", type: "hours" },
+        { key: "revenue", label: "anRevenueEarned", type: "money" },
+        { key: "laborCost", label: "anLaborCost", type: "money", sensitive: true },
+        { key: "expenses", label: "expenses", type: "money" },
+        { key: "profit", label: "anGrossProfit", type: "money", sensitive: true },
+        { key: "margin", label: "anGrossMargin", type: "percent", sensitive: true },
+      ]
+      const byProject = new Map<string, { hours: number; revenue: number; cost: number; expenses: number }>()
+      const get = (id: string) => byProject.get(id) ?? byProject.set(id, { hours: 0, revenue: 0, cost: 0, expenses: 0 }).get(id)!
+      for (const e of entries) {
+        const row = get(e.projectId)
+        row.hours += e.hours
+        row.cost += e.hours * entryCostRate(e, employeeById.get(e.employeeId))
+        if (e.status === TimeEntryStatus.APPROVED && isHourlyBillable(e)) row.revenue += e.hours * rateOf(e)
+      }
+      // Fixed-price, milestone and retainer revenue comes from invoices issued in the period
+      for (const inv of data.invoices) {
+        if (inv.status === ClientInvoiceStatus.DRAFT || inv.status === ClientInvoiceStatus.VOID || !inPeriod(inv.issueDate)) continue
+        if (inv.kind !== InvoiceKind.FIXED && inv.kind !== InvoiceKind.MILESTONE && inv.kind !== InvoiceKind.RETAINER) continue
+        for (const line of inv.lines) {
+          if (!line.projectId || !projectOk(line.projectId)) continue
+          get(line.projectId).revenue += toBase(line.quantity * line.unitPrice, inv)
+        }
+      }
+      for (const x of data.expenses) {
+        if (!x.projectId || !inPeriod(x.date) || x.status === ExpenseStatus.REJECTED || x.status === ExpenseStatus.SUBMITTED) continue
+        if (!projectOk(x.projectId) || (f.employeeId || f.departmentId ? !personOk(x.employeeId) : false)) continue
+        get(x.projectId).expenses += x.amount
+      }
+      rows = [...byProject.entries()]
+        .map(([projectId, v]) => {
+          const project = projectById.get(projectId)
+          const profit = v.revenue - v.cost - v.expenses
+          return {
+            project: project ? `${project.code} · ${project.name}` : "",
+            client: project?.clientId ? (clientById.get(project.clientId)?.name ?? "") : "",
+            hours: r2(v.hours),
+            revenue: r2(v.revenue),
+            laborCost: r2(v.cost),
+            expenses: r2(v.expenses),
+            profit: r2(profit),
+            margin: v.revenue > 0 ? r1((profit / v.revenue) * 100) : null,
+          }
+        })
+        .sort((a, b) => Number(b.revenue) - Number(a.revenue))
+      break
+    }
+  }
+
+  // RPT-8: sensitive columns never leave this function for people without the cost permission
+  if (!opts.canSeeCosts) {
+    const hidden = columns.filter((c) => c.sensitive).map((c) => c.key)
+    columns = columns.filter((c) => !c.sensitive)
+    rows = rows.map((row) => Object.fromEntries(Object.entries(row).filter(([k]) => !hidden.includes(k))))
+  }
+
+  const totals: ReportRow = {}
+  for (const c of columns) {
+    if (c.type === "hours" || c.type === "money" || c.type === "number") {
+      totals[c.key] = r2(rows.reduce((s, r) => s + (typeof r[c.key] === "number" ? (r[c.key] as number) : 0), 0))
+    }
+  }
+  // Ratios are recomputed from their parts, never summed
+  if (id === "billable" && columns.some((c) => c.key === "utilization")) {
+    const avail = Number(totals.available ?? 0)
+    totals.utilization = avail > 0 ? Math.round((Number(totals.billableHours ?? 0) / avail) * 100) : null
+  }
+  if (id === "profitability" && columns.some((c) => c.key === "margin")) {
+    const rev = Number(totals.revenue ?? 0)
+    totals.margin = rev > 0 ? r1((Number(totals.profit ?? 0) / rev) * 100) : null
+  }
+  return { id, columns, rows, totals }
+}
