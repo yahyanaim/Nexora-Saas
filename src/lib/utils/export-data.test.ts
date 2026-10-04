@@ -84,4 +84,12 @@ describe("export-data utils", () => {
     appendSpy.mockRestore()
     removeSpy.mockRestore()
   })
+
+  it("neutralizes cells a spreadsheet would run as formulas", async () => {
+    const { neutralizeFormula } = await import("./export-data")
+    for (const bad of ["=1+1", "+cmd", "-2+3", "@SUM(A1)", "\tx", "\rx"]) {
+      expect(neutralizeFormula(bad)).toBe(`'${bad}`)
+    }
+    expect(neutralizeFormula("Atlas Consulting")).toBe("Atlas Consulting")
+  })
 })

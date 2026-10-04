@@ -1,6 +1,7 @@
 import { Transaction } from "@/types/transactions"
 import { getMoroccanFiscalConfig } from "@/lib/demo-data/taxes"
 import type { JsPDFWithAutoTable } from "@/types/pdf"
+import { escapeHtml } from "@/lib/utils/sanitize"
 
 /**
  * Returns a payment method display string (e.g., "Visa ending in 4242").
@@ -13,7 +14,7 @@ function getPaymentMethodDisplay(transaction: Transaction): string {
     return `Visa ending in ${lastDigits}`
   }
   if (m === "paypal") {
-    return `PayPal (${transaction.user?.email || "verified"})`
+    return `PayPal (${escapeHtml(transaction.user?.email || "verified")})`
   }
   if (m === "bank-transfer") {
     return "ACH Direct Debit (•••• 6710)"
@@ -50,7 +51,7 @@ export function getReceiptHtml(transaction: Transaction): string {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Receipt ${transaction.transactionId} - Nexora</title>
+  <title>Receipt ${escapeHtml(transaction.transactionId)} - Nexora</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -416,16 +417,16 @@ export function getReceiptHtml(transaction: Transaction): string {
         <div class="brand-group">
           <img src="/app-logo.png" alt="Nexora Logo" class="brand-logo-img" style="width: 44px; height: 44px; object-fit: contain; border-radius: 10px;" />
           <div class="brand-meta">
-            <h2>${fiscal.companyName}</h2>
-            <p>${fiscal.address}, ${fiscal.city}, ${fiscal.country}</p>
+            <h2>${escapeHtml(fiscal.companyName)}</h2>
+            <p>${escapeHtml(fiscal.address)}, ${escapeHtml(fiscal.city)}, ${escapeHtml(fiscal.country)}</p>
             <p style="font-size: 11px; color: #64748b; font-family: 'JetBrains Mono', monospace; margin-top: 2px;">
-              ICE: <strong>${fiscal.ice}</strong> · IF: <strong>${fiscal.ifNumber}</strong> · RC: <strong>${fiscal.rcNumber}</strong> · TP: <strong>${fiscal.patente}</strong>
+              ICE: <strong>${escapeHtml(fiscal.ice)}</strong> · IF: <strong>${escapeHtml(fiscal.ifNumber)}</strong> · RC: <strong>${escapeHtml(fiscal.rcNumber)}</strong> · TP: <strong>${escapeHtml(fiscal.patente)}</strong>
             </p>
           </div>
         </div>
         <div class="receipt-heading">
           <h1>Payment Receipt</h1>
-          <div class="receipt-id-tag">REC-${transaction.transactionId}</div>
+          <div class="receipt-id-tag">REC-${escapeHtml(transaction.transactionId)}</div>
           <div class="status-badge ${isPaid ? 'paid' : 'pending'}">
             ${isPaid ? '✓ Paid in Full' : transaction.status.toUpperCase()}
           </div>
@@ -450,15 +451,15 @@ export function getReceiptHtml(transaction: Transaction): string {
           <div class="info-card-header">Customer Details</div>
           <div class="info-line">
             <span class="label">Billed To</span>
-            <span class="val">${transaction.user?.name || "Corporate Customer"}</span>
+            <span class="val">${escapeHtml(transaction.user?.name || "Corporate Customer")}</span>
           </div>
           <div class="info-line">
             <span class="label">Email</span>
-            <span class="val">${transaction.user?.email || "billing@client.com"}</span>
+            <span class="val">${escapeHtml(transaction.user?.email || "billing@client.com")}</span>
           </div>
           <div class="info-line">
             <span class="label">Account ID</span>
-            <span class="val">${transaction.user?.id || "NEX-USR-01"}</span>
+            <span class="val">${escapeHtml(transaction.user?.id || "NEX-USR-01")}</span>
           </div>
           <div class="info-line">
             <span class="label">Verification</span>
@@ -470,15 +471,15 @@ export function getReceiptHtml(transaction: Transaction): string {
           <div class="info-card-header">Payment Summary</div>
           <div class="info-line">
             <span class="label">Payment Method</span>
-            <span class="val">${paymentMethod}</span>
+            <span class="val">${escapeHtml(paymentMethod)}</span>
           </div>
           <div class="info-line">
             <span class="label">Transaction ID</span>
-            <span class="val">${transaction.transactionId}</span>
+            <span class="val">${escapeHtml(transaction.transactionId)}</span>
           </div>
           <div class="info-line">
             <span class="label">Reference ID</span>
-            <span class="val">${transaction.reference || 'REF-' + transaction.transactionId}</span>
+            <span class="val">${escapeHtml(transaction.reference || 'REF-' + transaction.transactionId)}</span>
           </div>
           <div class="info-line">
             <span class="label">Payment Status</span>
@@ -501,7 +502,7 @@ export function getReceiptHtml(transaction: Transaction): string {
           <tbody>
             <tr>
               <td>
-                <div class="item-title">${itemDesc}</div>
+                <div class="item-title">${escapeHtml(itemDesc)}</div>
                 <div class="item-desc">Enterprise Workspace, AI inference metering, compute resources & 99.99% SLA</div>
               </td>
               <td class="text-center">Monthly</td>
@@ -539,15 +540,15 @@ export function getReceiptHtml(transaction: Transaction): string {
       <div class="compliance-footer">
         <div>
           <div class="compliance-title">Merchant of Record & Fiscal Compliance</div>
-          <p><strong>${fiscal.companyName}</strong></p>
-          <p>${fiscal.address} · ${fiscal.city}, ${fiscal.country}</p>
-          <p>ICE: ${fiscal.ice} · IF: ${fiscal.ifNumber} · RC: ${fiscal.rcNumber} · TP: ${fiscal.patente}</p>
+          <p><strong>${escapeHtml(fiscal.companyName)}</strong></p>
+          <p>${escapeHtml(fiscal.address)} · ${escapeHtml(fiscal.city)}, ${escapeHtml(fiscal.country)}</p>
+          <p>ICE: ${escapeHtml(fiscal.ice)} · IF: ${escapeHtml(fiscal.ifNumber)} · RC: ${escapeHtml(fiscal.rcNumber)} · TP: ${escapeHtml(fiscal.patente)}</p>
           <p>Inquiries: <a href="mailto:billing@nexora.io" style="color: #0f62fe; text-decoration: none;">billing@nexora.io</a></p>
         </div>
         <div>
           <div class="compliance-title">Electronic Confirmation</div>
           <p>This electronic receipt confirms your payment for services rendered under your Master Services Agreement.</p>
-          <div class="verification-stamp">VERIFICATION: SHA256-REC-${transaction.transactionId}-VALID</div>
+          <div class="verification-stamp">VERIFICATION: SHA256-REC-${escapeHtml(transaction.transactionId)}-VALID</div>
         </div>
       </div>
 
@@ -658,7 +659,7 @@ export async function generateReceiptPdf(transaction: Transaction): Promise<void
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2])
-  doc.text(`NO: REC-${transaction.transactionId}`, pageWidth - rightMargin, currentY + 5, { align: "right" })
+  doc.text(`NO: REC-${escapeHtml(transaction.transactionId)}`, pageWidth - rightMargin, currentY + 5, { align: "right" })
 
   // Status Badge
   const isPaid = (transaction.status || "").toLowerCase() === "paid"
@@ -746,8 +747,8 @@ export async function generateReceiptPdf(transaction: Transaction): Promise<void
   doc.setFont("helvetica", "normal")
   doc.setFontSize(8)
   doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2])
-  doc.text(`Email: ${transaction.user?.email || "billing@client.com"}`, leftMargin + 6, currentY + 18.5)
-  doc.text(`Customer ID: ${transaction.user?.id || "NEX-USR-01"}`, leftMargin + 6, currentY + 23.5)
+  doc.text(`Email: ${escapeHtml(transaction.user?.email || "billing@client.com")}`, leftMargin + 6, currentY + 18.5)
+  doc.text(`Customer ID: ${escapeHtml(transaction.user?.id || "NEX-USR-01")}`, leftMargin + 6, currentY + 23.5)
   doc.text("Verification: Verified Enterprise Account", leftMargin + 6, currentY + 28.5)
 
   // Card 2: Payment Details
@@ -774,7 +775,7 @@ export async function generateReceiptPdf(transaction: Transaction): Promise<void
   doc.setTextColor(darkNavy[0], darkNavy[1], darkNavy[2])
   doc.text(paymentMethod, rightColX + 28, currentY + 13)
   doc.text(transaction.transactionId, rightColX + 28, currentY + 18.5)
-  doc.text(transaction.reference || `REF-${transaction.transactionId}`, rightColX + 28, currentY + 23.5)
+  doc.text(transaction.reference || `REF-${escapeHtml(transaction.transactionId)}`, rightColX + 28, currentY + 23.5)
   doc.setTextColor(isPaid ? emeraldSuccess[0] : 180, isPaid ? emeraldSuccess[1] : 83, isPaid ? emeraldSuccess[2] : 9)
   doc.text(isPaid ? "Settled & Reconciled" : transaction.status, rightColX + 28, currentY + 28.5)
 
@@ -790,7 +791,7 @@ export async function generateReceiptPdf(transaction: Transaction): Promise<void
     head: [["ITEM & DESCRIPTION", "CYCLE", "QTY", "RATE", "AMOUNT"]],
     body: [
       [
-        `${itemTitle}\nEnterprise compute allocation, AI inference telemetry & seat license`,
+        `${escapeHtml(itemTitle)}\nEnterprise compute allocation, AI inference telemetry & seat license`,
         "Monthly",
         "1",
         amountStr,
@@ -874,13 +875,13 @@ export async function generateReceiptPdf(transaction: Transaction): Promise<void
   doc.setFont("helvetica", "bold")
   doc.setFontSize(8)
   doc.setTextColor(darkNavy[0], darkNavy[1], darkNavy[2])
-  doc.text(`${fiscal.companyName} · Merchant of Record & Fiscal Compliance`, leftMargin + 6, currentY + 5.5)
+  doc.text(`${escapeHtml(fiscal.companyName)} · Merchant of Record & Fiscal Compliance`, leftMargin + 6, currentY + 5.5)
 
   doc.setFont("helvetica", "normal")
   doc.setFontSize(7.5)
   doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2])
-  doc.text(`${fiscal.address}, ${fiscal.city}, ${fiscal.country} | billing@nexora.io`, leftMargin + 6, currentY + 10)
-  doc.text(`ICE: ${fiscal.ice} · IF: ${fiscal.ifNumber} · RC: ${fiscal.rcNumber} | Cryptographic Auth: SHA256-REC-${transaction.transactionId}-VALID`, leftMargin + 6, currentY + 15)
+  doc.text(`${escapeHtml(fiscal.address)}, ${escapeHtml(fiscal.city)}, ${escapeHtml(fiscal.country)} | billing@nexora.io`, leftMargin + 6, currentY + 10)
+  doc.text(`ICE: ${escapeHtml(fiscal.ice)} · IF: ${escapeHtml(fiscal.ifNumber)} · RC: ${escapeHtml(fiscal.rcNumber)} | Cryptographic Auth: SHA256-REC-${escapeHtml(transaction.transactionId)}-VALID`, leftMargin + 6, currentY + 15)
 
   // --- Bottom Footer ---
   const footerY = pageHeight - 10
@@ -891,9 +892,9 @@ export async function generateReceiptPdf(transaction: Transaction): Promise<void
   doc.setFontSize(6.5)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2])
-  doc.text(`${fiscal.companyName} · ${fiscal.address}, ${fiscal.city} · ICE: ${fiscal.ice} · IF: ${fiscal.ifNumber}`, leftMargin, footerY)
+  doc.text(`${escapeHtml(fiscal.companyName)} · ${escapeHtml(fiscal.address)}, ${escapeHtml(fiscal.city)} · ICE: ${escapeHtml(fiscal.ice)} · IF: ${escapeHtml(fiscal.ifNumber)}`, leftMargin, footerY)
   doc.text("Official Receipt · Page 1 of 1", pageWidth - rightMargin, footerY, { align: "right" })
 
   // Trigger download
-  doc.save(`receipt-${transaction.transactionId}.pdf`)
+  doc.save(`receipt-${escapeHtml(transaction.transactionId)}.pdf`)
 }

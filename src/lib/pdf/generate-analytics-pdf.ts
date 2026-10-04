@@ -5,6 +5,7 @@
  */
 
 import type { JsPDFWithAutoTable } from "@/types/pdf"
+import { escapeHtml } from "@/lib/utils/sanitize"
 
 export interface AnalyticsPdfOptions {
   workspace?: string
@@ -340,7 +341,7 @@ export async function generateAnalyticsPdf(options?: AnalyticsPdfOptions): Promi
   doc.setFont("helvetica", "normal")
   doc.setFontSize(6.8)
   doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2])
-  doc.text(`Daily recurring volume performance · ${dateRange} (${compareMode})`, leftMargin + 6, currentY + 10.5)
+  doc.text(`Daily recurring volume performance · ${escapeHtml(dateRange)} (${escapeHtml(compareMode)})`, leftMargin + 6, currentY + 10.5)
 
   // Legend on Right
   const legX = pageWidth - rightMargin - 66
@@ -1157,15 +1158,15 @@ export function getAnalyticsReportHtml(options?: AnalyticsPdfOptions): string {
       <div class="scope-card">
         <div class="scope-item">
           <small>WORKSPACE</small>
-          <span>${workspace}</span>
+          <span>${escapeHtml(workspace)}</span>
         </div>
         <div class="scope-item">
           <small>TIMEFRAME</small>
-          <span>${dateRange}</span>
+          <span>${escapeHtml(dateRange)}</span>
         </div>
         <div class="scope-item">
           <small>COMPARISON</small>
-          <span>${compareMode}</span>
+          <span>${escapeHtml(compareMode)}</span>
         </div>
         <div class="scope-item">
           <small>CURRENCY</small>

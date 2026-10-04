@@ -6,6 +6,19 @@ export interface ExportColumn<T = Record<string, unknown>> {
 }
 
 /**
+ * Text that a spreadsheet would run as a formula (=, +, -, @, tab, carriage
+ * return) gets a leading apostrophe so it opens as plain text. Numbers are
+ * left alone, so negative amounts stay numeric.
+ */
+export function neutralizeFormula(str: string): string {
+  return /^[=+\-@\t\r]/.test(str) ? `'${str}` : str
+}
+
+function quote(str: string): string {
+  return `"${neutralizeFormula(str).replace(/"/g, '""')}"`
+}
+
+/**
  * Formats a single value safely for CSV export.
  * Handles quotes, commas, newlines, objects, and dates.
  */
@@ -14,24 +27,21 @@ function formatCsvValue(val: unknown): string {
     return '""'
   }
 
+  if (typeof val === "number" || typeof val === "bigint") return `"${val}"`
+
   if (typeof val === "object") {
     if (val instanceof Date) {
       return `"${val.toISOString()}"`
     }
     // For nested objects (e.g. { name: "..." }), try reading name or title or stringify
     const obj = val as Record<string, unknown>
-    if (obj.name) return `"${String(obj.name).replace(/"/g, '""')}"`
-    if (obj.title) return `"${String(obj.title).replace(/"/g, '""')}"`
-    if (obj.email) return `"${String(obj.email).replace(/"/g, '""')}"`
-    return `"${JSON.stringify(val).replace(/"/g, '""')}"`
+    if (obj.name) return quote(String(obj.name))
+    if (obj.title) return quote(String(obj.title))
+    if (obj.email) return quote(String(obj.email))
+    return quote(JSON.stringify(val))
   }
 
-  const str = String(val)
-  if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
-    return `"${str.replace(/"/g, '""')}"`
-  }
-
-  return `"${str}"`
+  return quote(String(val))
 }
 
 /**
@@ -56,7 +66,7 @@ export function exportToCsv<T extends Record<string, unknown>>(
         ? columns
         : Object.keys(data[0] || {}).map((k) => ({ key: k, label: k }))
 
-    const headerRow = cols.map((c) => `"${c.label.replace(/"/g, '""')}"`).join(",")
+    const headerRow = cols.map((c) => quote(c.label)).join(",")
 
     const rows = data.map((item) => {
       return cols

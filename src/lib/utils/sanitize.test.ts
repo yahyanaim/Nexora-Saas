@@ -146,3 +146,11 @@ describe("ALLOWED_TAGS and ALLOWED_ATTR", () => {
     expect(ALLOWED_ATTR).toContain("href")
   })
 })
+
+describe("escapeHtml", () => {
+  it("escapes markup characters", async () => {
+    const { escapeHtml } = await import("./sanitize")
+    expect(escapeHtml(`<img src=x onerror="a('b')">&`)).toBe("&lt;img src=x onerror=&quot;a(&#39;b&#39;)&quot;&gt;&amp;")
+    expect(escapeHtml(undefined)).toBe("")
+  })
+})

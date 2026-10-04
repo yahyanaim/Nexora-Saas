@@ -1,6 +1,7 @@
 import { Invoice, InvoiceStatus } from "@/types/invoices"
 import { getMoroccanFiscalConfig } from "@/lib/demo-data/taxes"
 import type { JsPDFWithAutoTable } from "@/types/pdf"
+import { escapeHtml } from "@/lib/utils/sanitize"
 
 /**
  * Loads the Nexora app logo as an HTMLImageElement for canvas / jsPDF embedding.
@@ -60,11 +61,11 @@ export function getInvoiceHtml(invoice: Invoice): string {
       (item) => `
       <tr>
         <td>
-          <div class="item-title">${item.description}</div>
+          <div class="item-title">${escapeHtml(item.description)}</div>
           <div class="item-desc">Enterprise compute allocation, API telemetry access & 99.99% uptime SLA</div>
         </td>
         <td class="text-center">Monthly</td>
-        <td class="text-center">${item.quantity}</td>
+        <td class="text-center">${escapeHtml(item.quantity)}</td>
         <td class="text-right">${formatMoney(item.unitPrice)}</td>
         <td class="text-right font-bold">${formatMoney(item.quantity * item.unitPrice)}</td>
       </tr>
@@ -76,7 +77,7 @@ export function getInvoiceHtml(invoice: Invoice): string {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Invoice ${invoice.invoiceNumber} - Nexora</title>
+  <title>Invoice ${escapeHtml(invoice.invoiceNumber)} - Nexora</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -459,17 +460,17 @@ export function getInvoiceHtml(invoice: Invoice): string {
         <div class="brand-side">
           <img src="/app-logo.png" alt="Nexora Logo" class="logo-img" />
           <div>
-            <h2>${fiscal.companyName}</h2>
-            <p>${fiscal.address}, ${fiscal.city}, ${fiscal.country}</p>
+            <h2>${escapeHtml(fiscal.companyName)}</h2>
+            <p>${escapeHtml(fiscal.address)}, ${escapeHtml(fiscal.city)}, ${escapeHtml(fiscal.country)}</p>
             <p style="font-size: 11px; color: #64748b; font-family: 'JetBrains Mono', monospace; margin-top: 3px;">
-              ICE: <strong>${fiscal.ice}</strong> · IF: <strong>${fiscal.ifNumber}</strong> · RC: <strong>${fiscal.rcNumber}</strong> · TP: <strong>${fiscal.patente}</strong>
+              ICE: <strong>${escapeHtml(fiscal.ice)}</strong> · IF: <strong>${escapeHtml(fiscal.ifNumber)}</strong> · RC: <strong>${escapeHtml(fiscal.rcNumber)}</strong> · TP: <strong>${escapeHtml(fiscal.patente)}</strong>
             </p>
           </div>
         </div>
         <div class="invoice-meta">
           <h1>INVOICE</h1>
-          <div class="invoice-number">${invoice.invoiceNumber}</div>
-          <div class="status-badge ${statusClass}">${statusLabel}</div>
+          <div class="invoice-number">${escapeHtml(invoice.invoiceNumber)}</div>
+          <div class="status-badge ${statusClass}">${escapeHtml(statusLabel)}</div>
         </div>
       </div>
 
@@ -497,15 +498,15 @@ export function getInvoiceHtml(invoice: Invoice): string {
           <div class="info-card-title">Billed To (Customer)</div>
           <div class="info-item">
             <span class="label">Customer Name</span>
-            <span class="val">${invoice.user.name}</span>
+            <span class="val">${escapeHtml(invoice.user.name)}</span>
           </div>
           <div class="info-item">
             <span class="label">Email Address</span>
-            <span class="val">${invoice.user.email}</span>
+            <span class="val">${escapeHtml(invoice.user.email)}</span>
           </div>
           <div class="info-item">
             <span class="label">Customer ID</span>
-            <span class="val">${invoice.user.id}</span>
+            <span class="val">${escapeHtml(invoice.user.id)}</span>
           </div>
           <div class="info-item">
             <span class="label">Account Status</span>
@@ -517,11 +518,11 @@ export function getInvoiceHtml(invoice: Invoice): string {
           <div class="info-card-title">Payment & Reference</div>
           <div class="info-item">
             <span class="label">Payment Method</span>
-            <span class="val">${invoice.method ? invoice.method.toUpperCase().replace('_', ' ') : 'STRIPE'}</span>
+            <span class="val">${escapeHtml(invoice.method ? invoice.method.toUpperCase().replace('_', ' ') : 'STRIPE')}</span>
           </div>
           <div class="info-item">
             <span class="label">Invoice Number</span>
-            <span class="val">${invoice.invoiceNumber}</span>
+            <span class="val">${escapeHtml(invoice.invoiceNumber)}</span>
           </div>
           <div class="info-item">
             <span class="label">Billing Currency</span>
@@ -560,7 +561,7 @@ export function getInvoiceHtml(invoice: Invoice): string {
             <span class="t-val">${formatMoney(invoice.subtotal)}</span>
           </div>
           <div class="totals-row">
-            <span class="t-label">TVA Maroc (${invoice.taxRate}%)</span>
+            <span class="t-label">TVA Maroc (${escapeHtml(invoice.taxRate)}%)</span>
             <span class="t-val">${formatMoney(invoice.tax)}</span>
           </div>
           <div class="totals-row">
@@ -602,15 +603,15 @@ export function getInvoiceHtml(invoice: Invoice): string {
       <div class="compliance-footer">
         <div>
           <div class="compliance-title">Merchant of Record & Fiscal Compliance</div>
-          <p><strong>${fiscal.companyName}</strong></p>
-          <p>${fiscal.address} · ${fiscal.city}, ${fiscal.country}</p>
-          <p>ICE: ${fiscal.ice} · IF: ${fiscal.ifNumber} · RC: ${fiscal.rcNumber} · TP: ${fiscal.patente}</p>
+          <p><strong>${escapeHtml(fiscal.companyName)}</strong></p>
+          <p>${escapeHtml(fiscal.address)} · ${escapeHtml(fiscal.city)}, ${escapeHtml(fiscal.country)}</p>
+          <p>ICE: ${escapeHtml(fiscal.ice)} · IF: ${escapeHtml(fiscal.ifNumber)} · RC: ${escapeHtml(fiscal.rcNumber)} · TP: ${escapeHtml(fiscal.patente)}</p>
           <p>Facture électronique certifiée conforme aux exigences fiscales et comptables marocaines.</p>
         </div>
         <div>
           <div class="compliance-title">Terms & Conditions</div>
           <p>Payment due within 30 days of invoice date. All platform services are provided under the Nexora SaaS Master Services Agreement.</p>
-          <div class="verification-stamp">VERIFICATION: SHA256-INV-${invoice.invoiceNumber}-AUTHENTICATED</div>
+          <div class="verification-stamp">VERIFICATION: SHA256-INV-${escapeHtml(invoice.invoiceNumber)}-AUTHENTICATED</div>
         </div>
       </div>
 
@@ -708,8 +709,8 @@ export async function generateInvoicePdf(invoice: Invoice): Promise<void> {
   doc.setFont("helvetica", "normal")
   doc.setFontSize(7.5)
   doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2])
-  doc.text(`${fiscal.address}, ${fiscal.city} · ICE: ${fiscal.ice}`, leftMargin + 16, currentY + 4.5)
-  doc.text(`IF: ${fiscal.ifNumber} · RC: ${fiscal.rcNumber} · TP: ${fiscal.patente}`, leftMargin + 16, currentY + 8)
+  doc.text(`${escapeHtml(fiscal.address)}, ${escapeHtml(fiscal.city)} · ICE: ${escapeHtml(fiscal.ice)}`, leftMargin + 16, currentY + 4.5)
+  doc.text(`IF: ${escapeHtml(fiscal.ifNumber)} · RC: ${escapeHtml(fiscal.rcNumber)} · TP: ${escapeHtml(fiscal.patente)}`, leftMargin + 16, currentY + 8)
 
   // Document Title Right
   doc.setFont("helvetica", "bold")
@@ -720,7 +721,7 @@ export async function generateInvoicePdf(invoice: Invoice): Promise<void> {
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
   doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2])
-  doc.text(`NO: ${invoice.invoiceNumber}`, pageWidth - rightMargin, currentY + 5, { align: "right" })
+  doc.text(`NO: ${escapeHtml(invoice.invoiceNumber)}`, pageWidth - rightMargin, currentY + 5, { align: "right" })
 
   // Status Badge
   const isPaid = invoice.status === InvoiceStatus.PAID
@@ -807,8 +808,8 @@ export async function generateInvoicePdf(invoice: Invoice): Promise<void> {
   doc.setFont("helvetica", "normal")
   doc.setFontSize(8)
   doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2])
-  doc.text(`Email: ${invoice.user?.email || "billing@client.com"}`, leftMargin + 6, currentY + 18.5)
-  doc.text(`Customer ID: ${invoice.user?.id || "NEX-USR-01"}`, leftMargin + 6, currentY + 23.5)
+  doc.text(`Email: ${escapeHtml(invoice.user?.email || "billing@client.com")}`, leftMargin + 6, currentY + 18.5)
+  doc.text(`Customer ID: ${escapeHtml(invoice.user?.id || "NEX-USR-01")}`, leftMargin + 6, currentY + 23.5)
   doc.text("Account Tier: Enterprise SaaS Plan", leftMargin + 6, currentY + 28.5)
 
   // Payment Details
@@ -852,7 +853,7 @@ export async function generateInvoicePdf(invoice: Invoice): Promise<void> {
         },
       ]
   ).map((item) => [
-    `${item.description}\nEnterprise compute minutes, API telemetry & 99.99% SLA`,
+    `${escapeHtml(item.description)}\nEnterprise compute minutes, API telemetry & 99.99% SLA`,
     "Monthly",
     String(item.quantity),
     formatMoney(item.unitPrice),
@@ -904,7 +905,7 @@ export async function generateInvoicePdf(invoice: Invoice): Promise<void> {
 
   const totals = [
     { label: "Subtotal (Montant HT)", val: formatMoney(invoice.subtotal) },
-    { label: `TVA Maroc (${invoice.taxRate}%)`, val: formatMoney(invoice.tax) },
+    { label: `TVA Maroc (${escapeHtml(invoice.taxRate)}%)`, val: formatMoney(invoice.tax) },
     { label: "Discounts", val: "$0.00" },
   ]
 
@@ -947,7 +948,7 @@ export async function generateInvoicePdf(invoice: Invoice): Promise<void> {
   doc.setFont("helvetica", "normal")
   doc.setFontSize(7.5)
   doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2])
-  doc.text(`SWIFT/BIC: SVBKUS6S · Beneficiary: Nexora Cloud Platforms, Inc. · Remittance Reference: ${invoice.invoiceNumber}`, leftMargin + 6, currentY + 12.5)
+  doc.text(`SWIFT/BIC: SVBKUS6S · Beneficiary: Nexora Cloud Platforms, Inc. · Remittance Reference: ${escapeHtml(invoice.invoiceNumber)}`, leftMargin + 6, currentY + 12.5)
 
   currentY += 24
 
@@ -960,9 +961,9 @@ export async function generateInvoicePdf(invoice: Invoice): Promise<void> {
   doc.setFontSize(6.5)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(slateMuted[0], slateMuted[1], slateMuted[2])
-  doc.text(`${fiscal.companyName} · ${fiscal.address}, ${fiscal.city} · ICE: ${fiscal.ice} · IF: ${fiscal.ifNumber} · billing@nexora.io`, leftMargin, footerY)
+  doc.text(`${escapeHtml(fiscal.companyName)} · ${escapeHtml(fiscal.address)}, ${escapeHtml(fiscal.city)} · ICE: ${escapeHtml(fiscal.ice)} · IF: ${escapeHtml(fiscal.ifNumber)} · billing@nexora.io`, leftMargin, footerY)
   doc.text("Page 1 of 1", pageWidth - rightMargin, footerY, { align: "right" })
 
   // Trigger download
-  doc.save(`invoice-${invoice.invoiceNumber}.pdf`)
+  doc.save(`invoice-${escapeHtml(invoice.invoiceNumber)}.pdf`)
 }
