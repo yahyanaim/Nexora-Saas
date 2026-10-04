@@ -23,6 +23,22 @@ export interface CompanySettings {
   timeZone: string
   /** Prefix and pattern for invoice numbers, e.g. INV-{YYYY}-{SEQ} */
   invoiceNumberFormat: string
+  /** Contact lines printed on invoices and reports */
+  phone?: string
+  email?: string
+  website?: string
+  /** Share capital, printed in the legal footer (e.g. "100 000 MAD") */
+  shareCapital?: string
+  /** Where clients pay: bank name, account / RIB / IBAN and SWIFT-BIC */
+  bankName?: string
+  bankAccount?: string
+  bankSwift?: string
+  /** Free text at the bottom of every invoice (late-payment terms, thank-you note) */
+  invoiceFooter?: string
+  /** Accent colour of documents, #RRGGBB */
+  brandColor?: string
+  /** Company logo for documents, as a small PNG/JPEG data URL (the server version stores a file) */
+  logoDataUrl?: string
 }
 
 export enum ApprovalSubject {

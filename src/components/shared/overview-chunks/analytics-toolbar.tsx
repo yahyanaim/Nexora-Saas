@@ -10,11 +10,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner"
 import { useRouter } from "@/i18n/navigation"
 import { useCurrentWorkspace } from "@/store/workspace-store"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { exportToCsv } from "@/lib/utils/export-data"
 import {
   downloadAnalyticsPdf,
   getAnalyticsReportHtml,
   printAnalyticsReport,
+  analyticsLabels,
   type AnalyticsReportInput,
 } from "@/lib/pdf/analytics-report"
 import { PageHeader } from "@/components/shared/page-header"
@@ -29,6 +31,7 @@ export function AnalyticsToolbar() {
   const locale = useLocale()
   const router = useRouter()
   const workspace = useCurrentWorkspace()
+  const { data: settings } = useWorkspaceSettings()
   const {
     dateRange,
     setDateRange,
@@ -55,46 +58,21 @@ export function AnalyticsToolbar() {
     () => ({
       analytics,
       title: t("anReportTitle"),
-      subtitle: [t(RANGE_LABEL[dateRange]), t(COMPARE_LABEL[compareMode]), clientName ?? t("allClients"), teamName ?? t("allTeams")].join(" · "),
-      company: workspace.name,
+      scope: [t(RANGE_LABEL[dateRange]), t(COMPARE_LABEL[compareMode]), clientName ?? t("allClients"), teamName ?? t("allTeams")],
+      company: settings?.company.tradeName || settings?.company.legalName || workspace.name,
       generatedOn: new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date()),
       money: (n) => formatCurrency(n),
       bucketLabel: (d) => formatBucket(d),
-      labels: {
-        revenue: t("anRevenueEarned"),
-        margin: t("anGrossMargin"),
-        utilization: t("anUtilization"),
-        collected: t("anCashCollected"),
-        profit: t("anGrossProfit"),
-        laborCost: t("anLaborCost"),
-        expenses: t("expenses"),
-        billableHours: t("anBillableHours"),
-        avgRate: t("anAvgRate"),
-        openReceivables: t("openReceivables"),
-        overdue: t("overdue"),
-        revenueByPeriod: t("anRevenueByPeriod"),
-        period: t("anPeriod"),
-        hours: t("hours"),
-        revenueByClient: t("anRevenueByClient"),
-        client: t("client"),
-        share: t("anShare"),
-        change: t("anChange"),
-        topProjects: t("anTopProjects"),
-        project: t("project"),
-        bridge: t("anRevenueBridge"),
-        bridgeSteps: {
-          start: t("anBridgeStart"),
-          growth: t("anBridgeGrowth"),
-          new: t("anBridgeNew"),
-          decline: t("anBridgeDecline"),
-          lost: t("anBridgeLost"),
-          end: t("anBridgeEnd"),
-        },
-        clientsAtRisk: t("anClientsAtRisk"),
-        none: t("anNothingToShow"),
+      labels: analyticsLabels((key) => t(key)),
+      pdf: {
+        locale,
+        currency: workspace.currency,
+        scopeKeys: [RANGE_LABEL[dateRange], COMPARE_LABEL[compareMode]],
+        scopeNames: [clientName ?? null, teamName ?? null],
+        company: settings?.company,
       },
     }),
-    [analytics, t, dateRange, compareMode, clientName, teamName, workspace.name, locale, formatCurrency, formatBucket]
+    [analytics, t, dateRange, compareMode, clientName, teamName, workspace.name, workspace.currency, locale, formatCurrency, formatBucket, settings]
   )
 
   const handleRefresh = () => {
@@ -191,7 +169,7 @@ export function AnalyticsToolbar() {
                     <span className="text-xs text-muted-foreground">{t("anPreviewReportHint")}</span>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => printAnalyticsReport(report)} className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md">
+                <DropdownMenuItem onClick={() => void printAnalyticsReport(report)} className="flex items-center gap-2.5 p-2 cursor-pointer rounded-md">
                   <Printer className="size-3.5 text-primary shrink-0" />
                   <div className="flex flex-col">
                     <span className="font-semibold text-foreground">{t("anPrintReport")}</span>
@@ -294,7 +272,7 @@ export function AnalyticsToolbar() {
               <span>{t("anReportTitle")}</span>
             </DialogTitle>
             <div className="flex items-center gap-2 me-6">
-              <Button variant="outline" size="sm" onClick={() => printAnalyticsReport(report)} className="h-7 text-xs gap-1.5">
+              <Button variant="outline" size="sm" onClick={() => void printAnalyticsReport(report)} className="h-7 text-xs gap-1.5">
                 <Printer className="size-3" />
                 <span>{t("print")}</span>
               </Button>

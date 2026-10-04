@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs } from "@/components/ui/tabs"
@@ -158,6 +159,71 @@ function CompanyTab({ initial }: { initial: CompanySettings }) {
             <Input className="font-mono" value={form.invoiceNumberFormat} onChange={(e) => set("invoiceNumberFormat", e.target.value)} />
           </Field>
         </div>
+        <div className="flex flex-col gap-1 border-t border-border pt-5">
+          <h3 className="text-sm font-semibold">{t("invoiceDetails")}</h3>
+          <p className="text-sm text-muted-foreground">{t("invoiceDetailsHint")}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-border p-4">
+          <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-muted/40">
+            {form.logoDataUrl ? (
+              <img src={form.logoDataUrl} alt={t("companyLogo")} className="max-h-full max-w-full object-contain" />
+            ) : (
+              <span className="text-lg font-semibold text-muted-foreground">{(form.tradeName || form.legalName).slice(0, 2).toUpperCase()}</span>
+            )}
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <Label htmlFor="company-logo">{t("companyLogo")}</Label>
+            <p className="text-xs text-muted-foreground">{t("companyLogoHint")}</p>
+          </div>
+          <div className="flex gap-2">
+            <Input
+              id="company-logo"
+              type="file"
+              accept="image/png,image/jpeg"
+              className="w-56"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                if (!["image/png", "image/jpeg"].includes(file.type) || file.size > 300 * 1024) {
+                  toast.error(t("companyLogoInvalid"))
+                  return
+                }
+                const reader = new FileReader()
+                reader.onload = () => set("logoDataUrl", String(reader.result))
+                reader.readAsDataURL(file)
+              }}
+            />
+            {form.logoDataUrl && (
+              <Button variant="outline" onClick={() => set("logoDataUrl", undefined)}>
+                {t("removeLogo")}
+              </Button>
+            )}
+          </div>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {text("phone", t("phone"))}
+          {text("email", t("billingEmail"))}
+          {text("website", t("website"))}
+          {text("bankName", t("bankName"))}
+          {text("bankAccount", t("bankAccount"), t("bankAccountHint"))}
+          {text("bankSwift", t("bankSwift"))}
+          {text("shareCapital", t("shareCapital"))}
+          <Field label={t("brandColor")} hint={t("brandColorHint")}>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                aria-label={t("brandColor")}
+                value={form.brandColor || "#2563eb"}
+                onChange={(e) => set("brandColor", e.target.value)}
+                className="h-9 w-12 cursor-pointer rounded-lg border border-border bg-card p-1"
+              />
+              <Input className="font-mono" value={form.brandColor ?? ""} placeholder="#2563eb" onChange={(e) => set("brandColor", e.target.value || undefined)} />
+            </div>
+          </Field>
+        </div>
+        <Field label={t("invoiceFooter")} hint={t("invoiceFooterHint")}>
+          <Textarea rows={2} value={form.invoiceFooter ?? ""} onChange={(e) => set("invoiceFooter", e.target.value)} />
+        </Field>
         <SaveBar onSave={() => company.mutate(form)} pending={company.isPending} />
       </CardContent>
     </Card>
