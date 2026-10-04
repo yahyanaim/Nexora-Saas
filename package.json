@@ -3,6 +3,8 @@
   "version": "0.0.1",
   "type": "module",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Yahia Naim",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
