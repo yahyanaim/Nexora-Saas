@@ -2,9 +2,8 @@ import type { Client, Employee } from "@/types/workforce"
 import { BudgetType, type WorkProject, type WorkTask } from "@/types/work-projects"
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import { ExpenseStatus, type Expense, type ProjectProfit } from "@/types/work-costs"
-import { hourlyRate } from "./billing"
+import { entryBillRate, entryCostRate } from "./billing"
 import { taskProgress } from "./project-metrics"
-import { rateOn } from "./rates"
 
 const SPENT = [ExpenseStatus.APPROVED, ExpenseStatus.REIMBURSED]
 
@@ -32,7 +31,7 @@ export function projectProfit(
   if (project.budgetType === BudgetType.HOURLY) {
     revenue = entries
       .filter((e) => e.status === TimeEntryStatus.APPROVED && e.billable)
-      .reduce((sum, e) => sum + e.hours * hourlyRate(employee(e.employeeId), client, e.date), 0)
+      .reduce((sum, e) => sum + e.hours * entryBillRate(e, employee(e.employeeId), client), 0)
   } else if (project.budgetType === BudgetType.FIXED && project.budgetAmount) {
     revenue = (project.budgetAmount * taskProgress(data.tasks.filter((t) => t.projectId === project.id))) / 100
   }
@@ -40,10 +39,7 @@ export function projectProfit(
     revenue += expenses.filter((x) => x.billable).reduce((sum, x) => sum + x.amount, 0)
   }
 
-  const laborCost = entries.reduce((sum, e) => {
-    const person = employee(e.employeeId)
-    return sum + e.hours * (person ? rateOn(person, e.date).hourlyCost : 0)
-  }, 0)
+  const laborCost = entries.reduce((sum, e) => sum + e.hours * entryCostRate(e, employee(e.employeeId)), 0)
   const expenseTotal = expenses.reduce((sum, x) => sum + x.amount, 0)
   const profit = revenue - laborCost - expenseTotal
 
@@ -86,12 +82,9 @@ export function budgetUsage(
   const person = (id: string) => data.employees.find((e) => e.id === id)
   let used = 0
   if (project.budgetType === BudgetType.HOURLY) {
-    used = entries.filter((e) => e.billable).reduce((sum, e) => sum + e.hours * hourlyRate(person(e.employeeId), client, e.date), 0)
+    used = entries.filter((e) => e.billable).reduce((sum, e) => sum + e.hours * entryBillRate(e, person(e.employeeId), client), 0)
   } else {
-    const labor = entries.reduce((sum, e) => {
-      const p = person(e.employeeId)
-      return sum + e.hours * (p ? rateOn(p, e.date).hourlyCost : 0)
-    }, 0)
+    const labor = entries.reduce((sum, e) => sum + e.hours * entryCostRate(e, person(e.employeeId)), 0)
     const spent = data.expenses.filter((x) => x.projectId === project.id && SPENT.includes(x.status)).reduce((s, x) => s + x.amount, 0)
     used = labor + spent
   }

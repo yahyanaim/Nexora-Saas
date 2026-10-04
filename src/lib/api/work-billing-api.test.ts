@@ -33,6 +33,10 @@ describe("timesheets", () => {
   })
 
   it("marks hours on non-billable projects as not billable", async () => {
+    // The sample internal project is completed; reopen it so it accepts hours
+    const { updateProjectApi } = await import("./work-projects-api")
+    const { WorkProjectStatus } = await import("@/types/work-projects")
+    await updateProjectApi(WS, "prj_site", { status: WorkProjectStatus.ACTIVE })
     const e = await setTimesheetCellApi(WS, { employeeId: "emp_julia", projectId: "prj_site", date: DAY, hours: 2 })
     expect(e?.billable).toBe(false)
   })

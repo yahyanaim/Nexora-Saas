@@ -2,7 +2,7 @@ import type { Client, Employee } from "@/types/workforce"
 import { BudgetType, TaskStatus, type WorkProject, type WorkTask } from "@/types/work-projects"
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import type { LeaveRequest } from "@/types/work-planning"
-import { addDays, hourlyRate } from "./billing"
+import { addDays, entryBillRate } from "./billing"
 import { employeeWorkDays, hoursPerDay, leaveDays } from "./planning"
 import { todayIso } from "./project-metrics"
 
@@ -68,7 +68,7 @@ export function employeeKpis(employee: Employee, data: Data, from: string, to: s
     .reduce((sum, e) => {
       const project = data.projects.find((p) => p.id === e.projectId)
       if (project?.budgetType !== BudgetType.HOURLY) return sum
-      return sum + e.hours * hourlyRate(employee, data.clients.find((c) => c.id === project.clientId), e.date)
+      return sum + e.hours * entryBillRate(e, employee, data.clients.find((c) => c.id === project.clientId))
     }, 0)
 
   const completed = data.tasks.filter(
@@ -143,7 +143,7 @@ export function weeklyRevenue(
       const project = data.projects.find((p) => p.id === e.projectId)
       if (project?.budgetType !== BudgetType.HOURLY) continue
       const employee = data.employees.find((x) => x.id === e.employeeId)
-      revenue += e.hours * hourlyRate(employee, data.clients.find((c) => c.id === project.clientId), e.date)
+      revenue += e.hours * entryBillRate(e, employee, data.clients.find((c) => c.id === project.clientId))
       hours += e.hours
     }
     return { week: monday, revenue: Math.round(revenue), hours: round1(hours) }

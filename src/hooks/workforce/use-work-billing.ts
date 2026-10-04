@@ -5,7 +5,10 @@ import { useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import {
+  addHoursApi,
   approveTimeEntriesApi,
+  copyPreviousWeekApi,
+  reopenTimeEntriesApi,
   clearTimesheetRowApi,
   createInvoiceFromHoursApi,
   deleteInvoiceDraftApi,
@@ -21,6 +24,7 @@ import {
   type TimesheetCell,
 } from "@/lib/api/work-billing-api"
 import type { ClientInvoice } from "@/types/work-billing"
+import { discardTimerApi, getTimerApi, startTimerApi, stopTimerApi, type RunningTimer } from "@/lib/api/timer-api"
 
 export function useTimeEntries() {
   const { id } = useCurrentWorkspace()
@@ -88,7 +92,63 @@ export function useTimesheetMutations() {
     },
     onError,
   })
-  return { setCell, clearRow, submit, approve, reject }
+  const reopen = useMutation({
+    mutationFn: ({ ids, reason }: { ids: string[]; reason: string }) => reopenTimeEntriesApi(workspaceId, ids, reason),
+    onSuccess: (count) => {
+      toast.success(t("hoursReopened", { count }))
+      refresh()
+    },
+    onError,
+  })
+  const copyWeek = useMutation({
+    mutationFn: ({ employeeId, monday }: { employeeId: string; monday: string }) => copyPreviousWeekApi(workspaceId, employeeId, monday),
+    onSuccess: (count) => {
+      toast.success(t("hoursCopied", { count }))
+      refresh()
+    },
+    onError,
+  })
+  const addHours = useMutation({
+    mutationFn: (cell: TimesheetCell) => addHoursApi(workspaceId, cell),
+    onSuccess: (_e, cell) => {
+      toast.success(t("hoursLogged", { hours: cell.hours }))
+      refresh()
+    },
+    onError,
+  })
+  return { setCell, clearRow, submit, approve, reject, reopen, copyWeek, addHours }
+}
+
+/** The person's running timer, if any (TIM-2). */
+export function useTimer(employeeId: string) {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: ["timer", id, employeeId], queryFn: () => getTimerApi(id, employeeId), enabled: !!employeeId })
+}
+
+export function useTimerMutations(employeeId: string) {
+  const { t, workspaceId, refresh, onError } = useHelpers()
+  const queryClient = useQueryClient()
+  const refreshTimer = () => queryClient.invalidateQueries({ queryKey: ["timer", workspaceId, employeeId] })
+  return {
+    start: useMutation({
+      mutationFn: (timer: Omit<RunningTimer, "startedAt" | "employeeId">) => startTimerApi(workspaceId, { ...timer, employeeId }),
+      onSuccess: () => {
+        refreshTimer()
+        refresh()
+      },
+      onError,
+    }),
+    stop: useMutation({
+      mutationFn: () => stopTimerApi(workspaceId, employeeId),
+      onSuccess: (entry) => {
+        toast.success(t("timerLogged", { hours: entry?.hours ?? 0 }))
+        refreshTimer()
+        refresh()
+      },
+      onError,
+    }),
+    discard: useMutation({ mutationFn: () => discardTimerApi(workspaceId, employeeId), onSuccess: refreshTimer, onError }),
+  }
 }
 
 export function useInvoiceMutations() {

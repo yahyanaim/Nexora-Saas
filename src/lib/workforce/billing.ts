@@ -82,7 +82,7 @@ export function unbilledValueByClient(
     const employee = employees.find((e) => e.id === entry.employeeId)
     const current = totals.get(project.clientId!) ?? { hours: 0, amount: 0 }
     current.hours += entry.hours
-    current.amount += entry.hours * hourlyRate(employee, client, entry.date)
+    current.amount += entry.hours * entryBillRate(entry, employee, client)
     totals.set(project.clientId!, current)
   }
   return totals
@@ -105,7 +105,7 @@ export function buildInvoiceLines(
   for (const entry of entries) {
     // A rate change inside the period starts a new line at the new price
     const employee = employees.find((e) => e.id === entry.employeeId)
-    const key = `${entry.projectId}:${entry.employeeId}:${hourlyRate(employee, client, entry.date)}`
+    const key = `${entry.projectId}:${entry.employeeId}:${entryBillRate(entry, employee, client)}`
     groups.set(key, [...(groups.get(key) ?? []), entry])
   }
   return [...groups.values()].map((group) => {
@@ -116,11 +116,31 @@ export function buildInvoiceLines(
       id: createLineId(),
       description: `${project ? `${project.code} · ${project.name}` : "Project"} — ${employee?.name ?? "Team member"}`,
       quantity: roundHours(group.reduce((sum, e) => sum + e.hours, 0)),
-      unitPrice: hourlyRate(employee, client, first.date),
+      unitPrice: entryBillRate(first, employee, client),
       projectId: first.projectId,
       timeEntryIds: group.map((e) => e.id),
     }
   })
+}
+
+/** Rate an entry bills at: the snapshot taken at approval, else today's resolution (TIM-9). */
+export function entryBillRate(entry: TimeEntry, employee: Employee | undefined, client: Client | undefined) {
+  return entry.billRate ?? hourlyRate(employee, client, entry.date)
+}
+
+/** Cost of an entry's hours per hour: the snapshot taken at approval, else the dated rate. */
+export function entryCostRate(entry: TimeEntry, employee: Employee | undefined) {
+  return entry.costRate ?? (employee ? rateOn(employee, entry.date).hourlyCost : 0)
+}
+
+/** Timesheet hours move in 15-minute steps (TIM-1). */
+export function quarterHours(hours: number) {
+  return Math.round(hours * 4) / 4
+}
+
+/** Shown state of an entry: approved hours on an invoice read as invoiced (TIM-5). */
+export function entryDisplayStatus(entry: TimeEntry): TimeEntryStatus | "invoiced" {
+  return entry.invoiceId ? "invoiced" : entry.status
 }
 
 export function roundHours(hours: number) {

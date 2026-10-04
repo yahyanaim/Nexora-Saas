@@ -5,10 +5,11 @@ import {
   type InvoiceLine,
   type TimeEntry,
 } from "@/types/work-billing"
-import { BudgetType } from "@/types/work-projects"
+import { BudgetType, WorkProjectStatus, type WorkProject } from "@/types/work-projects"
 import { createCollection, createId } from "@/lib/workforce/demo-store"
 import { seedClientInvoices, seedTimeEntries } from "@/lib/workforce/billing-seed"
-import { addDays, buildInvoiceLines, nextInvoiceNumber, roundHours, unbilledEntries } from "@/lib/workforce/billing"
+import { addDays, buildInvoiceLines, hourlyRate, nextInvoiceNumber, quarterHours, unbilledEntries } from "@/lib/workforce/billing"
+import { rateOn } from "@/lib/workforce/rates"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { listProjectsApi } from "./work-projects-api"
 import { listEmployeesApi } from "./employees-api"
@@ -61,7 +62,8 @@ export interface TimesheetCell {
  */
 export async function setTimesheetCellApi(workspaceId: string, cell: TimesheetCell): Promise<TimeEntry | null> {
   if (!Number.isFinite(cell.hours) || cell.hours < 0) throw new Error("Hours must be zero or more")
-  const hours = roundHours(cell.hours)
+  const hours = quarterHours(cell.hours)
+  if (cell.hours > 0 && hours === 0) throw new Error("The smallest step is 15 minutes (0.25 h)")
 
   const all = entries.list(workspaceId)
   const existing = all.find(
@@ -91,6 +93,7 @@ export async function setTimesheetCellApi(workspaceId: string, cell: TimesheetCe
 
   const project = (await listProjectsApi(workspaceId)).find((p) => p.id === cell.projectId)
   if (!project) throw new Error("Project not found")
+  assertOpen(project)
   if (!project.memberIds.includes(cell.employeeId)) throw new Error("Only the project team can log time on it")
 
   return entries.create(workspaceId, {
@@ -102,6 +105,48 @@ export async function setTimesheetCellApi(workspaceId: string, cell: TimesheetCe
     billable: project.budgetType !== BudgetType.NON_BILLABLE,
     status: TimeEntryStatus.DRAFT,
   })
+}
+
+/** Closed and cancelled projects accept no new hours (TIM-4, BR-10). */
+function assertOpen(project: WorkProject) {
+  if (project.status === WorkProjectStatus.COMPLETED || project.status === WorkProjectStatus.CANCELLED) {
+    throw new Error("This project is closed, so it no longer accepts hours")
+  }
+}
+
+/** Adds hours to today's (or a given day's) cell, used by the timer and quick entry. */
+export async function addHoursApi(workspaceId: string, cell: TimesheetCell): Promise<TimeEntry | null> {
+  const existing = entries
+    .list(workspaceId)
+    .find((e) => e.employeeId === cell.employeeId && e.projectId === cell.projectId && (e.taskId ?? "") === (cell.taskId ?? "") && e.date === cell.date)
+  return setTimesheetCellApi(workspaceId, { ...cell, hours: (existing?.hours ?? 0) + cell.hours })
+}
+
+/**
+ * Copies last week's rows and hours into empty cells of this week as drafts
+ * (TIM-13). Cells already filled, and closed projects, are skipped.
+ */
+export async function copyPreviousWeekApi(workspaceId: string, employeeId: string, monday: string): Promise<number> {
+  const lastMonday = addDays(monday, -7)
+  const lastSunday = addDays(monday, -1)
+  const source = entries.list(workspaceId).filter((e) => e.employeeId === employeeId && e.date >= lastMonday && e.date <= lastSunday)
+  if (source.length === 0) throw new Error("Nothing was logged last week")
+  let copied = 0
+  for (const e of source) {
+    const date = addDays(e.date, 7)
+    const taken = entries
+      .list(workspaceId)
+      .some((x) => x.employeeId === employeeId && x.projectId === e.projectId && (x.taskId ?? "") === (e.taskId ?? "") && x.date === date)
+    if (taken) continue
+    try {
+      await setTimesheetCellApi(workspaceId, { employeeId, projectId: e.projectId, taskId: e.taskId, date, hours: e.hours })
+      copied++
+    } catch {
+      // Closed projects or full days are skipped rather than failing the copy
+    }
+  }
+  if (copied === 0) throw new Error("This week already has those rows filled in")
+  return copied
 }
 
 /** Removes a whole timesheet row (draft or rejected hours only) for the given days. */
@@ -139,8 +184,37 @@ export async function submitTimesheetApi(
   return toSubmit.length
 }
 
+/** Approves submitted hours and freezes the rates they bill and cost at (TIM-9). */
 export async function approveTimeEntriesApi(workspaceId: string, ids: string[]): Promise<number> {
-  return review(workspaceId, ids, { status: TimeEntryStatus.APPROVED, rejectionReason: undefined })
+  const [projects, employees, clients] = await Promise.all([listProjectsApi(workspaceId), listEmployeesApi(workspaceId), listClientsApi(workspaceId)])
+  const approvedAt = new Date().toISOString()
+  return review(workspaceId, ids, { status: TimeEntryStatus.APPROVED, rejectionReason: undefined, approvedAt }, (entry) => {
+    const employee = employees.find((e) => e.id === entry.employeeId)
+    const client = clients.find((c) => c.id === projects.find((p) => p.id === entry.projectId)?.clientId)
+    return {
+      billRate: hourlyRate(employee, client, entry.date),
+      costRate: employee ? rateOn(employee, entry.date).hourlyCost : 0,
+    }
+  })
+}
+
+/**
+ * Sends approved hours back to draft (TIM-7). Only before they're invoiced;
+ * a reason is required and the reopening is logged.
+ */
+export async function reopenTimeEntriesApi(workspaceId: string, ids: string[], reason: string): Promise<number> {
+  if (!reason.trim()) throw new Error("Say why the hours are reopened")
+  let count = 0
+  for (const id of ids) {
+    const e = entries.get(workspaceId, id)
+    if (!e || e.status !== TimeEntryStatus.APPROVED) continue
+    if (e.invoiceId) throw new Error("Invoiced hours can't be reopened; issue a credit note instead")
+    entries.update(workspaceId, id, { status: TimeEntryStatus.DRAFT, billRate: undefined, costRate: undefined, approvedAt: undefined })
+    count++
+  }
+  if (count === 0) throw new Error("Only approved hours can be reopened")
+  recordAudit(workspaceId, { action: "Hours reopened", actionKey: "time.reopened", category: "Approvals", target: `${count} time ${count === 1 ? "entry" : "entries"}`, after: reason.trim() })
+  return count
 }
 
 export async function rejectTimeEntriesApi(workspaceId: string, ids: string[], reason: string): Promise<number> {
@@ -148,12 +222,12 @@ export async function rejectTimeEntriesApi(workspaceId: string, ids: string[], r
   return review(workspaceId, ids, { status: TimeEntryStatus.REJECTED, rejectionReason: reason.trim() })
 }
 
-function review(workspaceId: string, ids: string[], patch: Partial<TimeEntry>) {
+function review(workspaceId: string, ids: string[], patch: Partial<TimeEntry>, perEntry?: (e: TimeEntry) => Partial<TimeEntry>) {
   let count = 0
   for (const id of ids) {
     const e = entries.get(workspaceId, id)
     if (!e || e.status !== TimeEntryStatus.SUBMITTED) continue
-    entries.update(workspaceId, id, patch)
+    entries.update(workspaceId, id, { ...patch, ...perEntry?.(e) })
     count++
   }
   if (count === 0) throw new Error("Only submitted hours can be reviewed")

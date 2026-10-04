@@ -27,6 +27,10 @@ export interface TimeEntry {
   rejectionReason?: string
   /** Set once the hours are on a client invoice */
   invoiceId?: string
+  /** Rates captured at approval (TIM-9); later rate changes never alter them */
+  billRate?: number
+  costRate?: number
+  approvedAt?: string
   createdAt: string
   updatedAt: string
 }

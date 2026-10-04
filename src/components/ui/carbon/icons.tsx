@@ -162,6 +162,8 @@ import {
   Volleyball as LVolleyball,
   Webhook as LWebhook,
   X as LX,
+  Play as LPlay,
+  Square as LSquare,
   Zap as LZap,
 } from "lucide-react"
 
@@ -280,6 +282,8 @@ export const UserX = icon(LUserX, "UserX")
 export const Users = icon(LUsers, "Users")
 export const Volleyball = icon(LVolleyball, "Volleyball")
 export const X = icon(LX, "X")
+export const Play = icon(LPlay, "Play")
+export const Square = icon(LSquare, "Square")
 export const XCircle = icon(LCircleX, "XCircle")
 export const Zap = icon(LZap, "Zap")
 export const DownloadIcon = icon(LDownload, "DownloadIcon")
