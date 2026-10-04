@@ -40,17 +40,17 @@ export async function submitExpenseApi(workspaceId: string, input: ExpenseInput)
   if (!(input.amount > 0) || input.amount > MAX_EXPENSE) throw new Error("Enter an amount above zero")
   if (input.date > todayIso()) throw new Error("Expenses can't be in the future")
   if (!input.description.trim()) throw new Error("Describe the expense")
+  if (input.projectId) {
+    const project = (await listProjectsApi(workspaceId)).find((p) => p.id === input.projectId)
+    if (!project) throw new Error("Project not found")
+    if (!project.memberIds.includes(input.employeeId)) throw new Error("Only the project team can add expenses to it")
+  }
   const settings = await getSettingsApi(workspaceId)
   if (!settings.expenseCategories.some((c) => c.category === input.category && c.enabled)) {
     throw new Error("This category is turned off in the workspace settings")
   }
   if (input.amount > settings.receiptRequiredAbove && !input.receiptName) {
     throw new Error(`Attach a receipt for expenses above ${settings.receiptRequiredAbove}`)
-  }
-  if (input.projectId) {
-    const project = (await listProjectsApi(workspaceId)).find((p) => p.id === input.projectId)
-    if (!project) throw new Error("Project not found")
-    if (!project.memberIds.includes(input.employeeId)) throw new Error("Only the project team can add expenses to it")
   }
   return expenses.create(workspaceId, {
     ...input,

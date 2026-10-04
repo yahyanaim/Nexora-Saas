@@ -88,7 +88,7 @@ describe("projectProfit", () => {
 
 describe("expenses API", () => {
   beforeEach(() => localStorage.clear())
-  const base = { employeeId: "emp_lina", projectId: "prj_helio", date: "2026-01-10", category: ExpenseCategory.SOFTWARE, description: "Font licence", amount: 60, billable: true }
+  const base = { employeeId: "emp_lina", projectId: "prj_helio", date: "2026-01-10", category: ExpenseCategory.SOFTWARE, description: "Font licence", amount: 60, billable: true, receiptName: "licence.pdf" }
 
   it("validates amount, date, description and team", async () => {
     await expect(submitExpenseApi("ws_atlas", { ...base, amount: 0 })).rejects.toThrow(/amount/)
