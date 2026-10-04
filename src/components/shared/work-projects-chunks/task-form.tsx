@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input"
 import { Plus, Trash2 } from "@/components/ui/carbon/icons"
 import { createId } from "@/lib/workforce/demo-store"
 import type { Employee } from "@/types/workforce"
+import type { TaskLabel } from "@/types/work-settings"
+import { cn } from "@/lib/utils"
 import {
   Priority,
   TaskStatus,
@@ -37,6 +39,7 @@ const schema = z.object({
   dueDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]),
   estimatedHours: z.number({ error: "required" }).min(0).max(1000),
   subtasks: z.array(z.object({ id: z.string(), title: z.string().trim().min(1), done: z.boolean() })),
+  labelIds: z.array(z.string()),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -52,6 +55,7 @@ function toFormValues(task?: Partial<WorkTask>): FormValues {
     dueDate: task?.dueDate ?? "",
     estimatedHours: task?.estimatedHours ?? 4,
     subtasks: task?.subtasks ?? [],
+    labelIds: task?.labelIds ?? [],
   }
 }
 
@@ -61,11 +65,13 @@ interface Props {
   task?: Partial<WorkTask>
   team: Employee[]
   milestones: Milestone[]
+  /** Workspace task labels from settings */
+  labels: TaskLabel[]
   onValid: (input: WorkTaskInput) => void
 }
 
 export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
-  { projectId, task, team, milestones, onValid },
+  { projectId, task, team, milestones, labels, onValid },
   ref
 ) {
   const t = useTranslations()
@@ -139,6 +145,34 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
           <TextField control={form.control} name="dueDate" label={t("dueDate")} type="date" />
           <NumberField control={form.control} name="estimatedHours" label={t("estimateHours")} />
         </div>
+
+        {labels.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium">{t("labels")}</span>
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("labels")}>
+              {labels.map((label) => {
+                const selected = form.watch("labelIds")
+                const on = selected.includes(label.id)
+                return (
+                  <button
+                    key={label.id}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() =>
+                      form.setValue("labelIds", on ? selected.filter((id) => id !== label.id) : [...selected, label.id], { shouldDirty: true })
+                    }
+                    className={cn(
+                      "h-8 rounded-full border px-3 text-xs font-medium transition-colors",
+                      on ? "border-primary bg-info-soft text-info-foreground" : "border-border bg-card text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {label.name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <TextAreaField control={form.control} name="description" label={t("description")} />
 

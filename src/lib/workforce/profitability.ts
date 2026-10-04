@@ -67,3 +67,34 @@ export function unbilledExpenses(expenses: Expense[], projects: WorkProject[], c
     (x) => x.billable && !x.invoiceId && SPENT.includes(x.status) && x.projectId && ids.has(x.projectId)
   )
 }
+
+export type BudgetAlert = "none" | "warning" | "over"
+
+/**
+ * How much of a project's budget is used (PRJ-11). Hourly projects compare
+ * the value of logged billable hours with the cap; fixed-price projects
+ * compare labor cost plus expenses with the price. Alerts at 80% and 100%.
+ */
+export function budgetUsage(
+  project: WorkProject,
+  data: { entries: TimeEntry[]; expenses: Expense[]; employees: Employee[]; clients: Client[] }
+): { used: number; budget: number; percent: number | null; alert: BudgetAlert } {
+  const budget = project.budgetAmount ?? 0
+  if (project.budgetType === BudgetType.NON_BILLABLE || budget <= 0) return { used: 0, budget, percent: null, alert: "none" }
+  const client = data.clients.find((c) => c.id === project.clientId)
+  const entries = data.entries.filter((e) => e.projectId === project.id && e.status !== TimeEntryStatus.REJECTED)
+  const person = (id: string) => data.employees.find((e) => e.id === id)
+  let used = 0
+  if (project.budgetType === BudgetType.HOURLY) {
+    used = entries.filter((e) => e.billable).reduce((sum, e) => sum + e.hours * hourlyRate(person(e.employeeId), client, e.date), 0)
+  } else {
+    const labor = entries.reduce((sum, e) => {
+      const p = person(e.employeeId)
+      return sum + e.hours * (p ? rateOn(p, e.date).hourlyCost : 0)
+    }, 0)
+    const spent = data.expenses.filter((x) => x.projectId === project.id && SPENT.includes(x.status)).reduce((s, x) => s + x.amount, 0)
+    used = labor + spent
+  }
+  const percent = Math.round((used / budget) * 100)
+  return { used: round(used), budget, percent, alert: percent >= 100 ? "over" : percent >= 80 ? "warning" : "none" }
+}

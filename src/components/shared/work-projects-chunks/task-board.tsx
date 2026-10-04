@@ -14,11 +14,13 @@ import { Calendar, CheckCircle2, Flag, MoreHorizontal, Plus } from "@/components
 import { cn } from "@/lib/utils"
 import { isTaskOverdue } from "@/lib/workforce/project-metrics"
 import type { Employee } from "@/types/workforce"
+import type { TaskLabel } from "@/types/work-settings"
 import { TASK_STATUSES, TaskStatus, type Milestone, type WorkTask } from "@/types/work-projects"
 import { PRIORITY_DOT, PRIORITY_LABEL, TASK_STATUS_DOT, TASK_STATUS_LABEL, formatShortDate } from "./project-labels"
 
 interface Props {
   tasks: WorkTask[]
+  labels: TaskLabel[]
   team: Employee[]
   milestones: Milestone[]
   canEdit: boolean
@@ -33,7 +35,7 @@ const DRAG_TYPE = "application/x-nexora-task"
  * Kanban board. Drag a card onto a column (or onto a card to land before it);
  * each card's menu offers the same moves without a mouse.
  */
-export function TaskBoard({ tasks, team, milestones, canEdit, onOpen, onAdd, onMove }: Props) {
+export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, onAdd, onMove }: Props) {
   const t = useTranslations()
   const [dragId, setDragId] = useState<string | null>(null)
   const [over, setOver] = useState<{ status: TaskStatus; index: number } | null>(null)
@@ -108,6 +110,7 @@ export function TaskBoard({ tasks, team, milestones, canEdit, onOpen, onAdd, onM
                 task={task}
                 assignee={team.find((e) => e.id === task.assigneeId)}
                 milestone={milestones.find((m) => m.id === task.milestoneId)}
+                labelNames={(task.labelIds ?? []).map((id) => labels.find((l) => l.id === id)?.name).filter((n): n is string => !!n)}
                 canEdit={canEdit}
                 dragging={dragId === task.id}
                 onOpen={() => onOpen(task)}
@@ -151,6 +154,7 @@ interface CardProps {
   task: WorkTask
   assignee?: Employee
   milestone?: Milestone
+  labelNames: string[]
   canEdit: boolean
   dragging: boolean
   onOpen: () => void
@@ -160,7 +164,7 @@ interface CardProps {
   onDragOverCard: (e: React.DragEvent<HTMLElement>) => void
 }
 
-function TaskCard({ task, assignee, milestone, canEdit, dragging, onOpen, onMove, onDragStart, onDragEnd, onDragOverCard }: CardProps) {
+function TaskCard({ task, assignee, milestone, labelNames, canEdit, dragging, onOpen, onMove, onDragStart, onDragEnd, onDragOverCard }: CardProps) {
   const t = useTranslations()
   const locale = useLocale()
   const overdue = isTaskOverdue(task)
@@ -212,6 +216,14 @@ function TaskCard({ task, assignee, milestone, canEdit, dragging, onOpen, onMove
           </DropdownMenu>
         )}
       </div>
+
+      {labelNames.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {labelNames.map((name) => (
+            <span key={name} className="rounded-full bg-info-soft px-2 py-0.5 text-[11px] font-medium text-info-foreground">{name}</span>
+          ))}
+        </div>
+      )}
 
       {milestone && (
         <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">

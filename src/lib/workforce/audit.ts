@@ -16,6 +16,11 @@ interface Actor {
 
 let actor: Actor = { id: "system", name: "System", email: "system@nexora.local" }
 
+/** Who is acting right now, for audit entries, comments and task history. */
+export function getAuditActor(): Actor {
+  return actor
+}
+
 /** Called by the dashboard shell so entries carry who made the change. */
 export function setAuditActor(next: Actor | null | undefined) {
   if (next) actor = next

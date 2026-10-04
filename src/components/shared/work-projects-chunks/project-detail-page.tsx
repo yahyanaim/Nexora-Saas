@@ -26,7 +26,14 @@ import {
   useTaskMutations,
   useTasks,
 } from "@/hooks/workforce/use-work-projects"
-import { projectHealth, remainingHours, taskProgress } from "@/lib/workforce/project-metrics"
+import { automaticHealth, projectHealth, remainingHours, taskProgress } from "@/lib/workforce/project-metrics"
+import { budgetUsage } from "@/lib/workforce/profitability"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
+import { useTimeEntries } from "@/hooks/workforce/use-work-billing"
+import { useExpenses } from "@/hooks/workforce/use-expenses"
+import { TaskDiscussion } from "./task-discussion"
+import { TaskFilters, NO_FILTERS, applyTaskFilters, type TaskFilterValues } from "./task-filters"
+import { HealthOverrideDialog } from "./health-override-dialog"
 import { cn } from "@/lib/utils"
 import { BudgetType, TaskStatus, type WorkTask, type WorkTaskInput } from "@/types/work-projects"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
@@ -62,6 +69,12 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const projectMutations = useProjectMutations()
   const taskMutations = useTaskMutations()
   const milestoneMutations = useMilestoneMutations()
+  const { data: settings } = useWorkspaceSettings()
+  const { data: entries = [] } = useTimeEntries()
+  const { data: expenses = [] } = useExpenses()
+  const labels = settings?.taskLabels ?? []
+  const [filters, setFilters] = useState<TaskFilterValues>(NO_FILTERS)
+  const [healthDialog, setHealthDialog] = useState(false)
 
   const canEdit = can(authedUser, AdminPermissionsPlatform.PROJECTS_UPDATE)
   const canDelete = can(authedUser, AdminPermissionsPlatform.PROJECTS_DELETE)
@@ -110,6 +123,8 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const progress = taskProgress(tasks)
   const health = projectHealth(project, tasks)
   const done = tasks.filter((task) => task.status === TaskStatus.DONE).length
+  const budget = budgetUsage(project, { entries, expenses, employees, clients })
+  const visibleTasks = applyTaskFilters(tasks, filters)
 
   const saveTask = (input: WorkTaskInput) => {
     const close = { onSuccess: () => setTaskSheet(null) }
@@ -150,9 +165,23 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             <Badge variant="outline" className={PROJECT_STATUS_CLASS[project.status]}>
               {t(PROJECT_STATUS_LABEL[project.status])}
             </Badge>
-            <Badge variant="outline" className={HEALTH_CLASS[health]}>
-              {t(HEALTH_LABEL[health])}
-            </Badge>
+            {canEdit ? (
+              <button type="button" onClick={() => setHealthDialog(true)} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <Badge variant="outline" className={cn(HEALTH_CLASS[health], "cursor-pointer")}>
+                  {t(HEALTH_LABEL[health])}
+                  {project.healthOverride && <span className="ms-1 opacity-70">· {t("manual")}</span>}
+                </Badge>
+              </button>
+            ) : (
+              <Badge variant="outline" className={HEALTH_CLASS[health]}>
+                {t(HEALTH_LABEL[health])}
+              </Badge>
+            )}
+            {budget.alert !== "none" && (
+              <Badge variant="outline" className={budget.alert === "over" ? "bg-danger-soft text-destructive border-transparent" : "bg-warning-soft text-warning-foreground border-transparent"}>
+                {t(budget.alert === "over" ? "budgetOver" : "budgetWarning", { percent: budget.percent ?? 0 })}
+              </Badge>
+            )}
           </span>
         }
         actions={
@@ -191,6 +220,11 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
               {t("tasksDone", { done, total: tasks.length })}
             </span>
           </div>
+          {project.healthOverride && (
+            <p className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
+              {t("healthOverrideNote", { name: project.healthOverride.setBy, reason: project.healthOverride.reason })}
+            </p>
+          )}
           <dl className="grid grid-cols-2 gap-4 md:grid-cols-5">
             {facts.map((fact) => (
               <div key={fact.label} className="min-w-0">
@@ -208,8 +242,11 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             id: "board",
             label: t("board"),
             content: (
+              <>
+              <TaskFilters userId={authedUser?.id ?? "me"} team={team} labels={labels} value={filters} onChange={setFilters} />
               <TaskBoard
-                tasks={tasks}
+                tasks={visibleTasks}
+                labels={labels}
                 team={team}
                 milestones={milestones}
                 canEdit={canEdit}
@@ -217,9 +254,19 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                 onAdd={addTask}
                 onMove={(id, status, index) => taskMutations.move.mutate({ id, status, index })}
               />
+              </>
             ),
           },
-          { id: "list", label: t("list"), content: <TaskList tasks={tasks} team={team} milestones={milestones} onOpen={openTask} /> },
+          {
+            id: "list",
+            label: t("list"),
+            content: (
+              <>
+                <TaskFilters userId={authedUser?.id ?? "me"} team={team} labels={labels} value={filters} onChange={setFilters} />
+                <TaskList tasks={visibleTasks} team={team} milestones={milestones} onOpen={openTask} />
+              </>
+            ),
+          },
           {
             id: "milestones",
             label: t("milestones"),
@@ -256,8 +303,10 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
           task={taskSheet?.task ?? taskSheet?.defaults}
           team={team}
           milestones={milestones}
+          labels={labels}
           onValid={saveTask}
         />
+        {taskSheet?.task && <TaskDiscussion key={taskSheet.task.id} taskId={taskSheet.task.id} team={team} labels={labels} />}
         {taskSheet?.task && canEdit && (
           <Button
             variant="ghost"
@@ -292,6 +341,10 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
           }
         />
       </DataTableEntityFormSheet>
+
+      {healthDialog && (
+        <HealthOverrideDialog project={project} automatic={automaticHealth(project, tasks)} open={healthDialog} onOpenChange={setHealthDialog} />
+      )}
 
       <ConfirmAlertDialog
         open={!!deletingTask}

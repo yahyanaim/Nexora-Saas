@@ -106,14 +106,14 @@ export function useTaskMutations() {
     mutationFn: (input: WorkTaskInput) => createTaskApi(workspaceId, input),
     onSuccess: () => {
       toast.success(t("taskCreated"))
-      refresh("tasks")
+      refresh("tasks", "task-activity")
     },
     onError,
   })
   const update = useMutation({
     mutationFn: ({ id, input }: { id: string; input: Partial<WorkTaskInput> }) =>
       updateTaskApi(workspaceId, id, input),
-    onSuccess: () => refresh("tasks"),
+    onSuccess: () => refresh("tasks", "task-activity"),
     onError,
   })
 
@@ -133,14 +133,14 @@ export function useTaskMutations() {
       for (const [key, list] of context?.snapshots ?? []) queryClient.setQueryData(key, list)
       onError(err)
     },
-    onSettled: () => refresh("tasks"),
+    onSettled: () => refresh("tasks", "task-activity"),
   })
 
   const remove = useMutation({
     mutationFn: (id: string) => deleteTaskApi(workspaceId, id),
     onSuccess: () => {
       toast.success(t("taskDeleted"))
-      refresh("tasks")
+      refresh("tasks", "task-activity")
     },
     onError,
   })
