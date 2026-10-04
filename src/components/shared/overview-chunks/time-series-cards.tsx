@@ -25,7 +25,7 @@ function ticksFor(labels: string[], count: number) {
 export function SessionOverTimeCard() {
   const t = useTranslations()
   const { dateRange, compareMode, formatBucket, analytics } = useAnalyticsFilter()
-  const showComparison = analytics.showComparison
+  const showComparison = analytics.showComparison && analytics.hasPrevious
 
   const { data, ticks, headline, deltaText, deltaPositive, explanation } = useMemo(() => {
     const { series, current, previous } = analytics
@@ -161,7 +161,7 @@ export function AverageOrderValueCard() {
         <div className="mt-1 flex items-baseline gap-2">
           <span className="text-2xl font-bold tracking-tight text-foreground tabular-nums">{latest === null ? "—" : formatCurrency(latest)}</span>
           <span className="text-xs text-muted-foreground">{t("anPerHour")}</span>
-          {analytics.showComparison && (
+          {analytics.showComparison && analytics.hasPrevious && (
             <span className={`text-xs font-medium ${deltaPositive ? "text-success-foreground" : "text-danger-foreground"}`}>{deltaText}</span>
           )}
         </div>

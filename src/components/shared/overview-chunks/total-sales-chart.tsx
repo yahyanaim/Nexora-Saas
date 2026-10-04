@@ -18,7 +18,8 @@ import { COMPARE_LABEL, RANGE_LABEL, formatChange, useAnalyticsFilter } from "./
 export function TotalSalesChart() {
   const t = useTranslations()
   const { dateRange, compareMode, formatCurrency, formatBucket, analytics, clientId, clients: clientList } = useAnalyticsFilter()
-  const { series, current, previous, clients, showComparison } = analytics
+  const { series, current, previous, clients } = analytics
+  const showComparison = analytics.showComparison && analytics.hasPrevious
 
   const { chartData, xTicks, deltaText, deltaPositive, explanation } = useMemo(() => {
     const now = cumulative(series.map((s) => s.revenue))
