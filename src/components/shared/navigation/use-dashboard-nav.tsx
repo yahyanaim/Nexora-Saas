@@ -80,6 +80,20 @@ export function useDashboardNav() {
         icon: LayoutDashboard,
         items: [
           {
+            title: t("myWork"),
+            url: "/dashboard/my-work",
+            icon: Briefcase,
+            descriptionKey: "pageDescMyWork",
+            permission: AdminPermissionsPlatform.TIME_TRACK,
+          },
+          {
+            title: t("teamDashboard"),
+            url: "/dashboard/team",
+            icon: Users,
+            descriptionKey: "pageDescTeam",
+            permission: AdminPermissionsPlatform.TIME_APPROVE,
+          },
+          {
             title: t("analytics"),
             url: "/dashboard/overview",
             icon: ChartNoAxesCombined,
