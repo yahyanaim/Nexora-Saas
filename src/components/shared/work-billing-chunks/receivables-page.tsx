@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { AlertTriangle, Clock, DownloadIcon, Receipt } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClients } from "@/hooks/workforce/use-workforce"
 import { useClientInvoices } from "@/hooks/workforce/use-work-billing"
@@ -74,7 +75,41 @@ export default function ReceivablesPage() {
         }
       />
       <MetricCardGrid cards={cards} isLoading={isLoading} />
-      <section className="overflow-x-auto rounded-3xl border border-border bg-card shadow-panel">
+      {/* Phones: one card per client with its balance by age */}
+      <section className="space-y-2 md:hidden">
+        {isLoading ? (
+          <ListSkeleton />
+        ) : rows.length === 0 ? (
+          <EmptyState icon={Receipt} title={t("noOpenReceivables")} />
+        ) : (
+          <>
+            {rows.map((r) => (
+              <div key={r.clientId} className="rounded-2xl border border-border bg-card p-4 shadow-panel">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{r.name}</p>
+                    <p className="text-xs text-muted-foreground">{t("invoiceCount", { count: r.count })}</p>
+                  </div>
+                  <span className="font-semibold tabular-nums">{money(r.total)}</span>
+                </div>
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-border pt-3 text-sm">
+                  {AGING_BUCKETS.filter((b) => r[b] !== 0).map((b) => (
+                    <div key={b} className="min-w-0">
+                      <dt className="truncate text-xs text-muted-foreground">{t(BUCKET_LABEL[b])}</dt>
+                      <dd className={`tabular-nums ${b === "d90_plus" ? "font-medium text-destructive" : ""}`}>{money(r[b])}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ))}
+            <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/40 px-4 py-3 text-sm font-semibold">
+              <span>{t("total")}</span>
+              <span className="tabular-nums">{money(grand)}</span>
+            </div>
+          </>
+        )}
+      </section>
+      <section className="hidden overflow-x-auto rounded-3xl border border-border bg-card shadow-panel md:block">
         <table className="w-full min-w-[720px] text-sm">
           <thead className="text-xs text-muted-foreground">
             <tr className="border-b border-border">
@@ -86,9 +121,13 @@ export default function ReceivablesPage() {
             </tr>
           </thead>
           <tbody>
-            {rows.length === 0 && !isLoading ? (
+            {isLoading ? (
               <tr>
-                <td colSpan={AGING_BUCKETS.length + 2} className="px-4 py-12 text-center text-muted-foreground">{t("noOpenReceivables")}</td>
+                <td colSpan={AGING_BUCKETS.length + 2} className="p-4"><ListSkeleton rows={3} /></td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td colSpan={AGING_BUCKETS.length + 2} className="p-4"><EmptyState icon={Receipt} title={t("noOpenReceivables")} className="border-0" /></td>
               </tr>
             ) : (
               rows.map((r) => (

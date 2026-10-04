@@ -1747,5 +1747,8 @@
   "repVal_subcontractor": "Sous-traitance",
   "repVal_other": "Autre",
   "erpReports": "Rapports",
-  "pageDescErpReports": "Rapports standard filtrables, exportables en Excel, CSV et PDF."
+  "pageDescErpReports": "Rapports standard filtrables, exportables en Excel, CSV et PDF.",
+  "addRowHint": "Choisissez un projet ci-dessous, ajoutez une ligne puis saisissez vos heures.",
+  "noWorkloadPeople": "Aucun employé actif",
+  "noWorkloadPeopleHint": "Ajoutez des employés avec une capacité hebdomadaire pour voir leur charge."
 }

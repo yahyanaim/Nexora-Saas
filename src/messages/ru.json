@@ -1747,5 +1747,8 @@
   "repVal_subcontractor": "Субподряд",
   "repVal_other": "Прочее",
   "erpReports": "Отчёты",
-  "pageDescErpReports": "Стандартные отчёты с фильтрами, экспорт в Excel, CSV и PDF."
+  "pageDescErpReports": "Стандартные отчёты с фильтрами, экспорт в Excel, CSV и PDF.",
+  "addRowHint": "Выберите проект ниже, добавьте строку и введите часы.",
+  "noWorkloadPeople": "Нет активных сотрудников",
+  "noWorkloadPeopleHint": "Добавьте сотрудников с недельной ёмкостью, чтобы увидеть загрузку."
 }

@@ -1747,5 +1747,8 @@
   "repVal_subcontractor": "उप-ठेकेदार",
   "repVal_other": "अन्य",
   "erpReports": "रिपोर्ट",
-  "pageDescErpReports": "फ़िल्टर सहित मानक रिपोर्ट, Excel, CSV और PDF में निर्यात योग्य।"
+  "pageDescErpReports": "फ़िल्टर सहित मानक रिपोर्ट, Excel, CSV और PDF में निर्यात योग्य।",
+  "addRowHint": "नीचे परियोजना चुनें, पंक्ति जोड़ें और अपने घंटे लिखें।",
+  "noWorkloadPeople": "कोई सक्रिय कर्मचारी नहीं",
+  "noWorkloadPeopleHint": "उनका कार्यभार देखने के लिए साप्ताहिक क्षमता वाले कर्मचारी जोड़ें।"
 }

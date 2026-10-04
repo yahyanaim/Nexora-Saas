@@ -1747,5 +1747,8 @@
   "repVal_subcontractor": "分包",
   "repVal_other": "其他",
   "erpReports": "报表",
-  "pageDescErpReports": "带筛选的标准报表，可导出为 Excel、CSV 和 PDF。"
+  "pageDescErpReports": "带筛选的标准报表，可导出为 Excel、CSV 和 PDF。",
+  "addRowHint": "在下方选择项目并添加一行，然后填写工时。",
+  "noWorkloadPeople": "没有在职员工",
+  "noWorkloadPeopleHint": "添加设置了每周容量的员工即可查看工作负荷。"
 }
