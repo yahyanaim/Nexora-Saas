@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -180,10 +180,10 @@ flowchart TB
     S8["8 · Hours<br/>timesheet → submit<br/>→ approve"] --> S9["9 · Invoices<br/>from approved hours"]
   end
   A --> B --> C --> D
-  style A fill:#f8fafc,stroke:#cbd5e1
-  style B fill:#f8fafc,stroke:#cbd5e1
-  style C fill:#f8fafc,stroke:#cbd5e1
-  style D fill:#f8fafc,stroke:#cbd5e1
+  style A fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
+  style B fill:#dcfce7,stroke:#16a34a,stroke-width:2px
+  style C fill:#fef3c7,stroke:#d97706,stroke-width:2px
+  style D fill:#fce7f3,stroke:#db2777,stroke-width:2px
 </div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read the four bands from top to bottom and each band from left to right. A step can only be done once the steps before it exist.</p><h3>Step 1 – Company settings</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>System → Workspace settings → Company</td></tr><tr><td><b>Required</b></td><td>Company name, base currency, fiscal-year start, invoice number format</td></tr><tr><td><b>Optional</b></td><td>Legal name, ICE (15 digits), tax ID, trade register, address, time zone, logo</td></tr><tr><td><b>Why it matters</b></td><td>Printed on every invoice. Numbering and fiscal year must be right <b>before the first invoice</b>: issued numbers are never reused.</td></tr><tr><td><b>Check it worked</b></td><td>Open Finance → Client invoices → New invoice and look at the preview header.</td></tr></tbody></table><h3>Step 2 – Lists</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Workspace settings → Lists</td></tr><tr><td><b>Required</b></td><td>At least one department; this year's public holidays; leave types</td></tr><tr><td><b>Optional</b></td><td>Expense categories, task labels</td></tr><tr><td><b>Why it matters</b></td><td>Departments group people and filter reports; holidays and leave reduce expected hours and capacity.</td></tr><tr><td><b>Check it worked</b></td><td>My work shows the right expected hours for this week.</td></tr></tbody></table><h3>Step 3 – Approval rules</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Workspace settings → Approvals</td></tr><tr><td><b>Required</b></td><td>Who approves timesheets, leave and expenses</td></tr><tr><td><b>Optional</b></td><td>Two-step approval, a named approver</td></tr><tr><td><b>Why it matters</b></td><td>Without an approver, submitted hours wait forever. Nobody can approve their own requests.</td></tr><tr><td><b>Check it worked</b></td><td>Submit a test week as an employee and check it appears in Time approvals.</td></tr></tbody></table><h3>Step 4 – Employees</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Employees → Add employee</td></tr><tr><td><b>Required</b></td><td>Name (2+ letters), email, job title, role, employment type, status, hire date, hourly cost, billable rate, weekly capacity, at least one working day</td></tr><tr><td><b>Optional</b></td><td>Phone, department, manager, skills</td></tr><tr><td><b>Why it matters</b></td><td>The <b>role</b> decides what the person sees; the <b>manager</b> decides who approves them; the <b>billable rate</b> is the default bill rate and the <b>hourly cost</b> feeds margins. Change rates later with a dated rate change, never by editing old work.</td></tr><tr><td><b>Check it worked</b></td><td>Planning → Workload lists the person with the right capacity.</td></tr></tbody></table><h3>Step 5 – Clients</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Clients → Add client</td></tr><tr><td><b>Required</b></td><td>Name, currency, invoice language, payment terms (days), account manager</td></tr><tr><td><b>Optional</b></td><td>Legal name, ICE, tax ID, billing address, industry, contacts, client hourly rate, rate card</td></tr><tr><td><b>Why it matters</b></td><td>Payment terms set due dates and the aging; the rate card overrides employee rates for this client (person → job title → client rate → employee rate).</td></tr><tr><td><b>Check it worked</b></td><td>Open the client panel: contacts and rate card are listed.</td></tr></tbody></table><h3>Step 6 – Projects</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Projects → New project</td></tr><tr><td><b>Required</b></td><td>Name, code (2–12 characters, e.g. HEL-02), client, manager, status, priority, budget type</td></tr><tr><td><b>Optional</b></td><td>Description, team members, dates, budget amount, retainer monthly fee/hours/overage</td></tr><tr><td><b>Why it matters</b></td><td>The <b>budget type</b> (hourly, fixed price, retainer, internal) decides how the project is invoiced; the budget drives the 80%/100% alerts; only team members can log time on it.</td></tr><tr><td><b>Check it worked</b></td><td>The project appears on Projects with health <i>On track</i>.</td></tr></tbody></table><h3>Step 7 – Milestones and tasks</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Open the project → Milestones, then Board or List → New task</td></tr><tr><td><b>Required</b></td><td>Task title, status, priority, estimated hours</td></tr><tr><td><b>Optional</b></td><td>Assignee, milestone, due date, labels, subtasks</td></tr><tr><td><b>Why it matters</b></td><td>Due dates feed My work and project health; estimates feed workload; milestones can be invoiced on their own.</td></tr><tr><td><b>Check it worked</b></td><td>The assignee sees the task in My work → My day.</td></tr></tbody></table><h3>Step 8 – Hours</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Timesheets (or the timer / quick log)</td></tr><tr><td><b>Required</b></td><td>Project, day, hours (rounded to 15 minutes)</td></tr><tr><td><b>Optional</b></td><td>Task, note, billable flag</td></tr><tr><td><b>Why it matters</b></td><td>Approved hours are what clients are billed and what costs are measured on; the bill and cost rate are frozen at approval.</td></tr><tr><td><b>Check it worked</b></td><td>Submit the week, approve it in Time approvals; status becomes <i>Approved</i>.</td></tr></tbody></table><h3>Step 9 – First invoice</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Finance → Client invoices → Create from hours (or New invoice)</td></tr><tr><td><b>Required</b></td><td>Client, period, grouping</td></tr><tr><td><b>Optional</b></td><td>Taxes, withholding, notes, other invoice types (fixed, milestone, retainer, deposit, free)</td></tr><tr><td><b>Why it matters</b></td><td>Draft first; the number is given at issue. Corrections use a credit note.</td></tr><tr><td><b>Check it worked</b></td><td>Issue it, record a payment and check Receivables and Reports → Invoices.</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Each step is one table: where to click, which fields the form refuses to save without, which can wait, why it matters, and how to verify.</p><h3>Bringing existing data</h3><ul><li><b>Many employees or clients:</b> enter the first few by hand to check your lists and rates, then the rest. A CSV import arrives in Phase 5.</li><li><b>Open invoices from your old tool:</b> create them as <i>free</i> invoices dated on their original issue date so Receivables shows the real balance.</li><li><b>Past hours:</b> only the current month is useful for billing; older history is optional.</li></ul>
 <div class="callout good"><b>Tip:</b> do the whole chain once with a test client and a test project (steps 5–9), then delete or archive them before the team starts.</div>
 </section>
@@ -637,9 +637,9 @@ flowchart LR
   U11 --- DIR
   U14 --- DIR
   MGR --- U11
-  classDef actor fill:#eff6ff,stroke:#2563eb,stroke-width:2px,color:#0f172a;
-  style SYS fill:#f8fafc,stroke:#94a3b8,stroke-dasharray:4 3
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Blue ovals are roles (people on the left, finance and direction on the right); the dashed box is Nexora, and each rounded box inside it is something a role does. A line means that role uses that feature. Click the diagram to zoom.</p></section>
+  classDef actor fill:#fde68a,stroke:#b45309,stroke-width:2px,color:#1f2937;
+  style SYS fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,stroke-dasharray:5 4
+</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Yellow ovals are roles (people on the left, finance and direction on the right); the dashed box is Nexora, and each rounded box inside it is something a role does. A line means that role uses that feature. Click the diagram to zoom.</p></section>
 
 <section id="d-sitemap"><h2><span class="n">D3</span>Site map</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">The site map shows every section and page of Nexora and how they are reached, as a single tree.</p><div class="mermaid">
 flowchart TB
@@ -926,40 +926,10 @@ erDiagram
 <script>
   mermaid.initialize({
     startOnLoad: true,
-    theme: "base",
+    theme: "default",
     themeVariables: {
-      primaryColor: "#ffffff",
-      primaryBorderColor: "#2563eb",
-      primaryTextColor: "#0f172a",
-      lineColor: "#475569",
-      textColor: "#0f172a",
-      mainBkg: "#ffffff",
-      nodeBorder: "#cbd5e1",
-      nodeTextColor: "#0f172a",
-      clusterBkg: "#f8fafc",
-      clusterBorder: "#cbd5e1",
-      titleColor: "#0f172a",
-      edgeLabelBackground: "#ffffff",
-      actorBkg: "#ffffff",
-      actorBorder: "#2563eb",
-      actorTextColor: "#0f172a",
-      actorLineColor: "#94a3b8",
-      signalColor: "#475569",
-      signalTextColor: "#0f172a",
-      labelBoxBkgColor: "#ffffff",
-      labelBoxBorderColor: "#cbd5e1",
-      labelTextColor: "#0f172a",
-      loopTextColor: "#0f172a",
-      noteBorderColor: "#cbd5e1",
-      noteBkgColor: "#ffffff",
-      noteTextColor: "#0f172a",
-      activationBorderColor: "#2563eb",
-      activationBkgColor: "#eff6ff",
-      sequenceNumberColor: "#ffffff",
-      attributeBackgroundColorOdd: "#ffffff",
-      attributeBackgroundColorEven: "#f8fafc",
       fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-      fontSize: "12px"
+      fontSize: "13px"
     },
     flowchart: {
       useMaxWidth: true,
@@ -1004,7 +974,7 @@ erDiagram
     var src = el.querySelector("svg"); if (!src) return;
     var svg = src.cloneNode(true);
     var w = naturalWidth(src), vb = src.viewBox.baseVal, h = vb && vb.height ? vb.height : src.getBoundingClientRect().height;
-    svg.setAttribute("width", w); svg.setAttribute("height", h); svg.style.maxWidth = "none";
+    svg.setAttribute("width", w); svg.setAttribute("height", h); svg.style.width = w + "px"; svg.style.height = h + "px"; svg.style.maxWidth = "none";
     var ov = document.createElement("div"); ov.className = "dz-ov";
     var bar = document.createElement("div"); bar.className = "dz-ov-bar";
     var t = document.createElement("span"); t.textContent = title(el) + " — " + L.tip;
@@ -1040,16 +1010,27 @@ erDiagram
     var view = document.createElement("div"); view.className = "dz-view";
     var hint = document.createElement("span"); hint.className = "dz-hint"; hint.textContent = L.hint;
     el.parentNode.insertBefore(box, el); view.appendChild(el); box.append(bar, view);
-    var svg = el.querySelector("svg"), base = naturalWidth(svg), k = 1;
-    function fitWidth() { return Math.min(1.5, (view.clientWidth - 24) / base); }
-    function set(nk) { k = Math.min(4, Math.max(0.3, nk)); svg.style.width = base * k + "px"; svg.style.maxWidth = "none"; }
-    k = Math.max(fitWidth(), 0.3); set(k);
-    bar.append(hint, btn("−", "Zoom out", function () { set(k * 0.8); }), btn("+", "Zoom in", function () { set(k * 1.25); }),
-      btn(L.reset, "Fit width", function () { set(fitWidth()); }), btn("⤢ " + L.full, L.full, function () { openViewer(el); }));
+    // Mermaid may replace the SVG after this runs, so always work on the current one
+    var k = null, zoomed = false;
+    function svg() { return el.querySelector("svg"); }
+    function base() { var s = svg(); return s ? naturalWidth(s) : 0; }
+    function fitWidth() { var b = base(); return b ? Math.min(1.5, (view.clientWidth - 24) / b) : 1; }
+    function set(nk) {
+      var s = svg(); if (!s) return;
+      k = Math.min(4, Math.max(0.3, nk));
+      s.removeAttribute("width"); s.removeAttribute("height");
+      s.style.width = base() * k + "px"; s.style.maxWidth = "none"; s.style.height = "auto";
+    }
+    set(Math.max(fitWidth(), 0.3));
+    new MutationObserver(function () { var s = svg(); if (s && s.style.width !== base() * k + "px") set(zoomed ? k : Math.max(fitWidth(), 0.3)); }).observe(el, { childList: true, subtree: false });
+    bar.append(hint, btn("−", "Zoom out", function () { zoomed = true; set(k * 0.8); }), btn("+", "Zoom in", function () { zoomed = true; set(k * 1.25); }),
+      btn(L.reset, "Fit width", function () { zoomed = false; set(Math.max(fitWidth(), 0.3)); }), btn("⤢ " + L.full, L.full, function () { openViewer(el); }));
     view.addEventListener("click", function () { openViewer(el); });
   }
   function scan() { document.querySelectorAll(".mermaid").forEach(enhance); }
-  var tries = 0, timer = setInterval(function () { scan(); if (++tries > 40 || document.querySelectorAll(".mermaid:not([data-dz])").length === 0) clearInterval(timer); }, 250);
+  scan();
+  // Diagrams render asynchronously (and can be slow on large pages): enhance each one as soon as its SVG appears
+  new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
 })();
 </script>
 
