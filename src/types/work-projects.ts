@@ -54,11 +54,52 @@ export interface WorkProject {
   retainer?: RetainerTerms
   /** Manager's call on health when the automatic one is misleading; needs a reason (PRJ-10) */
   healthOverride?: HealthOverride
+  /** Set when the project is closed (PRJ-13) */
+  closedAt?: string
+  /** Final figures frozen at closing */
+  closeSnapshot?: CloseSnapshot
   createdAt: string
   updatedAt: string
 }
 
 export type WorkProjectInput = Omit<WorkProject, "id" | "workspaceId" | "createdAt" | "updatedAt">
+
+/** Profitability frozen when a project is closed (PRJ-13). */
+export interface CloseSnapshot {
+  revenue: number
+  laborCost: number
+  expenses: number
+  profit: number
+  margin: number | null
+  hours: number
+  currency: string
+  closedBy: string
+  closedAt: string
+}
+
+/** Reusable project plan (PRJ-2): offsets are days from the project start. */
+export interface ProjectTemplate {
+  id: string
+  workspaceId: string
+  name: string
+  description?: string
+  budgetType: BudgetType
+  durationDays: number
+  milestones: { key: string; title: string; dueOffset: number; requiresApproval: boolean }[]
+  tasks: {
+    key: string
+    title: string
+    estimatedHours: number
+    priority: Priority
+    startOffset: number
+    dueOffset: number
+    milestoneKey?: string
+    /** Keys of tasks that must finish first */
+    dependsOn: string[]
+  }[]
+  createdAt: string
+  updatedAt: string
+}
 
 export interface HealthOverride {
   health: ProjectHealth
@@ -93,7 +134,11 @@ export interface WorkTask {
   status: TaskStatus
   priority: Priority
   assigneeId?: string
+  /** First day of work, for the Gantt (PLN-2); defaults from the due date and estimate */
+  startDate?: string
   dueDate?: string
+  /** Tasks that must be done before this one starts (finish-to-start, PRJ-6) */
+  dependsOn?: string[]
   estimatedHours: number
   /** Position inside its status column */
   order: number

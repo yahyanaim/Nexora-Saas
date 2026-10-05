@@ -11,7 +11,9 @@ import {
 import { createCollection } from "@/lib/workforce/demo-store"
 import { seedMilestones, seedProjects, seedTasks } from "@/lib/workforce/project-seed"
 import { recordTaskChanges } from "./task-collab-api"
-import { getAuditActor } from "@/lib/workforce/audit"
+import { getAuditActor, recordAudit } from "@/lib/workforce/audit"
+import { wouldCreateCycle } from "@/lib/workforce/scheduling"
+import { WorkProjectStatus, type CloseSnapshot } from "@/types/work-projects"
 
 /**
  * Projects, their tasks and milestones. Backed by the browser demo store for
@@ -54,6 +56,33 @@ export async function updateProjectApi(
     }
   }
   return projects.update(workspaceId, id, next)
+}
+
+/**
+ * Closes a project (PRJ-13): it becomes completed, keeps a frozen copy of its
+ * profitability, and no longer accepts hours.
+ */
+export async function closeProjectApi(workspaceId: string, id: string, snapshot: Omit<CloseSnapshot, "closedAt" | "closedBy">): Promise<WorkProject> {
+  const current = projects.get(workspaceId, id)
+  if (!current) throw new Error("Project not found")
+  if (current.closedAt) throw new Error("This project is already closed")
+  const actor = getAuditActor()
+  const closedAt = new Date().toISOString()
+  const saved = projects.update(workspaceId, id, {
+    status: WorkProjectStatus.COMPLETED,
+    closedAt,
+    closeSnapshot: { ...snapshot, closedAt, closedBy: actor.name },
+  })
+  recordAudit(workspaceId, { action: "Project closed", actionKey: "project.closed", category: "Settings", target: `${current.code} ${current.name}`, before: current.status, after: saved.status })
+  return saved
+}
+
+/** Reopens a closed project; the closing snapshot is kept for reference. */
+export async function reopenProjectApi(workspaceId: string, id: string): Promise<WorkProject> {
+  const current = projects.get(workspaceId, id)
+  if (!current?.closedAt) throw new Error("This project isn't closed")
+  recordAudit(workspaceId, { action: "Project reopened", actionKey: "project.reopened", category: "Settings", target: `${current.code} ${current.name}` })
+  return projects.update(workspaceId, id, { status: WorkProjectStatus.ACTIVE, closedAt: undefined })
 }
 
 /** Sets or clears the manager's health override; setting one needs a reason (PRJ-10). */
@@ -101,8 +130,28 @@ export async function listTasksApi(workspaceId: string, projectId?: string): Pro
   return (projectId ? all.filter((t) => t.projectId === projectId) : all).sort((a, b) => a.order - b.order)
 }
 
+/** Predecessors must be tasks of the same project and never form a loop (PRJ-6). */
+function assertDependencies(workspaceId: string, projectId: string, taskId: string | undefined, dependsOn?: string[]) {
+  if (!dependsOn?.length) return
+  const all = tasks.list(workspaceId).filter((t) => t.projectId === projectId)
+  const id = taskId ?? "__new__"
+  const self = { id, dependsOn: [] as string[] }
+  const graph = [...all.filter((t) => t.id !== id), self]
+  for (const p of dependsOn) {
+    if (!all.some((t) => t.id === p)) throw new Error("A task can only wait for tasks of the same project")
+    if (wouldCreateCycle(graph, id, p)) throw new Error("These dependencies would make tasks wait for each other in a loop")
+    self.dependsOn.push(p)
+  }
+}
+
+function assertDates(input: Partial<Pick<WorkTask, "startDate" | "dueDate">>) {
+  if (input.startDate && input.dueDate && input.startDate > input.dueDate) throw new Error("The start date is after the due date")
+}
+
 export async function createTaskApi(workspaceId: string, input: WorkTaskInput): Promise<WorkTask> {
   assertAssigneeOnTeam(workspaceId, input.projectId, input.assigneeId)
+  assertDependencies(workspaceId, input.projectId, undefined, input.dependsOn)
+  assertDates(input)
   const order = nextOrder(workspaceId, input.projectId, input.status)
   const task = tasks.create(workspaceId, {
     ...input,
@@ -121,6 +170,8 @@ export async function updateTaskApi(
   const current = tasks.get(workspaceId, id)
   if (!current) throw new Error("Task not found")
   if ("assigneeId" in input) assertAssigneeOnTeam(workspaceId, current.projectId, input.assigneeId)
+  if ("dependsOn" in input) assertDependencies(workspaceId, current.projectId, id, input.dependsOn)
+  assertDates({ startDate: input.startDate ?? current.startDate, dueDate: input.dueDate ?? current.dueDate })
 
   const patch: Partial<WorkTask> = { ...input }
   if (input.status && input.status !== current.status) {
@@ -165,6 +216,10 @@ export async function moveTaskApi(
 }
 
 export async function deleteTaskApi(workspaceId: string, id: string): Promise<void> {
+  // Tasks that waited for this one no longer do
+  for (const t of tasks.list(workspaceId).filter((x) => x.dependsOn?.includes(id))) {
+    tasks.update(workspaceId, t.id, { dependsOn: t.dependsOn!.filter((d) => d !== id) })
+  }
   tasks.remove(workspaceId, id)
 }
 

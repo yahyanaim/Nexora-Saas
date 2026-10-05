@@ -25,10 +25,12 @@ interface Props {
   team: Employee[]
   milestones: Milestone[]
   onOpen: (task: WorkTask) => void
+  /** Dependency problems per task id (PRJ-6) */
+  warnings?: Record<string, string>
 }
 
 /** All tasks of a project as a sortable, filterable table. */
-export function TaskList({ tasks, team, milestones, onOpen }: Props) {
+export function TaskList({ tasks, team, milestones, onOpen, warnings = {} }: Props) {
   const t = useTranslations()
   const locale = useLocale()
 
@@ -48,6 +50,9 @@ export function TaskList({ tasks, team, milestones, onOpen }: Props) {
             )}
           >
             {row.original.title}
+            {warnings[row.original.id] && (
+              <span className="ms-2 inline-flex rounded-full bg-danger-soft px-1.5 py-0.5 align-middle text-[10px] font-medium text-destructive" title={warnings[row.original.id]}>!</span>
+            )}
           </button>
         ),
       },
@@ -116,7 +121,7 @@ export function TaskList({ tasks, team, milestones, onOpen }: Props) {
         cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.estimatedHours} h</span>,
       },
     ],
-    [t, locale, team, milestones, onOpen]
+    [t, locale, team, milestones, onOpen, warnings]
   )
 
   return (

@@ -1,5 +1,7 @@
 "use client"
 
+import { createProjectFromTemplateApi, listTemplatesApi, saveProjectAsTemplateApi } from "@/lib/api/project-templates-api"
+import type { CloseSnapshot } from "@/types/work-projects"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
@@ -7,6 +9,8 @@ import { useCurrentWorkspace } from "@/store/workspace-store"
 import {
   createMilestoneApi,
   createProjectApi,
+  closeProjectApi,
+  reopenProjectApi,
   createTaskApi,
   deleteMilestoneApi,
   deleteProjectApi,
@@ -96,7 +100,44 @@ export function useProjectMutations() {
     },
     onError,
   })
-  return { create, update, remove }
+  const close = useMutation({
+    mutationFn: ({ id, snapshot }: { id: string; snapshot: Omit<CloseSnapshot, "closedAt" | "closedBy"> }) => closeProjectApi(workspaceId, id, snapshot),
+    onSuccess: () => {
+      toast.success(t("projectClosed"))
+      refresh("projects")
+    },
+    onError,
+  })
+  const reopen = useMutation({
+    mutationFn: (id: string) => reopenProjectApi(workspaceId, id),
+    onSuccess: () => {
+      toast.success(t("projectReopened"))
+      refresh("projects")
+    },
+    onError,
+  })
+  const saveTemplate = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => saveProjectAsTemplateApi(workspaceId, id, name),
+    onSuccess: () => {
+      toast.success(t("templateSaved"))
+      refresh("project-templates")
+    },
+    onError,
+  })
+  const createFromTemplate = useMutation({
+    mutationFn: ({ templateId, input }: { templateId: string; input: WorkProjectInput }) => createProjectFromTemplateApi(workspaceId, templateId, input),
+    onSuccess: () => {
+      toast.success(t("projectCreated"))
+      refresh("projects", "tasks", "milestones")
+    },
+    onError,
+  })
+  return { create, update, remove, close, reopen, saveTemplate, createFromTemplate }
+}
+
+export function useProjectTemplates() {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: ["project-templates", id], queryFn: () => listTemplatesApi(id) })
 }
 
 export function useTaskMutations() {
