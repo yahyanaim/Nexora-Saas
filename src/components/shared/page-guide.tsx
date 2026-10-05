@@ -1,17 +1,37 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import { useTranslations } from "next-intl"
 import { ChevronDown, Information } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 
 const STORAGE = "nexora:guide-hidden"
 
-function hiddenGuides(): string[] {
+const EVENT = "nexora:guide-change"
+
+function readRaw() {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE) ?? "[]")
+    return localStorage.getItem(STORAGE) ?? "[]"
+  } catch {
+    return "[]"
+  }
+}
+
+function parse(raw: string): string[] {
+  try {
+    const list: unknown = JSON.parse(raw)
+    return Array.isArray(list) ? list.filter((k): k is string => typeof k === "string") : []
   } catch {
     return []
+  }
+}
+
+function subscribe(onChange: () => void) {
+  window.addEventListener(EVENT, onChange)
+  window.addEventListener("storage", onChange)
+  return () => {
+    window.removeEventListener(EVENT, onChange)
+    window.removeEventListener("storage", onChange)
   }
 }
 
@@ -28,20 +48,20 @@ export function guideKeyFor(url: string, isClient = false) {
  */
 export function PageGuide({ guideKey }: { guideKey: string }) {
   const t = useTranslations()
-  const [open, setOpen] = useState(false)
-  useEffect(() => setOpen(!hiddenGuides().includes(guideKey)), [guideKey])
+  // On the server (and first paint) the guide stays closed, then follows what this device remembers
+  const raw = useSyncExternalStore(subscribe, readRaw, () => null)
+  const open = raw !== null && !parse(raw).includes(guideKey)
   if (!t.has(guideKey)) return null
 
   const [intro = "", ...items] = t(guideKey).split("\n").filter(Boolean)
   const toggle = () => {
-    const next = !open
-    setOpen(next)
+    const rest = parse(readRaw()).filter((k) => k !== guideKey)
     try {
-      const rest = hiddenGuides().filter((k) => k !== guideKey)
-      localStorage.setItem(STORAGE, JSON.stringify(next ? rest : [...rest, guideKey]))
+      localStorage.setItem(STORAGE, JSON.stringify(open ? [...rest, guideKey] : rest))
     } catch {
-      // Storage blocked: the guide still opens and closes for this visit
+      // Storage blocked: nothing to remember on this device
     }
+    window.dispatchEvent(new Event(EVENT))
   }
 
   return (
