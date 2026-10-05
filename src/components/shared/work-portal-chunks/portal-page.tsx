@@ -11,6 +11,7 @@ import { useClients } from "@/hooks/workforce/use-workforce"
 import { ClientStatus } from "@/types/workforce"
 import { PortalView } from "./portal-view"
 import { PortalAccessManager } from "./portal-access-manager"
+import { PageGuide } from "../page-guide"
 
 /**
  * /dashboard/portal. A client contact sees its own portal; company staff
@@ -31,6 +32,7 @@ export default function PortalPage() {
           <p className="text-sm text-muted-foreground">{client?.name}</p>
           <h1 className="mt-1 text-2xl font-semibold">{t("portalWelcome", { name: (me.name ?? "").split(" ")[0] ?? "" })}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("portalWelcomeSub")}</p>
+          <PageGuide guideKey="guide_portal_client" />
         </section>
         <PortalView clientId={me.clientId} viewerName={me.name ?? ""} />
       </div>

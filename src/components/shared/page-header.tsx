@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl"
 import { ChevronRight } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 import { useDashboardNav } from "./navigation/use-dashboard-nav"
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { PageGuide, guideKeyFor } from "./page-guide"
 
 interface PageHeaderProps {
   /** Defaults to the current page's navigation title */
@@ -27,6 +29,8 @@ interface PageHeaderProps {
 export function PageHeader({ title, description, badge, actions, children, className }: PageHeaderProps) {
   const t = useTranslations()
   const { activeGroup, activeItem } = useDashboardNav()
+  const { authedUser } = useAuthGuard()
+  const isClient = !!(authedUser as { clientId?: string } | undefined)?.clientId
 
   const resolvedTitle = title ?? activeItem?.title
   const resolvedDescription =
@@ -65,6 +69,7 @@ export function PageHeader({ title, description, badge, actions, children, class
         </div>
         {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
       </div>
+      {activeItem && <PageGuide guideKey={guideKeyFor(activeItem.url, isClient)} />}
       {children && <div className="mt-6">{children}</div>}
     </section>
   )

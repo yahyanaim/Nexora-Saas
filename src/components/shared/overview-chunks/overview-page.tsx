@@ -13,6 +13,7 @@ import {
   AverageOrderValueCard,
 } from "./time-series-cards"
 import { AskVictorPill } from "./ask-victor-pill"
+import { PageGuide } from "../page-guide"
 
 export default function OverviewPage() {
   return (
@@ -21,6 +22,9 @@ export default function OverviewPage() {
         <div className="w-full space-y-5 p-4 pb-24 md:p-6 md:pb-28">
           {/* Top Analytics Toolbar with Filters & Actions */}
           <AnalyticsToolbar />
+          <div className="rounded-3xl border border-border bg-card px-5 pb-4 shadow-panel">
+            <PageGuide guideKey="guide_overview" />
+          </div>
 
           {/* 4 Top KPI Metric Cards with Bar Sparklines */}
           <AnalyticsKpiCards />
