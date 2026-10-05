@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl"
 import { ChevronDown, Information } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 
-const STORAGE = "nexora:guide-hidden"
+const STORAGE = "nexora:guide-open"
 
 const EVENT = "nexora:guide-change"
 
@@ -43,21 +43,21 @@ export function guideKeyFor(url: string, isClient = false) {
 
 /**
  * "How this page works": a paragraph on what the page is for, then one line
- * per section ("Section: what you do there"). Open on a first visit; once
- * hidden it stays hidden for that page on this device.
+ * per section ("Section: what you do there"). Closed by default; once
+ * opened it stays open for that page on this device.
  */
 export function PageGuide({ guideKey }: { guideKey: string }) {
   const t = useTranslations()
-  // On the server (and first paint) the guide stays closed, then follows what this device remembers
+  // Closed unless this device remembers it was opened for this page
   const raw = useSyncExternalStore(subscribe, readRaw, () => null)
-  const open = raw !== null && !parse(raw).includes(guideKey)
+  const open = raw !== null && parse(raw).includes(guideKey)
   if (!t.has(guideKey)) return null
 
   const [intro = "", ...items] = t(guideKey).split("\n").filter(Boolean)
   const toggle = () => {
     const rest = parse(readRaw()).filter((k) => k !== guideKey)
     try {
-      localStorage.setItem(STORAGE, JSON.stringify(open ? [...rest, guideKey] : rest))
+      localStorage.setItem(STORAGE, JSON.stringify(open ? rest : [...rest, guideKey]))
     } catch {
       // Storage blocked: nothing to remember on this device
     }
