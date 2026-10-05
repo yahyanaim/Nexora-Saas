@@ -225,11 +225,11 @@ function CompanyTab({ initial }: { initial: CompanySettings }) {
               <input
                 type="color"
                 aria-label={t("brandColor")}
-                value={form.brandColor || "#2563eb"}
+                value={form.brandColor || "#2684ff"}
                 onChange={(e) => set("brandColor", e.target.value)}
                 className="h-9 w-12 cursor-pointer rounded-lg border border-border bg-card p-1"
               />
-              <Input className="font-mono" value={form.brandColor ?? ""} placeholder="#2563eb" onChange={(e) => set("brandColor", e.target.value || undefined)} />
+              <Input className="font-mono" value={form.brandColor ?? ""} placeholder="#2684ff" onChange={(e) => set("brandColor", e.target.value || undefined)} />
             </div>
           </Field>
         </div>

@@ -1,10 +1,9 @@
-import type { CellHookData } from "jspdf-autotable"
 import type { JsPDFWithAutoTable } from "@/types/pdf"
-import { BODY, INK, MUTED, WHITE, clean, createPdf, fitText, logoTile, onLaterPages, pageSize, setText, tint, toneColors, watermark, type RGB, type Tone } from "./pdf-kit"
+import { BODY, INK, MUTED, WHITE, clean, createPdf, fitText, fontOf, logoTile, onLaterPages, pageSize, setText, tint, toneColors, watermark, type RGB, type Tone } from "./pdf-kit"
 
 /**
  * The "classic" layout of quotes and invoices, modelled on the French /
- * Moroccan devis: a dark title bar, references on the right, "on behalf of"
+ * Moroccan devis, drawn in the ERP's colours and font: a title bar, references on the right, "on behalf of"
  * and "addressed to" panels, a project description box, a bordered line
  * table with a unit column, notes and bank details next to the totals, the
  * net amount to pay, a "Bon pour accord" signature box and the legal footer.
@@ -34,18 +33,14 @@ export interface ClassicDocument {
 }
 
 const M = 18
-const CHARCOAL: RGB = [64, 64, 64]
-const BAR: RGB = [128, 128, 128]
-const RULE: RGB = [89, 89, 89]
-const PANEL: RGB = [242, 242, 242]
+// Light rules for the table and lines; bars and panels follow the brand colour
+const RULE: RGB = [203, 213, 225]
 
-function bar(doc: Parameters<typeof setText>[0], x: number, y: number, w: number, text: string, align: "left" | "center" = "left") {
-  doc.setFillColor(...BAR)
-  doc.setDrawColor(...RULE)
-  doc.setLineWidth(0.25)
-  doc.rect(x, y, w, 5.2, "FD")
+function bar(doc: Parameters<typeof setText>[0], brand: RGB, x: number, y: number, w: number, text: string, align: "left" | "center" = "left") {
+  doc.setFillColor(...brand)
+  doc.roundedRect(x, y, w, 5.6, 1, 1, "F")
   setText(doc, 7, WHITE, "bold")
-  doc.text(clean(text).toUpperCase(), align === "center" ? x + w / 2 : x + 1.8, y + 3.6, { align })
+  doc.text(clean(text).toUpperCase(), align === "center" ? x + w / 2 : x + 2.2, y + 3.85, { align })
 }
 
 export async function renderClassicDocument(model: ClassicDocument, opts: { save?: boolean } = {}) {
@@ -54,10 +49,13 @@ export async function renderClassicDocument(model: ClassicDocument, opts: { save
   const { w, h } = pageSize(doc)
   const right = w - M
   const cw = right - M
+  const brand = model.brand
+  const PANEL = tint(brand, 0.94)
+  const DEEP: RGB = brand.map((v) => Math.round(v * 0.72)) as RGB
 
   // ── Title bar ─────────────────────────────────────────────────────
-  doc.setFillColor(...CHARCOAL)
-  doc.rect(M, 16, cw, 9.5, "F")
+  doc.setFillColor(...brand)
+  doc.roundedRect(M, 16, cw, 9.5, 1.6, 1.6, "F")
   setText(doc, 17, WHITE, "bold")
   doc.text(clean(model.title).toUpperCase(), w / 2, 23.1, { align: "center" })
 
@@ -98,8 +96,8 @@ export async function renderClassicDocument(model: ClassicDocument, opts: { save
   // ── From / To panels ──────────────────────────────────────────────
   const colW = (cw - 10) / 2
   const toX = M + colW + 10
-  bar(doc, M, y, colW, model.from.heading)
-  bar(doc, toX, y, colW, model.to.heading)
+  bar(doc, brand, M, y, colW, model.from.heading)
+  bar(doc, brand, toX, y, colW, model.to.heading)
   y += 10
   const panel = (rows: [string, string][], x: number) => {
     let ry = y
@@ -118,18 +116,14 @@ export async function renderClassicDocument(model: ClassicDocument, opts: { save
 
   // ── Project description ───────────────────────────────────────────
   if (model.subject?.text) {
-    bar(doc, M, y, cw, model.subject.heading, "center")
-    doc.setDrawColor(...model.brand)
-    doc.setLineWidth(0.4)
-    doc.line(M, y, right, y)
-    doc.setDrawColor(...RULE)
-    doc.setLineWidth(0.25)
+    bar(doc, brand, M, y, cw, model.subject.heading, "center")
     const lines = doc.splitTextToSize(clean(model.subject.text), cw - 4) as string[]
-    const boxH = Math.max(14, lines.length * 3.8 + 8)
-    doc.rect(M, y + 5.2, cw, boxH)
+    const boxH = Math.max(12, lines.length * 3.8 + 7)
+    doc.setFillColor(...PANEL)
+    doc.rect(M, y + 6.4, cw, boxH, "F")
     setText(doc, 7.4, BODY)
-    doc.text(lines, M + 1.8, y + 5.2 + boxH / 2 - ((lines.length - 1) * 3.8) / 2 + 1)
-    y += 5.2 + boxH + 6
+    doc.text(lines, M + 2.2, y + 6.4 + boxH / 2 - ((lines.length - 1) * 3.8) / 2 + 1)
+    y += 6.4 + boxH + 6
   }
 
   // ── Lines ─────────────────────────────────────────────────────────
@@ -141,19 +135,17 @@ export async function renderClassicDocument(model: ClassicDocument, opts: { save
       { content: clean(model.columns.quantity), colSpan: 2, styles: { halign: "center" } },
       { content: clean(model.columns.total), styles: { halign: "center" } },
     ]],
-    body: [...model.items.map((i) => [clean(i.description), clean(i.unitPrice), clean(i.quantity), clean(i.unit), clean(i.total)]), ["", "", "", "", ""]],
+    body: model.items.map((i) => [clean(i.description), clean(i.unitPrice), clean(i.quantity), clean(i.unit), clean(i.total)]),
     margin: { left: M, right: M, top: 18, bottom: 30 },
     theme: "grid",
-    styles: { font: "helvetica", fontSize: 7, textColor: BODY, lineColor: RULE, lineWidth: 0.2, cellPadding: { top: 1.4, bottom: 1.4, left: 1.6, right: 1.6 }, minCellHeight: 5 },
-    headStyles: { fillColor: WHITE, textColor: INK, fontStyle: "bold", fontSize: 7.2, lineWidth: 0.35 },
+    styles: { font: fontOf(doc), fontSize: 7, textColor: BODY, lineColor: RULE, lineWidth: 0.2, cellPadding: { top: 1.6, bottom: 1.6, left: 1.8, right: 1.8 }, minCellHeight: 5.4 },
+    headStyles: { fillColor: tint(brand, 0.88), textColor: DEEP, fontStyle: "bold", fontSize: 7.2, lineColor: RULE },
+    alternateRowStyles: { fillColor: tint(brand, 0.97) },
     columnStyles: {
       1: { cellWidth: 34, halign: "center" },
       2: { cellWidth: 22, halign: "center" },
       3: { cellWidth: 22, halign: "center" },
       4: { cellWidth: 34, halign: "center" },
-    },
-    didParseCell: (data: CellHookData) => {
-      if (data.section === "body" && data.row.index === model.items.length) data.cell.styles.minCellHeight = 4.5
     },
   })
   y = (pdf.lastAutoTable?.finalY ?? y) + 8
@@ -165,7 +157,7 @@ export async function renderClassicDocument(model: ClassicDocument, opts: { save
     doc.addPage()
     y = 20
   }
-  setText(doc, 7.6, INK, "bold")
+  setText(doc, 7.6, DEEP, "bold")
   doc.text(clean(model.notes.heading).toUpperCase(), M + notesW / 2, y, { align: "center" })
   const notesTop = y + 1.5
   doc.setFillColor(...PANEL)
@@ -200,19 +192,16 @@ export async function renderClassicDocument(model: ClassicDocument, opts: { save
     doc.text(clean(row.label).toUpperCase(), valueX - 4, ry, { align: "right" })
     setText(doc, 7.2, INK, row.strong ? "bold" : "normal")
     doc.text(clean(row.value), valueX + valueW / 2, ry, { align: "center" })
-    doc.setDrawColor(...tint(model.brand, 0.35))
+    doc.setDrawColor(...tint(brand, 0.55))
     doc.setLineWidth(0.25)
     doc.line(valueX, ry + 1.6, right, ry + 1.6)
   })
   const netY = Math.max(y + model.totals.length * 5.6 + 8, notesTop + notesH - 3)
-  setText(doc, 10, CHARCOAL, "bold")
+  setText(doc, 10, DEEP, "bold")
   doc.text(clean(model.net.label).toUpperCase(), valueX - 6, netY, { align: "right" })
-  doc.setFillColor(...PANEL)
-  doc.rect(valueX, netY - 4.2, valueW, 6, "F")
-  doc.setDrawColor(...CHARCOAL)
-  doc.setLineWidth(0.6)
-  doc.line(valueX, netY + 1.8, right, netY + 1.8)
-  setText(doc, 8.6, INK, "bold")
+  doc.setFillColor(...brand)
+  doc.roundedRect(valueX, netY - 4.4, valueW, 6.6, 1.2, 1.2, "F")
+  setText(doc, 8.6, WHITE, "bold")
   fitText(doc, clean(model.net.value), valueX + valueW / 2, netY, valueW - 2, 8.6, { align: "center" })
   y = Math.max(netY + 8, notesTop + notesH + 6)
 
@@ -227,14 +216,14 @@ export async function renderClassicDocument(model: ClassicDocument, opts: { save
     doc.setFillColor(...PANEL)
     doc.rect(M + 39, y - 0.5, 88, 16, "F")
     setText(doc, 6.4, MUTED)
-    doc.setFont("helvetica", "italic")
+    doc.setFont(fontOf(doc), "italic")
     doc.text(clean(model.signature.hint), M + 40.5, y + 3, { maxWidth: 85 })
     y += 22
   }
 
   // ── Footer on every page: legal line, terms, page number ──────────
   onLaterPages(doc, () => {
-    doc.setFillColor(...CHARCOAL)
+    doc.setFillColor(...brand)
     doc.rect(M, 8, cw, 1.2, "F")
     setText(doc, 7.5, MUTED, "bold")
     doc.text(clean(`${model.title} ${model.refs.find(([, v]) => v)?.[1] ?? ""}`), M, 14)
@@ -243,16 +232,16 @@ export async function renderClassicDocument(model: ClassicDocument, opts: { save
   for (let p = 1; p <= total; p++) {
     doc.setPage(p)
     setText(doc, 6.3, BODY)
-    doc.setFont("helvetica", "italic")
+    doc.setFont(fontOf(doc), "italic")
     doc.text(clean(model.legal), w / 2, h - 27, { align: "center", maxWidth: cw })
     if (model.terms) {
       setText(doc, 5.6, BODY)
-      doc.setFont("helvetica", "italic")
+      doc.setFont(fontOf(doc), "italic")
       const lines = doc.splitTextToSize(clean(model.terms), cw - 6) as string[]
       doc.text(lines.slice(0, 3), w / 2, h - 22, { align: "center" })
     }
     doc.setFillColor(...PANEL)
-    doc.rect(M, h - 14, cw, 7, "F")
+    doc.roundedRect(M, h - 14, cw, 7, 1.2, 1.2, "F")
     setText(doc, 6.6, MUTED, "bold")
     doc.text(clean(model.pageLabel(p, total)), right - 2, h - 9.6, { align: "right" })
     setText(doc, 6.6, MUTED)

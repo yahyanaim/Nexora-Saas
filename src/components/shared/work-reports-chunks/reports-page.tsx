@@ -21,7 +21,7 @@ import { exportToCsv } from "@/lib/utils/export-data"
 import { downloadXlsx } from "@/lib/utils/xlsx"
 import { getPdfTranslator } from "@/lib/pdf/pdf-i18n"
 import { renderTableReport } from "@/lib/pdf/report-template"
-import { companyLines, hexToRgb, legalLine, loadLogo } from "@/lib/pdf/pdf-kit"
+import { companyLines, documentBrand, legalLine, loadLogo } from "@/lib/pdf/pdf-kit"
 import { cn } from "@/lib/utils"
 
 type Preset = "thisMonth" | "lastMonth" | "thisQuarter" | "thisYear" | "last12" | "custom"
@@ -170,7 +170,7 @@ export default function ReportsPage() {
     }
     const numeric = report.columns.filter((c) => (c.type === "money" || c.type === "hours" || c.type === "percent") && report.totals[c.key] !== undefined)
     await renderTableReport({
-      brand: hexToRgb(company?.brandColor),
+      brand: documentBrand(company?.brandColor),
       logo: await loadLogo(company?.logoDataUrl),
       title: pt(`rep_${reportId}`),
       description: pt(`repDesc_${reportId}`),

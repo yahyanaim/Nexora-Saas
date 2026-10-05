@@ -41,7 +41,7 @@ const COMPANIES: Record<string, CompanySettings> = {
     bankAccount: "007 780 0001234567890123 45",
     bankSwift: "BCMAMAMC",
     invoiceFooter: "Payment by bank transfer quoting the invoice number. Late payments bear interest at the legal rate.",
-    brandColor: "#2563eb",
+    brandColor: "#2684ff",
   },
   ws_northwind: {
     legalName: "Northwind Studio LLC",
@@ -64,7 +64,7 @@ const COMPANIES: Record<string, CompanySettings> = {
     bankAccount: "IBAN US00 0000 0000 1234 5678",
     bankSwift: "FRBBUS6S",
     invoiceFooter: "Thank you for your business. Payment due within the agreed terms.",
-    brandColor: "#7c3aed",
+    brandColor: "#2684ff",
   },
 }
 

@@ -3,7 +3,7 @@ import type { CompanySettings } from "@/types/work-settings"
 import { FLAT_UNIT, QuoteStatus, type Quote, type QuoteDisplayStatus } from "@/types/work-quotes"
 import { lineTotal, quoteDisplayStatus, quoteTotals } from "@/lib/workforce/quotes"
 import { todayIso } from "@/lib/workforce/project-metrics"
-import { companyLines, hexToRgb, legalLine, loadLogo, type Tone } from "./pdf-kit"
+import { companyLines, documentBrand, legalLine, loadLogo, type Tone } from "./pdf-kit"
 import { getPdfTranslator } from "./pdf-i18n"
 import { renderClassicDocument, type ClassicDocument } from "./classic-template"
 import { renderInvoiceDocument, type InvoiceDocument } from "./invoice-template"
@@ -82,7 +82,7 @@ export async function buildClassicQuote(input: QuotePdfInput): Promise<ClassicDo
   const cur = quote.currency
   const rates = [...new Set(totals.taxes.map((x) => x.rate))]
   return {
-    brand: hexToRgb(company?.brandColor),
+    brand: documentBrand(company?.brandColor),
     logo: await loadLogo(company?.logoDataUrl),
     companyName: company?.tradeName || company?.legalName || workspace.name,
     title: t("quote"),
@@ -130,7 +130,7 @@ export async function buildModernQuote(input: QuotePdfInput): Promise<InvoiceDoc
   const totals = quoteTotals(quote)
   const status = quoteDisplayStatus(quote, todayIso())
   return {
-    brand: hexToRgb(company?.brandColor),
+    brand: documentBrand(company?.brandColor),
     logo: await loadLogo(company?.logoDataUrl),
     title: t("quote"),
     number: quote.number || t("draft"),

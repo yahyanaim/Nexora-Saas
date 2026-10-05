@@ -17,7 +17,8 @@ import {
   drawFooters,
   ensureSpace,
   hBars,
-  hexToRgb,
+  documentBrand,
+  documentBrandHex,
   legalLine,
   loadLogo,
   onLaterPages,
@@ -126,7 +127,7 @@ function kpiTiles(a: Analytics, l: AnalyticsLabels, money: (n: number) => string
 export function getAnalyticsReportHtml(input: AnalyticsReportInput): string {
   const { analytics: a, labels: l, money } = input
   const e = escapeHtml
-  const brand = input.pdf.company?.brandColor || "#2563eb"
+  const brand = documentBrandHex(input.pdf.company?.brandColor)
   const max = Math.max(1, ...a.series.map((s) => Math.max(s.revenue, s.previous?.revenue ?? 0)))
   const barW = 100 / Math.max(1, a.series.length)
   const bars = a.series
@@ -230,7 +231,7 @@ export async function downloadAnalyticsPdf(input: AnalyticsReportInput, filename
   const bucket = (iso: string) => new Intl.DateTimeFormat(locale, a.bucket === "month" ? { month: "short", year: "2-digit" } : { day: "numeric", month: "short" }).format(new Date(`${iso}T00:00:00`))
   const company = input.pdf.company
   const companyName = company?.tradeName || company?.legalName || input.company
-  const brand = hexToRgb(company?.brandColor)
+  const brand = documentBrand(company?.brandColor)
 
   const { doc, autoTable } = await createPdf("portrait")
   const pdf = doc as unknown as JsPDFWithAutoTable

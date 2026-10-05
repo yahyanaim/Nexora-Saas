@@ -22,6 +22,7 @@ import {
   watermark,
   type RGB,
   type Tone,
+  fontOf,
 } from "./pdf-kit"
 
 /**
@@ -160,7 +161,7 @@ export async function renderInvoiceDocument(model: InvoiceDocument, opts: { save
     body,
     margin: { left: MARGIN, right: MARGIN, top: 18, bottom: 26 },
     theme: "plain",
-    styles: { font: "helvetica", fontSize: 8.6, textColor: INK, cellPadding: { top: 3, bottom: 3, left: 2.5, right: 2.5 }, valign: "top", lineColor: LINE },
+    styles: { font: fontOf(doc), fontSize: 8.6, textColor: INK, cellPadding: { top: 3, bottom: 3, left: 2.5, right: 2.5 }, valign: "top", lineColor: LINE },
     headStyles: { fillColor: brand, textColor: WHITE, fontStyle: "bold", fontSize: 7.8, cellPadding: { top: 3.2, bottom: 3.2, left: 2.5, right: 2.5 } },
     bodyStyles: { lineWidth: { bottom: 0.2 } },
     alternateRowStyles: { fillColor: SOFT },
