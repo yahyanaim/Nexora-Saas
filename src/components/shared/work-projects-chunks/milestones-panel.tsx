@@ -96,6 +96,11 @@ export function MilestonesPanel({ projectId, milestones, tasks, canEdit, onCreat
                     {t("dueOn", { date: formatShortDate(milestone.dueDate, locale) })} ·{" "}
                     {t("tasksDone", { done, total: own.length })}
                   </p>
+                  {milestone.rejectedAt && !milestone.approvedAt && milestone.decisionComment && (
+                    <p className="mt-2 rounded-lg bg-warning-soft px-2.5 py-1.5 text-xs text-warning-foreground">
+                      {t("portalChangesAsked", { by: milestone.decidedBy ?? "—" })}: {milestone.decisionComment}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3 md:w-72">
                   <Progress value={taskProgress(own)} aria-label={t("progress")} className="h-2 flex-1" />

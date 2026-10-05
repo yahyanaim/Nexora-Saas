@@ -24,6 +24,7 @@ import {
   Percent,
   Building,
   Briefcase,
+  Globe,
   Handshake,
   Clock,
   ClipboardCheck,
@@ -153,6 +154,13 @@ export function useDashboardNav() {
             icon: Handshake,
             descriptionKey: "pageDescClients",
             permission: AdminPermissionsPlatform.CLIENTS_READ,
+          },
+          {
+            title: t("clientPortal"),
+            url: "/dashboard/portal",
+            icon: Globe,
+            descriptionKey: "pageDescPortalStaff",
+            permission: AdminPermissionsPlatform.CLIENTS_UPDATE,
           },
           {
             title: t("projects"),
@@ -419,16 +427,20 @@ export function useDashboardNav() {
     [t]
   )
 
+  const isClient = !!(authedUser as { clientId?: string } | undefined)?.clientId
   const groups = useMemo(
     () =>
-      allGroups
+      // Client contacts only ever see their portal (CRM-9)
+      isClient
+        ? [{ id: "portal", title: t("clientPortal"), icon: Globe, items: [{ title: t("clientPortal"), url: "/dashboard/portal", icon: Globe, descriptionKey: "pageDescPortal" }] }]
+        : allGroups
         .map((group) => ({
           ...group,
           // Platform console pages are only for the Nexora team, never for ERP companies
           items: group.items.filter((item) => hasPermission(item.permission) && (!isPlatformPath(item.url) || isPlatformOperator(authedUser))),
         }))
         .filter((group) => group.items.length > 0),
-    [allGroups, hasPermission, authedUser]
+    [allGroups, hasPermission, authedUser, isClient, t]
   )
 
   const { activeGroup, activeItem } = useMemo(() => {

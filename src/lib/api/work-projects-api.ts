@@ -204,7 +204,7 @@ export async function updateMilestoneApi(
 
 /** Records (or withdraws) the client's sign-off. */
 export async function setMilestoneApprovalApi(workspaceId: string, id: string, approved: boolean): Promise<Milestone> {
-  return milestones.update(workspaceId, id, { approvedAt: approved ? new Date().toISOString() : undefined })
+  return milestones.update(workspaceId, id, approved ? { approvedAt: new Date().toISOString(), rejectedAt: undefined } : { approvedAt: undefined })
 }
 
 /** Deletes a milestone; its tasks stay on the project without a milestone. */

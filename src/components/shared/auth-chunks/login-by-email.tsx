@@ -173,7 +173,7 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
               </button>
             ))}
             <p className="text-center text-[11px] text-muted-foreground">
-              Employees can also sign in with their work email (e.g. lina@atlas.example) once they have access.
+              Employees can also sign in with their work email (e.g. lina@atlas.example), and clients with portal access with theirs (e.g. claire@orbit.example).
             </p>
           </div>
         )}

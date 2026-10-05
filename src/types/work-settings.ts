@@ -108,6 +108,8 @@ export interface WorkspaceSettings {
   lockedThrough?: string
   /** Overdue payment reminders (BIL-15); defaults to on at 3, 15 and 30 days */
   reminders?: ReminderSettings
+  /** Portal logins unused for this many days expire (CRM-12); default 90 */
+  portalInactivityDays?: number
 }
 
 /** Subjects whose second step can depend on an amount. */
