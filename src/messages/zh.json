@@ -2182,5 +2182,6 @@
   "to": "收件人",
   "reminderTemplate1": "{name}，您好：\n\n温馨提醒：金额为 {amount} 的发票 {number} 已于 {dueDate} 到期。如已付款，请忽略此消息。\n\n谢谢！\n{company}",
   "reminderTemplate2": "{name}，您好：\n\n金额为 {amount} 的发票 {number} 已逾期 {days} 天（到期日 {dueDate}）。请告知预计付款时间。\n\n此致\n{company}",
-  "reminderTemplate3": "{name}，您好：\n\n尽管我们此前已多次提醒，金额为 {amount} 的发票 {number} 在到期日（{dueDate}）后 {days} 天仍未支付。请在 8 天内付款，或联系我们商定付款计划。\n\n此致\n{company}"
+  "reminderTemplate3": "{name}，您好：\n\n尽管我们此前已多次提醒，金额为 {amount} 的发票 {number} 在到期日（{dueDate}）后 {days} 天仍未支付。请在 8 天内付款，或联系我们商定付款计划。\n\n此致\n{company}",
+  "timelineElapsed": "已过去的时间"
 }

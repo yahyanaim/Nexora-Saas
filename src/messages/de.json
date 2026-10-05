@@ -2182,5 +2182,6 @@
   "to": "An",
   "reminderTemplate1": "Guten Tag {name},\n\neine freundliche Erinnerung: Rechnung {number} über {amount} war am {dueDate} fällig. Falls Sie bereits gezahlt haben, ignorieren Sie diese Nachricht bitte.\n\nMit freundlichen Grüßen\n{company}",
   "reminderTemplate2": "Guten Tag {name},\n\nRechnung {number} über {amount} ist seit {days} Tagen überfällig (fällig am {dueDate}). Bitte teilen Sie uns mit, wann die Zahlung erfolgt.\n\nMit freundlichen Grüßen\n{company}",
-  "reminderTemplate3": "Guten Tag {name},\n\ntrotz unserer Erinnerungen ist Rechnung {number} über {amount} {days} Tage nach Fälligkeit ({dueDate}) offen. Bitte begleichen Sie sie innerhalb von 8 Tagen oder kontaktieren Sie uns für eine Ratenvereinbarung.\n\nMit freundlichen Grüßen\n{company}"
+  "reminderTemplate3": "Guten Tag {name},\n\ntrotz unserer Erinnerungen ist Rechnung {number} über {amount} {days} Tage nach Fälligkeit ({dueDate}) offen. Bitte begleichen Sie sie innerhalb von 8 Tagen oder kontaktieren Sie uns für eine Ratenvereinbarung.\n\nMit freundlichen Grüßen\n{company}",
+  "timelineElapsed": "Vergangene Zeit"
 }

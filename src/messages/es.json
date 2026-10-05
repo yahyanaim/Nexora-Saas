@@ -2182,5 +2182,6 @@
   "to": "Para",
   "reminderTemplate1": "Hola {name}:\n\nLe recordamos que la factura {number} por {amount} venció el {dueDate}. Si ya la ha pagado, ignore este mensaje.\n\nGracias,\n{company}",
   "reminderTemplate2": "Hola {name}:\n\nLa factura {number} por {amount} lleva {days} días vencida (vencimiento {dueDate}). ¿Podría indicarnos cuándo se realizará el pago?\n\nSaludos,\n{company}",
-  "reminderTemplate3": "Hola {name}:\n\nPese a nuestros recordatorios, la factura {number} por {amount} sigue impagada {days} días después de su vencimiento ({dueDate}). Le rogamos la abone en 8 días o nos contacte para acordar un plan de pagos.\n\nSaludos,\n{company}"
+  "reminderTemplate3": "Hola {name}:\n\nPese a nuestros recordatorios, la factura {number} por {amount} sigue impagada {days} días después de su vencimiento ({dueDate}). Le rogamos la abone en 8 días o nos contacte para acordar un plan de pagos.\n\nSaludos,\n{company}",
+  "timelineElapsed": "Tiempo transcurrido"
 }
