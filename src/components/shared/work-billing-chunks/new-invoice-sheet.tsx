@@ -11,6 +11,7 @@ import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity
 import { billedAgainstBudget, openAdvances } from "@/lib/workforce/invoice-builders"
 import { invoiceTotals } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
+import { clientOutstanding, creditStatus } from "@/lib/workforce/client-relations"
 import type { NewInvoiceInput } from "@/lib/api/work-billing-api"
 import type { Client } from "@/types/workforce"
 import { BudgetType, type Milestone, type WorkProject } from "@/types/work-projects"
@@ -111,6 +112,15 @@ export function NewInvoiceSheet({ open, clients, projects, milestones, invoices,
             <SelectContent>{clients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
           </Select>
         ))}
+        {(() => {
+          const c = clients.find((x) => x.id === clientId)
+          const credit = c ? creditStatus(c, clientOutstanding(c.id, invoices)) : undefined
+          return credit?.limit && credit.outstanding >= credit.limit * 0.8 ? (
+            <p role="alert" className="-mt-1 rounded-xl bg-warning-soft px-3 py-2 text-xs text-warning-foreground">
+              {t("creditLimitWarning", { owed: formatMoney(credit.outstanding, currency, locale), limit: formatMoney(credit.limit, currency, locale) })}
+            </p>
+          ) : null
+        })()}
 
         {kind !== InvoiceKind.FREE && clientId && field("nv-project", kind === InvoiceKind.ADVANCE ? t("projectOptional") : t("project"), (
           <Select value={projectId} onValueChange={setProjectId}>

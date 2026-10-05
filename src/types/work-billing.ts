@@ -1,3 +1,5 @@
+import type { InvoiceReminder } from "./work-crm"
+
 /** Hours employees log on projects, and the invoices sent to clients for them. */
 
 export enum TimeEntryStatus {
@@ -134,6 +136,10 @@ export interface ClientInvoice {
   /** The invoice a credit note corrects (BIL-10) */
   creditNoteFor?: string
   deliveries?: InvoiceDelivery[]
+  /** Overdue reminders sent, in order (BIL-15) */
+  reminders?: InvoiceReminder[]
+  /** The recurring schedule that drafted this invoice (BIL-14) */
+  recurringId?: string
   /** Project description printed above the lines (carried over from a quote) */
   subject?: string
   /** The accepted quote this invoice comes from */

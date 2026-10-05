@@ -114,6 +114,7 @@ export default function ClientsPage() {
         <ClientForm
           ref={formRef}
           client={editing ?? undefined}
+          existingClients={clients}
           employees={employees}
           currency={workspace.currency}
           onValid={handleValid}

@@ -35,6 +35,7 @@ import {
   Network,
   FileBadge,
   FileSignature,
+  Renew,
   DollarSign,
   TrendingUp,
   type LucideIcon,
@@ -194,6 +195,13 @@ export function useDashboardNav() {
             icon: FileText,
             descriptionKey: "pageDescClientInvoices",
             permission: AdminPermissionsPlatform.INVOICES_READ,
+          },
+          {
+            title: t("recurringInvoices"),
+            url: "/dashboard/recurring-invoices",
+            icon: Renew,
+            descriptionKey: "pageDescRecurring",
+            permission: AdminPermissionsPlatform.INVOICES_CREATE,
           },
           {
             title: t("receivables"),

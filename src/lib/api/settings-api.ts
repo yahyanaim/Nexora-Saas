@@ -1,3 +1,4 @@
+import type { ReminderSettings } from "@/types/work-crm"
 import { ExpenseCategory } from "@/types/work-costs"
 import { LeaveType } from "@/types/work-planning"
 import type { Department } from "@/types/workforce"
@@ -211,6 +212,18 @@ export async function updateListsApi(workspaceId: string, lists: ListsInput): Pr
     taskLabels: lists.taskLabels.map((l) => ({ ...l, name: l.name.trim() })),
   }
   recordAudit(workspaceId, { action: "Lists updated", actionKey: "settings.lists", category: "Settings", target: "Workspace settings" })
+  write(workspaceId, next)
+  return next
+}
+
+/** Saves when overdue reminders go out (BIL-15): three increasing day counts. */
+export async function updateRemindersApi(workspaceId: string, reminders: ReminderSettings): Promise<WorkspaceSettings> {
+  const [a, b, c] = reminders.days
+  if (![a, b, c].every((d) => Number.isInteger(d) && d >= 1 && d <= 365) || !(a < b && b < c)) {
+    throw new Error("Reminder days must be whole numbers that increase, from 1 to 365")
+  }
+  recordAudit(workspaceId, { action: "Payment reminders updated", actionKey: "settings.reminders", category: "Settings", target: "Workspace settings" })
+  const next = { ...read(workspaceId), reminders }
   write(workspaceId, next)
   return next
 }
