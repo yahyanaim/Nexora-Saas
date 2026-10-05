@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 vi.mock("./pdf-kit", async (orig) => ({ ...(await orig<typeof import("./pdf-kit")>()), loadLogo: async () => null }))
-import { clean, companyLines, hexToRgb, legalLine, tint } from "./pdf-kit"
+import { clean, companyLines, documentBrand, hexToRgb, legalLine, tint } from "./pdf-kit"
 import { pdfLocale } from "./pdf-i18n"
 import { buildClientInvoiceDocument } from "./generate-client-invoice-pdf"
 import { ClientInvoiceStatus, InvoiceKind, PaymentMethod, type ClientInvoice } from "@/types/work-billing"
@@ -11,7 +11,11 @@ describe("PDF kit", () => {
   })
   it("reads brand colours and tints them", () => {
     expect(hexToRgb("#7c3aed")).toEqual([124, 58, 237])
-    expect(hexToRgb("nope")).toEqual([37, 99, 235])
+    expect(hexToRgb("nope")).toEqual([38, 132, 255])
+    // Old demo seed colours and a missing colour fall back to the ERP blue; a real choice is kept
+    expect(documentBrand(undefined)).toEqual([38, 132, 255])
+    expect(documentBrand("#2563EB")).toEqual([38, 132, 255])
+    expect(documentBrand("#10b981")).toEqual([16, 185, 129])
     expect(tint([0, 0, 0], 0.5)).toEqual([128, 128, 128])
   })
   it("prints the company identity and legal line", () => {

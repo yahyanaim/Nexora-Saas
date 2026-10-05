@@ -4,7 +4,7 @@ import type { WorkProject } from "@/types/work-projects"
 import type { CompanySettings } from "@/types/work-settings"
 import { displayStatus, invoiceTotals } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
-import { companyLines, hexToRgb, legalLine, loadLogo, type Tone } from "./pdf-kit"
+import { companyLines, documentBrand, legalLine, loadLogo, type Tone } from "./pdf-kit"
 import { renderInvoiceDocument, type InvoiceDocument } from "./invoice-template"
 import { getPdfTranslator } from "./pdf-i18n"
 import { renderClassicDocument, type ClassicDocument } from "./classic-template"
@@ -98,7 +98,7 @@ export async function buildClientInvoiceDocument(input: ClientInvoicePdfInput): 
   ]
 
   return {
-    brand: hexToRgb(company?.brandColor),
+    brand: documentBrand(company?.brandColor),
     logo: await loadLogo(company?.logoDataUrl),
     title: isCredit ? t("creditNote") : t("invoice"),
     number: invoice.number || t("draft"),
@@ -168,7 +168,7 @@ export async function buildClassicInvoice(input: ClientInvoicePdfInput & { quote
   const projectOf = (id?: string) => input.projects?.find((p) => p.id === id)
   const subject = invoice.subject || [...new Set(invoice.lines.map((l) => projectOf(l.projectId)).filter(Boolean).map((p) => `${p!.code} · ${p!.name}`))].join(", ")
   return {
-    brand: hexToRgb(company?.brandColor),
+    brand: documentBrand(company?.brandColor),
     logo: await loadLogo(company?.logoDataUrl),
     companyName: company?.tradeName || company?.legalName || workspace.name,
     title: isCredit ? t("creditNote") : t("invoice"),

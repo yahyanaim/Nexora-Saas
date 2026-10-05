@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -115,20 +116,21 @@ export function InvoiceSheet(props: Props) {
     <Sheet open onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-xl">
         <SheetHeader className="border-b px-6 py-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <SheetTitle className="font-mono">{invoice.number || t("draftInvoice")}</SheetTitle>
-            {isCredit && <Badge variant="outline">{t("creditNote")}</Badge>}
-            <Badge variant="outline" className={INVOICE_STATUS_CLASS[status]}>
-              {t(INVOICE_STATUS_LABEL[status])}
-            </Badge>
-          </div>
+          {/* Number, status and the PDF button on one line */}
           <div className="flex items-center justify-between gap-3">
-            <SheetDescription>{client?.name ?? "—"}</SheetDescription>
-            <Button variant="outline" size="sm" disabled={downloading} onClick={download}>
+            <div className="flex min-w-0 items-center gap-2.5">
+              <SheetTitle className="truncate font-mono">{invoice.number || t("draftInvoice")}</SheetTitle>
+              {isCredit && <Badge variant="outline">{t("creditNote")}</Badge>}
+              <Badge variant="outline" className={cn("shrink-0", INVOICE_STATUS_CLASS[status])}>
+                {t(INVOICE_STATUS_LABEL[status])}
+              </Badge>
+            </div>
+            <Button variant="outline" size="sm" className="shrink-0" disabled={downloading} onClick={download}>
               <DownloadIcon className="size-4" />
               {t("downloadPdf")}
             </Button>
           </div>
+          <SheetDescription>{client?.name ?? "—"}</SheetDescription>
         </SheetHeader>
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">

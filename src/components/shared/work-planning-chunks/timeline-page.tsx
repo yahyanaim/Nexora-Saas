@@ -35,6 +35,15 @@ function days(from: string, to: string) {
   return Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000)
 }
 
+/** Columns are half months (1st and 16th), like the time slots of a schedule. */
+const GAP = 6
+const HATCH = "repeating-linear-gradient(135deg, var(--border) 0 1.5px, transparent 1.5px 7px)"
+
+/** CSS offset of a fractional column position inside a grid with gaps. */
+function colOffset(pos: number, count: number) {
+  return `calc(${pos / count} * (100% - ${(count - 1) * GAP}px) + ${Math.min(Math.floor(pos), count - 1) * GAP}px)`
+}
+
 /** Gantt-style view of every project between its start and due date. */
 export default function TimelinePage() {
   const t = useTranslations()
@@ -47,8 +56,6 @@ export default function TimelinePage() {
   const today = todayIso()
   const [windowStart, setWindowStart] = useState(() => monthStart(today, -1))
   const windowEnd = addDays(monthStart(windowStart, MONTHS), -1)
-  const span = days(windowStart, windowEnd) + 1
-  const pct = (iso: string) => Math.min(100, Math.max(0, (days(windowStart, iso) / span) * 100))
 
   const stats = useMemo(() => projectStatsById(projects, tasks), [projects, tasks])
   const rows = useMemo(
@@ -60,6 +67,16 @@ export default function TimelinePage() {
   )
   const months = Array.from({ length: MONTHS }, (_, i) => monthStart(windowStart, i))
   const todayInView = today >= windowStart && today <= windowEnd
+  const slots = months.flatMap((m) => [m, `${m.slice(0, 8)}16`])
+  const slotEnd = (i: number) => (i + 1 < slots.length ? slots[i + 1]! : addDays(windowEnd, 1))
+  /** Fractional column position of a date (0 = window start, slots.length = window end). */
+  const pos = (iso: string) => {
+    if (iso <= windowStart) return 0
+    if (iso > windowEnd) return slots.length
+    const i = slots.findLastIndex((x) => x <= iso)
+    return i + days(slots[i]!, iso) / days(slots[i]!, slotEnd(i))
+  }
+  const todaySlot = slots.findLastIndex((x) => x <= today)
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -85,31 +102,26 @@ export default function TimelinePage() {
       </PageHeader>
 
       <section className="relative overflow-x-auto rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
-        <div className="min-w-[56rem]">
-          {/* Month header: one chip per month, the current month highlighted */}
+        <div className="min-w-[60rem]">
+          {/* Column header: one chip per half month, the current one highlighted */}
           <div className="grid grid-cols-[15rem_1fr] items-center gap-3 pb-3">
             <div className="ps-1 text-sm font-medium text-muted-foreground">{t("project")}</div>
-            <div className="relative h-12">
-              {months.map((m, i) => {
-                const left = pct(m)
-                const right = i + 1 < months.length ? pct(months[i + 1]!) : 100
-                const current = m.slice(0, 7) === today.slice(0, 7)
-                const date = new Date(`${m}T00:00:00`)
+            <div className="grid" style={{ gridTemplateColumns: `repeat(${slots.length}, minmax(0, 1fr))`, gap: GAP }}>
+              {slots.map((slot, i) => {
+                const current = todayInView && i === todaySlot
+                const past = slotEnd(i) <= today
                 return (
                   <span
-                    key={m}
+                    key={slot}
                     className={cn(
-                      "absolute inset-y-0 flex flex-col items-center justify-center rounded-xl border text-center leading-tight",
-                      current
-                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                        : m < monthStart(today)
-                          ? "border-transparent bg-muted text-muted-foreground"
-                          : "border-border bg-card text-foreground"
+                      "flex h-12 flex-col items-center justify-center rounded-xl border text-center leading-tight",
+                      current ? "border-primary bg-primary text-primary-foreground shadow-sm" : past ? "border-transparent bg-muted text-muted-foreground" : "border-border bg-card text-foreground"
                     )}
-                    style={{ insetInlineStart: `calc(${left}% + 3px)`, width: `calc(${right - left}% - 6px)` }}
                   >
-                    <span className={cn("text-[10px]", current ? "text-primary-foreground/80" : "text-muted-foreground")}>{date.getFullYear()}</span>
-                    <span className="text-sm font-medium capitalize">{new Intl.DateTimeFormat(locale, { month: "short" }).format(date)}</span>
+                    <span className={cn("text-[10px] capitalize", current ? "text-primary-foreground/80" : "text-muted-foreground")}>
+                      {new Intl.DateTimeFormat(locale, { month: "short" }).format(new Date(`${slot}T00:00:00`))}
+                    </span>
+                    <span className="text-sm font-medium tabular-nums">{slot.slice(8)}</span>
                   </span>
                 )
               })}
@@ -124,26 +136,10 @@ export default function TimelinePage() {
           )}
 
           <div className="relative">
-            {/* Background of the time area: elapsed time hatched, month lines and the today line */}
-            {rows.length > 0 && (
-              <div className="pointer-events-none absolute inset-y-0 end-0 start-[calc(15rem+0.75rem)]" aria-hidden>
-                {today > windowStart && (
-                  <span
-                    className="absolute inset-y-0 start-0 rounded-xl opacity-70"
-                    style={{
-                      width: `${pct(today)}%`,
-                      backgroundImage: "repeating-linear-gradient(135deg, var(--border) 0 1px, transparent 1px 9px)",
-                    }}
-                  />
-                )}
-                {months.slice(1).map((m) => (
-                  <span key={m} className="absolute inset-y-0 border-s border-dashed border-border" style={{ insetInlineStart: `${pct(m)}%` }} />
-                ))}
-                {todayInView && (
-                  <span className="absolute inset-y-0 border-s-2 border-dashed border-destructive/70" style={{ insetInlineStart: `${pct(today)}%` }}>
-                    <span className="absolute -top-1 -start-[5px] size-2 rounded-full bg-destructive" />
-                  </span>
-                )}
+            {/* The "now" line runs through every row, behind the bars */}
+            {todayInView && rows.length > 0 && (
+              <div className="pointer-events-none absolute -top-3 bottom-0 end-0 start-[calc(15rem+0.75rem)]" aria-hidden>
+                <span className="absolute inset-y-0 border-s-2 border-dashed border-primary" style={{ insetInlineStart: colOffset(pos(today), slots.length) }} />
               </div>
             )}
 
@@ -152,8 +148,8 @@ export default function TimelinePage() {
                 const s = stats.get(project.id)!
                 const end = project.dueDate ?? addDays(project.startDate, 30)
                 const visible = project.startDate <= windowEnd && end >= windowStart
-                const left = pct(project.startDate)
-                const width = Math.max(1.5, pct(end) - left)
+                const from = pos(project.startDate)
+                const to = Math.max(from + 0.25, pos(addDays(end, 1)))
                 const bar = BAR[s.health]
                 const client = clients.find((c) => c.id === project.clientId)?.name ?? t("internalProject")
                 return (
@@ -170,23 +166,33 @@ export default function TimelinePage() {
                         <span className="block truncate text-xs text-muted-foreground">{project.code} · {client}</span>
                       </span>
                     </Link>
-                    <div className="relative h-[3.25rem]">
+                    <div className="relative h-[3.6rem]">
+                      {/* Cells: elapsed half months are hatched tiles */}
+                      <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${slots.length}, minmax(0, 1fr))`, gap: GAP }} aria-hidden>
+                        {slots.map((slot, i) => (
+                          <span
+                            key={slot}
+                            className={cn("rounded-xl", slotEnd(i) <= today ? "border border-border/70" : "")}
+                            style={slotEnd(i) <= today ? { backgroundImage: HATCH } : undefined}
+                          />
+                        ))}
+                      </div>
                       {visible && (
                         <Link
                           href={`/dashboard/projects/${project.id}`}
                           title={`${project.name}: ${formatShortDate(project.startDate, locale)} – ${formatShortDate(project.dueDate, locale)} · ${s.progress}%`}
                           className={cn(
-                            "@container absolute top-0.5 bottom-2 flex items-center overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md",
+                            "@container absolute inset-y-0 flex items-center overflow-hidden rounded-2xl shadow-md ring-4 ring-card transition-shadow hover:shadow-lg",
                             bar.fill,
                             !project.dueDate && "outline-2 outline-dashed outline-offset-2 outline-border"
                           )}
-                          style={{ insetInlineStart: `${left}%`, width: `${width}%` }}
+                          style={{ insetInlineStart: colOffset(from, slots.length), width: `calc(${colOffset(to, slots.length)} - ${colOffset(from, slots.length)})` }}
                         >
                           {/* Progress: a thin strip along the bottom of the bar */}
-                          <span className="absolute inset-x-3 bottom-1 h-[3px] overflow-hidden rounded-full bg-white/35" aria-hidden>
+                          <span className="absolute inset-x-3 bottom-1.5 h-[3px] overflow-hidden rounded-full bg-white/35" aria-hidden>
                             <span className="block h-full rounded-full bg-white" style={{ width: `${s.progress}%` }} />
                           </span>
-                          <span className="relative flex min-w-0 flex-1 items-center gap-2 px-1.5 pb-0.5">
+                          <span className="relative flex min-w-0 flex-1 items-center gap-2.5 px-2 pb-1">
                             <span className="hidden size-8 shrink-0 items-center justify-center rounded-full bg-card shadow-sm @[4.5rem]:flex">
                               <FolderKanban className={cn("size-4", bar.icon)} />
                             </span>
@@ -208,10 +214,10 @@ export default function TimelinePage() {
                               key={m.id}
                               title={`${m.title} · ${formatShortDate(m.dueDate, locale)}`}
                               className={cn(
-                                "absolute bottom-0 size-3.5 -translate-x-1/2 rotate-45 rounded-[3px] border-2 border-card shadow-sm rtl:translate-x-1/2",
+                                "absolute -bottom-1.5 size-3.5 -translate-x-1/2 rotate-45 rounded-[3px] border-2 border-card shadow-sm rtl:translate-x-1/2",
                                 reached ? "bg-success-foreground" : "bg-foreground"
                               )}
-                              style={{ insetInlineStart: `${pct(m.dueDate)}%` }}
+                              style={{ insetInlineStart: colOffset(pos(m.dueDate), slots.length) }}
                             >
                               <span className="sr-only">{m.title}</span>
                             </span>
@@ -231,9 +237,9 @@ export default function TimelinePage() {
           <Badge key={h} variant="outline" className={HEALTH_CLASS[h]}>{t(HEALTH_LABEL[h])}</Badge>
         ))}
         <span className="flex items-center gap-2"><span className="size-3 rotate-45 rounded-[2px] bg-foreground" aria-hidden />{t("milestone")}</span>
-        <span className="flex items-center gap-2"><span className="h-3 border-s-2 border-dashed border-destructive/70" aria-hidden />{t("today")}</span>
+        <span className="flex items-center gap-2"><span className="h-3 border-s-2 border-dashed border-primary" aria-hidden />{t("today")}</span>
         <span className="flex items-center gap-2">
-          <span className="size-3 rounded-[3px] border border-border" style={{ backgroundImage: "repeating-linear-gradient(135deg, var(--border) 0 1px, transparent 1px 4px)" }} aria-hidden />
+          <span className="size-3 rounded-[3px] border border-border" style={{ backgroundImage: HATCH }} aria-hidden />
           {t("timelineElapsed")}
         </span>
         <span>{t("timelineHint")}</span>

@@ -34,6 +34,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
+## Inter font (SIL Open Font License 1.1)
+
+`public/fonts/inter-400.ttf` and `public/fonts/inter-700.ttf` (Latin subset, embedded in generated PDFs) are from Inter, Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter), licensed under the SIL Open Font License, Version 1.1 (https://openfontlicense.org).
+
 ## npm dependencies
 
 Every package in `package.json` keeps its own license (mostly MIT, Apache-2.0,

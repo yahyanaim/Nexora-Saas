@@ -16,14 +16,24 @@ export const MUTED: RGB = [100, 116, 139]
 export const LINE: RGB = [226, 232, 240]
 export const SOFT: RGB = [248, 250, 252]
 export const WHITE: RGB = [255, 255, 255]
-export const DEFAULT_BRAND: RGB = [37, 99, 235]
+/** The ERP's own chart palette (globals.css --chart-1…5), so documents match the app. */
+export const ERP_CHART = {
+  blue: [38, 132, 255] as RGB, // --chart-1 #2684ff
+  sky: [130, 190, 255] as RGB, // --chart-2 #82beff
+  green: [47, 191, 113] as RGB, // --chart-3 #2fbf71
+  amber: [245, 184, 61] as RGB, // --chart-4 #f5b83d
+  slate: [125, 141, 160] as RGB, // --chart-5 #7d8da0
+}
+export const DEFAULT_BRAND: RGB = ERP_CHART.blue
+export const ERP_BRAND_HEX = "#2684ff"
 
+// Text colours are the chart hues darkened for contrast on white; backgrounds are light tints of them
 const TONES: Record<Tone, { fg: RGB; bg: RGB }> = {
-  neutral: { fg: [71, 85, 105], bg: [241, 245, 249] },
-  info: { fg: [29, 78, 216], bg: [219, 234, 254] },
-  success: { fg: [21, 128, 61], bg: [220, 252, 231] },
-  warning: { fg: [180, 83, 9], bg: [254, 243, 199] },
-  danger: { fg: [185, 28, 28], bg: [254, 226, 226] },
+  neutral: { fg: [83, 97, 116], bg: [238, 242, 246] },
+  info: { fg: [24, 104, 214], bg: [222, 236, 255] },
+  success: { fg: [27, 135, 78], bg: [222, 245, 233] },
+  warning: { fg: [176, 116, 12], bg: [254, 243, 216] },
+  danger: { fg: [200, 40, 40], bg: [253, 228, 228] },
 }
 export const toneColors = (tone: Tone) => TONES[tone]
 
@@ -31,6 +41,15 @@ export function hexToRgb(hex: string | undefined, fallback: RGB = DEFAULT_BRAND)
   const m = hex?.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i)
   return m ? [parseInt(m[1]!, 16), parseInt(m[2]!, 16), parseInt(m[3]!, 16)] : fallback
 }
+
+/** Colours the demo used to seed before documents followed the ERP palette. */
+const LEGACY_SEED_COLOURS = ["#2563eb", "#7c3aed"]
+
+/** Brand colour for documents: the company's own choice, otherwise the ERP blue. */
+export function documentBrandHex(hex: string | undefined) {
+  return !hex || LEGACY_SEED_COLOURS.includes(hex.toLowerCase()) ? ERP_BRAND_HEX : hex
+}
+export const documentBrand = (hex: string | undefined): RGB => hexToRgb(documentBrandHex(hex))
 
 /** Mixes a colour with white: 0 = the colour, 1 = white. */
 export function tint(c: RGB, amount: number): RGB {
@@ -54,11 +73,52 @@ export function clean(s: string | number | null | undefined): string {
     .replace(/•/g, "·")
 }
 
+// ── Font: Inter, the ERP's typeface (public/fonts, SIL OFL), with Helvetica as fallback ──
+const FAMILY = new WeakMap<jsPDF, string>()
+/** Font family to use with doc.setFont and autoTable styles. */
+export const fontOf = (doc: jsPDF) => FAMILY.get(doc) ?? "helvetica"
+
+let interData: Promise<{ regular: string; bold: string } | null> | null = null
+
+function toBase64(buffer: ArrayBuffer) {
+  const bytes = new Uint8Array(buffer)
+  let binary = ""
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  return btoa(binary)
+}
+
+async function loadInter() {
+  if (typeof window === "undefined" || typeof fetch === "undefined") return null
+  try {
+    const [regular, bold] = await Promise.all(
+      ["/fonts/inter-400.ttf", "/fonts/inter-700.ttf"].map(async (url) => {
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(url)
+        return toBase64(await res.arrayBuffer())
+      })
+    )
+    return { regular: regular!, bold: bold! }
+  } catch {
+    interData = null // try again next time
+    return null
+  }
+}
+
 export async function createPdf(orientation: "portrait" | "landscape" = "portrait") {
   const { jsPDF } = await import("jspdf")
   const autoTable = (await import("jspdf-autotable")).default
   const doc = new jsPDF({ orientation, unit: "mm", format: "a4", compress: true })
   doc.setLineHeightFactor(1.3)
+  const inter = await (interData ??= loadInter())
+  if (inter) {
+    doc.addFileToVFS("Inter-Regular.ttf", inter.regular)
+    doc.addFileToVFS("Inter-Bold.ttf", inter.bold)
+    doc.addFont("Inter-Regular.ttf", "Inter", "normal")
+    doc.addFont("Inter-Bold.ttf", "Inter", "bold")
+    // Inter ships no italic here; italic text uses the regular face
+    doc.addFont("Inter-Regular.ttf", "Inter", "italic")
+    FAMILY.set(doc, "Inter")
+  }
   return { doc, autoTable }
 }
 
@@ -76,7 +136,7 @@ export async function loadLogo(src?: string): Promise<HTMLImageElement | null> {
 }
 
 export function setText(doc: jsPDF, size: number, color: RGB, style: "normal" | "bold" = "normal") {
-  doc.setFont("helvetica", style)
+  doc.setFont(fontOf(doc), style)
   doc.setFontSize(size)
   doc.setTextColor(...color)
 }

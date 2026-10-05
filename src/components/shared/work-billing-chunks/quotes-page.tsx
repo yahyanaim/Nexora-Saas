@@ -4,6 +4,7 @@ import { Fragment, useMemo, useState } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -209,7 +210,7 @@ export default function QuotesPage() {
         header: ({ column }) => <DataTableColumnHeader column={column} title={t("status")} />,
         cell: ({ row }) => {
           const s = status(row.original)
-          return <Badge variant="outline" className={QUOTE_STATUS_CLASS[s]}>{t(QUOTE_STATUS_LABEL[s])}</Badge>
+          return <Badge variant="outline" className={cn("shrink-0", QUOTE_STATUS_CLASS[s])}>{t(QUOTE_STATUS_LABEL[s])}</Badge>
         },
         filterFn: includesFilter,
       },
@@ -379,9 +380,14 @@ export default function QuotesPage() {
             return (
               <>
                 <SheetHeader className="border-b px-6 py-4">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <SheetTitle className="font-mono">{viewing.number || t("draft")}</SheetTitle>
-                    <Badge variant="outline" className={QUOTE_STATUS_CLASS[s]}>{t(QUOTE_STATUS_LABEL[s])}</Badge>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <SheetTitle className="truncate font-mono">{viewing.number || t("draft")}</SheetTitle>
+                      <Badge variant="outline" className={cn("shrink-0", QUOTE_STATUS_CLASS[s])}>{t(QUOTE_STATUS_LABEL[s])}</Badge>
+                    </div>
+                    <Button variant="outline" size="sm" className="shrink-0" onClick={() => pdf(viewing)}>
+                      <DownloadIcon className="size-4" /> {t("downloadPdf")}
+                    </Button>
                   </div>
                   <SheetDescription>{client?.name} · {formatShortDate(viewing.issueDate, locale)} → {formatShortDate(viewing.validUntil, locale)}</SheetDescription>
                 </SheetHeader>
@@ -423,9 +429,6 @@ export default function QuotesPage() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2 border-t px-6 py-4">
-                  <Button variant="outline" onClick={() => pdf(viewing)}>
-                    <DownloadIcon className="size-4" /> {t("downloadPdf")}
-                  </Button>
                   {canEdit && viewing.status === QuoteStatus.DRAFT && (
                     <>
                       <Button variant="outline" onClick={() => openForm(viewing)}><Pencil className="size-4" /> {t("edit")}</Button>
