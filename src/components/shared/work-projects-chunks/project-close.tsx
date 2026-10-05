@@ -77,7 +77,7 @@ export function CloseProjectDialog({ open, onOpenChange, ...data }: Data & { ope
           <span className="font-medium">{t("profit")}</span>
           <span className={cn("text-end font-semibold tabular-nums", profit.profit < 0 && "text-destructive")}>
             {money(profit.profit)}
-            {profit.margin !== null ? ` · ${Math.round(profit.margin * 100)}%` : ""}
+            {profit.margin !== null ? ` · ${Math.round(profit.margin)}%` : ""}
           </span>
         </div>
         {openItems > 0 && (
@@ -113,7 +113,7 @@ export function ClosedProjectSummary({ project, canEdit }: { project: WorkProjec
         <p className="text-sm font-medium">{t("projectClosedOn", { date, name: s.closedBy })}</p>
         <p className="text-xs text-muted-foreground">
           {t("revenue")} {money(s.revenue)} · {t("laborCost")} {money(s.laborCost)} · {t("expenses")} {money(s.expenses)} · {t("profit")} {money(s.profit)}
-          {s.margin !== null ? ` (${Math.round(s.margin * 100)}%)` : ""} · {s.hours} h
+          {s.margin !== null ? ` (${Math.round(s.margin)}%)` : ""} · {s.hours} h
         </p>
       </div>
       {canEdit && (

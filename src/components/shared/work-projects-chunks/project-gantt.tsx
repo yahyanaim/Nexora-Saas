@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { AlertTriangle } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
@@ -63,6 +63,12 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
   const x = (iso: string) => days(startDay, iso) * DAY
   const weeks = Array.from({ length: Math.ceil(total / 7) }, (_, i) => addDays(startDay, i * 7))
   const indexOf = new Map(rows.map((r, i) => [r.task.id, i]))
+  // Open the chart around today rather than at the project start
+  const scroller = useRef<HTMLDivElement>(null)
+  const todayX = today >= startDay ? x(today) : 0
+  useEffect(() => {
+    if (scroller.current) scroller.current.scrollLeft = Math.max(0, todayX - 7 * DAY)
+  }, [todayX])
   const fmt = (iso: string) => new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(`${iso}T00:00:00`))
 
   const onPointerDown = (e: React.PointerEvent, id: string) => {
@@ -115,7 +121,7 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
         </div>
 
         {/* Chart */}
-        <div className="min-w-0 flex-1 overflow-x-auto">
+        <div ref={scroller} className="min-w-0 flex-1 overflow-x-auto">
           <div className="relative" style={{ width: total * DAY }}>
             {/* Week header */}
             <div className="flex h-12 border-b border-border">
@@ -210,7 +216,7 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
                     )}
                     style={{ left: x(start) + shift * DAY + 2, width: (days(start, end) + 1) * DAY - 4, top: i * ROW + 8, height: ROW - 16 }}
                   >
-                    <span className="truncate">{task.estimatedHours ? `${task.estimatedHours} h` : ""}</span>
+                    {days(start, end) >= 1 && <span className="truncate">{task.estimatedHours ? `${task.estimatedHours} h` : ""}</span>}
                   </button>
                 )
               })}

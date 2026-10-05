@@ -70,7 +70,7 @@ describe("project APIs for planning", () => {
   })
 
   it("closes with a snapshot, refuses a second close, and reopens", async () => {
-    const snap = { revenue: 100, laborCost: 40, expenses: 10, profit: 50, margin: 0.5, hours: 3, currency: "EUR" }
+    const snap = { revenue: 100, laborCost: 40, expenses: 10, profit: 50, margin: 50, hours: 3, currency: "EUR" }
     const closed = await closeProjectApi(WS, "prj_helio", snap)
     expect(closed.status).toBe(WorkProjectStatus.COMPLETED)
     expect(closed.closeSnapshot?.profit).toBe(50)
