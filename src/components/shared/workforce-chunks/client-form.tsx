@@ -23,7 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Star, Trash2 } from "@/components/ui/carbon/icons"
+import { Plus, Star, Trash2, Warning } from "@/components/ui/carbon/icons"
+import { Switch } from "@/components/ui/switch"
+import { findDuplicateClients } from "@/lib/workforce/client-relations"
 import { createId } from "@/lib/workforce/demo-store"
 import { cn } from "@/lib/utils"
 import { ClientStatus, type Client, type ClientInput, type Employee } from "@/types/workforce"
@@ -69,6 +71,8 @@ const schema = z.object({
   status: z.enum(ClientStatus),
   hourlyRate: z.number().min(0).max(100000).optional(),
   paymentTermsDays: z.number({ error: "required" }).int().min(0).max(365),
+  creditLimit: z.number().min(0).max(1e9).optional(),
+  remindersOff: z.boolean(),
   accountManagerId: z.string(),
   contacts: z.array(contactSchema),
   notes: z.string().optional(),
@@ -94,6 +98,8 @@ function toFormValues(client?: Client): FormValues {
     status: client?.status ?? ClientStatus.LEAD,
     hourlyRate: client?.hourlyRate,
     paymentTermsDays: client?.paymentTermsDays ?? 30,
+    creditLimit: client?.creditLimit,
+    remindersOff: client?.remindersOff ?? false,
     accountManagerId: client?.accountManagerId ?? NONE,
     contacts: client?.contacts ?? [],
     notes: client?.notes ?? "",
@@ -119,6 +125,8 @@ function toInput(values: FormValues): ClientInput {
       r.employeeId !== NONE ? { id: r.id, employeeId: r.employeeId, rate: r.rate } : { id: r.id, jobTitle: r.jobTitle, rate: r.rate }
     ),
     notes: emptyToUndefined(values.notes),
+    creditLimit: values.creditLimit || undefined,
+    remindersOff: values.remindersOff || undefined,
     accountManagerId: values.accountManagerId === NONE ? undefined : values.accountManagerId,
     contacts: values.contacts.map((c) => ({
       ...c,
@@ -130,13 +138,15 @@ function toInput(values: FormValues): ClientInput {
 
 interface Props {
   client?: Client
+  /** Other clients of the workspace, to warn about duplicates (CRM-5) */
+  existingClients?: Client[]
   employees: Employee[]
   currency: string
   onValid: (input: ClientInput) => void
 }
 
 export const ClientForm = forwardRef<ClientFormHandle, Props>(function ClientForm(
-  { client, employees, currency, onValid },
+  { client, existingClients = [], employees, currency, onValid },
   ref
 ) {
   const t = useTranslations()
@@ -147,6 +157,8 @@ export const ClientForm = forwardRef<ClientFormHandle, Props>(function ClientFor
   const contacts = useFieldArray({ control: form.control, name: "contacts", keyName: "key" })
   const rateCard = useFieldArray({ control: form.control, name: "rateCard", keyName: "key" })
   const titles = [...new Set(employees.map((e) => e.jobTitle))].sort()
+  const [watchName, watchLegal, watchIce, watchTax] = form.watch(["name", "legalName", "ice", "taxId"])
+  const duplicates = findDuplicateClients(existingClients, { name: watchName, legalName: watchLegal, ice: watchIce, taxId: watchTax }, client?.id)
 
   useEffect(() => {
     form.reset(toFormValues(client))
@@ -187,6 +199,22 @@ export const ClientForm = forwardRef<ClientFormHandle, Props>(function ClientFor
     <Form {...form}>
       <form className="flex flex-col gap-4" onSubmit={(e) => e.preventDefault()}>
         {text("name", t("companyName"))}
+        {duplicates.length > 0 && (
+          <div role="alert" className="flex gap-2 rounded-2xl bg-warning-soft p-3 text-sm text-warning-foreground">
+            <Warning className="mt-0.5 size-4 shrink-0" />
+            <div>
+              <p className="font-medium">{t("duplicateClientTitle")}</p>
+              <ul className="mt-1 list-disc ps-4 text-xs">
+                {duplicates.slice(0, 3).map((d) => (
+                  <li key={d.client.id}>
+                    {d.client.name} · {d.reasons.map((r) => t(`duplicateBy_${r}`)).join(", ")}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1 text-xs">{t("duplicateClientHint")}</p>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           {text("industry", t("industry"))}
           <FormField
@@ -294,6 +322,46 @@ export const ClientForm = forwardRef<ClientFormHandle, Props>(function ClientFor
                   />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="creditLimit"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="truncate">{`${t("creditLimit")} (${currency})`}</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    min={0}
+                    placeholder={t("optional")}
+                    name={field.name}
+                    ref={field.ref}
+                    onBlur={field.onBlur}
+                    value={field.value ?? ""}
+                    onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="remindersOff"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("paymentReminders")}</FormLabel>
+                <div className="flex h-9 items-center gap-2">
+                  <FormControl>
+                    <Switch checked={!field.value} onCheckedChange={(on) => field.onChange(!on)} aria-label={t("paymentReminders")} />
+                  </FormControl>
+                  <span className="text-sm text-muted-foreground">{field.value ? t("remindersOffLabel") : t("remindersOnLabel")}</span>
+                </div>
               </FormItem>
             )}
           />

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { Star } from "@/components/ui/carbon/icons"
 import type { Client, Employee } from "@/types/workforce"
+import { ClientActivitySection, ClientBalanceSection, ClientContractsSection } from "./client-crm-sections"
 import { CLIENT_STATUS_CLASS, CLIENT_STATUS_LABEL, formatMoney } from "./workforce-labels"
 
 interface Props {
@@ -20,7 +21,7 @@ interface Props {
   onOpenChange: (open: boolean) => void
 }
 
-/** Read-only client profile: billing details, terms and contacts. */
+/** Client profile: balance, billing details, contacts, contracts, quotes and the activity timeline. */
 export function ClientProfileSheet({ client, employees, currency, onOpenChange }: Props) {
   const t = useTranslations()
   const locale = useLocale()
@@ -49,6 +50,8 @@ export function ClientProfileSheet({ client, employees, currency, onOpenChange }
             </SheetHeader>
 
             <div className="flex flex-col gap-6 px-4 pb-6">
+              <ClientBalanceSection client={client} currency={currency} />
+
               <Section title={t("billing")}>
                 <Row label={t("billingEmail")} value={client.email} />
                 {client.legalName && <Row label={t("legalName")} value={client.legalName} />}
@@ -108,6 +111,8 @@ export function ClientProfileSheet({ client, employees, currency, onOpenChange }
                 ))}
               </Section>
 
+              <ClientContractsSection client={client} currency={currency} />
+
               <Section title={t("quotes")}>
                 {clientQuotes.length === 0 ? (
                   <p className="text-sm text-muted-foreground">{t("noQuotes")}</p>
@@ -132,6 +137,8 @@ export function ClientProfileSheet({ client, employees, currency, onOpenChange }
                 )}
                 <Link href="/dashboard/quotes" className="text-sm text-primary hover:underline">{t("manageQuotes")}</Link>
               </Section>
+
+              <ClientActivitySection client={client} employees={employees} />
 
               {client.notes && (
                 <Section title={t("notes")}>

@@ -1,3 +1,4 @@
+import type { ReminderSettings } from "./work-crm"
 import { ExpenseCategory } from "./work-costs"
 import { LeaveType } from "./work-planning"
 
@@ -105,6 +106,8 @@ export interface WorkspaceSettings {
   holidays: Holiday[]
   /** Nothing dated on or before this day can be created or changed (BR-7) */
   lockedThrough?: string
+  /** Overdue payment reminders (BIL-15); defaults to on at 3, 15 and 30 days */
+  reminders?: ReminderSettings
 }
 
 /** Subjects whose second step can depend on an amount. */

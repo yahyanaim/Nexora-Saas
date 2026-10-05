@@ -174,6 +174,10 @@ export interface Client {
   /** Employee responsible for the relationship */
   accountManagerId?: string
   contacts: ClientContact[]
+  /** Most the client may owe at once; a warning shows above it (CRM-8) */
+  creditLimit?: number
+  /** Turns overdue payment reminders off for this client (BIL-15) */
+  remindersOff?: boolean
   notes?: string
   createdAt: string
   updatedAt: string

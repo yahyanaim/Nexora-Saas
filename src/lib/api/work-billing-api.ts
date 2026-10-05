@@ -341,6 +341,8 @@ export type NewInvoiceInput = {
   notes?: string
   subject?: string
   quoteId?: string
+  /** Recurring schedule drafting this invoice (BIL-14) */
+  recurringId?: string
   deductAdvances?: boolean
 } & (
   | { kind: InvoiceKind.FIXED; projectId: string; percent: number }
@@ -424,6 +426,7 @@ export async function createInvoiceApi(workspaceId: string, input: NewInvoiceInp
     notes: input.notes || undefined,
     subject: input.subject || undefined,
     quoteId: input.quoteId,
+    recurringId: input.recurringId,
   })
   for (const e of coveredEntries) entries.update(workspaceId, e.id, { invoiceId: invoice.id })
   return invoice
@@ -520,6 +523,24 @@ export async function markInvoiceSentApi(workspaceId: string, id: string) {
   })
   auditInvoice(workspaceId, sent, "Invoice sent", "invoice.sent", invoice.status)
   return sent
+}
+
+/**
+ * Logs an overdue reminder to the client's primary contact (BIL-15). Each
+ * level goes out once and only while something is still owed.
+ */
+export async function sendReminderApi(workspaceId: string, id: string, level: 1 | 2 | 3) {
+  const invoice = invoices.get(workspaceId, id)
+  if (!invoice) throw new Error("Invoice not found")
+  if (invoiceBalance(invoice, invoices.list(workspaceId)) <= 0) throw new Error("Nothing is owed on this invoice")
+  if ((invoice.reminders ?? []).some((r) => r.level >= level)) throw new Error("This reminder was already sent")
+  const client = (await listClientsApi(workspaceId)).find((c) => c.id === invoice.clientId)
+  const to = client?.contacts.find((c) => c.isPrimary)?.email ?? client?.email ?? ""
+  const updated = invoices.update(workspaceId, id, {
+    reminders: [...(invoice.reminders ?? []), { invoiceId: id, level, to, at: new Date().toISOString() }],
+  })
+  recordAudit(workspaceId, { action: `Payment reminder ${level} sent`, actionKey: "invoice.reminder", category: "Billing", target: invoice.number })
+  return updated
 }
 
 /**

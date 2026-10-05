@@ -13,6 +13,7 @@ import { useClientInvoices } from "@/hooks/workforce/use-work-billing"
 import { AGING_BUCKETS, receivablesAging, type AgingBucket } from "@/lib/workforce/billing"
 import { exportToCsv } from "@/lib/utils/export-data"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
+import { PaymentReminders } from "./payment-reminders"
 
 const BUCKET_LABEL: Record<AgingBucket, string> = {
   current: "agingCurrent",
@@ -22,7 +23,7 @@ const BUCKET_LABEL: Record<AgingBucket, string> = {
   d90_plus: "aging90plus",
 }
 
-/** Open balances per client by how long they are past due (BIL-15), in the base currency. */
+/** Open balances per client by how long they are past due (BIL-16), and overdue reminders (BIL-15). */
 export default function ReceivablesPage() {
   const t = useTranslations()
   const locale = useLocale()
@@ -159,6 +160,7 @@ export default function ReceivablesPage() {
           )}
         </table>
       </section>
+      <PaymentReminders invoices={invoices} clients={clients} />
     </div>
   )
 }
