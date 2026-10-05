@@ -120,11 +120,17 @@ export interface Milestone {
   requiresApproval: boolean
   /** ISO timestamp of the client sign-off */
   approvedAt?: string
+  /** ISO timestamp of a client asking for changes instead (cleared by a later approval) */
+  rejectedAt?: string
+  /** The client's comment with the decision */
+  decisionComment?: string
+  /** Who decided, e.g. the portal contact's name */
+  decidedBy?: string
   createdAt: string
   updatedAt: string
 }
 
-export type MilestoneInput = Omit<Milestone, "id" | "workspaceId" | "createdAt" | "updatedAt" | "approvedAt">
+export type MilestoneInput = Omit<Milestone, "id" | "workspaceId" | "createdAt" | "updatedAt" | "approvedAt" | "rejectedAt" | "decisionComment" | "decidedBy">
 
 /** A comment on a task; @mentions are resolved to employee ids (PRJ-7). */
 export interface TaskComment {

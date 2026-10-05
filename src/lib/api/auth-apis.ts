@@ -78,6 +78,28 @@ async function employeeDemoUser(email: string): Promise<AuthUser | undefined> {
   }
 }
 
+/** Demo sign-in for a client contact with portal access (CRM-9): no ERP rights, own client only. */
+async function clientDemoUser(email: string): Promise<AuthUser | undefined> {
+  if (typeof window === "undefined" || !email) return undefined
+  const { findPortalAccountForSignInApi } = await import("./portal-api")
+  const { DEMO_WORKSPACES } = await import("@/lib/workforce/demo-seed")
+  const found = await findPortalAccountForSignInApi(email, DEMO_WORKSPACES.map((w) => w.id))
+  if (!found) return undefined
+  const { useWorkspaceStore } = await import("@/store/workspace-store")
+  useWorkspaceStore.getState().setCurrent(found.workspaceId)
+  return {
+    id: `prt-${found.access.id}`,
+    name: found.access.name,
+    email: found.access.email,
+    role: "user",
+    emailVerified: true,
+    workspaceId: found.workspaceId,
+    clientId: found.client.id,
+    portalContactId: found.access.contactId,
+    permissions: [],
+  }
+}
+
 export const loginApi = async (
   payload: LoginPayload
 ): Promise<LoginResponse> => {
@@ -92,7 +114,7 @@ export const loginApi = async (
     // and only for the known demo accounts — never for arbitrary credentials.
     const emailKey = payload.email?.toLowerCase?.() ?? ""
     // Employees with an account sign in with their work email (rights from their role)
-    const demoUser = DEMO_USERS[emailKey] ?? (shouldUseDemoFallback(err) ? await employeeDemoUser(emailKey) : undefined)
+    const demoUser = DEMO_USERS[emailKey] ?? (shouldUseDemoFallback(err) ? ((await employeeDemoUser(emailKey)) ?? (await clientDemoUser(emailKey))) : undefined)
     if (demoUser && shouldUseDemoFallback(err)) {
       logger.warn(
         `[AUTH WARNING] Demo mode fallback used in loginApi: Logged in as ${demoUser.name}. Do NOT enable NEXT_PUBLIC_DEMO_MODE in production.`

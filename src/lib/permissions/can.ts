@@ -37,6 +37,8 @@ export function isSuperUser(user: User | undefined): boolean {
   if (!user) return false
   // Employee accounts get exactly the rights of their work role
   if ((user as unknown as { employeeId?: string }).employeeId) return false
+  // Client portal contacts have no ERP rights at all
+  if ((user as unknown as { clientId?: string }).clientId) return false
   const record = user as unknown as Record<string, unknown>
   return (
     user.role === "admin" ||

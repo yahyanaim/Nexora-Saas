@@ -12,6 +12,8 @@ import { usePathname } from "@/i18n/navigation"
 import { isPlatformPath } from "@/lib/permissions/platform"
 import { isPlatformOperator } from "@/lib/permissions/can"
 import { PlatformOnly } from "./platform-only"
+import { isPortalPath } from "@/lib/workforce/portal"
+import { PortalRedirect } from "./portal-redirect"
 
 interface Props {
   children: React.ReactNode
@@ -29,6 +31,8 @@ export const DashboardLayout = ({ children }: Props) => {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
   const blocked = !!authedUser && isPlatformPath(pathname) && !isPlatformOperator(authedUser)
+  // Client contacts stay inside their portal
+  const outsidePortal = !!(authedUser as { clientId?: string } | undefined)?.clientId && !isPortalPath(pathname)
 
   if (isPasscodeLocked && !isUnlocked) return <LockScreen />
 
@@ -40,7 +44,7 @@ export const DashboardLayout = ({ children }: Props) => {
       <div className="flex min-h-0 flex-1 md:ps-6">
         <DashboardRail className="my-6 hidden md:flex" />
         <main className="min-w-0 flex-1 overflow-y-auto">
-          <ErrorBoundary>{blocked ? <PlatformOnly /> : children}</ErrorBoundary>
+          <ErrorBoundary>{outsidePortal ? <PortalRedirect /> : blocked ? <PlatformOnly /> : children}</ErrorBoundary>
         </main>
       </div>
       <MobileNavDrawer open={menuOpen} onOpenChange={setMenuOpen} />

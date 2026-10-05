@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { Star } from "@/components/ui/carbon/icons"
 import type { Client, Employee } from "@/types/workforce"
+import { PortalAccessManager } from "../work-portal-chunks/portal-access-manager"
 import { ClientActivitySection, ClientBalanceSection, ClientContractsSection } from "./client-crm-sections"
 import { CLIENT_STATUS_CLASS, CLIENT_STATUS_LABEL, formatMoney } from "./workforce-labels"
 
@@ -110,6 +111,12 @@ export function ClientProfileSheet({ client, employees, currency, onOpenChange }
                   </div>
                 ))}
               </Section>
+
+              {client.contacts.length > 0 && (
+                <Section title={t("clientPortal")}>
+                  <PortalAccessManager clientId={client.id} />
+                </Section>
+              )}
 
               <ClientContractsSection client={client} currency={currency} />
 

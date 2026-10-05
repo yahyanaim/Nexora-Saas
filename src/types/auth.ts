@@ -24,6 +24,9 @@ export interface AuthUser {
   /** Signed in through an employee account: the company and employee it belongs to */
   workspaceId?: string
   employeeId?: string
+  /** Signed in through the client portal: the client and contact it belongs to */
+  clientId?: string
+  portalContactId?: string
   /** Rights from the employee's work role */
   permissions?: AdminPermissionsPlatform[]
   createdAt?: string
