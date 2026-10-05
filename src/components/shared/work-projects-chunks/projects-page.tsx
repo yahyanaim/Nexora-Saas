@@ -15,7 +15,11 @@ import { AdminPermissionsPlatform } from "@/types/roles"
 import { ProjectHealth, WorkProjectStatus, type WorkProjectInput } from "@/types/work-projects"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
-import { useProjectMutations, useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
+import { useProjectMutations, useProjectTemplates, useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+const NO_TEMPLATE = "__blank__"
 import { projectStatsById, todayIso } from "@/lib/workforce/project-metrics"
 import { cn } from "@/lib/utils"
 import { ProjectCard } from "./project-card"
@@ -34,7 +38,9 @@ export default function ProjectsPage() {
   const { data: tasks = [] } = useTasks()
   const { data: clients = [] } = useClients()
   const { data: employees = [] } = useEmployees()
-  const { create } = useProjectMutations()
+  const { create, createFromTemplate } = useProjectMutations()
+  const { data: templates = [] } = useProjectTemplates()
+  const [templateId, setTemplateId] = useState(NO_TEMPLATE)
   const canCreate = can(authedUser, AdminPermissionsPlatform.PROJECTS_CREATE)
 
   const [search, setSearch] = useState("")
@@ -83,7 +89,9 @@ export default function ProjectsPage() {
   ]
 
   const handleValid = (input: WorkProjectInput) =>
-    create.mutate(input, { onSuccess: () => setFormOpen(false) })
+    templateId === NO_TEMPLATE
+      ? create.mutate(input, { onSuccess: () => setFormOpen(false) })
+      : createFromTemplate.mutate({ templateId, input }, { onSuccess: () => setFormOpen(false) })
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -169,9 +177,22 @@ export default function ProjectsPage() {
         createTitle={t("newProject")}
         editTitle={t("editProject")}
         description={t("newProjectDescription")}
-        isSubmitting={create.isPending}
+        isSubmitting={create.isPending || createFromTemplate.isPending}
         onSubmit={() => formRef.current?.submit()}
       >
+        {templates.length > 0 && (
+          <div className="mb-4 grid gap-1.5 rounded-2xl border border-border bg-muted/40 p-3">
+            <Label>{t("startFromTemplate")}</Label>
+            <Select value={templateId} onValueChange={setTemplateId}>
+              <SelectTrigger className="w-full bg-card"><SelectValue>{templates.find((x) => x.id === templateId)?.name ?? t("blankProject")}</SelectValue></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_TEMPLATE}>{t("blankProject")}</SelectItem>
+                {templates.map((x) => <SelectItem key={x.id} value={x.id}>{x.name} · {t("templateSize", { tasks: x.tasks.length, days: x.durationDays })}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">{t("startFromTemplateHint")}</p>
+          </div>
+        )}
         <ProjectForm
           ref={formRef}
           clients={clients}

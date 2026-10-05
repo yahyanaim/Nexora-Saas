@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
-import { Calendar, CheckCircle2, Flag, MoreHorizontal, Plus } from "@/components/ui/carbon/icons"
+import { AlertTriangle, Calendar, CheckCircle2, Flag, MoreHorizontal, Plus } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 import { isTaskOverdue } from "@/lib/workforce/project-metrics"
 import type { Employee } from "@/types/workforce"
@@ -27,6 +27,8 @@ interface Props {
   onOpen: (task: WorkTask) => void
   onAdd: (status: TaskStatus) => void
   onMove: (taskId: string, status: TaskStatus, index?: number) => void
+  /** Dependency problems per task id, shown as a warning (PRJ-6) */
+  warnings?: Record<string, string>
 }
 
 const DRAG_TYPE = "application/x-nexora-task"
@@ -35,7 +37,7 @@ const DRAG_TYPE = "application/x-nexora-task"
  * Kanban board. Drag a card onto a column (or onto a card to land before it);
  * each card's menu offers the same moves without a mouse.
  */
-export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, onAdd, onMove }: Props) {
+export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, onAdd, onMove, warnings = {} }: Props) {
   const t = useTranslations()
   const [dragId, setDragId] = useState<string | null>(null)
   const [over, setOver] = useState<{ status: TaskStatus; index: number } | null>(null)
@@ -112,6 +114,7 @@ export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, on
                 milestone={milestones.find((m) => m.id === task.milestoneId)}
                 labelNames={(task.labelIds ?? []).map((id) => labels.find((l) => l.id === id)?.name).filter((n): n is string => !!n)}
                 canEdit={canEdit}
+                warning={warnings[task.id]}
                 dragging={dragId === task.id}
                 onOpen={() => onOpen(task)}
                 onMove={(next) => onMove(task.id, next)}
@@ -156,6 +159,7 @@ interface CardProps {
   milestone?: Milestone
   labelNames: string[]
   canEdit: boolean
+  warning?: string
   dragging: boolean
   onOpen: () => void
   onMove: (status: TaskStatus) => void
@@ -164,7 +168,7 @@ interface CardProps {
   onDragOverCard: (e: React.DragEvent<HTMLElement>) => void
 }
 
-function TaskCard({ task, assignee, milestone, labelNames, canEdit, dragging, onOpen, onMove, onDragStart, onDragEnd, onDragOverCard }: CardProps) {
+function TaskCard({ task, assignee, milestone, labelNames, canEdit, warning, dragging, onOpen, onMove, onDragStart, onDragEnd, onDragOverCard }: CardProps) {
   const t = useTranslations()
   const locale = useLocale()
   const overdue = isTaskOverdue(task)
@@ -193,6 +197,11 @@ function TaskCard({ task, assignee, milestone, labelNames, canEdit, dragging, on
         >
           {task.title}
         </button>
+        {warning && (
+          <span title={warning} className="mt-0.5 shrink-0">
+            <AlertTriangle className="size-4 text-destructive" aria-label={warning} />
+          </span>
+        )}
         {canEdit && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

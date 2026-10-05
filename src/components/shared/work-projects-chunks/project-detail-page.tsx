@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs } from "@/components/ui/tabs"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
-import { ArrowLeft, FolderKanban, Pencil, Plus, Trash2 } from "@/components/ui/carbon/icons"
+import { ArrowLeft, Copy, FolderKanban, Lock, Pencil, Plus, Trash2 } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -40,6 +40,10 @@ import { BudgetType, TaskStatus, type WorkTask, type WorkTaskInput } from "@/typ
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 import { ProjectForm, type ProjectFormHandle } from "./project-form"
 import { TaskForm, type TaskFormHandle } from "./task-form"
+import { ProjectGantt } from "./project-gantt"
+import { CloseProjectDialog, ClosedProjectSummary, SaveTemplateDialog } from "./project-close"
+import { dependencyIssues } from "@/lib/workforce/scheduling"
+import { todayIso } from "@/lib/workforce/project-metrics"
 import { TaskBoard } from "./task-board"
 import { TaskList } from "./task-list"
 import { MilestonesPanel } from "./milestones-panel"
@@ -77,6 +81,8 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const labels = settings?.taskLabels ?? []
   const [filters, setFilters] = useState<TaskFilterValues>(NO_FILTERS)
   const [healthDialog, setHealthDialog] = useState(false)
+  const [closing, setClosing] = useState(false)
+  const [savingTemplate, setSavingTemplate] = useState(false)
 
   const canEdit = can(authedUser, AdminPermissionsPlatform.PROJECTS_UPDATE)
   const canDelete = can(authedUser, AdminPermissionsPlatform.PROJECTS_DELETE)
@@ -135,6 +141,13 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   }
 
   const openTask = (task: WorkTask) => setTaskSheet({ task })
+  // Late or overlapping predecessors, as one sentence per task (PRJ-6)
+  const depWarnings = Object.fromEntries(
+    tasks
+      .map((task) => [task.id, dependencyIssues(task, tasks, project.startDate, todayIso()).filter((i) => i.kind !== "waiting")] as const)
+      .filter(([, issues]) => issues.length > 0)
+      .map(([id, issues]) => [id, issues.map((i) => t(i.kind === "late" ? "depLate" : "depOverlaps", { task: i.predecessor.title })).join(" ")])
+  )
   const addTask = (status: TaskStatus = TaskStatus.TODO) => setTaskSheet({ defaults: { status } })
 
   const facts: { label: string; value: React.ReactNode }[] = [
@@ -213,6 +226,18 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
               </Button>
             )}
             {canEdit && (
+              <Button variant="outline" onClick={() => setSavingTemplate(true)}>
+                <Copy className="size-4" />
+                {t("saveAsTemplate")}
+              </Button>
+            )}
+            {canEdit && !project.closedAt && (
+              <Button variant="outline" onClick={() => setClosing(true)}>
+                <Lock className="size-4" />
+                {t("closeProject")}
+              </Button>
+            )}
+            {canEdit && (
               <Button onClick={() => addTask()}>
                 <Plus className="size-4" />
                 {t("addTask")}
@@ -245,6 +270,8 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
         </div>
       </PageHeader>
 
+      <ClosedProjectSummary project={project} canEdit={canEdit} />
+
       <Tabs
         tabs={[
           {
@@ -262,6 +289,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                 onOpen={openTask}
                 onAdd={addTask}
                 onMove={(id, status, index) => taskMutations.move.mutate({ id, status, index })}
+                warnings={depWarnings}
               />
               </>
             ),
@@ -272,7 +300,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             content: (
               <>
                 <TaskFilters userId={authedUser?.id ?? "me"} team={team} labels={labels} value={filters} onChange={setFilters} />
-                <TaskList tasks={visibleTasks} team={team} milestones={milestones} onOpen={openTask} />
+                <TaskList tasks={visibleTasks} team={team} milestones={milestones} onOpen={openTask} warnings={depWarnings} />
               </>
             ),
           },
@@ -292,9 +320,39 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
               />
             ),
           },
+          {
+            id: "gantt",
+            label: t("gantt"),
+            content: (
+              <ProjectGantt
+                project={project}
+                tasks={tasks}
+                milestones={milestones}
+                team={team}
+                canEdit={canEdit}
+                onOpen={openTask}
+                onReschedule={(id, dates) => taskMutations.update.mutate({ id, input: dates })}
+              />
+            ),
+          },
           { id: "team", label: t("team"), content: <TeamPanel team={team} managerId={project.managerId} tasks={tasks} /> },
         ]}
       />
+
+      <CloseProjectDialog
+        open={closing}
+        onOpenChange={setClosing}
+        project={project}
+        tasks={tasks}
+        milestones={milestones}
+        entries={entries}
+        invoices={invoices}
+        expenses={expenses}
+        employees={employees}
+        clients={clients}
+        currency={workspace.currency}
+      />
+      {savingTemplate && <SaveTemplateDialog project={project} open={savingTemplate} onOpenChange={setSavingTemplate} />}
 
       <DataTableEntityFormSheet
         open={!!taskSheet}
@@ -313,6 +371,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
           team={team}
           milestones={milestones}
           labels={labels}
+          projectTasks={tasks}
           onValid={saveTask}
         />
         {taskSheet?.task && <TaskDiscussion key={taskSheet.task.id} taskId={taskSheet.task.id} team={team} labels={labels} />}

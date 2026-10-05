@@ -36,7 +36,9 @@ const schema = z.object({
   priority: z.enum(Priority),
   assigneeId: z.string(),
   milestoneId: z.string(),
+  startDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]),
   dueDate: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]),
+  dependsOn: z.array(z.string()),
   estimatedHours: z.number({ error: "required" }).min(0).max(1000),
   subtasks: z.array(z.object({ id: z.string(), title: z.string().trim().min(1), done: z.boolean() })),
   labelIds: z.array(z.string()),
@@ -52,7 +54,9 @@ function toFormValues(task?: Partial<WorkTask>): FormValues {
     priority: task?.priority ?? Priority.MEDIUM,
     assigneeId: task?.assigneeId ?? NONE,
     milestoneId: task?.milestoneId ?? NONE,
+    startDate: task?.startDate ?? "",
     dueDate: task?.dueDate ?? "",
+    dependsOn: task?.dependsOn ?? [],
     estimatedHours: task?.estimatedHours ?? 4,
     subtasks: task?.subtasks ?? [],
     labelIds: task?.labelIds ?? [],
@@ -67,11 +71,13 @@ interface Props {
   milestones: Milestone[]
   /** Workspace task labels from settings */
   labels: TaskLabel[]
+  /** Other tasks of the project, to choose predecessors from (PRJ-6) */
+  projectTasks?: WorkTask[]
   onValid: (input: WorkTaskInput) => void
 }
 
 export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
-  { projectId, task, team, milestones, labels, onValid },
+  { projectId, task, team, milestones, labels, projectTasks = [], onValid },
   ref
 ) {
   const t = useTranslations()
@@ -92,6 +98,7 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
           description: v.description || undefined,
           assigneeId: v.assigneeId === NONE ? undefined : v.assigneeId,
           milestoneId: v.milestoneId === NONE ? undefined : v.milestoneId,
+          startDate: v.startDate || undefined,
           dueDate: v.dueDate || undefined,
         })
       )(),
@@ -141,10 +148,36 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
+          <TextField control={form.control} name="startDate" label={t("startDate")} type="date" />
           <TextField control={form.control} name="dueDate" label={t("dueDate")} type="date" />
           <NumberField control={form.control} name="estimatedHours" label={t("estimateHours")} />
         </div>
+
+        {projectTasks.filter((x) => x.id !== task?.id).length > 0 && (
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium">{t("waitsFor")}</span>
+            <p className="-mt-1 text-xs text-muted-foreground">{t("waitsForHint")}</p>
+            <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded-xl border border-border p-2" role="group" aria-label={t("waitsFor")}>
+              {projectTasks
+                .filter((x) => x.id !== task?.id)
+                .map((other) => {
+                  const selected = form.watch("dependsOn")
+                  const on = selected.includes(other.id)
+                  return (
+                    <label key={other.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-1.5 py-1 text-sm hover:bg-muted/60">
+                      <Checkbox
+                        checked={on}
+                        onCheckedChange={(v) => form.setValue("dependsOn", v ? [...selected, other.id] : selected.filter((id) => id !== other.id), { shouldDirty: true })}
+                      />
+                      <span className="min-w-0 flex-1 truncate">{other.title}</span>
+                      <span className="text-xs text-muted-foreground">{t(TASK_STATUS_LABEL[other.status])}</span>
+                    </label>
+                  )
+                })}
+            </div>
+          </div>
+        )}
 
         {labels.length > 0 && (
           <div className="flex flex-col gap-2">
