@@ -2182,5 +2182,6 @@
   "to": "To",
   "reminderTemplate1": "Hello {name},\n\nA friendly reminder that invoice {number} for {amount} was due on {dueDate}. If you have already paid, please ignore this message.\n\nThank you,\n{company}",
   "reminderTemplate2": "Hello {name},\n\nInvoice {number} for {amount} is now {days} days overdue (due {dueDate}). Could you let us know when payment will be made?\n\nBest regards,\n{company}",
-  "reminderTemplate3": "Hello {name},\n\nDespite our earlier reminders, invoice {number} for {amount} remains unpaid {days} days after its due date ({dueDate}). Please settle it within 8 days or contact us to agree a payment plan.\n\nRegards,\n{company}"
+  "reminderTemplate3": "Hello {name},\n\nDespite our earlier reminders, invoice {number} for {amount} remains unpaid {days} days after its due date ({dueDate}). Please settle it within 8 days or contact us to agree a payment plan.\n\nRegards,\n{company}",
+  "timelineElapsed": "Time elapsed"
 }

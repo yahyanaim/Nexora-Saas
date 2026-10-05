@@ -2182,5 +2182,6 @@
   "to": "À",
   "reminderTemplate1": "Bonjour {name},\n\nPetit rappel : la facture {number} d'un montant de {amount} était due le {dueDate}. Si le règlement est déjà parti, merci d'ignorer ce message.\n\nCordialement,\n{company}",
   "reminderTemplate2": "Bonjour {name},\n\nLa facture {number} de {amount} est en retard de {days} jours (échéance le {dueDate}). Pourriez-vous nous indiquer la date de règlement ?\n\nCordialement,\n{company}",
-  "reminderTemplate3": "Bonjour {name},\n\nMalgré nos relances, la facture {number} de {amount} reste impayée {days} jours après son échéance ({dueDate}). Merci de la régler sous 8 jours ou de nous contacter pour convenir d'un échéancier.\n\nCordialement,\n{company}"
+  "reminderTemplate3": "Bonjour {name},\n\nMalgré nos relances, la facture {number} de {amount} reste impayée {days} jours après son échéance ({dueDate}). Merci de la régler sous 8 jours ou de nous contacter pour convenir d'un échéancier.\n\nCordialement,\n{company}",
+  "timelineElapsed": "Temps écoulé"
 }

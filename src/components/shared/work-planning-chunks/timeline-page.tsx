@@ -17,11 +17,12 @@ import { HEALTH_CLASS, HEALTH_LABEL, formatShortDate } from "../work-projects-ch
 
 const MONTHS = 6
 
-const BAR: Record<ProjectHealth, { track: string; fill: string }> = {
-  [ProjectHealth.ON_TRACK]: { track: "bg-primary/15", fill: "bg-primary" },
-  [ProjectHealth.AT_RISK]: { track: "bg-warning-soft", fill: "bg-warning-foreground" },
-  [ProjectHealth.LATE]: { track: "bg-danger-soft", fill: "bg-destructive" },
-  [ProjectHealth.DONE]: { track: "bg-muted", fill: "bg-muted-foreground/50" },
+/** Same health colours as before: solid bar, soft icon circle, and the dot in the status pill. */
+const BAR: Record<ProjectHealth, { fill: string; soft: string; icon: string; dot: string }> = {
+  [ProjectHealth.ON_TRACK]: { fill: "bg-primary", soft: "bg-primary/15", icon: "text-primary", dot: "bg-primary" },
+  [ProjectHealth.AT_RISK]: { fill: "bg-warning-foreground", soft: "bg-warning-soft", icon: "text-warning-foreground", dot: "bg-warning-foreground" },
+  [ProjectHealth.LATE]: { fill: "bg-destructive", soft: "bg-danger-soft", icon: "text-destructive", dot: "bg-destructive" },
+  [ProjectHealth.DONE]: { fill: "bg-muted-foreground/50", soft: "bg-muted", icon: "text-muted-foreground", dot: "bg-muted-foreground" },
 }
 
 function monthStart(iso: string, delta = 0) {
@@ -83,21 +84,35 @@ export default function TimelinePage() {
         </div>
       </PageHeader>
 
-      <section className="relative overflow-x-auto rounded-3xl border border-border bg-card p-3 shadow-panel md:p-4">
-        <div className="min-w-[52rem]">
-          {/* Month header */}
-          <div className="grid grid-cols-[16rem_1fr] text-xs font-medium text-muted-foreground">
-            <div className="px-2 py-2">{t("project")}</div>
-            <div className="relative h-8">
-              {months.map((m) => (
-                <span
-                  key={m}
-                  className="absolute top-0 flex h-full items-center border-s border-border ps-2 capitalize"
-                  style={{ insetInlineStart: `${pct(m)}%` }}
-                >
-                  {new Intl.DateTimeFormat(locale, { month: "short", year: "2-digit" }).format(new Date(`${m}T00:00:00`))}
-                </span>
-              ))}
+      <section className="relative overflow-x-auto rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
+        <div className="min-w-[56rem]">
+          {/* Month header: one chip per month, the current month highlighted */}
+          <div className="grid grid-cols-[15rem_1fr] items-center gap-3 pb-3">
+            <div className="ps-1 text-sm font-medium text-muted-foreground">{t("project")}</div>
+            <div className="relative h-12">
+              {months.map((m, i) => {
+                const left = pct(m)
+                const right = i + 1 < months.length ? pct(months[i + 1]!) : 100
+                const current = m.slice(0, 7) === today.slice(0, 7)
+                const date = new Date(`${m}T00:00:00`)
+                return (
+                  <span
+                    key={m}
+                    className={cn(
+                      "absolute inset-y-0 flex flex-col items-center justify-center rounded-xl border text-center leading-tight",
+                      current
+                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                        : m < monthStart(today)
+                          ? "border-transparent bg-muted text-muted-foreground"
+                          : "border-border bg-card text-foreground"
+                    )}
+                    style={{ insetInlineStart: `calc(${left}% + 3px)`, width: `calc(${right - left}% - 6px)` }}
+                  >
+                    <span className={cn("text-[10px]", current ? "text-primary-foreground/80" : "text-muted-foreground")}>{date.getFullYear()}</span>
+                    <span className="text-sm font-medium capitalize">{new Intl.DateTimeFormat(locale, { month: "short" }).format(date)}</span>
+                  </span>
+                )
+              })}
             </div>
           </div>
 
@@ -108,63 +123,106 @@ export default function TimelinePage() {
             </p>
           )}
 
-          <ul className="flex flex-col">
-            {rows.map((project) => {
-              const s = stats.get(project.id)!
-              const end = project.dueDate ?? addDays(project.startDate, 30)
-              const visible = project.startDate <= windowEnd && end >= windowStart
-              const left = pct(project.startDate)
-              const width = Math.max(1.5, pct(end) - left)
-              const bar = BAR[s.health]
-              return (
-                <li key={project.id} className="grid grid-cols-[16rem_1fr] items-center border-t border-border py-2.5">
-                  <Link href={`/dashboard/projects/${project.id}`} className="min-w-0 px-2 hover:text-primary">
-                    <span className="block truncate text-sm font-medium">{project.name}</span>
-                    <span className="flex items-center gap-2 text-xs text-muted-foreground">
-                      {project.code} · {clients.find((c) => c.id === project.clientId)?.name ?? t("internalProject")}
-                    </span>
-                  </Link>
-                  <div className="relative h-9">
-                    {months.map((m) => (
-                      <span key={m} className="absolute inset-y-0 border-s border-border/60" style={{ insetInlineStart: `${pct(m)}%` }} aria-hidden />
-                    ))}
-                    {visible && (
-                      <Link
-                        href={`/dashboard/projects/${project.id}`}
-                        title={`${project.name}: ${formatShortDate(project.startDate, locale)} – ${formatShortDate(project.dueDate, locale)} · ${s.progress}%`}
-                        className={cn("absolute top-1.5 flex h-6 items-center overflow-hidden rounded-full", bar.track, !project.dueDate && "border border-dashed border-border")}
-                        style={{ insetInlineStart: `${left}%`, width: `${width}%` }}
-                      >
-                        <span className={cn("h-full rounded-full", bar.fill)} style={{ width: `${s.progress}%` }} />
-                        <span className="sr-only">{t(HEALTH_LABEL[s.health])}, {s.progress}%</span>
-                      </Link>
-                    )}
-                    {milestones
-                      .filter((m) => m.projectId === project.id && m.dueDate >= windowStart && m.dueDate <= windowEnd)
-                      .map((m) => {
-                        const reached = milestoneState(m, tasks) === MilestoneState.REACHED
-                        return (
-                          <span
-                            key={m.id}
-                            title={`${m.title} · ${formatShortDate(m.dueDate, locale)}`}
-                            className={cn(
-                              "absolute top-2.5 size-4 -translate-x-1/2 rotate-45 rounded-[3px] border-2 border-card shadow-sm rtl:translate-x-1/2",
-                              reached ? "bg-success-foreground" : "bg-foreground"
-                            )}
-                            style={{ insetInlineStart: `${pct(m.dueDate)}%` }}
-                          >
-                            <span className="sr-only">{m.title}</span>
+          <div className="relative">
+            {/* Background of the time area: elapsed time hatched, month lines and the today line */}
+            {rows.length > 0 && (
+              <div className="pointer-events-none absolute inset-y-0 end-0 start-[calc(15rem+0.75rem)]" aria-hidden>
+                {today > windowStart && (
+                  <span
+                    className="absolute inset-y-0 start-0 rounded-xl opacity-70"
+                    style={{
+                      width: `${pct(today)}%`,
+                      backgroundImage: "repeating-linear-gradient(135deg, var(--border) 0 1px, transparent 1px 9px)",
+                    }}
+                  />
+                )}
+                {months.slice(1).map((m) => (
+                  <span key={m} className="absolute inset-y-0 border-s border-dashed border-border" style={{ insetInlineStart: `${pct(m)}%` }} />
+                ))}
+                {todayInView && (
+                  <span className="absolute inset-y-0 border-s-2 border-dashed border-destructive/70" style={{ insetInlineStart: `${pct(today)}%` }}>
+                    <span className="absolute -top-1 -start-[5px] size-2 rounded-full bg-destructive" />
+                  </span>
+                )}
+              </div>
+            )}
+
+            <ul className="relative flex flex-col gap-2.5">
+              {rows.map((project) => {
+                const s = stats.get(project.id)!
+                const end = project.dueDate ?? addDays(project.startDate, 30)
+                const visible = project.startDate <= windowEnd && end >= windowStart
+                const left = pct(project.startDate)
+                const width = Math.max(1.5, pct(end) - left)
+                const bar = BAR[s.health]
+                const client = clients.find((c) => c.id === project.clientId)?.name ?? t("internalProject")
+                return (
+                  <li key={project.id} className="grid grid-cols-[15rem_1fr] items-center gap-3">
+                    <Link
+                      href={`/dashboard/projects/${project.id}`}
+                      className="flex min-w-0 items-center gap-3 rounded-2xl border border-border bg-card px-3 py-2.5 transition-colors hover:border-primary/40"
+                    >
+                      <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full", bar.soft)}>
+                        <FolderKanban className={cn("size-4", bar.icon)} />
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium">{project.name}</span>
+                        <span className="block truncate text-xs text-muted-foreground">{project.code} · {client}</span>
+                      </span>
+                    </Link>
+                    <div className="relative h-[3.25rem]">
+                      {visible && (
+                        <Link
+                          href={`/dashboard/projects/${project.id}`}
+                          title={`${project.name}: ${formatShortDate(project.startDate, locale)} – ${formatShortDate(project.dueDate, locale)} · ${s.progress}%`}
+                          className={cn(
+                            "@container absolute top-0.5 bottom-2 flex items-center overflow-hidden rounded-2xl shadow-sm transition-shadow hover:shadow-md",
+                            bar.fill,
+                            !project.dueDate && "outline-2 outline-dashed outline-offset-2 outline-border"
+                          )}
+                          style={{ insetInlineStart: `${left}%`, width: `${width}%` }}
+                        >
+                          {/* Progress: a thin strip along the bottom of the bar */}
+                          <span className="absolute inset-x-3 bottom-1 h-[3px] overflow-hidden rounded-full bg-white/35" aria-hidden>
+                            <span className="block h-full rounded-full bg-white" style={{ width: `${s.progress}%` }} />
                           </span>
-                        )
-                      })}
-                    {todayInView && (
-                      <span className="absolute inset-y-0 w-0.5 bg-destructive/70" style={{ insetInlineStart: `${pct(today)}%` }} aria-hidden />
-                    )}
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+                          <span className="relative flex min-w-0 flex-1 items-center gap-2 px-1.5 pb-0.5">
+                            <span className="hidden size-8 shrink-0 items-center justify-center rounded-full bg-card shadow-sm @[4.5rem]:flex">
+                              <FolderKanban className={cn("size-4", bar.icon)} />
+                            </span>
+                            <span className="hidden min-w-0 flex-1 truncate text-sm font-medium text-white @[9rem]:block">{project.name}</span>
+                            <span className="ms-auto hidden shrink-0 items-center gap-1.5 rounded-full bg-card px-2 py-0.5 text-[11px] font-medium text-foreground shadow-sm @[16rem]:flex">
+                              <span className={cn("size-1.5 rounded-full", bar.dot)} aria-hidden />
+                              {t(HEALTH_LABEL[s.health])} · {s.progress}%
+                            </span>
+                          </span>
+                          <span className="sr-only">{t(HEALTH_LABEL[s.health])}, {s.progress}%</span>
+                        </Link>
+                      )}
+                      {milestones
+                        .filter((m) => m.projectId === project.id && m.dueDate >= windowStart && m.dueDate <= windowEnd)
+                        .map((m) => {
+                          const reached = milestoneState(m, tasks) === MilestoneState.REACHED
+                          return (
+                            <span
+                              key={m.id}
+                              title={`${m.title} · ${formatShortDate(m.dueDate, locale)}`}
+                              className={cn(
+                                "absolute bottom-0 size-3.5 -translate-x-1/2 rotate-45 rounded-[3px] border-2 border-card shadow-sm rtl:translate-x-1/2",
+                                reached ? "bg-success-foreground" : "bg-foreground"
+                              )}
+                              style={{ insetInlineStart: `${pct(m.dueDate)}%` }}
+                            >
+                              <span className="sr-only">{m.title}</span>
+                            </span>
+                          )
+                        })}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -173,7 +231,11 @@ export default function TimelinePage() {
           <Badge key={h} variant="outline" className={HEALTH_CLASS[h]}>{t(HEALTH_LABEL[h])}</Badge>
         ))}
         <span className="flex items-center gap-2"><span className="size-3 rotate-45 rounded-[2px] bg-foreground" aria-hidden />{t("milestone")}</span>
-        <span className="flex items-center gap-2"><span className="h-3 w-0.5 bg-destructive/70" aria-hidden />{t("today")}</span>
+        <span className="flex items-center gap-2"><span className="h-3 border-s-2 border-dashed border-destructive/70" aria-hidden />{t("today")}</span>
+        <span className="flex items-center gap-2">
+          <span className="size-3 rounded-[3px] border border-border" style={{ backgroundImage: "repeating-linear-gradient(135deg, var(--border) 0 1px, transparent 1px 4px)" }} aria-hidden />
+          {t("timelineElapsed")}
+        </span>
         <span>{t("timelineHint")}</span>
       </div>
     </div>
