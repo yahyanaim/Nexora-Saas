@@ -68,7 +68,8 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
       lang={locale}
       dir={locale === "ar" || locale === "ur" ? "rtl" : "ltr"}
     >
-      <body className="font-sans antialiased">
+      {/* Browser extensions (Grammarly, password managers) add attributes to body before React loads */}
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           <ProviderContexts nonce={nonce}>
             <NextTopLoader
