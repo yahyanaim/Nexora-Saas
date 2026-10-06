@@ -25,6 +25,9 @@ import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLogout } from "@/hooks/auth/use-logout"
 import { useTheme } from "@/hooks/use-theme"
 import { ProfilePage } from "../profile-chunks/profile-page"
+import { isDemoMode } from "@/lib/auth/demo-mode"
+import { resetDemoData } from "@/lib/workforce/demo-store"
+import { RotateCcw } from "@/components/ui/carbon/icons"
 
 /** Confirmation dialog shared by every logout entry point. */
 export function LogoutDialog({
@@ -118,6 +121,20 @@ export function UserMenu() {
             {isDark ? <Sun /> : <Moon />}
             {isDark ? t("lightMode") : t("darkMode")}
           </DropdownMenuItem>
+          {isDemoMode() && (
+            <DropdownMenuItem
+              tabIndex={0}
+              className="h-9 text-sm"
+              onClick={() => {
+                // Fresh demo data, then a full reload so every screen reads it
+                resetDemoData()
+                window.location.reload()
+              }}
+            >
+              <RotateCcw />
+              {t("resetDemoData")}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             tabIndex={0}

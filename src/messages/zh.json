@@ -2691,5 +2691,6 @@
   "err_fieldTwoChoices": "“{name}”至少需要两个选项",
   "err_fieldDuplicate": "有两个字段都叫“{name}”",
   "err_seatsUsed": "此套餐允许 {seats} 个用户，已有 {used} 人有权限，请先移除访问",
-  "err_leaveBalance": "{year} 年仅剩 {left} 天，此申请需要 {need} 天"
+  "err_leaveBalance": "{year} 年仅剩 {left} 天，此申请需要 {need} 天",
+  "resetDemoData": "重置演示数据"
 }

@@ -2691,5 +2691,6 @@
   "err_fieldTwoChoices": "„{name}“ braucht mindestens zwei Optionen",
   "err_fieldDuplicate": "Zwei Felder heißen „{name}“",
   "err_seatsUsed": "Dieser Tarif erlaubt {seats} Nutzer und {used} haben Zugang; entfernen Sie zuerst einen Zugang",
-  "err_leaveBalance": "Nur noch {left} Tag(e) in {year}; dieser Antrag braucht {need}"
+  "err_leaveBalance": "Nur noch {left} Tag(e) in {year}; dieser Antrag braucht {need}",
+  "resetDemoData": "Demodaten zurücksetzen"
 }

@@ -2691,5 +2691,6 @@
   "err_fieldTwoChoices": "\"{name}\" के कम से कम दो विकल्प होने चाहिए",
   "err_fieldDuplicate": "दो फ़ील्ड का नाम \"{name}\" है",
   "err_seatsUsed": "यह प्लान {seats} उपयोगकर्ताओं की अनुमति देता है और {used} के पास एक्सेस है; पहले एक्सेस हटाएँ",
-  "err_leaveBalance": "{year} में केवल {left} दिन बचे हैं; इस अनुरोध को {need} चाहिए"
+  "err_leaveBalance": "{year} में केवल {left} दिन बचे हैं; इस अनुरोध को {need} चाहिए",
+  "resetDemoData": "डेमो डेटा रीसेट करें"
 }

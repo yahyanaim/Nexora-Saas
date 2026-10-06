@@ -2691,5 +2691,6 @@
   "err_fieldTwoChoices": "Для «{name}» нужно минимум два варианта",
   "err_fieldDuplicate": "Два поля называются «{name}»",
   "err_seatsUsed": "Тариф допускает {seats} пользователей, доступ есть у {used}; сначала уберите доступ",
-  "err_leaveBalance": "В {year} осталось {left} дн.; запросу нужно {need}"
+  "err_leaveBalance": "В {year} осталось {left} дн.; запросу нужно {need}",
+  "resetDemoData": "Сбросить демо-данные"
 }

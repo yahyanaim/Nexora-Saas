@@ -2691,5 +2691,6 @@
   "err_fieldTwoChoices": "«{name}» necesita al menos dos opciones",
   "err_fieldDuplicate": "Dos campos se llaman «{name}»",
   "err_seatsUsed": "Este plan permite {seats} usuarios y {used} tienen acceso; quita un acceso primero",
-  "err_leaveBalance": "Solo quedan {left} día(s) en {year}; esta solicitud necesita {need}"
+  "err_leaveBalance": "Solo quedan {left} día(s) en {year}; esta solicitud necesita {need}",
+  "resetDemoData": "Restablecer datos de demostración"
 }

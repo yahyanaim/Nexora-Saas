@@ -2691,5 +2691,6 @@
   "err_fieldTwoChoices": "\"{name}\" needs at least two choices",
   "err_fieldDuplicate": "Two fields are named \"{name}\"",
   "err_seatsUsed": "This plan allows {seats} users and {used} have access; remove access first",
-  "err_leaveBalance": "Only {left} day(s) left in {year}; this request needs {need}"
+  "err_leaveBalance": "Only {left} day(s) left in {year}; this request needs {need}",
+  "resetDemoData": "Reset demo data"
 }
