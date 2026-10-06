@@ -5,6 +5,10 @@
  * same keys as error codes.
  */
 export const ERROR_KEYS: Record<string, string> = {
+  "This invoice was sent to the DGI; issue a credit note instead": "err_thisInvoiceWasSentTo",
+  "Issue the invoice before sending it to the DGI": "err_issueTheInvoiceBeforeSending",
+  "E-invoicing applies to issued invoices of Moroccan companies": "err_eInvoicingAppliesToIssued",
+  "This invoice was already sent to the DGI": "err_thisInvoiceWasAlreadySent",
   "Add the client's ICE: invoices to companies in Morocco must show it": "err_addTheClientSIceInvoices",
   "Add your company's ICE in Settings before issuing invoices": "err_addYourCompanySIceIn",
   "Add your company's IF (tax ID) in Settings before issuing invoices": "err_addYourCompanySIfTax",

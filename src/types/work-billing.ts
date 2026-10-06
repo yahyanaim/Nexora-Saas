@@ -83,6 +83,25 @@ export interface Payment {
 }
 
 /** One email of the invoice to the client (BIL-11). */
+/** Where an invoice stands with the DGI e-invoicing platform (Phase 6e.2). */
+export enum EInvoiceStatus {
+  TO_SEND = "to_send",
+  SENT = "sent",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+}
+
+export interface EInvoiceState {
+  status: EInvoiceStatus
+  /** ISO timestamps */
+  sentAt?: string
+  decidedAt?: string
+  /** Reference the platform gives an accepted invoice */
+  reference?: string
+  /** Why the platform refused it */
+  reason?: string
+}
+
 export interface InvoiceDelivery {
   to: string
   /** ISO timestamp */
@@ -148,6 +167,8 @@ export interface ClientInvoice {
   subject?: string
   /** The accepted quote this invoice comes from */
   quoteId?: string
+  /** DGI e-invoice state; absent until the first send (Phase 6e.2) */
+  eInvoice?: EInvoiceState
   createdAt: string
   updatedAt: string
 }

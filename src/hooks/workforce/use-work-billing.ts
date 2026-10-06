@@ -10,6 +10,8 @@ import {
   createInvoiceApi,
   type NewInvoiceInput,
   issueInvoiceApi,
+  sendEInvoiceApi,
+  checkEInvoiceStatusApi,
   recordPaymentApi,
   approveTimeEntriesApi,
   copyPreviousWeekApi,
@@ -218,5 +220,15 @@ export function useInvoiceMutations() {
     onSuccess: done(t("creditNoteIssued")),
     onError,
   })
-  return { createFromHours, create, updateDraft, markSent, markPaid, voidInvoice, deleteDraft, issue, recordPayment, creditNote }
+  const sendEInvoice = useMutation({
+    mutationFn: (id: string) => sendEInvoiceApi(workspaceId, id),
+    onSuccess: done(t("eInvoiceSentToast")),
+    onError,
+  })
+  const checkEInvoice = useMutation({
+    mutationFn: (id: string) => checkEInvoiceStatusApi(workspaceId, id),
+    onSuccess: done(t("eInvoiceCheckedToast")),
+    onError,
+  })
+  return { createFromHours, create, updateDraft, markSent, markPaid, voidInvoice, deleteDraft, issue, recordPayment, creditNote, sendEInvoice, checkEInvoice }
 }

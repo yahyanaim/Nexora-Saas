@@ -22,6 +22,7 @@ import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { unbilledExpenses } from "@/lib/workforce/profitability"
 import { addDays, displayStatus, invoiceBalance, invoiceTotals, toBase, unbilledValueByClient } from "@/lib/workforce/billing"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
+import { eInvoiceStatus } from "@/lib/workforce/e-invoice"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { ClientInvoiceStatus, InvoiceKind, type ClientInvoice, type ClientInvoiceDisplayStatus } from "@/types/work-billing"
 import { ClientStatus, type Client } from "@/types/workforce"
@@ -30,7 +31,8 @@ import { formatShortDate } from "../work-projects-chunks/project-labels"
 import { CreateInvoiceSheet } from "./create-invoice-sheet"
 import { InvoiceSheet } from "./invoice-sheet"
 import { NewInvoiceSheet } from "./new-invoice-sheet"
-import { INVOICE_STATUS_CLASS, INVOICE_STATUS_LABEL, formatHours } from "./billing-labels"
+import { E_INVOICE_STATUS_CLASS, E_INVOICE_STATUS_LABEL, INVOICE_STATUS_CLASS, INVOICE_STATUS_LABEL, formatHours } from "./billing-labels"
+import { cn } from "@/lib/utils"
 
 const DISPLAY_STATUSES: ClientInvoiceDisplayStatus[] = [
   ClientInvoiceStatus.DRAFT,
@@ -113,6 +115,10 @@ export default function ClientInvoicesPage() {
           <button type="button" onClick={() => setOpenId(row.original.id)} className="flex items-center gap-2 font-mono text-sm font-medium hover:text-primary">
             {row.original.number || <span className="font-sans text-muted-foreground">{t("draftInvoice")}</span>}
             {row.original.kind === InvoiceKind.CREDIT_NOTE && <span className="rounded-full bg-muted px-2 py-0.5 font-sans text-[11px] text-muted-foreground">{t("creditNote")}</span>}
+            {(() => {
+              const e = settings && eInvoiceStatus(row.original, settings.company)
+              return e ? <span className={cn("rounded-full px-2 py-0.5 font-sans text-[11px]", E_INVOICE_STATUS_CLASS[e])}>DGI · {t(E_INVOICE_STATUS_LABEL[e])}</span> : null
+            })()}
           </button>
         ),
       },
@@ -166,7 +172,7 @@ export default function ClientInvoicesPage() {
         },
       },
     ],
-    [t, locale, clients, invoices]
+    [t, locale, clients, invoices, settings]
   )
 
   const readyClients = clients.filter((c) => unbilled.has(c.id))

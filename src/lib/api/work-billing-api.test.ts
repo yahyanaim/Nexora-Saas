@@ -83,6 +83,22 @@ describe("client invoices", () => {
     expect((await issueInvoiceApi(WS, invoice.id)).number).toBe("INV-2030-001")
   })
 
+  it("sends an issued invoice to the DGI and records the (simulated) acceptance", async () => {
+    const { sendEInvoiceApi, checkEInvoiceStatusApi, getEInvoiceXmlApi } = await import("./work-billing-api")
+    const { EInvoiceStatus } = await import("@/types/work-billing")
+    const draft = await createInvoiceFromHoursApi(WS, { clientId: "cli_helio", entryIds: (await unbilledHelio()).map((e) => e.id), taxRate: 20, issueDate: "2030-02-01" })
+    await expect(sendEInvoiceApi(WS, draft.id)).rejects.toThrow(/Moroccan companies/)
+    await issueInvoiceApi(WS, draft.id)
+    const { xml, fileName } = await getEInvoiceXmlApi(WS, draft.id)
+    expect(fileName).toBe("INV-2030-001.xml")
+    expect(xml).toContain("<cbc:ID>INV-2030-001</cbc:ID>")
+    expect((await sendEInvoiceApi(WS, draft.id)).eInvoice?.status).toBe(EInvoiceStatus.SENT)
+    await expect(sendEInvoiceApi(WS, draft.id)).rejects.toThrow(/already sent/)
+    const accepted = await checkEInvoiceStatusApi(WS, draft.id)
+    expect(accepted.eInvoice).toMatchObject({ status: EInvoiceStatus.ACCEPTED, reference: expect.stringMatching(/^DGI-INV-2030-001-/) })
+    await expect(voidInvoiceApi(WS, draft.id)).rejects.toThrow(/credit note/)
+  })
+
   it("seeds a paid invoice and leaves approved Helio hours to bill", async () => {
     const invoices = await listClientInvoicesApi(WS)
     expect(invoices.some((i) => i.status === ClientInvoiceStatus.PAID)).toBe(true)

@@ -1,4 +1,4 @@
-import { ClientInvoiceStatus, TimeEntryStatus, type ClientInvoiceDisplayStatus } from "@/types/work-billing"
+import { ClientInvoiceStatus, EInvoiceStatus, TimeEntryStatus, type ClientInvoiceDisplayStatus } from "@/types/work-billing"
 
 /** Translation keys and badge styles for time and invoice statuses. */
 
@@ -48,4 +48,18 @@ export const INVOICE_STATUS_CLASS: Record<ClientInvoiceDisplayStatus, string> = 
 
 export function formatHours(hours: number) {
   return `${Math.round(hours * 100) / 100} h`
+}
+
+export const E_INVOICE_STATUS_LABEL: Record<EInvoiceStatus, string> = {
+  [EInvoiceStatus.TO_SEND]: "eInvoiceToSend",
+  [EInvoiceStatus.SENT]: "eInvoiceSent",
+  [EInvoiceStatus.ACCEPTED]: "eInvoiceAccepted",
+  [EInvoiceStatus.REJECTED]: "eInvoiceRejected",
+}
+
+export const E_INVOICE_STATUS_CLASS: Record<EInvoiceStatus, string> = {
+  [EInvoiceStatus.TO_SEND]: "bg-warning-soft text-warning-foreground border-transparent",
+  [EInvoiceStatus.SENT]: "bg-info-soft text-info-foreground border-transparent",
+  [EInvoiceStatus.ACCEPTED]: "bg-success-soft text-success-foreground border-transparent",
+  [EInvoiceStatus.REJECTED]: "bg-danger-soft text-destructive border-transparent",
 }
