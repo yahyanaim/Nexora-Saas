@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Archive, Building, Pencil, Plus, Trash2, Warning } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
@@ -145,58 +145,57 @@ export default function SuppliersPage() {
         )}
       </section>
 
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{t(editing?.id ? "supplierEdit" : "supplierNew")}</DialogTitle>
-            <DialogDescription>{t("supplierFormHint")}</DialogDescription>
-          </DialogHeader>
+      <DataTableEntityFormSheet
+        open={!!editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        mode={editing?.id ? "edit" : "create"}
+        createTitle={t("supplierNew")}
+        editTitle={t("supplierEdit")}
+        description={t("supplierFormHint")}
+        isSubmitting={create.isPending || update.isPending}
+        onSubmit={save}
+      >
           {editing && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {field("name", t("supplierName"))}
-              {field("legalName", t("legalName"))}
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("category")}</Label>
-                <Select value={editing.input.category} onValueChange={(v) => set({ category: v as SupplierCategory })}>
-                  <SelectTrigger className="w-full bg-card"><SelectValue>{t(`supCat_${editing.input.category}`)}</SelectValue></SelectTrigger>
-                  <SelectContent>
-                    {Object.values(SupplierCategory).map((c) => <SelectItem key={c} value={c}>{t(`supCat_${c}`)}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t("country")}</Label>
-                <Select value={editing.input.country ?? NONE} onValueChange={(v) => set({ country: v === NONE ? undefined : v })}>
-                  <SelectTrigger className="w-full min-w-0 bg-card"><SelectValue><span className="truncate">{editing.input.country ?? t("sameAsCompany", { country: companyCountry })}</span></SelectValue></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>{t("sameAsCompany", { country: companyCountry })}</SelectItem>
-                    {COUNTRIES.filter((c) => c !== companyCountry).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              {field("ice", formMoroccan ? `${t("iceNumber")} *` : t("iceNumber"), formMoroccan ? t("supplierIceHint") : undefined)}
-              {field("taxId", t("taxIdentifier"))}
-              {field("email", t("email"))}
-              {field("phone", t("phone"))}
-              <div className="sm:col-span-2">{field("address", t("address"))}</div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="sup-terms">{t("paymentTermsDays")}</Label>
-                <Input id="sup-terms" type="number" min={0} max={365} value={editing.input.paymentTermsDays} onChange={(e) => set({ paymentTermsDays: Number(e.target.value) })} />
-              </div>
-              {field("bankName", t("bankName"))}
-              <div className="sm:col-span-2">{field("bankAccount", formMoroccan ? t("supplierRib") : t("bankAccount"), formMoroccan ? t("supplierRibHint") : undefined)}</div>
-              <div className="flex flex-col gap-1.5 sm:col-span-2">
-                <Label htmlFor="sup-notes">{t("notes")}</Label>
-                <Textarea id="sup-notes" rows={2} value={editing.input.notes ?? ""} onChange={(e) => set({ notes: e.target.value })} />
-              </div>
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+          {field("name", t("supplierName"))}
+          {field("legalName", t("legalName"))}
+          <div className="flex flex-col gap-1.5">
+            <Label>{t("category")}</Label>
+            <Select value={editing.input.category} onValueChange={(v) => set({ category: v as SupplierCategory })}>
+              <SelectTrigger className="w-full bg-card"><SelectValue>{t(`supCat_${editing.input.category}`)}</SelectValue></SelectTrigger>
+              <SelectContent>
+                {Object.values(SupplierCategory).map((c) => <SelectItem key={c} value={c}>{t(`supCat_${c}`)}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label>{t("country")}</Label>
+            <Select value={editing.input.country ?? NONE} onValueChange={(v) => set({ country: v === NONE ? undefined : v })}>
+              <SelectTrigger className="w-full min-w-0 bg-card"><SelectValue><span className="truncate">{editing.input.country ?? t("sameAsCompany", { country: companyCountry })}</span></SelectValue></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>{t("sameAsCompany", { country: companyCountry })}</SelectItem>
+                {COUNTRIES.filter((c) => c !== companyCountry).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          {field("ice", formMoroccan ? `${t("iceNumber")} *` : t("iceNumber"), formMoroccan ? t("supplierIceHint") : undefined)}
+          {field("taxId", t("taxIdentifier"))}
+          {field("email", t("email"))}
+          {field("phone", t("phone"))}
+          <div className="col-span-2">{field("address", t("address"))}</div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="sup-terms">{t("paymentTermsDays")}</Label>
+            <Input id="sup-terms" type="number" min={0} max={365} value={editing.input.paymentTermsDays} onChange={(e) => set({ paymentTermsDays: Number(e.target.value) })} />
+          </div>
+          {field("bankName", t("bankName"))}
+          <div className="col-span-2">{field("bankAccount", formMoroccan ? t("supplierRib") : t("bankAccount"), formMoroccan ? t("supplierRibHint") : undefined)}</div>
+          <div className="flex flex-col gap-1.5 col-span-2">
+            <Label htmlFor="sup-notes">{t("notes")}</Label>
+            <Textarea id="sup-notes" rows={2} value={editing.input.notes ?? ""} onChange={(e) => set({ notes: e.target.value })} />
+          </div>
+        </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(null)}>{t("cancel")}</Button>
-            <Button disabled={create.isPending || update.isPending} onClick={save}>{t("save")}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      </DataTableEntityFormSheet>
 
       <ConfirmAlertDialog
         open={!!deleting}

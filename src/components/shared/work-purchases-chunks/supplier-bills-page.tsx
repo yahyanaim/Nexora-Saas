@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CheckCircle2, FileText, Pencil, Plus, Trash2, Warning, Receipt } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useSuppliers } from "@/hooks/workforce/use-workforce"
 import { useProjects } from "@/hooks/workforce/use-work-projects"
@@ -176,94 +177,98 @@ export default function SupplierBillsPage() {
         )}
       </section>
 
-      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>{t(editing?.id ? "billEdit" : "billNew")}</DialogTitle>
-            <DialogDescription>{t("billFormHint")}</DialogDescription>
-          </DialogHeader>
-          {editing && (
-            <div className="flex flex-col gap-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-1.5">
-                  <Label>{t("supplier")}</Label>
-                  <Select value={editing.input.supplierId || NONE} onValueChange={(v) => v !== NONE && pickSupplier(v)}>
-                    <SelectTrigger className="w-full bg-card" aria-label={t("supplier")}><SelectValue>{editing.input.supplierId ? supplierName(editing.input.supplierId) : t("billChooseSupplier")}</SelectValue></SelectTrigger>
-                    <SelectContent>
-                      {suppliers.filter((s) => s.status === SupplierStatus.ACTIVE).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="bill-number">{t("billNumber")}</Label>
-                  <Input id="bill-number" value={editing.input.number} onChange={(e) => set({ number: e.target.value })} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="bill-date">{t("billDate")}</Label>
-                  <Input id="bill-date" type="date" value={editing.input.issueDate} onChange={(e) => set({ issueDate: e.target.value })} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="bill-due">{t("dueDate")}</Label>
-                  <Input id="bill-due" type="date" value={editing.input.dueDate} onChange={(e) => set({ dueDate: e.target.value })} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label>{t("billProject")}</Label>
-                  <Select value={editing.input.projectId ?? NONE} onValueChange={(v) => set({ projectId: v === NONE ? undefined : v })}>
-                    <SelectTrigger className="w-full bg-card"><SelectValue>{editing.input.projectId ? projects.find((p) => p.id === editing.input.projectId)?.name : t("billNoProject")}</SelectValue></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>{t("billNoProject")}</SelectItem>
-                      {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.code} · {p.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="bill-vat">{t("billDefaultVat")}</Label>
-                  <Input id="bill-vat" type="number" min={0} max={100} value={editing.input.taxRate} onChange={(e) => set({ taxRate: Number(e.target.value) })} />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Label>{t("billLines")}</Label>
-                {editing.input.lines.map((l, i) => (
-                  <div key={l.id} className="grid grid-cols-[1fr_5rem_7rem_5rem_auto] items-center gap-2">
-                    <Input aria-label={t("description")} placeholder={t("description")} value={l.description} onChange={(e) => setLine(i, { description: e.target.value })} />
-                    <Input aria-label={t("quantity")} type="number" min={0} value={l.quantity} onChange={(e) => setLine(i, { quantity: Number(e.target.value) })} />
-                    <Input aria-label={t("unitPrice")} type="number" min={0} value={l.unitPrice} onChange={(e) => setLine(i, { unitPrice: Number(e.target.value) })} />
-                    <Input aria-label={t("vatRate")} type="number" min={0} max={100} placeholder={String(editing.input.taxRate)} value={l.taxRate ?? ""} onChange={(e) => setLine(i, { taxRate: e.target.value === "" ? undefined : Number(e.target.value) })} />
-                    <Button size="icon-sm" variant="ghost" aria-label={t("delete")} disabled={editing.input.lines.length === 1} onClick={() => set({ lines: editing.input.lines.filter((_, j) => j !== i) })}><Trash2 className="size-4" /></Button>
-                  </div>
-                ))}
-                <Button size="sm" variant="outline" className="self-start" onClick={() => set({ lines: [...editing.input.lines, { id: createId("bl"), description: "", quantity: 1, unitPrice: 0 }] })}>
-                  <Plus className="size-4" /> {t("addLine")}
-                </Button>
-              </div>
-
-              {totals && (
-                <dl className="ms-auto grid w-64 grid-cols-2 gap-1 text-sm">
-                  <dt className="text-muted-foreground">{t("subtotal")}</dt><dd className="text-end tabular-nums">{money(totals.subtotal)}</dd>
-                  <dt className="text-muted-foreground">{t("vatAmountCol")}</dt><dd className="text-end tabular-nums">{money(totals.tax)}</dd>
-                  <dt className="font-semibold">{t("total")}</dt><dd className="text-end font-semibold tabular-nums">{money(totals.total)}</dd>
-                </dl>
-              )}
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="bill-file">{t("billFile")}</Label>
-                  <Input id="bill-file" placeholder="facture.pdf" value={editing.input.fileName ?? ""} onChange={(e) => set({ fileName: e.target.value || undefined })} />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="bill-notes">{t("notes")}</Label>
-                  <Textarea id="bill-notes" rows={1} value={editing.input.notes ?? ""} onChange={(e) => set({ notes: e.target.value || undefined })} />
-                </div>
-              </div>
+      <DataTableEntityFormSheet
+        open={!!editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        mode={editing?.id ? "edit" : "create"}
+        createTitle={t("billNew")}
+        editTitle={t("billEdit")}
+        description={t("billFormHint")}
+        isSubmitting={save.isPending}
+        onSubmit={() => editing && save.mutate(editing, { onSuccess: () => setEditing(null) })}
+        submitLabel={{ create: t("billSubmit"), edit: t("billSubmit") }}
+      >
+      {editing && (
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2 flex flex-col gap-1.5">
+              <Label>{t("supplier")}</Label>
+              <Select value={editing.input.supplierId || NONE} onValueChange={(v) => v !== NONE && pickSupplier(v)}>
+                <SelectTrigger className="w-full bg-card" aria-label={t("supplier")}><SelectValue>{editing.input.supplierId ? supplierName(editing.input.supplierId) : t("billChooseSupplier")}</SelectValue></SelectTrigger>
+                <SelectContent>
+                  {suppliers.filter((s) => s.status === SupplierStatus.ACTIVE).map((s) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bill-number">{t("billNumber")}</Label>
+              <Input id="bill-number" value={editing.input.number} onChange={(e) => set({ number: e.target.value })} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bill-vat">{t("billDefaultVat")}</Label>
+              <Input id="bill-vat" type="number" min={0} max={100} value={editing.input.taxRate} onChange={(e) => set({ taxRate: Number(e.target.value) })} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bill-date">{t("billDate")}</Label>
+              <Input id="bill-date" type="date" value={editing.input.issueDate} onChange={(e) => set({ issueDate: e.target.value })} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bill-due">{t("dueDate")}</Label>
+              <Input id="bill-due" type="date" value={editing.input.dueDate} onChange={(e) => set({ dueDate: e.target.value })} />
+            </div>
+            <div className="col-span-2 flex flex-col gap-1.5">
+              <Label>{t("billProject")}</Label>
+              <Select value={editing.input.projectId ?? NONE} onValueChange={(v) => set({ projectId: v === NONE ? undefined : v })}>
+                <SelectTrigger className="w-full bg-card"><SelectValue>{editing.input.projectId ? projects.find((p) => p.id === editing.input.projectId)?.name : t("billNoProject")}</SelectValue></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NONE}>{t("billNoProject")}</SelectItem>
+                  {projects.map((p) => <SelectItem key={p.id} value={p.id}>{p.code} · {p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label>{t("billLines")}</Label>
+            {editing.input.lines.map((l, i) => (
+              <div key={l.id} className="flex flex-col gap-2 rounded-2xl border border-border p-3">
+                <div className="flex items-center gap-2">
+                  <Input aria-label={t("description")} placeholder={t("description")} value={l.description} onChange={(e) => setLine(i, { description: e.target.value })} />
+                  <Button size="icon-sm" variant="ghost" aria-label={t("delete")} disabled={editing.input.lines.length === 1} onClick={() => set({ lines: editing.input.lines.filter((_, j) => j !== i) })}><Trash2 className="size-4" /></Button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <Input aria-label={t("quantity")} title={t("quantity")} type="number" min={0} value={l.quantity} onChange={(e) => setLine(i, { quantity: Number(e.target.value) })} />
+                  <Input aria-label={t("unitPrice")} title={t("unitPrice")} type="number" min={0} value={l.unitPrice} onChange={(e) => setLine(i, { unitPrice: Number(e.target.value) })} />
+                  <Input aria-label={t("vatRate")} title={t("vatRate")} type="number" min={0} max={100} placeholder={`${editing.input.taxRate} %`} value={l.taxRate ?? ""} onChange={(e) => setLine(i, { taxRate: e.target.value === "" ? undefined : Number(e.target.value) })} />
+                </div>
+              </div>
+            ))}
+            <Button size="sm" variant="outline" className="self-start" onClick={() => set({ lines: [...editing.input.lines, { id: createId("bl"), description: "", quantity: 1, unitPrice: 0 }] })}>
+              <Plus className="size-4" /> {t("addLine")}
+            </Button>
+          </div>
+
+          {totals && (
+            <dl className="ms-auto grid w-56 grid-cols-2 gap-1 text-sm">
+              <dt className="text-muted-foreground">{t("subtotal")}</dt><dd className="text-end tabular-nums">{money(totals.subtotal)}</dd>
+              <dt className="text-muted-foreground">{t("vatAmountCol")}</dt><dd className="text-end tabular-nums">{money(totals.tax)}</dd>
+              <dt className="font-semibold">{t("total")}</dt><dd className="text-end font-semibold tabular-nums">{money(totals.total)}</dd>
+            </dl>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(null)}>{t("cancel")}</Button>
-            <Button disabled={save.isPending} onClick={() => editing && save.mutate(editing, { onSuccess: () => setEditing(null) })}>{t("billSubmit")}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bill-file">{t("billFile")}</Label>
+              <Input id="bill-file" placeholder="facture.pdf" value={editing.input.fileName ?? ""} onChange={(e) => set({ fileName: e.target.value || undefined })} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="bill-notes">{t("notes")}</Label>
+              <Textarea id="bill-notes" rows={1} value={editing.input.notes ?? ""} onChange={(e) => set({ notes: e.target.value || undefined })} />
+            </div>
+          </div>
+        </div>
+      )}
+      </DataTableEntityFormSheet>
 
       <Dialog open={!!paying} onOpenChange={(o) => !o && setPaying(null)}>
         <DialogContent className="sm:max-w-md">

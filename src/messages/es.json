@@ -2885,5 +2885,7 @@
   "err_approveTheBillBeforePaying": "Apruebe la factura antes de pagarla",
   "err_thePaymentIsMoreThan": "El pago supera lo que queda por pagar",
   "err_approvedBillsCanTBe2": "Las facturas aprobadas no se pueden eliminar",
-  "err_thisSupplierHasBillsSo": "Este proveedor tiene facturas; solo se puede archivar"
+  "err_thisSupplierHasBillsSo": "Este proveedor tiene facturas; solo se puede archivar",
+  "guide_suppliers": "Las empresas y autónomos a quienes compra, con lo necesario para registrar y pagar sus facturas.\nTarjetas: proveedores activos, subcontratistas y proveedores marroquíes sin ICE.\nLista: busque por nombre, ICE, IF o correo; el botón muestra los archivados.\nNuevo proveedor: identificadores (ICE de 15 dígitos, IF), contactos, plazo de pago y banco (RIB de 24 dígitos en Marruecos).\nArchivar: conserve un proveedor sin uso con su historial; elimine solo errores.",
+  "guide_supplier_bills": "Las facturas que le envían sus proveedores, del registro al pago.\nTarjetas: facturas por aprobar, importe por pagar, importe vencido y pagos de los últimos 30 días.\nRegistrar factura: proveedor, su número, fechas (vencimiento según el plazo del proveedor), proyecto opcional y líneas con su tipo de IVA.\nAprobar o rechazar: decide otra persona distinta de quien la registró; una factura rechazada puede corregirse y reenviarse.\nPagar: registre pagos totales o parciales; las facturas aprobadas cuentan como costes de proyecto, su IVA como deducible y se contabilizan en el diario de compras."
 }
