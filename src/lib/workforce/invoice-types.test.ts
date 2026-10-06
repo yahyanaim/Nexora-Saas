@@ -13,14 +13,14 @@ describe("fixed price and milestones (BIL-3, BIL-18)", () => {
   it("bills shares of the price, tracks the billed share, and never exceeds the price", async () => {
     // The demo already billed 30% of the fleet portal at kick-off
     const before = billedAgainstBudget((await listProjectsApi(WS)).find((p) => p.id === "prj_orbit")!, await listClientInvoicesApi(WS)).billed
-    expect(before).toBe(14400)
+    expect(before).toBe(144000)
     const inv = await createInvoiceApi(WS, { kind: InvoiceKind.FIXED, clientId: "cli_orbit", projectId: "prj_orbit", percent: 30, taxRate: 20 })
-    expect(invoiceTotals(inv).subtotal).toBe(14400) // 30% of 48,000
+    expect(invoiceTotals(inv).subtotal).toBe(144000) // 30% of 480,000
     await issueInvoiceApi(WS, inv.id)
     const orbit = (await listProjectsApi(WS)).find((p) => p.id === "prj_orbit")!
-    expect(billedAgainstBudget(orbit, await listClientInvoicesApi(WS))).toMatchObject({ billed: 28800, percent: 60, remaining: 19200 })
+    expect(billedAgainstBudget(orbit, await listClientInvoicesApi(WS))).toMatchObject({ billed: 288000, percent: 60, remaining: 192000 })
     await expect(createInvoiceApi(WS, { kind: InvoiceKind.FIXED, clientId: "cli_orbit", projectId: "prj_orbit", percent: 80, taxRate: 20 })).rejects.toThrow(/more than the project price/)
-    const ms = await createInvoiceApi(WS, { kind: InvoiceKind.MILESTONE, clientId: "cli_orbit", projectId: "prj_orbit", milestoneId: "ms_orbit_beta", amount: 12000, taxRate: 20 })
+    const ms = await createInvoiceApi(WS, { kind: InvoiceKind.MILESTONE, clientId: "cli_orbit", projectId: "prj_orbit", milestoneId: "ms_orbit_beta", amount: 120000, taxRate: 20 })
     expect(ms.lines[0]!.description).toContain("Beta release")
     // A credit note gives the share back
     await createCreditNoteApi(WS, inv.id, { releaseHours: false })

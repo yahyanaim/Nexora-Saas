@@ -1,5 +1,7 @@
 "use client"
 
+import { useCurrentWorkspace } from "@/store/workspace-store"
+
 import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
@@ -226,6 +228,7 @@ const ACTIVITY_ICON: Record<ClientActivity["kind"], typeof Calendar> = {
 
 /** Everything that happened with the client, newest first, plus notes and meetings (CRM-7). */
 export function ClientActivitySection({ client, employees }: { client: Client; employees: Employee[] }) {
+  const { currency } = useCurrentWorkspace()
   const t = useTranslations()
   const locale = useLocale()
   const currentEmployee = useCurrentEmployee()
@@ -293,7 +296,7 @@ export function ClientActivitySection({ client, employees }: { client: Client; e
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1">
-                    {a.amount !== undefined && <span className="text-xs tabular-nums">{formatMoney(a.amount, a.currency ?? "EUR", locale)}</span>}
+                    {a.amount !== undefined && <span className="text-xs tabular-nums">{formatMoney(a.amount, a.currency ?? currency, locale)}</span>}
                     {noteId && (
                       <Button variant="ghost" size="icon" className="size-6" aria-label={t("delete")} onClick={() => deleteNote.mutate(noteId)}>
                         <Trash2 className="size-3" />

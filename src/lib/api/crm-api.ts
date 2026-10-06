@@ -17,9 +17,9 @@ function seedContracts(workspaceId: string): ClientContract[] {
   const rows: Omit<ClientContract, "workspaceId" | "createdAt" | "updatedAt">[] =
     workspaceId === "ws_atlas"
       ? [
-          { id: "ctr_1", clientId: "cli_orbit", title: "Fleet portal: fixed-price agreement", type: ContractType.FIXED_PRICE, startDate: addDays(t, -45), endDate: addDays(t, 30), value: 48000, currency: "EUR", fileName: "orbit-portal-signed.pdf" },
-          { id: "ctr_2", clientId: "cli_helio", title: "Framework agreement, time and materials", type: ContractType.TIME_MATERIALS, startDate: addDays(t, -300), renewalDate: addDays(t, 18), currency: "EUR", fileName: "helio-framework-2025.pdf", notes: "Renegotiate rates before renewal." },
-          { id: "ctr_3", clientId: "cli_kappa", title: "Support retainer", type: ContractType.RETAINER, startDate: addDays(t, -400), endDate: addDays(t, -35), value: 2500, currency: "EUR" },
+          { id: "ctr_1", clientId: "cli_orbit", title: "Fleet portal: fixed-price agreement", type: ContractType.FIXED_PRICE, startDate: addDays(t, -45), endDate: addDays(t, 30), value: 480000, currency: "MAD", fileName: "orbit-portal-signed.pdf" },
+          { id: "ctr_2", clientId: "cli_helio", title: "Framework agreement, time and materials", type: ContractType.TIME_MATERIALS, startDate: addDays(t, -300), renewalDate: addDays(t, 18), currency: "MAD", fileName: "helio-framework-2025.pdf", notes: "Renegotiate rates before renewal." },
+          { id: "ctr_3", clientId: "cli_kappa", title: "Support retainer", type: ContractType.RETAINER, startDate: addDays(t, -400), endDate: addDays(t, -35), value: 25000, currency: "MAD" },
         ]
       : workspaceId === "ws_northwind"
         ? [{ id: "ctr_10", clientId: "cli_lumen", title: "Content retainer", type: ContractType.RETAINER, startDate: addDays(t, -120), renewalDate: addDays(t, 60), value: 6000, currency: "USD" }]

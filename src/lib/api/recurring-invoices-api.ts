@@ -17,12 +17,12 @@ function seedRecurring(workspaceId: string): RecurringInvoice[] {
           {
             id: "rec_1", clientId: "cli_helio", projectId: "prj_helio", title: "Dashboard hosting and support", frequency: RecurringFrequency.MONTHLY,
             startDate: "2026-01-01", nextRunDate: firstOfMonth, taxRate: 20, active: true, invoiceIds: [],
-            lines: [{ id: "rl1", description: "Hosting and monitoring", quantity: 1, unit: "month", unitPrice: 450 }, { id: "rl2", description: "Support hours included", quantity: 8, unit: "h", unitPrice: 95 }],
+            lines: [{ id: "rl1", description: "Hosting and monitoring", quantity: 1, unit: "month", unitPrice: 4500 }, { id: "rl2", description: "Support hours included", quantity: 8, unit: "h", unitPrice: 950 }],
           },
           {
             id: "rec_2", clientId: "cli_orbit", title: "Portal licence", frequency: RecurringFrequency.YEARLY,
             startDate: "2026-03-01", nextRunDate: "2027-03-01", taxRate: 20, active: true, invoiceIds: [],
-            lines: [{ id: "rl3", description: "Annual portal licence", quantity: 1, unit: "year", unitPrice: 3600 }],
+            lines: [{ id: "rl3", description: "Annual portal licence", quantity: 1, unit: "year", unitPrice: 36000 }],
           },
         ]
       : workspaceId === "ws_northwind"

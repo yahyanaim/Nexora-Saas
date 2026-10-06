@@ -1,5 +1,6 @@
 "use client"
 
+import { CURRENCIES } from "@/lib/workforce/currency"
 import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
@@ -31,7 +32,6 @@ import { formatShortDate } from "../work-projects-chunks/project-labels"
 import { INVOICE_STATUS_CLASS, INVOICE_STATUS_LABEL } from "./billing-labels"
 import { EInvoicePanel } from "./e-invoice-panel"
 
-const CURRENCIES = ["MAD", "EUR", "USD", "GBP", "CAD", "AED", "SAR", "CHF"]
 const DEFAULT_RATE = "__default__"
 
 type DraftPatch = Partial<Pick<ClientInvoice, "taxRate" | "lines" | "withholdingRate" | "currency" | "exchangeRate" | "exchangeRateDate">>

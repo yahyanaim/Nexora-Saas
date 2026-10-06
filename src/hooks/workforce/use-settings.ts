@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
 import { setCompanyTimeZone } from "@/lib/workforce/project-metrics"
-import { useCurrentWorkspace } from "@/store/workspace-store"
+import { useCurrentWorkspace, useWorkspaceStore } from "@/store/workspace-store"
 import {
   createDepartmentApi,
   deleteDepartmentApi,
@@ -31,6 +31,8 @@ export function useWorkspaceSettings() {
       const settings = await getSettingsApi(id)
       // Business dates follow the company's time zone (M2)
       setCompanyTimeZone(settings.company.timeZone)
+      // Screens format money in the company's base currency (MAD for Morocco)
+      useWorkspaceStore.getState().setCurrency(id, settings.company.baseCurrency)
       return settings
     },
   })
@@ -46,6 +48,7 @@ export function useSettingsMutations() {
     toast.error(translateError(err, t))
   const saved = (data: WorkspaceSettings) => {
     setCompanyTimeZone(data.company.timeZone)
+    useWorkspaceStore.getState().setCurrency(workspaceId, data.company.baseCurrency)
     queryClient.setQueryData(["settings", workspaceId], data)
     toast.success(t("settingsSaved"))
   }

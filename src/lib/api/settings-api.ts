@@ -32,7 +32,7 @@ const COMPANIES: Record<string, CompanySettings> = {
     address: "12 Boulevard d'Anfa",
     city: "Casablanca",
     country: "MA",
-    baseCurrency: "EUR",
+    baseCurrency: "MAD",
     fiscalYearStartMonth: 1,
     weekStart: "monday",
     timeZone: "Africa/Casablanca",

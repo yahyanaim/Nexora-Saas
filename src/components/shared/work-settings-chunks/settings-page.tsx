@@ -1,5 +1,6 @@
 "use client"
 
+import { CURRENCIES, currencyAfterCountryChange } from "@/lib/workforce/currency"
 import { useState } from "react"
 import { vatPeriodOf, vatRegimeOf } from "@/lib/workforce/vat"
 import { useTranslations } from "next-intl"
@@ -38,7 +39,6 @@ import {
   type WorkspaceSettings,
 } from "@/types/work-settings"
 
-const CURRENCIES = ["MAD", "EUR", "USD", "GBP", "CAD", "AED", "SAR", "CHF"]
 const COUNTRIES = ["MA", "FR", "BE", "CH", "ES", "DE", "GB", "US", "CA", "AE", "SA", "TN", "DZ", "SN"]
 const TIME_ZONES = ["Africa/Casablanca", "Europe/Paris", "Europe/London", "America/New_York", "America/Los_Angeles", "Asia/Dubai", "Africa/Tunis"]
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -113,7 +113,7 @@ function CompanyTab({ initial }: { initial: CompanySettings }) {
           {text("address", t("address"))}
           {text("city", t("city"))}
           <Field label={t("country")}>
-            <Select value={form.country} onValueChange={(v) => set("country", v)}>
+            <Select value={form.country} onValueChange={(v) => setForm((f) => ({ ...f, country: v, baseCurrency: currencyAfterCountryChange(f.baseCurrency, f.country, v) }))}>
               <SelectTrigger><SelectValue>{form.country}</SelectValue></SelectTrigger>
               <SelectContent>
                 {COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}

@@ -1,5 +1,6 @@
 "use client"
 
+import { CURRENCIES } from "@/lib/workforce/currency"
 import { forwardRef, useEffect, useImperativeHandle } from "react"
 import { useFieldArray, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -34,7 +35,6 @@ import { ClientStatus, ClientType, type Client, type ClientInput, type Employee 
 import { CLIENT_STATUS_LABEL, NONE } from "./workforce-labels"
 import { CustomFieldInputs, useCustomFields } from "./custom-fields"
 
-const CURRENCIES = ["MAD", "EUR", "USD", "GBP", "CAD", "AED", "SAR", "CHF"]
 const LANGUAGES = ["en", "fr", "ar", "es", "de"]
 
 export interface ClientFormHandle {

@@ -85,11 +85,11 @@ describe("payments and status", () => {
   it("needs an exchange rate to issue in another currency (BIL-7)", async () => {
     const hours = unbilledEntries(await listTimeEntriesApi(WS), await listProjectsApi(WS), "cli_helio")
     const draft = await createInvoiceFromHoursApi(WS, { clientId: "cli_helio", entryIds: hours.map((e) => e.id), taxRate: 20, issueDate: "2030-02-01" })
-    await updateInvoiceDraftApi(WS, draft.id, { currency: "MAD" } as never)
+    await updateInvoiceDraftApi(WS, draft.id, { currency: "EUR" } as never)
     await expect(issueInvoiceApi(WS, draft.id)).rejects.toThrow(/exchange rate/)
-    await updateInvoiceDraftApi(WS, draft.id, { exchangeRate: 0.0923456789, exchangeRateDate: "2030-02-01" })
+    await updateInvoiceDraftApi(WS, draft.id, { exchangeRate: 10.8323456789, exchangeRateDate: "2030-02-01" })
     const issued = await issueInvoiceApi(WS, draft.id)
-    expect(issued.exchangeRate).toBe(0.092346)
+    expect(issued.exchangeRate).toBe(10.832346)
   })
 })
 

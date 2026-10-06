@@ -113,7 +113,7 @@ describe("expenses API", () => {
     const before = unbilledExpenses(await listExpensesApi("ws_atlas"), projects, "cli_helio")
     expect(before.map((x) => x.id)).toContain("ex_2")
     const invoice = await createInvoiceFromHoursApi("ws_atlas", { clientId: "cli_helio", entryIds: [], expenseIds: ["ex_2"], taxRate: 0 })
-    expect(invoice.lines).toEqual([expect.objectContaining({ unitPrice: 420, expenseIds: ["ex_2"] })])
+    expect(invoice.lines).toEqual([expect.objectContaining({ unitPrice: 4200, expenseIds: ["ex_2"] })])
     expect(unbilledExpenses(await listExpensesApi("ws_atlas"), projects, "cli_helio").map((x) => x.id)).not.toContain("ex_2")
     await expect(updateInvoiceDraftApi("ws_atlas", invoice.id, { lines: [] })).rejects.toThrow(/can't change/)
     await deleteInvoiceDraftApi("ws_atlas", invoice.id)
