@@ -150,6 +150,7 @@ export type AccountKey =
   | "expenseHardware"
   | "expenseSubcontractor"
   | "expenseOther"
+  | "suppliers"
 
 /** A monthly running cost not tied to a project. */
 export interface OverheadItem {

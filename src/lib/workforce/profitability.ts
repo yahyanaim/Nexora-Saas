@@ -1,3 +1,5 @@
+import type { SupplierBill } from "@/types/work-purchases"
+import { projectBillCost } from "./supplier-bills"
 import type { Client, Employee } from "@/types/workforce"
 import { BudgetType, type WorkProject, type WorkTask } from "@/types/work-projects"
 import { ClientInvoiceStatus, TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/work-billing"
@@ -21,7 +23,7 @@ const round = roundMoney
  */
 export function projectProfit(
   project: WorkProject,
-  data: { entries: TimeEntry[]; tasks: WorkTask[]; expenses: Expense[]; employees: Employee[]; clients: Client[]; invoices?: ClientInvoice[]; overheadRate?: number }
+  data: { entries: TimeEntry[]; tasks: WorkTask[]; expenses: Expense[]; employees: Employee[]; clients: Client[]; invoices?: ClientInvoice[]; overheadRate?: number; bills?: SupplierBill[] }
 ): ProjectProfit {
   const client = data.clients.find((c) => c.id === project.clientId)
   const entries = data.entries.filter((e) => e.projectId === project.id && e.status !== TimeEntryStatus.REJECTED)
@@ -46,7 +48,8 @@ export function projectProfit(
   }
 
   const laborCost = entries.reduce((sum, e) => sum + e.hours * entryCostRate(e, employee(e.employeeId)), 0)
-  const expenseTotal = expenses.reduce((sum, x) => sum + x.amount, 0)
+  // Supplier bills on the project count before VAT, which is deductible (Phase 6f.2)
+  const expenseTotal = expenses.reduce((sum, x) => sum + x.amount, 0) + projectBillCost(data.bills, project.id)
   const hours = entries.reduce((sum, e) => sum + e.hours, 0)
   const overhead = hours * (data.overheadRate ?? 0)
   const profit = revenue - laborCost - expenseTotal - overhead
@@ -82,7 +85,7 @@ export type BudgetAlert = "none" | "warning" | "over"
  */
 export function budgetUsage(
   project: WorkProject,
-  data: { entries: TimeEntry[]; expenses: Expense[]; employees: Employee[]; clients: Client[] }
+  data: { entries: TimeEntry[]; expenses: Expense[]; employees: Employee[]; clients: Client[]; bills?: SupplierBill[] }
 ): { used: number; budget: number; percent: number | null; alert: BudgetAlert } {
   const budget = project.budgetAmount ?? 0
   if (project.budgetType === BudgetType.NON_BILLABLE || budget <= 0) return { used: 0, budget, percent: null, alert: "none" }
@@ -95,7 +98,7 @@ export function budgetUsage(
   } else {
     const labor = entries.reduce((sum, e) => sum + e.hours * entryCostRate(e, person(e.employeeId)), 0)
     const spent = data.expenses.filter((x) => x.projectId === project.id && SPENT.includes(x.status)).reduce((s, x) => s + x.amount, 0)
-    used = labor + spent
+    used = labor + spent + projectBillCost(data.bills, project.id)
   }
   const percent = Math.round((used / budget) * 100)
   return { used: round(used), budget, percent, alert: percent >= 100 ? "over" : percent >= 80 ? "warning" : "none" }

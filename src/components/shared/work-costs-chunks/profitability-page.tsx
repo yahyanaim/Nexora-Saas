@@ -1,5 +1,6 @@
 "use client"
 
+import { useSupplierBills } from "@/hooks/workforce/use-supplier-bills"
 import { useMemo } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
@@ -46,6 +47,7 @@ export default function ProfitabilityPage() {
   const { data: employees = [] } = useEmployees()
   const { data: clients = [] } = useClients()
   const { data: invoices = [] } = useClientInvoices()
+  const { data: bills = [] } = useSupplierBills()
   const { data: settings } = useWorkspaceSettings()
   const rate = overheadRate(settings?.overheads, employees)
 
@@ -53,8 +55,8 @@ export default function ProfitabilityPage() {
     () =>
       projects
         .filter((p) => p.status !== WorkProjectStatus.CANCELLED)
-        .map((p) => ({ ...p, profit: projectProfit(p, { entries, tasks, expenses, employees, clients, invoices, overheadRate: rate }) })),
-    [projects, entries, tasks, expenses, employees, clients, invoices, rate]
+        .map((p) => ({ ...p, profit: projectProfit(p, { entries, tasks, expenses, employees, clients, invoices, overheadRate: rate, bills }) })),
+    [projects, entries, tasks, expenses, employees, clients, invoices, rate, bills]
   )
 
   const money = (n: number) => formatMoney(n, workspace.currency, locale)

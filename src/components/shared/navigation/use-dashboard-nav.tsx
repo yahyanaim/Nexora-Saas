@@ -216,6 +216,12 @@ export function useDashboardNav() {
             descriptionKey: "pageDescSuppliers",
           },
           {
+            title: t("supplierBills"),
+            url: "/dashboard/supplier-bills",
+            icon: Receipt,
+            descriptionKey: "pageDescSupplierBills",
+          },
+          {
             title: t("receivables"),
             url: "/dashboard/receivables",
             icon: Receipt,

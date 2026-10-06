@@ -54,6 +54,8 @@ export async function updateSupplierApi(workspaceId: string, id: string, input: 
 export async function deleteSupplierApi(workspaceId: string, id: string): Promise<void> {
   const current = suppliers.get(workspaceId, id)
   if (!current) throw new Error("Supplier not found")
+  const { listSupplierBillsApi } = await import("./supplier-bills-api")
+  if ((await listSupplierBillsApi(workspaceId)).some((b) => b.supplierId === id)) throw new Error("This supplier has bills, so it can only be archived")
   suppliers.remove(workspaceId, id)
   recordAudit(workspaceId, { action: "Supplier deleted", actionKey: "supplier.deleted", category: "Billing", target: current.name })
 }

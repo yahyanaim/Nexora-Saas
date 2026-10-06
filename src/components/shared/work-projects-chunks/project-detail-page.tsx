@@ -1,5 +1,6 @@
 "use client"
 
+import { useSupplierBills } from "@/hooks/workforce/use-supplier-bills"
 import { useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Link, useRouter } from "@/i18n/navigation"
@@ -79,6 +80,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const { data: entries = [] } = useTimeEntries()
   const { data: invoices = [] } = useClientInvoices()
   const { data: expenses = [] } = useExpenses()
+  const { data: bills = [] } = useSupplierBills()
   const labels = settings?.taskLabels ?? []
   const [filters, setFilters] = useState<TaskFilterValues>(NO_FILTERS)
   const [healthDialog, setHealthDialog] = useState(false)
@@ -132,7 +134,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const progress = taskProgress(tasks)
   const health = projectHealth(project, tasks)
   const done = tasks.filter((task) => task.status === TaskStatus.DONE).length
-  const budget = budgetUsage(project, { entries, expenses, employees, clients })
+  const budget = budgetUsage(project, { entries, expenses, employees, clients, bills })
   const visibleTasks = applyTaskFilters(tasks, filters)
 
   const saveTask = (input: WorkTaskInput) => {

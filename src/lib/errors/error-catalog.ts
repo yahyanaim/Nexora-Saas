@@ -5,6 +5,18 @@
  * same keys as error codes.
  */
 export const ERROR_KEYS: Record<string, string> = {
+  "Choose a supplier": "err_chooseASupplier",
+  "Enter the supplier's bill number": "err_enterTheSupplierSBill",
+  "The due date can't be before the bill date": "err_theDueDateCanTBe",
+  "VAT rates are between 0 and 100%": "err_vatRatesAreBetween0",
+  "This supplier's bill number is already recorded": "err_thisSupplierSBillNumber",
+  "Bill not found": "err_billNotFound",
+  "Approved bills can't be changed": "err_approvedBillsCanTBe",
+  "Only bills waiting for approval can be reviewed": "err_onlyBillsWaitingForApproval",
+  "Approve the bill before paying it": "err_approveTheBillBeforePaying",
+  "The payment is more than what is left to pay": "err_thePaymentIsMoreThan",
+  "Approved bills can't be deleted": "err_approvedBillsCanTBe2",
+  "This supplier has bills, so it can only be archived": "err_thisSupplierHasBillsSo",
   "Enter the supplier's name": "err_enterTheSupplierSName",
   "Payment terms must be between 0 and 365 days": "err_paymentTermsMustBeBetween",
   "A Moroccan RIB has 24 digits": "err_aMoroccanRibHas24",
