@@ -1,4 +1,6 @@
 "use client"
+import { createSupplierApi, deleteSupplierApi, listSuppliersApi, updateSupplierApi } from "@/lib/api/suppliers-api"
+import type { SupplierInput } from "@/types/work-purchases"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
@@ -40,7 +42,7 @@ export function useClients() {
  * Create / update / delete for one workspace collection, with toasts and a
  * refetch of that collection afterwards.
  */
-function useCollectionMutations<TInput>(
+export function useCollectionMutations<TInput>(
   key: string,
   fns: {
     create: (workspaceId: string, input: TInput) => Promise<unknown>
@@ -110,5 +112,19 @@ export function useClientMutations() {
     "clients",
     { create: createClientApi, update: updateClientApi, remove: deleteClientApi },
     { created: t("clientCreated"), updated: t("clientUpdated"), deleted: t("clientDeleted") }
+  )
+}
+
+export function useSuppliers() {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: ["suppliers", id], queryFn: () => listSuppliersApi(id) })
+}
+
+export function useSupplierMutations() {
+  const t = useTranslations()
+  return useCollectionMutations<SupplierInput>(
+    "suppliers",
+    { create: createSupplierApi, update: updateSupplierApi, remove: deleteSupplierApi },
+    { created: t("supplierCreated"), updated: t("supplierUpdated"), deleted: t("supplierDeleted") }
   )
 }
