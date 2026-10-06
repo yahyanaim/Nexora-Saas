@@ -26,6 +26,7 @@ import { LEAVE_TYPE_LABEL } from "../work-planning-chunks/planning-labels"
 import { DEFAULT_CARRY_OVER_DAYS, LeaveType } from "@/types/work-planning"
 import { EXPENSE_CATEGORY_LABEL } from "../work-costs-chunks/cost-labels"
 import { CustomFieldsTab, OverheadsTab } from "./costs-fields-tabs"
+import { AccountsTab } from "./accounts-tab"
 import { OwnerEmployeeCard } from "./owner-employee-card"
 import {
   AMOUNT_SUBJECTS,
@@ -639,6 +640,7 @@ export default function SettingsPage() {
               { id: "approvals", label: t("approvals"), content: <ApprovalsTab initial={settings.approvals} /> },
               { id: "overheads", label: t("overheadCosts"), content: <OverheadsTab initial={settings.overheads ?? []} /> },
               { id: "fields", label: t("customFields"), content: <CustomFieldsTab initial={settings.customFields ?? []} /> },
+              { id: "accounts", label: t("accountingTab"), content: <AccountsTab initial={settings.accounts ?? {}} /> },
             ]}
           />
         </div>

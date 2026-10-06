@@ -92,14 +92,14 @@ export default function ReportsPage() {
     () =>
       buildReport(
         reportId,
-        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees), ...(settings ? { vatRegime: vatRegimeOf(settings.company), vatPeriod: vatPeriodOf(settings.company) } : {}) },
+        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees), ...(settings ? { vatRegime: vatRegimeOf(settings.company), vatPeriod: vatPeriodOf(settings.company), accounts: settings.accounts } : {}) },
         { ...range, clientId: clientId || undefined, projectId: projectId || undefined, employeeId: employeeId || undefined, departmentId: departmentId || undefined },
         { canSeeCosts, today }
       ),
     [reportId, entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, settings, range.from, range.to, clientId, projectId, employeeId, departmentId, canSeeCosts, today] // eslint-disable-line react-hooks/exhaustive-deps
   )
   // The VAT return covers the whole company, so only the period filter applies
-  const isVatReport = reportId === "vat" || reportId === "vatDetail"
+  const isVatReport = reportId === "vat" || reportId === "vatDetail" || reportId === "journal"
   const hiddenCosts = !canSeeCosts && ["timesheet", "billable", "profitability"].includes(reportId)
   const visibleProjects = projects.filter((p) => !clientId || p.clientId === clientId)
 
