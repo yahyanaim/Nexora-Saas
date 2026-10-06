@@ -9,6 +9,8 @@ interface WorkspaceState {
   workspaces: Workspace[]
   currentId: string
   setCurrent: (id: string) => void
+  /** Keeps amounts on screen in the company's base currency from Settings */
+  setCurrency: (id: string, currency: string) => void
 }
 
 /** The workspace (company) every workforce screen reads and writes. */
@@ -19,6 +21,11 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       currentId: DEFAULT_WORKSPACE.id,
       setCurrent: (id) => {
         if (get().workspaces.some((w) => w.id === id)) set({ currentId: id })
+      },
+      setCurrency: (id, currency) => {
+        if (get().workspaces.some((w) => w.id === id && w.currency !== currency)) {
+          set({ workspaces: get().workspaces.map((w) => (w.id === id ? { ...w, currency } : w)) })
+        }
       },
     }),
     {

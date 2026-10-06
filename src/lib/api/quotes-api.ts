@@ -21,30 +21,30 @@ function seedQuotes(workspaceId: string): Quote[] {
     workspaceId === "ws_atlas"
       ? [
           {
-            id: "quo_1", number: "DEV-2026-004", clientId: "cli_vela", currency: "EUR", issueDate: addDays(today, -6), validUntil: addDays(today, 24), deliveryDate: addDays(today, 60),
+            id: "quo_1", number: "DEV-2026-004", clientId: "cli_vela", currency: "MAD", issueDate: addDays(today, -6), validUntil: addDays(today, 24), deliveryDate: addDays(today, 60),
             subject: "Online store for Vela Retail: design, development and launch", taxRate: 20, discountRate: 5, status: QuoteStatus.SENT, sentAt: addDays(today, -6),
             notes: "Payment: 40% on order, 60% on delivery, by bank transfer.",
-            lines: [l("q1a", "UX workshop and wireframes", 3, "days", 650), l("q1b", "Visual design of key pages", 6, "pages", 420), l("q1c", "Store development and payment integration", 18, "days", 600), l("q1d", "Launch support and training", 1, FLAT_UNIT, 900)],
+            lines: [l("q1a", "UX workshop and wireframes", 3, "days", 6500), l("q1b", "Visual design of key pages", 6, "pages", 4200), l("q1c", "Store development and payment integration", 18, "days", 6000), l("q1d", "Launch support and training", 1, FLAT_UNIT, 900)],
           },
           {
-            id: "quo_2", number: "DEV-2026-003", clientId: "cli_helio", currency: "EUR", issueDate: addDays(today, -20), validUntil: addDays(today, 10),
+            id: "quo_2", number: "DEV-2026-003", clientId: "cli_helio", currency: "MAD", issueDate: addDays(today, -20), validUntil: addDays(today, 10),
             subject: "Helio energy dashboard: phase 2 forecasting module", taxRate: 20, discountRate: 0, status: QuoteStatus.ACCEPTED, sentAt: addDays(today, -20), decidedAt: addDays(today, -12),
-            lines: [l("q2a", "Forecasting model and API", 12, "days", 650), l("q2b", "Dashboard screens", 4, "pages", 500)],
+            lines: [l("q2a", "Forecasting model and API", 12, "days", 6500), l("q2b", "Dashboard screens", 4, "pages", 5000)],
           },
           {
-            id: "quo_3", number: "DEV-2026-002", clientId: "cli_medica", currency: "EUR", issueDate: addDays(today, -48), validUntil: addDays(today, -18),
+            id: "quo_3", number: "DEV-2026-002", clientId: "cli_medica", currency: "MAD", issueDate: addDays(today, -48), validUntil: addDays(today, -18),
             subject: "Medica patient app: offline mode", taxRate: 20, discountRate: 0, status: QuoteStatus.SENT, sentAt: addDays(today, -48),
-            lines: [l("q3a", "Offline storage and sync", 10, "days", 600)],
+            lines: [l("q3a", "Offline storage and sync", 10, "days", 6000)],
           },
           {
-            id: "quo_4", number: "DEV-2026-001", clientId: "cli_orbit", currency: "EUR", issueDate: addDays(today, -70), validUntil: addDays(today, -40),
+            id: "quo_4", number: "DEV-2026-001", clientId: "cli_orbit", currency: "MAD", issueDate: addDays(today, -70), validUntil: addDays(today, -40),
             subject: "Orbit fleet portal: native mobile apps", taxRate: 20, discountRate: 0, status: QuoteStatus.DECLINED, sentAt: addDays(today, -70), decidedAt: addDays(today, -52), declineReason: "Budget postponed to next year",
-            lines: [l("q4a", "iOS and Android apps", 30, "days", 620)],
+            lines: [l("q4a", "iOS and Android apps", 30, "days", 6200)],
           },
           {
-            id: "quo_5", number: "", clientId: "cli_orbit", currency: "EUR", issueDate: today, validUntil: addDays(today, 30),
+            id: "quo_5", number: "", clientId: "cli_orbit", currency: "MAD", issueDate: today, validUntil: addDays(today, 30),
             subject: "Orbit fleet portal: driver training videos", taxRate: 20, discountRate: 0, status: QuoteStatus.DRAFT,
-            lines: [l("q5a", "Script and storyboard", 1, FLAT_UNIT, 1200), l("q5b", "Video production", 4, "videos", 950)],
+            lines: [l("q5a", "Script and storyboard", 1, FLAT_UNIT, 1200), l("q5b", "Video production", 4, "videos", 9500)],
           },
         ]
       : workspaceId === "ws_northwind"
@@ -52,7 +52,7 @@ function seedQuotes(workspaceId: string): Quote[] {
             {
               id: "quo_10", number: "NWQ-2026-001", clientId: "cli_peak", currency: "USD", issueDate: addDays(today, -4), validUntil: addDays(today, 26),
               subject: "Peak Outdoors summer campaign: hero film and social cut-downs", taxRate: 0, discountRate: 0, status: QuoteStatus.SENT, sentAt: addDays(today, -4),
-              lines: [l("q10a", "Pre-production and casting", 1, FLAT_UNIT, 4500), l("q10b", "Shoot days", 2, "days", 6800), l("q10c", "Edit and grade", 6, "days", 1100)],
+              lines: [l("q10a", "Pre-production and casting", 1, FLAT_UNIT, 450), l("q10b", "Shoot days", 2, "days", 6800), l("q10c", "Edit and grade", 6, "days", 1100)],
             },
           ]
         : []

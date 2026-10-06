@@ -40,7 +40,7 @@ describe("timesheet rules", () => {
     await approveTimeEntriesApi(WS, { isAdmin: true }, [e!.id])
     await changeRateApi(WS, "emp_lina", { effectiveFrom: "2029-01-01", hourlyCost: 99, billableRate: 999 })
     const [saved] = await listTimeEntriesApi(WS, { employeeId: "emp_lina", from: "2030-01-07", to: "2030-01-07" })
-    expect(saved!.costRate).toBe(55)
+    expect(saved!.costRate).toBe(550)
     expect(saved!.billRate).toBeGreaterThan(0)
     expect(saved!.billRate).not.toBe(999)
   })

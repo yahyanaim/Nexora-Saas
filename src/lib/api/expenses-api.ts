@@ -16,11 +16,11 @@ function seedExpenses(workspaceId: string): Expense[] {
   const rows: Omit<Expense, "workspaceId" | "createdAt" | "updatedAt">[] =
     workspaceId === "ws_atlas"
       ? [
-          { id: "ex_1", employeeId: "emp_karim", projectId: "prj_helio", date: addDays(monday, -16), category: ExpenseCategory.TRAVEL, description: "Train to Casablanca for the site visit", amount: 180, vatAmount: 22.11, billable: true, receiptName: "train-ticket.pdf", status: ExpenseStatus.REIMBURSED },
-          { id: "ex_2", employeeId: "emp_lina", projectId: "prj_helio", date: addDays(monday, -9), category: ExpenseCategory.SOFTWARE, description: "Charting library licence", amount: 420, vatAmount: 70, billable: true, receiptName: "licence-invoice.pdf", status: ExpenseStatus.APPROVED },
-          { id: "ex_3", employeeId: "emp_omar", projectId: "prj_orbit", date: addDays(monday, -6), category: ExpenseCategory.HARDWARE, description: "GPS tracker test units", amount: 650, vatAmount: 108.33, billable: false, receiptName: "trackers.jpg", status: ExpenseStatus.APPROVED },
-          { id: "ex_4", employeeId: "emp_julia", projectId: "prj_orbit", date: addDays(monday, -2), category: ExpenseCategory.MEALS, description: "Workshop lunch with Orbit team", amount: 95, billable: false, status: ExpenseStatus.SUBMITTED },
-          { id: "ex_5", employeeId: "emp_emma", date: addDays(monday, -1), category: ExpenseCategory.TRAVEL, description: "Taxi to client pitch", amount: 38, billable: false, receiptName: "taxi.png", status: ExpenseStatus.SUBMITTED },
+          { id: "ex_1", employeeId: "emp_karim", projectId: "prj_helio", date: addDays(monday, -16), category: ExpenseCategory.TRAVEL, description: "Train to Casablanca for the site visit", amount: 1800, vatAmount: 221.1, billable: true, receiptName: "train-ticket.pdf", status: ExpenseStatus.REIMBURSED },
+          { id: "ex_2", employeeId: "emp_lina", projectId: "prj_helio", date: addDays(monday, -9), category: ExpenseCategory.SOFTWARE, description: "Charting library licence", amount: 4200, vatAmount: 700, billable: true, receiptName: "licence-invoice.pdf", status: ExpenseStatus.APPROVED },
+          { id: "ex_3", employeeId: "emp_omar", projectId: "prj_orbit", date: addDays(monday, -6), category: ExpenseCategory.HARDWARE, description: "GPS tracker test units", amount: 6500, vatAmount: 1083.3, billable: false, receiptName: "trackers.jpg", status: ExpenseStatus.APPROVED },
+          { id: "ex_4", employeeId: "emp_julia", projectId: "prj_orbit", date: addDays(monday, -2), category: ExpenseCategory.MEALS, description: "Workshop lunch with Orbit team", amount: 950, billable: false, status: ExpenseStatus.SUBMITTED },
+          { id: "ex_5", employeeId: "emp_emma", date: addDays(monday, -1), category: ExpenseCategory.TRAVEL, description: "Taxi to client pitch", amount: 380, billable: false, receiptName: "taxi.png", status: ExpenseStatus.SUBMITTED },
         ]
       : workspaceId === "ws_northwind"
         ? [{ id: "ex_10", employeeId: "emp_chloe", projectId: "prj_lumen", date: addDays(monday, -8), category: ExpenseCategory.SUBCONTRACTOR, description: "Drone operator for the shoot", amount: 900, billable: true, receiptName: "drone-invoice.pdf", status: ExpenseStatus.APPROVED }]
