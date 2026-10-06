@@ -1,5 +1,6 @@
 import type { ReminderSettings } from "@/types/work-crm"
-import type { KpiSettings } from "@/types/work-settings"
+import type { CustomFieldDef, KpiSettings, OverheadItem } from "@/types/work-settings"
+import { validateFieldDefs } from "@/lib/workforce/custom-fields"
 import { ExpenseCategory } from "@/types/work-costs"
 import { LeaveType } from "@/types/work-planning"
 import type { Department } from "@/types/workforce"
@@ -235,6 +236,31 @@ export async function updateKpiSettingsApi(workspaceId: string, kpi: KpiSettings
   if (["utilization", "onTime", "estimateAccuracy"].some((k) => kpi.targets[k as keyof KpiSettings["targets"]] > 200)) throw new Error("Rate targets must be 200% or less")
   recordAudit(workspaceId, { action: "KPI targets updated", actionKey: "settings.kpi", category: "Settings", target: "KPI targets and visibility" })
   const next = { ...read(workspaceId), kpi }
+  write(workspaceId, next)
+  return next
+}
+
+/** Monthly overhead lines (CST-4). */
+export async function updateOverheadsApi(workspaceId: string, overheads: OverheadItem[]): Promise<WorkspaceSettings> {
+  const rows = overheads.map((o) => ({ ...o, name: o.name.trim() })).filter((o) => o.name || o.monthlyAmount)
+  if (rows.some((o) => !o.name)) throw new Error("Every overhead line needs a name")
+  if (rows.some((o) => !(o.monthlyAmount >= 0))) throw new Error("Amounts can't be negative")
+  recordAudit(workspaceId, { action: "Overheads updated", actionKey: "settings.overheads", category: "Settings", target: "Overhead costs" })
+  const next = { ...read(workspaceId), overheads: rows }
+  write(workspaceId, next)
+  return next
+}
+
+/** Custom fields on clients, projects and employees (PLT-12). Values of removed fields stay on records but are no longer shown. */
+export async function updateCustomFieldsApi(workspaceId: string, customFields: CustomFieldDef[]): Promise<WorkspaceSettings> {
+  const defs = customFields.map((d) => ({
+    ...d,
+    label: d.label.trim(),
+    options: d.type === "select" ? (d.options ?? []).map((o) => o.trim()).filter(Boolean) : undefined,
+  }))
+  validateFieldDefs(defs)
+  recordAudit(workspaceId, { action: "Custom fields updated", actionKey: "settings.custom_fields", category: "Settings", target: "Custom fields" })
+  const next = { ...read(workspaceId), customFields: defs }
   write(workspaceId, next)
   return next
 }

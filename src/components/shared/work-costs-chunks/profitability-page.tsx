@@ -17,6 +17,9 @@ import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { projectProfit } from "@/lib/workforce/profitability"
+import { monthlyOverhead, overheadRate } from "@/lib/workforce/overhead"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
+import { rateMoney } from "../work-settings-chunks/costs-fields-tabs"
 import { WorkProjectStatus, type WorkProject } from "@/types/work-projects"
 import type { ProjectProfit } from "@/types/work-costs"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
@@ -43,13 +46,15 @@ export default function ProfitabilityPage() {
   const { data: employees = [] } = useEmployees()
   const { data: clients = [] } = useClients()
   const { data: invoices = [] } = useClientInvoices()
+  const { data: settings } = useWorkspaceSettings()
+  const rate = overheadRate(settings?.overheads, employees)
 
   const rows = useMemo<Row[]>(
     () =>
       projects
         .filter((p) => p.status !== WorkProjectStatus.CANCELLED)
-        .map((p) => ({ ...p, profit: projectProfit(p, { entries, tasks, expenses, employees, clients, invoices }) })),
-    [projects, entries, tasks, expenses, employees, clients, invoices]
+        .map((p) => ({ ...p, profit: projectProfit(p, { entries, tasks, expenses, employees, clients, invoices, overheadRate: rate }) })),
+    [projects, entries, tasks, expenses, employees, clients, invoices, rate]
   )
 
   const money = (n: number) => formatMoney(n, workspace.currency, locale)
@@ -58,16 +63,17 @@ export default function ProfitabilityPage() {
       revenue: acc.revenue + r.profit.revenue,
       labor: acc.labor + r.profit.laborCost,
       expenses: acc.expenses + r.profit.expenses,
+      overhead: acc.overhead + r.profit.overhead,
       profit: acc.profit + r.profit.profit,
     }),
-    { revenue: 0, labor: 0, expenses: 0, profit: 0 }
+    { revenue: 0, labor: 0, expenses: 0, overhead: 0, profit: 0 }
   )
   const margin = total.revenue > 0 ? Math.round((total.profit / total.revenue) * 100) : null
 
   const cards: MetricCardItem[] = [
     { key: "revenue", title: t("revenueEarned"), value: money(total.revenue), valueClassName: "text-primary", footer: { icon: DollarSign, text: t("revenueRule") } },
     { key: "labor", title: t("laborCost"), value: money(total.labor), footer: { icon: TrendingDown, text: t("hoursTimesCost") } },
-    { key: "expenses", title: t("expenses"), value: money(total.expenses), footer: { icon: Receipt, text: t("approvedExpenses") } },
+    { key: "expenses", title: t("expenses"), value: money(total.expenses), footer: { icon: Receipt, text: rate > 0 ? t("plusOverhead", { amount: money(total.overhead) }) : t("approvedExpenses") } },
     {
       key: "profit",
       title: t("profit"),
@@ -118,6 +124,16 @@ export default function ProfitabilityPage() {
         header: ({ column }) => <DataTableColumnHeader column={column} title={t("expenses")} />,
         cell: ({ row }) => <span className="text-sm tabular-nums">{formatMoney(row.original.profit.expenses, workspace.currency, locale)}</span>,
       },
+      ...(rate > 0
+        ? [
+            {
+              id: "overhead",
+              accessorFn: (r: Row) => r.profit.overhead,
+              header: ({ column }) => <DataTableColumnHeader column={column} title={t("overhead")} />,
+              cell: ({ row }) => <span className="text-sm tabular-nums">{formatMoney(row.original.profit.overhead, workspace.currency, locale)}</span>,
+            } satisfies ColumnDef<Row>,
+          ]
+        : []),
       {
         id: "profit",
         accessorFn: (r) => r.profit.profit,
@@ -139,20 +155,25 @@ export default function ProfitabilityPage() {
         ),
       },
     ],
-    [t, locale, clients, workspace.currency]
+    [t, locale, clients, workspace.currency, rate]
   )
 
   return (
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader />
       <MetricCardGrid cards={cards} isLoading={isLoading} />
+      {rate > 0 && (
+        <p className="rounded-2xl bg-muted/50 px-4 py-2.5 text-sm text-muted-foreground">
+          {t("overheadIncluded", { rate: rateMoney(rate, workspace.currency, locale), monthly: money(monthlyOverhead(settings?.overheads)) })}
+        </p>
+      )}
 
       <section className="flex flex-col gap-3 rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
         <h2 className="text-base font-semibold">{t("profitByProject")}</h2>
         <ul className="flex flex-col gap-3">
           {[...rows].sort((a, b) => b.profit.revenue - a.profit.revenue).map((r) => {
-            const max = Math.max(1, ...rows.map((x) => Math.max(x.profit.revenue, x.profit.laborCost + x.profit.expenses)))
-            const cost = r.profit.laborCost + r.profit.expenses
+            const max = Math.max(1, ...rows.map((x) => Math.max(x.profit.revenue, x.profit.laborCost + x.profit.expenses + x.profit.overhead)))
+            const cost = r.profit.laborCost + r.profit.expenses + r.profit.overhead
             return (
               <li key={r.id} className="grid grid-cols-[10rem_1fr_6rem] items-center gap-3 text-sm md:grid-cols-[14rem_1fr_7rem]">
                 <span className="truncate font-medium">{r.name}</span>
@@ -167,7 +188,7 @@ export default function ProfitabilityPage() {
         </ul>
         <div className="flex gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-2"><span className="h-2 w-4 rounded-full bg-primary" aria-hidden />{t("revenue")}</span>
-          <span className="flex items-center gap-2"><span className="h-2 w-4 rounded-full bg-muted-foreground/40" aria-hidden />{t("costLaborExpenses")}</span>
+          <span className="flex items-center gap-2"><span className="h-2 w-4 rounded-full bg-muted-foreground/40" aria-hidden />{rate > 0 ? t("costWithOverhead") : t("costLaborExpenses")}</span>
         </div>
       </section>
 
@@ -187,6 +208,7 @@ export default function ProfitabilityPage() {
             laborCost: r.profit.laborCost,
             hours: r.profit.hours,
             expenses: r.profit.expenses,
+            overhead: r.profit.overhead,
             profit: r.profit.profit,
             margin: r.profit.margin ?? "",
           }))

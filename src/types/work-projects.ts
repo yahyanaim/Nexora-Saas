@@ -58,6 +58,8 @@ export interface WorkProject {
   closedAt?: string
   /** Final figures frozen at closing */
   closeSnapshot?: CloseSnapshot
+  /** Values of the workspace's custom fields (PLT-12) */
+  customFields?: Record<string, string>
   createdAt: string
   updatedAt: string
 }
@@ -69,6 +71,8 @@ export interface CloseSnapshot {
   revenue: number
   laborCost: number
   expenses: number
+  /** Overhead share at closing (CST-4); missing on projects closed before overheads existed */
+  overhead?: number
   profit: number
   margin: number | null
   hours: number

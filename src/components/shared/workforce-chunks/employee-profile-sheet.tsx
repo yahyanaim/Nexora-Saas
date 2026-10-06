@@ -27,6 +27,9 @@ import {
   WORK_ROLE_LABEL,
   formatMoney,
 } from "./workforce-labels"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
+import { fieldsFor } from "@/lib/workforce/custom-fields"
+import { CustomFieldValuesList } from "./custom-fields"
 
 interface Props {
   employee: Employee | null
@@ -44,6 +47,7 @@ interface Props {
 /** Read-only employee profile: details, rates and the reporting line. */
 export function EmployeeProfileSheet({ employee, employees, departments, currency, canSeeCosts, canEditRates, canSeeDocuments = false, onOpenChange, onSelect }: Props) {
   const t = useTranslations()
+  const { data: settings } = useWorkspaceSettings()
   const locale = useLocale()
   const manager = employee?.managerId ? employees.find((e) => e.id === employee.managerId) : undefined
   const reports = employee ? employees.filter((e) => e.managerId === employee.id) : []
@@ -180,6 +184,11 @@ export function EmployeeProfileSheet({ employee, employees, departments, currenc
                 />
               </Section>
 
+              {fieldsFor(settings?.customFields, "employee").some((d) => employee.customFields?.[d.id]) && (
+                <Section title={t("customFields")}>
+                  <CustomFieldValuesList entity="employee" values={employee.customFields} />
+                </Section>
+              )}
               {employee.skills.length > 0 && (
                 <Section title={t("skills")}>
                   <div className="flex flex-wrap gap-2">

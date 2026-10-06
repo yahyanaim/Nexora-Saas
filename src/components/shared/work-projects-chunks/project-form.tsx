@@ -20,6 +20,7 @@ import { NumberField, SelectField, TextAreaField, TextField } from "../workforce
 import { NONE } from "../workforce-chunks/workforce-labels"
 import { BUDGET_TYPE_LABEL, PRIORITY_LABEL, PROJECT_STATUS_LABEL } from "./project-labels"
 import { todayIso } from "@/lib/workforce/project-metrics"
+import { CustomFieldInputs, useCustomFields } from "../workforce-chunks/custom-fields"
 
 export interface ProjectFormHandle {
   submit: () => void
@@ -44,6 +45,7 @@ const schema = z
     retainerMonthly: z.number().min(0).optional(),
     retainerHours: z.number().min(0).optional(),
     retainerOverage: z.number().min(0).optional(),
+    customFields: z.record(z.string(), z.string().optional()),
   })
   .refine((v) => !v.dueDate || v.dueDate >= v.startDate, { path: ["dueDate"], message: "dueBeforeStart" })
   .refine((v) => v.budgetType !== BudgetType.RETAINER || (v.retainerMonthly ?? 0) > 0, { path: ["retainerMonthly"], message: "required" })
@@ -67,6 +69,7 @@ function toFormValues(project?: WorkProject): FormValues {
     retainerMonthly: project?.retainer?.monthlyAmount,
     retainerHours: project?.retainer?.includedHours,
     retainerOverage: project?.retainer?.overageRate,
+    customFields: project?.customFields ?? {},
   }
 }
 
@@ -74,6 +77,8 @@ function toInput(values: FormValues): WorkProjectInput {
   const { retainerMonthly, retainerHours, retainerOverage, ...rest } = values
   return {
     ...rest,
+    // Checked and cleaned by useCustomFields when saving
+    customFields: undefined,
     retainer:
       values.budgetType === BudgetType.RETAINER
         ? { monthlyAmount: retainerMonthly ?? 0, includedHours: retainerHours ?? 0, overageRate: retainerOverage ?? 0 }
@@ -117,8 +122,14 @@ export const ProjectForm = forwardRef<ProjectFormHandle, Props>(function Project
     form.reset(toFormValues(project))
   }, [project, form])
 
+  const custom = useCustomFields("project")
+
   useImperativeHandle(ref, () => ({
-    submit: () => form.handleSubmit((values) => onValid(toInput(values)))(),
+    submit: () =>
+      form.handleSubmit((values) => {
+        const customFields = custom.check(form, values.customFields)
+        if (customFields !== false) onValid({ ...toInput(values), customFields })
+      })(),
   }))
 
   // New projects get a code as soon as there is a name or client to build it from
@@ -261,6 +272,8 @@ export const ProjectForm = forwardRef<ProjectFormHandle, Props>(function Project
             </FormItem>
           )}
         />
+
+        <CustomFieldInputs entity="project" />
 
         <TextAreaField control={form.control} name="description" label={t("description")} />
       </form>

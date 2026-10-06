@@ -112,7 +112,35 @@ export interface WorkspaceSettings {
   portalInactivityDays?: number
   /** KPI targets and who may see individual figures (KPI-6, KPI-11) */
   kpi?: KpiSettings
+  /** Monthly running costs (rent, software, admin staff) spread over logged hours (CST-4) */
+  overheads?: OverheadItem[]
+  /** Extra fields the company adds to clients, projects and employees (PLT-12) */
+  customFields?: CustomFieldDef[]
 }
+
+/** A monthly running cost not tied to a project. */
+export interface OverheadItem {
+  id: string
+  name: string
+  monthlyAmount: number
+}
+
+export type CustomFieldEntity = "client" | "project" | "employee"
+export type CustomFieldType = "text" | "number" | "date" | "select"
+
+/** One extra field shown on the forms and profiles of an entity. */
+export interface CustomFieldDef {
+  id: string
+  entity: CustomFieldEntity
+  label: string
+  type: CustomFieldType
+  /** Choices of a select field */
+  options?: string[]
+  required?: boolean
+}
+
+/** Values of custom fields on a record, by field id; stored as text. */
+export type CustomFieldValues = Record<string, string>
 
 export type KpiKey = "utilization" | "onTime" | "estimateAccuracy" | "revenue"
 

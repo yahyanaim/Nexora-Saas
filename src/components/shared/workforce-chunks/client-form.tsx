@@ -30,6 +30,7 @@ import { createId } from "@/lib/workforce/demo-store"
 import { cn } from "@/lib/utils"
 import { ClientStatus, type Client, type ClientInput, type Employee } from "@/types/workforce"
 import { CLIENT_STATUS_LABEL, NONE } from "./workforce-labels"
+import { CustomFieldInputs, useCustomFields } from "./custom-fields"
 
 const CURRENCIES = ["MAD", "EUR", "USD", "GBP", "CAD", "AED", "SAR", "CHF"]
 const LANGUAGES = ["en", "fr", "ar", "es", "de"]
@@ -76,6 +77,7 @@ const schema = z.object({
   accountManagerId: z.string(),
   contacts: z.array(contactSchema),
   notes: z.string().optional(),
+  customFields: z.record(z.string(), z.string().optional()),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -103,6 +105,7 @@ function toFormValues(client?: Client): FormValues {
     accountManagerId: client?.accountManagerId ?? NONE,
     contacts: client?.contacts ?? [],
     notes: client?.notes ?? "",
+    customFields: client?.customFields ?? {},
   }
 }
 
@@ -111,6 +114,8 @@ const emptyToUndefined = (value?: string) => (value ? value : undefined)
 function toInput(values: FormValues): ClientInput {
   return {
     ...values,
+    // Checked and cleaned by useCustomFields when saving
+    customFields: undefined,
     industry: emptyToUndefined(values.industry),
     phone: emptyToUndefined(values.phone),
     website: emptyToUndefined(values.website),
@@ -164,8 +169,14 @@ export const ClientForm = forwardRef<ClientFormHandle, Props>(function ClientFor
     form.reset(toFormValues(client))
   }, [client, form])
 
+  const custom = useCustomFields("client")
+
   useImperativeHandle(ref, () => ({
-    submit: () => form.handleSubmit((values) => onValid(toInput(values)))(),
+    submit: () =>
+      form.handleSubmit((values) => {
+        const customFields = custom.check(form, values.customFields)
+        if (customFields !== false) onValid({ ...toInput(values), customFields })
+      })(),
   }))
 
   const text = (
@@ -551,6 +562,8 @@ export const ClientForm = forwardRef<ClientFormHandle, Props>(function ClientFor
             </div>
           ))}
         </fieldset>
+
+        <CustomFieldInputs entity="client" />
 
         <FormField
           control={form.control}
