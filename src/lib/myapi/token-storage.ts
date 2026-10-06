@@ -20,6 +20,8 @@ import { isDemoMode } from "@/lib/auth/demo-mode"
  */
 export const DEMO_COOKIE = "nexora_demo_session"
 const TOKEN_KEY = DEMO_COOKIE
+/** Name the demo session used before; a leftover copy is removed on sign-in and sign-out. */
+const LEGACY_DEMO_COOKIE = "token"
 
 /** Token set by the demo sign-in; no real backend ever accepts it. */
 export const DEMO_SESSION_TOKEN = "demo-session-token"
@@ -47,6 +49,8 @@ export const tokenStorage = {
   set: (token: string): void => {
     if (typeof window === "undefined" || !isDemoMode()) return
 
+    // An old demo "token" cookie lets the edge guard through without a real session
+    document.cookie = `${LEGACY_DEMO_COOKIE}=; path=/; max-age=0; SameSite=Lax`
     const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 // 7 days
     const secure = window.location.protocol === "https:" ? "; Secure" : ""
     document.cookie = `${TOKEN_KEY}=${encodeURIComponent(token)}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax${secure}`
@@ -60,6 +64,7 @@ export const tokenStorage = {
 
     const secure = window.location.protocol === "https:" ? "; Secure" : ""
     document.cookie = `${TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax${secure}`
+    if (isDemoMode()) document.cookie = `${LEGACY_DEMO_COOKIE}=; path=/; max-age=0; SameSite=Lax`
   },
 }
 

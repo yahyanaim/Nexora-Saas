@@ -181,14 +181,17 @@ describe("AuthProvider", () => {
       mockPathname = "/dashboard/users"
       window.history.replaceState(null, "", "/en/dashboard/users?page=2")
       vi.spyOn(authApis, "fetchMyAccountApi").mockRejectedValueOnce(new Error("Unauthorized"))
+      const locationReplace = vi.fn()
+      vi.stubGlobal("location", { ...window.location, pathname: "/en/dashboard/users", search: "?page=2", replace: locationReplace })
 
       renderWithProviders(<TestConsumer />)
 
       await waitFor(() => {
-        expect(mockReplace).toHaveBeenCalledWith(
-          `/auth?next=${encodeURIComponent("/dashboard/users?page=2")}`
+        expect(locationReplace).toHaveBeenCalledWith(
+          `/en/auth?next=${encodeURIComponent("/dashboard/users?page=2")}`
         )
       })
+      vi.unstubAllGlobals()
     })
 
     it("sends an authenticated user on /auth to a safe next path", async () => {
