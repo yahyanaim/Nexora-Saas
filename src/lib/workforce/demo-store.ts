@@ -14,7 +14,47 @@ interface Identified {
 const PREFIX = "nexora"
 
 function storageKey(collection: string, workspaceId: string) {
+  ensureDataVersion()
   return `${PREFIX}:${collection}:${workspaceId}`
+}
+
+/**
+ * Bumped when the shape of the demo data changes. A browser holding data from
+ * an older version starts again from fresh demo data instead of mixing old
+ * records with new rules (the workspace choice and UI preferences are kept).
+ */
+export const DEMO_DATA_VERSION = "2026-10-07"
+const VERSION_KEY = `${PREFIX}:data-version`
+const KEEP = new Set([VERSION_KEY, `${PREFIX}:workspace`, `${PREFIX}:guide-open`])
+let versionChecked = false
+
+export function ensureDataVersion() {
+  if (versionChecked || typeof window === "undefined") return
+  versionChecked = true
+  try {
+    if (localStorage.getItem(VERSION_KEY) === DEMO_DATA_VERSION) return
+    const stale: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(`${PREFIX}:`) && !KEEP.has(key) && !key.startsWith(`${PREFIX}:inbox:`)) stale.push(key)
+    }
+    for (const key of stale) localStorage.removeItem(key)
+    localStorage.setItem(VERSION_KEY, DEMO_DATA_VERSION)
+  } catch {
+    // Storage blocked: nothing to clean
+  }
+}
+
+/** Clears every demo record so the next read starts from fresh demo data. */
+export function resetDemoData() {
+  if (typeof window === "undefined") return
+  try {
+    localStorage.removeItem(VERSION_KEY)
+  } catch {
+    // ignore
+  }
+  versionChecked = false
+  ensureDataVersion()
 }
 
 /** Reads a collection, seeding it when absent or unreadable. */

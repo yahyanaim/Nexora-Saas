@@ -2691,5 +2691,6 @@
   "err_fieldTwoChoices": "يحتاج \"{name}\" خيارين على الأقل",
   "err_fieldDuplicate": "يوجد حقلان باسم \"{name}\"",
   "err_seatsUsed": "تسمح هذه الخطة بـ {seats} مستخدمين ولدى {used} صلاحية؛ أزل صلاحية أولًا",
-  "err_leaveBalance": "تبقى {left} يوم فقط في {year}؛ يحتاج هذا الطلب {need}"
+  "err_leaveBalance": "تبقى {left} يوم فقط في {year}؛ يحتاج هذا الطلب {need}",
+  "resetDemoData": "إعادة تعيين بيانات العرض"
 }

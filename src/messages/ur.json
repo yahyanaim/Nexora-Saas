@@ -2691,5 +2691,6 @@
   "err_fieldTwoChoices": "\"{name}\" کے کم از کم دو انتخاب ہونے چاہییں",
   "err_fieldDuplicate": "دو فیلڈز کا نام \"{name}\" ہے",
   "err_seatsUsed": "یہ پلان {seats} صارفین کی اجازت دیتا ہے اور {used} کو رسائی ہے؛ پہلے رسائی ہٹائیں",
-  "err_leaveBalance": "{year} میں صرف {left} دن باقی ہیں؛ اس درخواست کو {need} چاہییں"
+  "err_leaveBalance": "{year} میں صرف {left} دن باقی ہیں؛ اس درخواست کو {need} چاہییں",
+  "resetDemoData": "ڈیمو ڈیٹا دوبارہ ترتیب دیں"
 }
