@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
+import { useSearchParams } from "next/navigation"
 import { CheckCircle, Handshake, Plus, Sparkles, Users } from "@/components/ui/carbon/icons"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
@@ -36,6 +37,18 @@ export default function ClientsPage() {
   const [viewing, setViewing] = useState<Client | null>(null)
   const [deleting, setDeleting] = useState<Client | null>(null)
   const formRef = useRef<ClientFormHandle>(null)
+
+  // ?client=<id> (e.g. from an invoice missing the client's ICE) opens that client's form once
+  const linkedId = useSearchParams().get("client")
+  const [handledLink, setHandledLink] = useState<string | null>(null)
+  const linked = linkedId && linkedId !== handledLink ? clients.find((c) => c.id === linkedId) : undefined
+  if (linked) {
+    setHandledLink(linkedId)
+    if (canEdit) {
+      setEditing(linked)
+      setFormOpen(true)
+    } else setViewing(linked)
+  }
 
   const openForm = (client: Client | null) => {
     setEditing(client)

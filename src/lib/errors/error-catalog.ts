@@ -5,6 +5,12 @@
  * same keys as error codes.
  */
 export const ERROR_KEYS: Record<string, string> = {
+  "Add the client's ICE: invoices to companies in Morocco must show it": "err_addTheClientSIceInvoices",
+  "Add your company's ICE in Settings before issuing invoices": "err_addYourCompanySIceIn",
+  "Add your company's IF (tax ID) in Settings before issuing invoices": "err_addYourCompanySIfTax",
+  "The CNSS number must have 7 digits": "err_theCnssNumberMustHave",
+  "The IF (tax ID) must have 6 to 8 digits": "err_theIfTaxIdMust",
+  "The patente number must have 8 digits": "err_thePatenteNumberMustHave",
   "A completed review can't be cancelled": "err_aCompletedReviewCanTBe",
   "A credit note can't be credited": "err_aCreditNoteCanTBe",
   "A department with this name already exists": "err_aDepartmentWithThisNameAlready",

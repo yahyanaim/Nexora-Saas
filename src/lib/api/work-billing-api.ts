@@ -1,3 +1,4 @@
+import { invoiceIdProblems } from "@/lib/workforce/tax-ids"
 import {
   ClientInvoiceStatus,
   InvoiceKind,
@@ -528,6 +529,9 @@ export async function issueInvoiceApi(workspaceId: string, id: string): Promise<
   if (invoice.lines.length === 0) throw new Error("Add at least one line first")
   await assertPeriodOpen(workspaceId, invoice.issueDate)
   const { company } = await getSettingsApi(workspaceId)
+  const client = (await listClientsApi(workspaceId)).find((c) => c.id === invoice.clientId)
+  const [idProblem] = invoiceIdProblems(company, client)
+  if (idProblem) throw new Error(idProblem)
   if (invoice.currency !== company.baseCurrency && !(invoice.exchangeRate && invoice.exchangeRate > 0)) {
     throw new Error(`Enter the exchange rate from ${invoice.currency} to ${company.baseCurrency}`)
   }

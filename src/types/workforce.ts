@@ -148,6 +148,12 @@ export interface RateCardEntry {
   rate: number
 }
 
+/** A company (needs its ICE in Morocco) or a private person. */
+export enum ClientType {
+  COMPANY = "company",
+  INDIVIDUAL = "individual",
+}
+
 export interface Client {
   id: string
   workspaceId: string
@@ -157,6 +163,10 @@ export interface Client {
   legalName?: string
   /** Morocco: 15-digit company identifier */
   ice?: string
+  /** Company (the default) or private person */
+  clientType?: ClientType
+  /** ISO country code; defaults to the company's country */
+  country?: string
   industry?: string
   email: string
   phone?: string

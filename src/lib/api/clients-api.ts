@@ -1,6 +1,7 @@
 import type { Client, ClientInput } from "@/types/workforce"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { seedClients } from "@/lib/workforce/demo-seed"
+import { assertClientIds, cleanId } from "@/lib/workforce/tax-ids"
 
 /**
  * Clients a workspace works for and bills. Backed by the browser demo store
@@ -12,10 +13,10 @@ export async function listClientsApi(workspaceId: string): Promise<Client[]> {
   return clients.list(workspaceId)
 }
 
-const ICE = /^\d{15}$/
-
-function validate(input: Partial<ClientInput>) {
-  if (input.ice && !ICE.test(input.ice)) throw new Error("The ICE must have exactly 15 digits")
+async function validate(workspaceId: string, input: Partial<ClientInput>) {
+  const { getSettingsApi } = await import("./settings-api")
+  const { company } = await getSettingsApi(workspaceId)
+  assertClientIds(input, company.country)
   const card = input.rateCard ?? []
   if (card.some((r) => !(r.rate >= 0) || (!r.employeeId && !r.jobTitle?.trim()))) {
     throw new Error("Each rate card line needs a person or a job title, and a rate")
@@ -25,7 +26,8 @@ function validate(input: Partial<ClientInput>) {
 }
 
 export async function createClientApi(workspaceId: string, input: ClientInput): Promise<Client> {
-  validate(input)
+  input = withCleanIds(input)
+  await validate(workspaceId, input)
   return clients.create(workspaceId, normalizeContacts(input))
 }
 
@@ -34,7 +36,8 @@ export async function updateClientApi(
   id: string,
   input: Partial<ClientInput>
 ): Promise<Client> {
-  validate(input)
+  input = withCleanIds(input)
+  await validate(workspaceId, input)
   return clients.update(workspaceId, id, input.contacts ? normalizeContacts(input) : input)
 }
 
@@ -48,6 +51,11 @@ export async function deleteClientApi(workspaceId: string, id: string): Promise<
 }
 
 /** Exactly one primary contact whenever a client has contacts. */
+/** Drops the spaces and dots people type in the ICE. */
+function withCleanIds<T extends Partial<ClientInput>>(input: T): T {
+  return "ice" in input ? { ...input, ice: cleanId(input.ice) } : input
+}
+
 function normalizeContacts<T extends Partial<ClientInput>>(input: T): T {
   const contacts = input.contacts
   if (!contacts?.length) return input

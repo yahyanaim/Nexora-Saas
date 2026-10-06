@@ -220,7 +220,7 @@ export async function buildClassicInvoice(input: ClientInvoicePdfInput & { quote
       ...(totals.paid ? [{ label: t("paid"), value: `-${f.money(totals.paid)}` }] : []),
     ],
     net: { label: t("docNetToPay", { currency: cur }), value: f.money(isCredit ? totals.total : balance) },
-    legal: [company?.ice && `ICE: ${company.ice}`, company?.tradeRegister && `RC: ${company.tradeRegister}`, company?.taxId && `IF: ${company.taxId}`].filter(Boolean).join(" | ") || legalLine(company, workspace.name),
+    legal: [company?.ice && `ICE: ${company.ice}`, company?.tradeRegister && `RC: ${company.tradeRegister}`, company?.taxId && `IF: ${company.taxId}`, company?.patente && `Patente: ${company.patente}`, company?.cnssNumber && `CNSS: ${company.cnssNumber}`].filter(Boolean).join(" | ") || legalLine(company, workspace.name),
     terms: company?.invoiceFooter,
     pageLabel: (page, total) => t("pdfPageOf", { page, total }),
     filename: `${invoice.number || "draft"}${invoice.status === ClientInvoiceStatus.VOID ? "-cancelled" : ""}.pdf`,

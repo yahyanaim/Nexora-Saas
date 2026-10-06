@@ -1,3 +1,4 @@
+import { assertCompanyIds, cleanId, isMoroccan } from "@/lib/workforce/tax-ids"
 import type { ReminderSettings } from "@/types/work-crm"
 import type { CustomFieldDef, KpiSettings, OverheadItem } from "@/types/work-settings"
 import { validateFieldDefs } from "@/lib/workforce/custom-fields"
@@ -25,6 +26,8 @@ const COMPANIES: Record<string, CompanySettings> = {
     ice: "002847192000084",
     taxId: "40182934",
     tradeRegister: "Casablanca 148291",
+    patente: "34172859",
+    cnssNumber: "4827193",
     address: "12 Boulevard d'Anfa",
     city: "Casablanca",
     country: "MA",
@@ -168,12 +171,12 @@ export async function getSettingsApi(workspaceId: string): Promise<WorkspaceSett
   return { ...settings, company }
 }
 
-const ICE = /^\d{15}$/
-
 /** Validates and saves the company identity (PLT-3). */
-export async function updateCompanyApi(workspaceId: string, company: CompanySettings): Promise<WorkspaceSettings> {
+export async function updateCompanyApi(workspaceId: string, input: CompanySettings): Promise<WorkspaceSettings> {
+  const company = { ...input, ice: cleanId(input.ice), patente: cleanId(input.patente), cnssNumber: cleanId(input.cnssNumber) }
+  if (isMoroccan(company.country)) company.taxId = cleanId(company.taxId)
   if (!company.legalName.trim()) throw new Error("Enter the company's legal name")
-  if (company.ice && !ICE.test(company.ice)) throw new Error("The ICE must have exactly 15 digits")
+  assertCompanyIds(company)
   if (!/^[A-Z]{3}$/.test(company.baseCurrency)) throw new Error("Pick a base currency")
   if (company.fiscalYearStartMonth < 1 || company.fiscalYearStartMonth > 12) throw new Error("Pick the first month of the fiscal year")
   if (!company.invoiceNumberFormat.includes("{SEQ}")) throw new Error("The invoice number format must contain {SEQ}")

@@ -33,8 +33,14 @@ beforeEach(() => localStorage.clear())
 
 describe("reference scenario (spec 13.3)", () => {
   it("runs the whole chain from rate card to credit note", async () => {
+    // 0. Moroccan company identifiers, required to issue invoices
+    const { getSettingsApi, updateCompanyApi } = await import("@/lib/api/settings-api")
+    const { company } = await getSettingsApi(WS)
+    await updateCompanyApi(WS, { ...company, country: "MA", ice: "001234567000089", taxId: "1234567" })
+
     // 1. Rate card 800/h for Senior consultant; the employee costs 300/h, 40 h a week
     const client = await createClientApi(WS, {
+      ice: "009876543000012",
       name: "Client SA", email: "billing@client.example", status: ClientStatus.ACTIVE, paymentTermsDays: 30, contacts: [],
       rateCard: [{ id: "rc", jobTitle: "Senior consultant", rate: 800 }],
     })
