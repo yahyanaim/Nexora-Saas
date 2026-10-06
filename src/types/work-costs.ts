@@ -26,8 +26,10 @@ export interface Expense {
   date: string
   category: ExpenseCategory
   description: string
-  /** In the workspace currency */
+  /** In the workspace currency, VAT included */
   amount: number
+  /** Deductible VAT included in the amount, from the receipt (Phase 6e.3) */
+  vatAmount?: number
   /** Re-bill to the project's client on the next invoice */
   billable: boolean
   /** Name of the attached receipt (the file itself stays with the backend later) */
@@ -46,7 +48,7 @@ export interface Expense {
 
 export type ExpenseInput = Pick<
   Expense,
-  "employeeId" | "projectId" | "date" | "category" | "description" | "amount" | "billable" | "receiptName"
+  "employeeId" | "projectId" | "date" | "category" | "description" | "amount" | "vatAmount" | "billable" | "receiptName"
 >
 
 export interface ProjectProfit {

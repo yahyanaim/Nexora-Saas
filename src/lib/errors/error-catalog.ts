@@ -5,6 +5,7 @@
  * same keys as error codes.
  */
 export const ERROR_KEYS: Record<string, string> = {
+  "The VAT must be less than the amount": "err_theVatMustBeLess",
   "This invoice was sent to the DGI; issue a credit note instead": "err_thisInvoiceWasSentTo",
   "Issue the invoice before sending it to the DGI": "err_issueTheInvoiceBeforeSending",
   "E-invoicing applies to issued invoices of Moroccan companies": "err_eInvoicingAppliesToIssued",

@@ -7,6 +7,7 @@ import { AGING_BUCKETS, displayStatus, entryBillRate, entryCostRate, invoiceBala
 import { employeeKpis } from "./kpis"
 import { todayIso } from "./project-metrics"
 import { roundMoney } from "./money"
+import { collectedVatLines, deductibleVatLines, vatReturn, type VatPeriod, type VatRegime } from "./vat"
 
 /**
  * The standard reports (RPT-4). Every report takes the same filters and
@@ -16,14 +17,16 @@ import { roundMoney } from "./money"
  * permission (RPT-8).
  */
 
-export type ReportId = "timesheet" | "billable" | "unbilled" | "invoices" | "aging" | "expenses" | "profitability"
-export const REPORT_IDS: ReportId[] = ["timesheet", "billable", "unbilled", "invoices", "aging", "expenses", "profitability"]
+export type ReportId = "timesheet" | "billable" | "unbilled" | "invoices" | "aging" | "expenses" | "profitability" | "vat" | "vatDetail"
+export const REPORT_IDS: ReportId[] = ["timesheet", "billable", "unbilled", "invoices", "aging", "expenses", "profitability", "vat", "vatDetail"]
 
 export type ColumnType = "text" | "date" | "hours" | "money" | "percent" | "number"
 export interface ReportColumn {
   key: string
   /** Translation key of the header */
   label: string
+  /** Values for placeholders in the label, e.g. { rate: 20 } */
+  labelValues?: Record<string, string | number>
   type: ColumnType
   sensitive?: boolean
 }
@@ -51,6 +54,9 @@ export interface ReportData {
   holidays?: string[]
   /** Overhead per logged hour (CST-4); adds an overhead column and makes profit net */
   overheadRate?: number
+  /** VAT return settings (Phase 6e.3) */
+  vatRegime?: VatRegime
+  vatPeriod?: VatPeriod
 }
 
 export interface Report {
@@ -317,6 +323,61 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
         .sort((a, b) => Number(b.revenue) - Number(a.revenue))
       break
     }
+    case "vat": {
+      // The VAT return covers the whole company: client, project and person filters don't apply
+      const lines = [...collectedVatLines(data.invoices, data.vatRegime ?? "invoice"), ...deductibleVatLines(data.expenses)]
+      const periods = vatReturn(lines, data.vatPeriod ?? "monthly", f.from, f.to)
+      const rates = [...new Set(periods.flatMap((p) => p.byRate.map((r) => r.rate)))].sort((a, b) => b - a)
+      columns = [
+        { key: "period", label: "vatPeriodCol", type: "text" },
+        ...rates.flatMap((rate): ReportColumn[] => [
+          { key: `base_${rate}`, label: "vatBaseAt", labelValues: { rate }, type: "money" },
+          { key: `vat_${rate}`, label: "vatAt", labelValues: { rate }, type: "money" },
+        ]),
+        { key: "collected", label: "vatCollected", type: "money" },
+        { key: "deductible", label: "vatDeductible", type: "money" },
+        { key: "creditIn", label: "vatCreditIn", type: "money" },
+        { key: "due", label: "vatDue", type: "money" },
+        { key: "creditOut", label: "vatCreditOut", type: "money" },
+      ]
+      rows = periods.map((p) => ({
+        period: p.period,
+        ...Object.fromEntries(rates.flatMap((rate) => {
+          const r = p.byRate.find((x) => x.rate === rate)
+          return [[`base_${rate}`, r?.base ?? 0], [`vat_${rate}`, r?.vat ?? 0]]
+        })),
+        collected: p.collected,
+        deductible: p.deductible,
+        creditIn: p.creditIn,
+        due: p.due,
+        creditOut: p.creditOut,
+      }))
+      break
+    }
+    case "vatDetail": {
+      columns = [
+        { key: "date", label: "date", type: "date" },
+        { key: "kind", label: "vatKind", type: "text" },
+        { key: "document", label: "vatDocument", type: "text" },
+        { key: "party", label: "vatParty", type: "text" },
+        { key: "rate", label: "vatRate", type: "percent" },
+        { key: "base", label: "vatBase", type: "money" },
+        { key: "vat", label: "vatAmountCol", type: "money" },
+      ]
+      rows = [...collectedVatLines(data.invoices, data.vatRegime ?? "invoice"), ...deductibleVatLines(data.expenses)]
+        .filter((l) => inPeriod(l.date))
+        .sort((a, b) => a.date.localeCompare(b.date) || a.kind.localeCompare(b.kind))
+        .map((l) => ({
+          date: l.date,
+          kind: l.kind,
+          document: l.document,
+          party: l.kind === "collected" ? (clientById.get(l.partyId)?.name ?? "") : (employeeById.get(l.partyId)?.name ?? ""),
+          rate: l.rate,
+          base: l.kind === "deductible" ? -l.base : l.base,
+          vat: l.kind === "deductible" ? -l.vat : l.vat,
+        }))
+      break
+    }
   }
 
   // RPT-8: sensitive columns never leave this function for people without the cost permission
@@ -340,6 +401,11 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
   if (id === "profitability" && columns.some((c) => c.key === "margin")) {
     const rev = Number(totals.revenue ?? 0)
     totals.margin = rev > 0 ? r1((Number(totals.profit ?? 0) / rev) * 100) : null
+  }
+  // A credit is a balance, not a flow: the period's opening and closing credit, never a sum
+  if (id === "vat") {
+    totals.creditIn = rows.length ? Number(rows[0]!.creditIn) : 0
+    totals.creditOut = rows.length ? Number(rows[rows.length - 1]!.creditOut) : 0
   }
   return { id, columns, rows, totals }
 }

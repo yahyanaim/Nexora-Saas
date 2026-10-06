@@ -16,6 +16,10 @@ export interface CompanySettings {
   patente?: string
   /** Morocco: CNSS employer affiliation number, 7 digits */
   cnssNumber?: string
+  /** When collected VAT is due: on invoicing ("débit") or on payment ("encaissement", Morocco's default) */
+  vatRegime?: "invoice" | "payment"
+  /** How often the VAT return is filed */
+  vatPeriod?: "monthly" | "quarterly"
   address?: string
   city?: string
   country: string
