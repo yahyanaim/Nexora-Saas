@@ -23,7 +23,7 @@ describe("VAT return", () => {
   })
 
   it("counts VAT on the issue date on the invoice regime", () => {
-    expect(collectedVatLines([inv({})], "invoice")).toEqual([{ date: "2026-01-20", kind: "collected", document: "INV-1", partyId: "c", rate: 20, base: 1000, vat: 200 }])
+    expect(collectedVatLines([inv({})], "invoice")).toEqual([{ date: "2026-01-20", kind: "collected", source: "invoice", document: "INV-1", partyId: "c", rate: 20, base: 1000, vat: 200 }])
     expect(collectedVatLines([inv({ status: ClientInvoiceStatus.DRAFT }), inv({ status: ClientInvoiceStatus.VOID })], "invoice")).toEqual([])
   })
 
@@ -43,7 +43,7 @@ describe("VAT return", () => {
 
   it("takes deductible VAT from approved expenses only", () => {
     expect(deductibleVatLines([exp({}), exp({ status: ExpenseStatus.SUBMITTED }), exp({ vatAmount: undefined })])).toEqual([
-      { date: "2026-01-10", kind: "deductible", document: "Licence", partyId: "emp", rate: 20, base: 100, vat: 20 },
+      { date: "2026-01-10", kind: "deductible", source: "expense", document: "Licence", partyId: "emp", rate: 20, base: 100, vat: 20 },
     ])
   })
 

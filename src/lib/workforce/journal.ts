@@ -3,6 +3,8 @@ import { ExpenseCategory, ExpenseStatus, type Expense } from "@/types/work-costs
 import type { AccountKey } from "@/types/work-settings"
 import { invoiceTotals, toBase } from "./billing"
 import { roundMoney } from "./money"
+import { billCounts, billTotals } from "./supplier-bills"
+import { SupplierCategory, type Supplier, type SupplierBill } from "@/types/work-purchases"
 
 /**
  * Accounting journal (Phase 6e.4): every invoice, credit note, payment and
@@ -24,6 +26,7 @@ export const DEFAULT_ACCOUNTS: Record<AccountKey, string> = {
   expenseHardware: "6125",
   expenseSubcontractor: "6136", // Rémunérations d'intermédiaires et honoraires
   expenseOther: "6188", // Autres charges externes
+  suppliers: "4411", // Fournisseurs
 }
 
 export const ACCOUNT_KEYS = Object.keys(DEFAULT_ACCOUNTS) as AccountKey[]
@@ -37,8 +40,8 @@ const EXPENSE_ACCOUNT: Record<ExpenseCategory, AccountKey> = {
   [ExpenseCategory.OTHER]: "expenseOther",
 }
 
-/** Sales (VT), bank (BQ), cash (CA) and miscellaneous (OD) journals. */
-export type JournalCode = "VT" | "BQ" | "CA" | "OD"
+/** Sales (VT), purchases (HA), bank (BQ), cash (CA) and miscellaneous (OD) journals. */
+export type JournalCode = "VT" | "HA" | "BQ" | "CA" | "OD"
 
 export interface JournalLine {
   journal: JournalCode
@@ -62,10 +65,27 @@ export const ACCOUNT_PATTERN = /^\d{4,8}$/
 interface Names {
   client: (id: string) => string
   employee: (id: string) => string
+  supplier?: (id: string) => string
+}
+
+const SUPPLIER_ACCOUNT: Record<SupplierCategory, AccountKey> = {
+  [SupplierCategory.SUBCONTRACTOR]: "expenseSubcontractor",
+  [SupplierCategory.SOFTWARE]: "expenseSoftware",
+  [SupplierCategory.HARDWARE]: "expenseHardware",
+  [SupplierCategory.OFFICE]: "expenseOther",
+  [SupplierCategory.SERVICES]: "expenseSubcontractor",
+  [SupplierCategory.OTHER]: "expenseOther",
 }
 
 /** Builds the journal lines; each document's lines balance. */
-export function buildJournal(invoices: ClientInvoice[], expenses: Expense[], accounts: Record<AccountKey, string>, names: Names): JournalLine[] {
+export function buildJournal(
+  invoices: ClientInvoice[],
+  expenses: Expense[],
+  accounts: Record<AccountKey, string>,
+  names: Names,
+  bills: SupplierBill[] = [],
+  suppliers: Pick<Supplier, "id" | "category">[] = []
+): JournalLine[] {
   const out: JournalLine[] = []
   const add = (l: Omit<JournalLine, "debit" | "credit"> & { amount: number; side: "D" | "C" }) => {
     const amount = roundMoney(l.amount)
@@ -123,7 +143,28 @@ export function buildJournal(invoices: ClientInvoice[], expenses: Expense[], acc
     }
   }
 
-  const order: Record<JournalCode, number> = { VT: 0, BQ: 1, CA: 2, OD: 3 }
+  // Supplier bills (Phase 6f.2): expense and deductible VAT against the supplier, then the payments
+  for (const b of bills) {
+    if (!billCounts(b)) continue
+    const t = billTotals(b)
+    const who = names.supplier?.(b.supplierId) ?? ""
+    const piece = b.number
+    const label = `Facture fournisseur ${piece} ${who}`.trim()
+    const category = suppliers.find((s) => s.id === b.supplierId)?.category ?? SupplierCategory.OTHER
+    const vat = t.taxes.reduce((s, x) => s + x.amount, 0)
+    add({ journal: "HA", date: b.issueDate, piece, account: accounts[SUPPLIER_ACCOUNT[category]], label, amount: t.subtotal, side: "D" })
+    add({ journal: "HA", date: b.issueDate, piece, account: accounts.vatDeductible, label, amount: vat, side: "D" })
+    add({ journal: "HA", date: b.issueDate, piece, account: accounts.suppliers, label, amount: roundMoney(t.subtotal + vat), side: "C" })
+    for (const p of b.payments) {
+      const cash = p.method === "cash"
+      const journal: JournalCode = cash ? "CA" : "BQ"
+      const plabel = `Règlement ${piece} ${who}`.trim()
+      add({ journal, date: p.date, piece, account: accounts.suppliers, label: plabel, amount: p.amount, side: "D" })
+      add({ journal, date: p.date, piece, account: cash ? accounts.cash : accounts.bank, label: plabel, amount: p.amount, side: "C" })
+    }
+  }
+
+  const order: Record<JournalCode, number> = { VT: 0, HA: 1, BQ: 2, CA: 3, OD: 4 }
   return out
     .map((l, i) => ({ l, i }))
     .sort((a, b) => a.l.date.localeCompare(b.l.date) || order[a.l.journal] - order[b.l.journal] || a.l.piece.localeCompare(b.l.piece) || a.i - b.i)

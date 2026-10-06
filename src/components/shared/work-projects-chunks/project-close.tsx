@@ -1,5 +1,6 @@
 "use client"
 
+import { useSupplierBills } from "@/hooks/workforce/use-supplier-bills"
 import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
@@ -42,7 +43,8 @@ export function CloseProjectDialog({ open, onOpenChange, ...data }: Data & { ope
   const checks = closeChecklist({ ...data, billable: project.budgetType !== BudgetType.NON_BILLABLE })
   const openItems = checks.filter((c) => c.open > 0).length
   const { data: settings } = useWorkspaceSettings()
-  const profit = projectProfit(project, { ...data, overheadRate: overheadRate(settings?.overheads, data.employees) })
+  const { data: bills = [] } = useSupplierBills()
+  const profit = projectProfit(project, { ...data, overheadRate: overheadRate(settings?.overheads, data.employees), bills })
   const money = (n: number) => formatMoney(n, data.currency, locale)
 
   const confirm = () =>

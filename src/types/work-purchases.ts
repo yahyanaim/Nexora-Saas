@@ -42,3 +42,59 @@ export interface Supplier {
 }
 
 export type SupplierInput = Omit<Supplier, "id" | "workspaceId" | "createdAt" | "updatedAt">
+
+export enum SupplierBillStatus {
+  /** Entered, waiting for approval */
+  SUBMITTED = "submitted",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  PAID = "paid",
+}
+
+export interface SupplierBillLine {
+  id: string
+  description: string
+  quantity: number
+  unitPrice: number
+  /** VAT rate in percent; the bill's rate applies when unset */
+  taxRate?: number
+}
+
+export interface SupplierBillPayment {
+  id: string
+  /** yyyy-mm-dd */
+  date: string
+  amount: number
+  method: "bank_transfer" | "cheque" | "cash" | "card" | "other"
+  reference?: string
+}
+
+/** A bill received from a supplier (Phase 6f.2). Amounts are in the workspace currency. */
+export interface SupplierBill {
+  id: string
+  workspaceId: string
+  supplierId: string
+  /** The supplier's own invoice number */
+  number: string
+  /** yyyy-mm-dd */
+  issueDate: string
+  dueDate: string
+  /** Project the cost belongs to, if any */
+  projectId?: string
+  lines: SupplierBillLine[]
+  /** Default VAT rate in percent */
+  taxRate: number
+  status: SupplierBillStatus
+  /** Who entered it (employee id or "admin") */
+  submittedBy: string
+  approvedBy?: string
+  rejectionReason?: string
+  payments: SupplierBillPayment[]
+  /** Name of the scanned bill */
+  fileName?: string
+  notes?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type SupplierBillInput = Pick<SupplierBill, "supplierId" | "number" | "issueDate" | "dueDate" | "projectId" | "lines" | "taxRate" | "fileName" | "notes">

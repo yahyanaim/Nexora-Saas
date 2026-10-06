@@ -4,6 +4,8 @@ import type { CompanySettings } from "@/types/work-settings"
 import { invoiceTotals, toBase } from "./billing"
 import { roundMoney } from "./money"
 import { isMoroccan } from "./tax-ids"
+import { billCounts, billTotals } from "./supplier-bills"
+import type { SupplierBill } from "@/types/work-purchases"
 
 /**
  * VAT return (Phase 6e.3). Collected VAT is due either when the invoice is
@@ -28,8 +30,10 @@ export interface VatLine {
   kind: "collected" | "deductible"
   /** Invoice or credit note number, or the expense description */
   document: string
-  /** Client id or employee id */
+  /** Client, employee or supplier id, depending on the source */
   partyId: string
+  /** Where the line comes from */
+  source?: "invoice" | "expense" | "bill"
   rate: number
   /** In the base currency; negative for credit notes */
   base: number
@@ -54,6 +58,7 @@ export function collectedVatLines(invoices: ClientInvoice[], regime: VatRegime):
         lines.push({
           date,
           kind: "collected",
+          source: "invoice",
           document: inv.number,
           partyId: inv.clientId,
           rate: t.rate,
@@ -87,8 +92,39 @@ export function deductibleVatLines(expenses: Expense[]): VatLine[] {
     .map((e) => {
       const vat = roundMoney(e.vatAmount!)
       const base = roundMoney(e.amount - vat)
-      return { date: e.date, kind: "deductible" as const, document: e.description, partyId: e.employeeId, rate: base > 0 ? Math.round((vat / base) * 100) : 0, base, vat }
+      return { date: e.date, kind: "deductible" as const, source: "expense" as const, document: e.description, partyId: e.employeeId, rate: base > 0 ? Math.round((vat / base) * 100) : 0, base, vat }
     })
+}
+
+/**
+ * Deductible VAT from approved supplier bills (Phase 6f.2): on the bill date
+ * on the invoice regime, and with each payment on the payment regime (in
+ * Morocco the right to deduct follows payment).
+ */
+export function billVatLines(bills: SupplierBill[], regime: VatRegime): VatLine[] {
+  const lines: VatLine[] = []
+  for (const bill of bills.filter(billCounts)) {
+    const t = billTotals(bill)
+    const push = (date: string, share: number) => {
+      for (const x of t.taxes) {
+        if (x.amount === 0) continue
+        lines.push({ date, kind: "deductible", source: "bill", document: bill.number, partyId: bill.supplierId, rate: x.rate, base: roundMoney(x.base * share), vat: roundMoney(x.amount * share) })
+      }
+    }
+    if (regime === "invoice") {
+      push(bill.issueDate, 1)
+      continue
+    }
+    if (t.total <= 0) continue
+    let paidShare = 0
+    for (const p of bill.payments) {
+      const share = Math.min(p.amount / t.total, 1 - paidShare)
+      if (share <= 0) continue
+      paidShare += share
+      push(p.date, share)
+    }
+  }
+  return lines
 }
 
 /** Period key of a date: 2026-10 (monthly) or 2026-Q4 (quarterly). */

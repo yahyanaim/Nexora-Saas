@@ -1,5 +1,7 @@
 "use client"
 
+import { useSupplierBills } from "@/hooks/workforce/use-supplier-bills"
+import { useSuppliers } from "@/hooks/workforce/use-workforce"
 import { useMemo, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
@@ -78,6 +80,8 @@ export default function ReportsPage() {
   const { data: tasks = [] } = useTasks()
   const { data: leave = [] } = useLeave()
   const { data: settings } = useWorkspaceSettings()
+  const { data: bills = [] } = useSupplierBills()
+  const { data: suppliers = [] } = useSuppliers()
 
   const [reportId, setReportId] = useState<ReportId>("timesheet")
   const [preset, setPreset] = useState<Preset>("thisMonth")
@@ -92,11 +96,11 @@ export default function ReportsPage() {
     () =>
       buildReport(
         reportId,
-        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees), ...(settings ? { vatRegime: vatRegimeOf(settings.company), vatPeriod: vatPeriodOf(settings.company), accounts: settings.accounts } : {}) },
+        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees), ...(settings ? { vatRegime: vatRegimeOf(settings.company), vatPeriod: vatPeriodOf(settings.company), accounts: settings.accounts } : {}), bills, suppliers },
         { ...range, clientId: clientId || undefined, projectId: projectId || undefined, employeeId: employeeId || undefined, departmentId: departmentId || undefined },
         { canSeeCosts, today }
       ),
-    [reportId, entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, settings, range.from, range.to, clientId, projectId, employeeId, departmentId, canSeeCosts, today] // eslint-disable-line react-hooks/exhaustive-deps
+    [reportId, entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, settings, bills, suppliers, range.from, range.to, clientId, projectId, employeeId, departmentId, canSeeCosts, today] // eslint-disable-line react-hooks/exhaustive-deps
   )
   // The VAT return covers the whole company, so only the period filter applies
   const isVatReport = reportId === "vat" || reportId === "vatDetail" || reportId === "journal"

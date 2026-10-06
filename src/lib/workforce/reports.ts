@@ -9,7 +9,9 @@ import { todayIso } from "./project-metrics"
 import { roundMoney } from "./money"
 import { accountsWithDefaults, buildJournal } from "./journal"
 import type { AccountKey } from "@/types/work-settings"
-import { collectedVatLines, deductibleVatLines, vatReturn, type VatPeriod, type VatRegime } from "./vat"
+import type { Supplier, SupplierBill } from "@/types/work-purchases"
+import { billCounts, billTotals } from "./supplier-bills"
+import { billVatLines, collectedVatLines, deductibleVatLines, vatReturn, type VatPeriod, type VatRegime } from "./vat"
 
 /**
  * The standard reports (RPT-4). Every report takes the same filters and
@@ -61,6 +63,9 @@ export interface ReportData {
   vatPeriod?: VatPeriod
   /** Account numbers for the journal (Phase 6e.4); CGNC defaults when absent */
   accounts?: Partial<Record<AccountKey, string>>
+  /** Supplier bills and suppliers (Phase 6f.2) */
+  bills?: SupplierBill[]
+  suppliers?: Supplier[]
 }
 
 export interface Report {
@@ -307,6 +312,13 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
         if (!projectOk(x.projectId) || (f.employeeId || f.departmentId ? !personOk(x.employeeId) : false)) continue
         get(x.projectId).expenses += x.amount
       }
+      // Supplier bills charged to projects, before VAT (Phase 6f.2)
+      if (!f.employeeId && !f.departmentId) {
+        for (const b of data.bills ?? []) {
+          if (!b.projectId || !billCounts(b) || !inPeriod(b.issueDate) || !projectOk(b.projectId)) continue
+          get(b.projectId).expenses += billTotals(b).subtotal
+        }
+      }
       rows = [...byProject.entries()]
         .map(([projectId, v]) => {
           const project = projectById.get(projectId)
@@ -329,7 +341,7 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
     }
     case "vat": {
       // The VAT return covers the whole company: client, project and person filters don't apply
-      const lines = [...collectedVatLines(data.invoices, data.vatRegime ?? "invoice"), ...deductibleVatLines(data.expenses)]
+      const lines = [...collectedVatLines(data.invoices, data.vatRegime ?? "invoice"), ...deductibleVatLines(data.expenses), ...billVatLines(data.bills ?? [], data.vatRegime ?? "invoice")]
       const periods = vatReturn(lines, data.vatPeriod ?? "monthly", f.from, f.to)
       const rates = [...new Set(periods.flatMap((p) => p.byRate.map((r) => r.rate)))].sort((a, b) => b - a)
       columns = [
@@ -371,7 +383,8 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
       rows = buildJournal(data.invoices, data.expenses, accountsWithDefaults(data.accounts), {
         client: (id) => clientById.get(id)?.name ?? "",
         employee: (id) => employeeById.get(id)?.name ?? "",
-      })
+        supplier: (id) => data.suppliers?.find((x) => x.id === id)?.name ?? "",
+      }, data.bills ?? [], data.suppliers ?? [])
         .filter((l) => inPeriod(l.date))
         .map((l) => ({ ...l }))
       break
@@ -386,14 +399,19 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
         { key: "base", label: "vatBase", type: "money" },
         { key: "vat", label: "vatAmountCol", type: "money" },
       ]
-      rows = [...collectedVatLines(data.invoices, data.vatRegime ?? "invoice"), ...deductibleVatLines(data.expenses)]
+      rows = [...collectedVatLines(data.invoices, data.vatRegime ?? "invoice"), ...deductibleVatLines(data.expenses), ...billVatLines(data.bills ?? [], data.vatRegime ?? "invoice")]
         .filter((l) => inPeriod(l.date))
         .sort((a, b) => a.date.localeCompare(b.date) || a.kind.localeCompare(b.kind))
         .map((l) => ({
           date: l.date,
           kind: l.kind,
           document: l.document,
-          party: l.kind === "collected" ? (clientById.get(l.partyId)?.name ?? "") : (employeeById.get(l.partyId)?.name ?? ""),
+          party:
+            l.source === "bill"
+              ? (data.suppliers?.find((x) => x.id === l.partyId)?.name ?? "")
+              : l.kind === "collected"
+                ? (clientById.get(l.partyId)?.name ?? "")
+                : (employeeById.get(l.partyId)?.name ?? ""),
           rate: l.rate,
           base: l.kind === "deductible" ? -l.base : l.base,
           vat: l.kind === "deductible" ? -l.vat : l.vat,
