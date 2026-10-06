@@ -210,6 +210,12 @@ export function useDashboardNav() {
             descriptionKey: "pageDescRecurring",
           },
           {
+            title: t("suppliers"),
+            url: "/dashboard/suppliers",
+            icon: Building,
+            descriptionKey: "pageDescSuppliers",
+          },
+          {
             title: t("receivables"),
             url: "/dashboard/receivables",
             icon: Receipt,

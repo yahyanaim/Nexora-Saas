@@ -26,6 +26,7 @@ export const ROUTE_PERMISSIONS: Record<string, P> = {
   "/dashboard/client-invoices": P.INVOICES_READ,
   "/dashboard/recurring-invoices": P.INVOICES_CREATE,
   "/dashboard/receivables": P.INVOICES_READ,
+  "/dashboard/suppliers": P.INVOICES_CREATE,
   "/dashboard/expenses": P.TIME_TRACK,
   "/dashboard/profitability": P.COSTS_READ,
   "/dashboard/timeline": P.PROJECTS_READ,

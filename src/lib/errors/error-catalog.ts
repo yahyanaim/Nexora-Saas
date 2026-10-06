@@ -5,6 +5,12 @@
  * same keys as error codes.
  */
 export const ERROR_KEYS: Record<string, string> = {
+  "Enter the supplier's name": "err_enterTheSupplierSName",
+  "Payment terms must be between 0 and 365 days": "err_paymentTermsMustBeBetween",
+  "A Moroccan RIB has 24 digits": "err_aMoroccanRibHas24",
+  "Another supplier already uses this ICE": "err_anotherSupplierAlreadyUsesThis",
+  "A supplier with this name already exists": "err_aSupplierWithThisName",
+  "Supplier not found": "err_supplierNotFound",
   "Account numbers have 4 to 8 digits": "err_accountNumbersHave4To",
   "The VAT must be less than the amount": "err_theVatMustBeLess",
   "This invoice was sent to the DGI; issue a credit note instead": "err_thisInvoiceWasSentTo",
