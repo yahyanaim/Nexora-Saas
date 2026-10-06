@@ -27,8 +27,10 @@ import { Plus, Star, Trash2, Warning } from "@/components/ui/carbon/icons"
 import { Switch } from "@/components/ui/switch"
 import { findDuplicateClients } from "@/lib/workforce/client-relations"
 import { createId } from "@/lib/workforce/demo-store"
+import { clientNeedsIce } from "@/lib/workforce/tax-ids"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { cn } from "@/lib/utils"
-import { ClientStatus, type Client, type ClientInput, type Employee } from "@/types/workforce"
+import { ClientStatus, ClientType, type Client, type ClientInput, type Employee } from "@/types/workforce"
 import { CLIENT_STATUS_LABEL, NONE } from "./workforce-labels"
 import { CustomFieldInputs, useCustomFields } from "./custom-fields"
 
@@ -58,7 +60,9 @@ const rateCardSchema = z.object({
 const schema = z.object({
   name: z.string().trim().min(2),
   legalName: z.string().trim().optional(),
-  ice: z.union([z.literal(""), z.string().regex(/^\d{15}$/, "15 digits")]).optional(),
+  ice: z.union([z.literal(""), z.string().transform((v) => v.replace(/[\s.-]/g, "")).pipe(z.string().regex(/^\d{15}$/, "15 digits"))]).optional(),
+  clientType: z.enum(ClientType),
+  country: z.string(),
   billingAddress: z.string().trim().optional(),
   currency: z.string(),
   language: z.string(),
@@ -87,6 +91,8 @@ function toFormValues(client?: Client): FormValues {
     name: client?.name ?? "",
     legalName: client?.legalName ?? "",
     ice: client?.ice ?? "",
+    clientType: client?.clientType ?? ClientType.COMPANY,
+    country: client?.country ?? NONE,
     billingAddress: client?.billingAddress ?? "",
     currency: client?.currency ?? NONE,
     language: client?.language ?? NONE,
@@ -109,6 +115,8 @@ function toFormValues(client?: Client): FormValues {
   }
 }
 
+const COUNTRIES = ["MA", "FR", "BE", "CH", "ES", "DE", "GB", "US", "CA", "AE", "SA", "TN", "DZ", "SN"]
+
 const emptyToUndefined = (value?: string) => (value ? value : undefined)
 
 function toInput(values: FormValues): ClientInput {
@@ -124,6 +132,7 @@ function toInput(values: FormValues): ClientInput {
     legalName: emptyToUndefined(values.legalName),
     ice: emptyToUndefined(values.ice),
     billingAddress: emptyToUndefined(values.billingAddress),
+    country: values.country === NONE ? undefined : values.country,
     currency: values.currency === NONE ? undefined : values.currency,
     language: values.language === NONE ? undefined : values.language,
     rateCard: values.rateCard.map((r) =>
@@ -162,7 +171,9 @@ export const ClientForm = forwardRef<ClientFormHandle, Props>(function ClientFor
   const contacts = useFieldArray({ control: form.control, name: "contacts", keyName: "key" })
   const rateCard = useFieldArray({ control: form.control, name: "rateCard", keyName: "key" })
   const titles = [...new Set(employees.map((e) => e.jobTitle))].sort()
-  const [watchName, watchLegal, watchIce, watchTax] = form.watch(["name", "legalName", "ice", "taxId"])
+  const [watchName, watchLegal, watchIce, watchTax, watchType, watchCountry] = form.watch(["name", "legalName", "ice", "taxId", "clientType", "country"])
+  const companyCountry = useWorkspaceSettings().data?.company.country ?? "MA"
+  const needsIce = clientNeedsIce({ clientType: watchType, country: watchCountry === NONE ? undefined : watchCountry }, companyCountry)
   const duplicates = findDuplicateClients(existingClients, { name: watchName, legalName: watchLegal, ice: watchIce, taxId: watchTax }, client?.id)
 
   useEffect(() => {
@@ -261,9 +272,48 @@ export const ClientForm = forwardRef<ClientFormHandle, Props>(function ClientFor
         {text("address", t("address"))}
         {text("billingAddress", t("billingAddressOptional"))}
         <div className="grid grid-cols-2 gap-4">
-          {text("ice", t("iceNumber"))}
+          <FormField
+            control={form.control}
+            name="clientType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("clientType")}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="w-full bg-card"><SelectValue>{t(field.value === ClientType.COMPANY ? "clientTypeCompany" : "clientTypeIndividual")}</SelectValue></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value={ClientType.COMPANY}>{t("clientTypeCompany")}</SelectItem>
+                    <SelectItem value={ClientType.INDIVIDUAL}>{t("clientTypeIndividual")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t("country")}</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger className="w-full min-w-0 bg-card"><SelectValue><span className="truncate">{field.value === NONE ? t("sameAsCompany", { country: companyCountry }) : field.value}</span></SelectValue></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value={NONE}>{t("sameAsCompany", { country: companyCountry })}</SelectItem>
+                    {COUNTRIES.filter((c) => c !== companyCountry).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {text("ice", needsIce ? `${t("iceNumber")} *` : t("iceNumber"))}
           {text("taxId", t("taxId"))}
         </div>
+        {needsIce && !watchIce && <p className="-mt-2 text-xs text-warning-foreground">{t("clientIceRequiredHint")}</p>}
         <div className="grid grid-cols-2 gap-4">
           {(["currency", "language"] as const).map((name) => (
             <FormField

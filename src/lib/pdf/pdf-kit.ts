@@ -207,7 +207,7 @@ export function companyLines(company: Partial<CompanySettings> | undefined) {
   return [
     [company.address, company.city, company.country].filter(Boolean).join(", "),
     [company.phone, company.email, company.website].filter(Boolean).join("  ·  "),
-    [company.ice && `ICE ${company.ice}`, company.taxId && `IF ${company.taxId}`, company.tradeRegister && `RC ${company.tradeRegister}`]
+    [company.ice && `ICE ${company.ice}`, company.taxId && `IF ${company.taxId}`, company.tradeRegister && `RC ${company.tradeRegister}`, company.patente && `Patente ${company.patente}`, company.cnssNumber && `CNSS ${company.cnssNumber}`]
       .filter(Boolean)
       .join("  ·  "),
   ]
@@ -225,6 +225,8 @@ export function legalLine(company: Partial<CompanySettings> | undefined, fallbac
       company?.ice && `ICE ${company.ice}`,
       company?.taxId && `IF ${company.taxId}`,
       company?.tradeRegister && `RC ${company.tradeRegister}`,
+      company?.patente && `Patente ${company.patente}`,
+      company?.cnssNumber && `CNSS ${company.cnssNumber}`,
       company?.shareCapital && `Capital ${company.shareCapital}`,
     ]
       .filter(Boolean)

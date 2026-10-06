@@ -104,8 +104,10 @@ function CompanyTab({ initial }: { initial: CompanySettings }) {
           {text("legalName", t("legalName"))}
           {text("tradeName", t("tradeName"))}
           {text("ice", t("iceNumber"), t("iceHint"))}
-          {text("taxId", t("taxIdentifier"))}
+          {text("taxId", t("taxIdentifier"), form.country === "MA" ? t("ifHint") : undefined)}
           {text("tradeRegister", t("tradeRegister"))}
+          {form.country === "MA" && text("patente", t("patenteNumber"), t("patenteHint"))}
+          {form.country === "MA" && text("cnssNumber", t("cnssNumber"), t("cnssHint"))}
           {text("address", t("address"))}
           {text("city", t("city"))}
           <Field label={t("country")}>

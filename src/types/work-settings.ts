@@ -12,6 +12,10 @@ export interface CompanySettings {
   taxId?: string
   /** Registre de commerce */
   tradeRegister?: string
+  /** Morocco: taxe professionnelle number, 8 digits */
+  patente?: string
+  /** Morocco: CNSS employer affiliation number, 7 digits */
+  cnssNumber?: string
   address?: string
   city?: string
   country: string

@@ -12,10 +12,12 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Ban, CheckCircle2, DownloadIcon, FileText, Plus, RotateCcw, Send, Trash2 } from "@/components/ui/carbon/icons"
+import { AlertTriangle, Ban, CheckCircle2, DownloadIcon, FileText, Plus, RotateCcw, Send, Trash2 } from "@/components/ui/carbon/icons"
 import { createId } from "@/lib/workforce/demo-store"
 import { creditedAmount, displayStatus, invoiceBalance, invoiceTotals } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
+import { invoiceIdProblems } from "@/lib/workforce/tax-ids"
+import { translateError } from "@/lib/errors/translate-error"
 import type { Client } from "@/types/workforce"
 import type { CompanySettings } from "@/types/work-settings"
 import { useCurrentWorkspace } from "@/store/workspace-store"
@@ -84,6 +86,8 @@ export function InvoiceSheet(props: Props) {
   const credited = creditedAmount(invoice, allInvoices)
   const balance = invoiceBalance(invoice, allInvoices)
   const baseCurrency = company?.baseCurrency ?? workspace.currency
+  // Missing ICE / IF: the invoice can't be issued yet (Phase 6e.1)
+  const idProblems = company ? invoiceIdProblems(company, client) : []
   const foreign = invoice.currency !== baseCurrency
   const money = (n: number) => formatMoney(n, invoice.currency, locale)
   const creditNotes = allInvoices.filter((x) => x.creditNoteFor === invoice.id)
@@ -377,6 +381,22 @@ export function InvoiceSheet(props: Props) {
           {invoice.notes && <p className="whitespace-pre-line rounded-2xl bg-muted/50 p-3 text-sm text-muted-foreground">{invoice.notes}</p>}
         </div>
 
+        {canEdit && isDraft && idProblems.length > 0 && (
+          <div role="alert" className="mx-6 mb-2 flex gap-2 rounded-2xl bg-warning-soft p-3 text-sm">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning-foreground" />
+            <div>
+              <p className="font-medium">{t("taxIdsMissingTitle")}</p>
+              <ul className="mt-1 list-disc ps-4 text-muted-foreground">
+                {idProblems.map((p) => <li key={p}>{translateError(new Error(p), t)}</li>)}
+              </ul>
+              <div className="mt-2 flex flex-wrap gap-3 font-medium">
+                {idProblems.some((p) => p.includes("Settings")) && <Link href="/dashboard/settings" className="text-primary hover:underline">{t("openCompanySettings")}</Link>}
+                {client && idProblems.some((p) => p.includes("client")) && <Link href={`/dashboard/clients?client=${client.id}`} className="text-primary hover:underline">{t("openClient")}</Link>}
+              </div>
+            </div>
+          </div>
+        )}
+
         {canEdit && invoice.status !== ClientInvoiceStatus.VOID && !isCredit && (
           <SheetFooter className="flex-row flex-wrap gap-2 border-t px-6 py-4">
             {isDraft ? (
@@ -385,11 +405,11 @@ export function InvoiceSheet(props: Props) {
                   <Trash2 className="size-4" />
                   {t("deleteDraft")}
                 </Button>
-                <Button variant="outline" className="flex-1" disabled={busy || invoice.lines.length === 0} onClick={() => onIssue(invoice.id)}>
+                <Button variant="outline" className="flex-1" disabled={busy || invoice.lines.length === 0 || idProblems.length > 0} onClick={() => onIssue(invoice.id)}>
                   <FileText className="size-4" />
                   {t("issueInvoice")}
                 </Button>
-                <Button className="flex-1" disabled={busy || invoice.lines.length === 0} onClick={() => onSend(invoice.id)}>
+                <Button className="flex-1" disabled={busy || invoice.lines.length === 0 || idProblems.length > 0} onClick={() => onSend(invoice.id)}>
                   <Send className="size-4" />
                   {t("issueAndSend")}
                 </Button>

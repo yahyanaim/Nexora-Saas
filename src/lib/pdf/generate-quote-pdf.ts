@@ -116,7 +116,7 @@ export async function buildClassicQuote(input: QuotePdfInput): Promise<ClassicDo
     ],
     net: { label: t("docNetToPay", { currency: cur }), value: f.money(totals.total) },
     signature: { label: t("docSignature"), hint: t("docSignatureHint") },
-    legal: [company?.ice && `ICE: ${company.ice}`, company?.tradeRegister && `RC: ${company.tradeRegister}`, company?.taxId && `IF: ${company.taxId}`].filter(Boolean).join(" | ") || legalLine(company, workspace.name),
+    legal: [company?.ice && `ICE: ${company.ice}`, company?.tradeRegister && `RC: ${company.tradeRegister}`, company?.taxId && `IF: ${company.taxId}`, company?.patente && `Patente: ${company.patente}`, company?.cnssNumber && `CNSS: ${company.cnssNumber}`].filter(Boolean).join(" | ") || legalLine(company, workspace.name),
     terms: company?.invoiceFooter,
     pageLabel: (page, total) => t("pdfPageOf", { page, total }),
     filename: `${quote.number || "quote-draft"}.pdf`,

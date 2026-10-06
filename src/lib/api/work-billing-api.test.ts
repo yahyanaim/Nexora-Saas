@@ -74,6 +74,15 @@ describe("client invoices", () => {
     return unbilledEntries(await listTimeEntriesApi(WS), await listProjectsApi(WS), "cli_helio")
   }
 
+  it("refuses to issue an invoice to a Moroccan company without its ICE", async () => {
+    const { updateClientApi } = await import("./clients-api")
+    await updateClientApi(WS, "cli_helio", { ice: undefined })
+    const invoice = await createInvoiceFromHoursApi(WS, { clientId: "cli_helio", entryIds: (await unbilledHelio()).map((e) => e.id), taxRate: 20, issueDate: "2030-02-01" })
+    await expect(issueInvoiceApi(WS, invoice.id)).rejects.toThrow(/client's ICE/)
+    await updateClientApi(WS, "cli_helio", { ice: "001 523 874 000 062" })
+    expect((await issueInvoiceApi(WS, invoice.id)).number).toBe("INV-2030-001")
+  })
+
   it("seeds a paid invoice and leaves approved Helio hours to bill", async () => {
     const invoices = await listClientInvoicesApi(WS)
     expect(invoices.some((i) => i.status === ClientInvoiceStatus.PAID)).toBe(true)
