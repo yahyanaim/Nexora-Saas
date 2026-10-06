@@ -13,7 +13,13 @@
 
 import { isDemoMode } from "@/lib/auth/demo-mode"
 
-const TOKEN_KEY = "token"
+/**
+ * Demo sessions use their own cookie. A real backend on the same host sets an
+ * HttpOnly "token" cookie that JavaScript can't overwrite; sharing that name
+ * made the demo sign-in fail silently and bounce between /auth and the dashboard.
+ */
+export const DEMO_COOKIE = "nexora_demo_session"
+const TOKEN_KEY = DEMO_COOKIE
 
 /** Token set by the demo sign-in; no real backend ever accepts it. */
 export const DEMO_SESSION_TOKEN = "demo-session-token"
