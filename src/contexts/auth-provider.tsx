@@ -135,7 +135,10 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
       router.replace(resolveAfterLoginPath(window.location.search))
     } else if (!isAuthenticated && isDashboardPage) {
       const next = encodeURIComponent(`${pathname}${window.location.search}`)
-      router.replace(`/auth?next=${next}`)
+      // Full page load: a client navigation can stay stuck behind the dashboard's
+      // pending loading screen, leaving the person on "Loading dashboard content…".
+      const locale = window.location.pathname.split("/")[1]
+      window.location.replace(`/${locale}/auth?next=${next}`)
     }
   }, [isAuthenticated, isLoading, pathname, router])
 
