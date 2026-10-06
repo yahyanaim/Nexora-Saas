@@ -31,3 +31,10 @@ export function useSelfScope() {
     isMine: (employeeId: string) => !scoped || employeeId === me?.id,
   }
 }
+
+/** The signed-in person as an approver: approve actions refuse their own requests (BR-3). */
+export function useApprover() {
+  const { authedUser } = useAuthGuard()
+  const me = useCurrentEmployee()
+  return { employeeId: me?.id, isAdmin: can(authedUser, AdminPermissionsPlatform.ROLES_UPDATE) }
+}

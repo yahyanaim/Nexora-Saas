@@ -2487,5 +2487,9 @@
   "inboxMarkRead": "Marcar como leída",
   "inboxMarkUnread": "Marcar como no leída",
   "inboxDismiss": "Descartar",
-  "kpiIndicator": "Indicador"
+  "kpiIndicator": "Indicador",
+  "approvalFirstStep": "Primera aprobación registrada – falta un segundo aprobador",
+  "approvalOneOfTwo": "1 de 2 aprobaciones",
+  "approvalOwnRequest": "Tu propia solicitud – decide otro aprobador",
+  "approvalWaitingSecond": "Ya aprobaste – falta un segundo aprobador"
 }

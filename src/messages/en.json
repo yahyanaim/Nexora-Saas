@@ -2487,5 +2487,9 @@
   "inboxMarkRead": "Mark as read",
   "inboxMarkUnread": "Mark as unread",
   "inboxDismiss": "Dismiss",
-  "kpiIndicator": "Indicator"
+  "kpiIndicator": "Indicator",
+  "approvalFirstStep": "First approval recorded – waiting for a second approver",
+  "approvalOneOfTwo": "1 of 2 approvals",
+  "approvalOwnRequest": "Your own request – another approver decides",
+  "approvalWaitingSecond": "You approved – waiting for a second approver"
 }

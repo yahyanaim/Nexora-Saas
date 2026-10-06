@@ -12,6 +12,7 @@ import {
   submitExpenseApi,
 } from "@/lib/api/expenses-api"
 import type { ExpenseInput } from "@/types/work-costs"
+import { useApprover } from "@/hooks/workforce/use-current-employee"
 
 export function useExpenses() {
   const { id } = useCurrentWorkspace()
@@ -35,10 +36,11 @@ export function useExpenseMutations() {
     onSuccess: done(t("expenseSubmitted")),
     onError,
   })
+  const approver = useApprover()
   const review = useMutation({
     mutationFn: ({ id, approved, reason }: { id: string; approved: boolean; reason?: string }) =>
-      reviewExpenseApi(workspaceId, id, approved, reason),
-    onSuccess: (_x, { approved }) => done(approved ? t("expenseApproved") : t("expenseRejected"))(),
+      reviewExpenseApi(workspaceId, approver, id, approved, reason),
+    onSuccess: (x, { approved }) => done(!approved ? t("expenseRejected") : x.status === "submitted" ? t("approvalFirstStep") : t("expenseApproved"))(),
     onError,
   })
   const reimburse = useMutation({

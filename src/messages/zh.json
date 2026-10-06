@@ -2487,5 +2487,9 @@
   "inboxMarkRead": "标为已读",
   "inboxMarkUnread": "标为未读",
   "inboxDismiss": "忽略",
-  "kpiIndicator": "指标"
+  "kpiIndicator": "指标",
+  "approvalFirstStep": "已记录第一次审批，等待第二位审批人",
+  "approvalOneOfTwo": "已审批 1/2",
+  "approvalOwnRequest": "这是你自己的申请，由其他审批人决定",
+  "approvalWaitingSecond": "你已审批，等待第二位审批人"
 }

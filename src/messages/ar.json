@@ -2487,5 +2487,9 @@
   "inboxMarkRead": "تعليم كمقروء",
   "inboxMarkUnread": "تعليم كغير مقروء",
   "inboxDismiss": "تجاهل",
-  "kpiIndicator": "المؤشر"
+  "kpiIndicator": "المؤشر",
+  "approvalFirstStep": "تم تسجيل الموافقة الأولى – بانتظار موافق ثانٍ",
+  "approvalOneOfTwo": "موافقة 1 من 2",
+  "approvalOwnRequest": "طلبك الخاص – يقرر موافق آخر",
+  "approvalWaitingSecond": "وافقت – بانتظار موافق ثانٍ"
 }

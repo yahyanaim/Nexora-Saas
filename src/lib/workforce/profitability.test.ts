@@ -102,8 +102,8 @@ describe("expenses API", () => {
   it("follows submitted → approved → reimbursed, with a reason to reject", async () => {
     const x = await submitExpenseApi("ws_atlas", base)
     await expect(reimburseExpenseApi("ws_atlas", x.id)).rejects.toThrow(/approved/)
-    await expect(reviewExpenseApi("ws_atlas", x.id, false)).rejects.toThrow(/reason/)
-    await reviewExpenseApi("ws_atlas", x.id, true)
+    await expect(reviewExpenseApi("ws_atlas", { isAdmin: true }, x.id, false)).rejects.toThrow(/reason/)
+    await reviewExpenseApi("ws_atlas", { isAdmin: true }, x.id, true)
     await expect(deleteExpenseApi("ws_atlas", x.id)).rejects.toThrow(/can't be deleted/)
     expect((await reimburseExpenseApi("ws_atlas", x.id)).status).toBe(ExpenseStatus.REIMBURSED)
   })

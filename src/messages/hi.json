@@ -2487,5 +2487,9 @@
   "inboxMarkRead": "पढ़ा हुआ करें",
   "inboxMarkUnread": "अपठित करें",
   "inboxDismiss": "हटाएँ",
-  "kpiIndicator": "संकेतक"
+  "kpiIndicator": "संकेतक",
+  "approvalFirstStep": "पहली स्वीकृति दर्ज – दूसरे स्वीकृतकर्ता की प्रतीक्षा",
+  "approvalOneOfTwo": "2 में से 1 स्वीकृति",
+  "approvalOwnRequest": "आपका अपना अनुरोध – कोई और तय करेगा",
+  "approvalWaitingSecond": "आपने स्वीकृत किया – दूसरे की प्रतीक्षा"
 }

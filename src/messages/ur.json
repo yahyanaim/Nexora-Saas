@@ -2487,5 +2487,9 @@
   "inboxMarkRead": "پڑھا ہوا نشان زد کریں",
   "inboxMarkUnread": "نہ پڑھا نشان زد کریں",
   "inboxDismiss": "ہٹائیں",
-  "kpiIndicator": "اشاریہ"
+  "kpiIndicator": "اشاریہ",
+  "approvalFirstStep": "پہلی منظوری درج – دوسرے منظور کنندہ کا انتظار",
+  "approvalOneOfTwo": "2 میں سے 1 منظوری",
+  "approvalOwnRequest": "آپ کی اپنی درخواست – کوئی اور فیصلہ کرے گا",
+  "approvalWaitingSecond": "آپ نے منظور کیا – دوسرے کا انتظار"
 }

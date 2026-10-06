@@ -57,7 +57,7 @@ describe("reference scenario (spec 13.3)", () => {
     expect(entries.every((e) => e.status === TimeEntryStatus.SUBMITTED)).toBe(true)
 
     // 4. Approved: each entry stores billable rate 800 and cost rate 300
-    await approveTimeEntriesApi(WS, entries.map((e) => e.id))
+    await approveTimeEntriesApi(WS, { isAdmin: true }, entries.map((e) => e.id))
     entries = await listTimeEntriesApi(WS)
     expect(entries.every((e) => e.status === TimeEntryStatus.APPROVED && e.billRate === 800 && e.costRate === 300)).toBe(true)
 

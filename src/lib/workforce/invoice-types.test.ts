@@ -43,7 +43,7 @@ describe("retainer (section 6.5)", () => {
     const days = ["2030-03-04", "2030-03-05", "2030-03-06"]
     for (const d of days) await setTimesheetCellApi(WS, { employeeId: "emp_lina", projectId: project.id, date: d, hours: 4 })
     await submitTimesheetApi(WS, "emp_lina", "2030-03-04", "2030-03-10")
-    await approveTimeEntriesApi(WS, (await listTimeEntriesApi(WS, { from: "2030-03-04", to: "2030-03-06" })).map((e) => e.id))
+    await approveTimeEntriesApi(WS, { isAdmin: true }, (await listTimeEntriesApi(WS, { from: "2030-03-04", to: "2030-03-06" })).map((e) => e.id))
     const inv = await createInvoiceApi(WS, { kind: InvoiceKind.RETAINER, clientId: "cli_helio", projectId: project.id, month: "2030-03", taxRate: 20 })
     expect(inv.lines.map((l) => [l.quantity, l.unitPrice])).toEqual([[1, 3000], [2, 150]])
     expect(invoiceTotals(inv).subtotal).toBe(3300)

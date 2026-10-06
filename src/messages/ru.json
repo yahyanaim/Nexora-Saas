@@ -2487,5 +2487,9 @@
   "inboxMarkRead": "Отметить прочитанным",
   "inboxMarkUnread": "Отметить непрочитанным",
   "inboxDismiss": "Скрыть",
-  "kpiIndicator": "Показатель"
+  "kpiIndicator": "Показатель",
+  "approvalFirstStep": "Первое одобрение записано – ждём второго",
+  "approvalOneOfTwo": "1 из 2 одобрений",
+  "approvalOwnRequest": "Ваш собственный запрос – решает другой",
+  "approvalWaitingSecond": "Вы одобрили – ждём второго"
 }

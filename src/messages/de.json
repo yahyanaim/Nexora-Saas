@@ -2487,5 +2487,9 @@
   "inboxMarkRead": "Als gelesen markieren",
   "inboxMarkUnread": "Als ungelesen markieren",
   "inboxDismiss": "Ausblenden",
-  "kpiIndicator": "Kennzahl"
+  "kpiIndicator": "Kennzahl",
+  "approvalFirstStep": "Erste Freigabe erfasst – wartet auf eine zweite Person",
+  "approvalOneOfTwo": "1 von 2 Freigaben",
+  "approvalOwnRequest": "Ihr eigener Antrag – eine andere Person entscheidet",
+  "approvalWaitingSecond": "Von Ihnen freigegeben – wartet auf eine zweite Person"
 }

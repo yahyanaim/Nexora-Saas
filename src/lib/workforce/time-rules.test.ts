@@ -37,7 +37,7 @@ describe("timesheet rules", () => {
   it("snapshots rates at approval so later raises don't change them (TIM-9, BR-4)", async () => {
     const e = await setTimesheetCellApi(WS, cell("2030-01-07", 3))
     await submitTimesheetApi(WS, "emp_lina", "2030-01-07", "2030-01-13")
-    await approveTimeEntriesApi(WS, [e!.id])
+    await approveTimeEntriesApi(WS, { isAdmin: true }, [e!.id])
     await changeRateApi(WS, "emp_lina", { effectiveFrom: "2029-01-01", hourlyCost: 99, billableRate: 999 })
     const [saved] = await listTimeEntriesApi(WS, { employeeId: "emp_lina", from: "2030-01-07", to: "2030-01-07" })
     expect(saved!.costRate).toBe(55)
@@ -48,7 +48,7 @@ describe("timesheet rules", () => {
   it("reopens approved, uninvoiced hours with a reason (TIM-7)", async () => {
     const e = await setTimesheetCellApi(WS, cell("2030-01-07", 3))
     await submitTimesheetApi(WS, "emp_lina", "2030-01-07", "2030-01-13")
-    await approveTimeEntriesApi(WS, [e!.id])
+    await approveTimeEntriesApi(WS, { isAdmin: true }, [e!.id])
     await expect(reopenTimeEntriesApi(WS, [e!.id], " ")).rejects.toThrow(/why/)
     expect(await reopenTimeEntriesApi(WS, [e!.id], "Wrong project")).toBe(1)
     const [saved] = await listTimeEntriesApi(WS, { employeeId: "emp_lina", from: "2030-01-07", to: "2030-01-07" })

@@ -6,6 +6,7 @@ import { toast } from "@/lib/utils/toast"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { cancelLeaveApi, decideLeaveApi, listLeaveApi, requestLeaveApi } from "@/lib/api/leave-api"
 import type { LeaveRequestInput } from "@/types/work-planning"
+import { useApprover } from "@/hooks/workforce/use-current-employee"
 
 export function useLeave() {
   const { id } = useCurrentWorkspace()
@@ -28,11 +29,12 @@ export function useLeaveMutations() {
     },
     onError,
   })
+  const approver = useApprover()
   const decide = useMutation({
     mutationFn: ({ id, approved, note }: { id: string; approved: boolean; note?: string }) =>
-      decideLeaveApi(workspaceId, id, approved, note),
-    onSuccess: (_r, { approved }) => {
-      toast.success(approved ? t("leaveApproved") : t("leaveDeclined"))
+      decideLeaveApi(workspaceId, approver, id, approved, note),
+    onSuccess: (r, { approved }) => {
+      toast.success(!approved ? t("leaveDeclined") : r.status === "pending" ? t("approvalFirstStep") : t("leaveApproved"))
       refresh()
     },
     onError,

@@ -2487,5 +2487,9 @@
   "inboxMarkRead": "Marquer comme lu",
   "inboxMarkUnread": "Marquer comme non lu",
   "inboxDismiss": "Ignorer",
-  "kpiIndicator": "Indicateur"
+  "kpiIndicator": "Indicateur",
+  "approvalFirstStep": "Première validation enregistrée – en attente d'un second valideur",
+  "approvalOneOfTwo": "1 validation sur 2",
+  "approvalOwnRequest": "Votre propre demande – un autre valideur décide",
+  "approvalWaitingSecond": "Vous avez validé – en attente d'un second valideur"
 }
