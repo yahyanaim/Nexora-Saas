@@ -2,6 +2,22 @@
 
 _Supersedes `docs/AUDIT_2026-10.md` and `docs/CODE_REVIEW_AND_AUDIT.md`._
 
+## Status (after PR #50)
+
+| Finding | Status |
+| :--- | :--- |
+| C1 route guard | ✅ Fixed: `lib/permissions/routes.ts`, used by the menu and the layout; role tests |
+| C2 approval rules | ✅ Fixed: `approvalDecision()` in every approve action, `approvedBy` / `firstApprovedBy`, two-step and auto-approve |
+| H1 money | ✅ Fixed: `lib/workforce/money.ts` replaces 6 copies |
+| H2 identity, H3 per-role responses | ⏳ Server-side by design (Phase 7) |
+| H4 failed saves | ✅ Fixed: storage failures throw and show an error |
+| M1 translated errors | ✅ Fixed: error catalog with 200 keys in 9 languages, plus a guard test |
+| M2 company time zone | ✅ Fixed |
+| M3 inbox memo | ✅ Fixed (server aggregation still planned) |
+| M4 concurrency | ⏳ Phase 7 |
+| M5 legacy code, M6 large components | ⏳ Open |
+| M7 IDs, M8 npm audit | ✅ Fixed |
+
 ## Scope and method
 
 - Whole front end at `main` (611 TypeScript files, about 76,000 lines), with the focus on what the backend (Phase 7) will take over: business rules, permissions, money, data and identity.
