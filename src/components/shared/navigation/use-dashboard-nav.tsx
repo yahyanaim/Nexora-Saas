@@ -28,6 +28,7 @@ import {
   Handshake,
   Clock,
   ClipboardCheck,
+  Star,
   FileText,
   ChartGantt,
   CalendarDays,
@@ -140,6 +141,13 @@ export function useDashboardNav() {
             icon: Network,
             descriptionKey: "pageDescOrgChart",
             permission: AdminPermissionsPlatform.EMPLOYEES_READ,
+          },
+          {
+            title: t("reviews"),
+            url: "/dashboard/reviews",
+            icon: Star,
+            descriptionKey: "pageDescReviews",
+            permission: AdminPermissionsPlatform.TIME_TRACK,
           },
           {
             title: t("documents"),
