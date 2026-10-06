@@ -32,7 +32,7 @@ describe("tokenStorage (src/lib/myapi/token-storage.ts)", () => {
     it("sets and retrieves a token cookie in document.cookie", () => {
       tokenStorage.set("demo-session-token-123")
 
-      expect(document.cookie).toContain("token=demo-session-token-123")
+      expect(document.cookie).toContain("nexora_demo_session=demo-session-token-123")
       expect(tokenStorage.get()).toBe("demo-session-token-123")
     })
 
@@ -45,7 +45,7 @@ describe("tokenStorage (src/lib/myapi/token-storage.ts)", () => {
 
     it("correctly extracts token when multiple cookies are present", () => {
       document.cookie = "other_cookie=12345; path=/"
-      document.cookie = "token=multi-token-abc; path=/"
+      document.cookie = "nexora_demo_session=multi-token-abc; path=/"
       document.cookie = "analytics_id=xyz; path=/"
 
       expect(tokenStorage.get()).toBe("multi-token-abc")

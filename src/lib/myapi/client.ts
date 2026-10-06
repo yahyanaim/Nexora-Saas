@@ -62,6 +62,13 @@ export function __resetRefreshStateForTests() {
 }
 
 apiClient.interceptors.request.use((config) => {
+  // A demo session never talks to a backend: whatever answers at the API URL
+  // (nothing, a 401, or a server that hangs) the demo must open at once with
+  // its local data. The request fails immediately as "unreachable", which is
+  // what every API helper already treats as "use the demo data".
+  if (isDemoMode() && hasDemoSession()) {
+    return Promise.reject(new axios.AxiosError("Demo session: backend not used", "ERR_DEMO_SESSION", config))
+  }
   ;(config as RetriableConfig)._refreshGeneration = refreshGeneration
   return config
 })

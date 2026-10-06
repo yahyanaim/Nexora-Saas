@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import createMiddleware from "next-intl/middleware"
 import { routing } from "./i18n/routing"
 import { buildCsp, createNonce } from "./lib/security/csp"
+import { isDemoMode } from "@/lib/auth/demo-mode"
+import { DEMO_COOKIE } from "@/lib/myapi/token-storage"
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -49,7 +51,8 @@ export async function proxy(req: NextRequest) {
   })
 
   // Check for auth cookie presence (HttpOnly in production; fallback in demo mode)
-  const token = req.cookies.get("token")?.value
+  // The backend's HttpOnly session, or the demo session cookie when demo mode is on
+  const token = req.cookies.get("token")?.value || (isDemoMode() ? req.cookies.get(DEMO_COOKIE)?.value : undefined)
 
   // Guard dashboard routes: redirect to login if no session cookie
   if (DASHBOARD_ROUTE.test(pathname) && !token) {
