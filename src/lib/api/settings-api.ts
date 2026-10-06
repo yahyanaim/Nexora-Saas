@@ -144,14 +144,20 @@ export function seedSettings(workspaceId: string): WorkspaceSettings {
     ],
     receiptRequiredAbove: 25,
     holidays: HOLIDAYS[workspaceId] ?? [],
+    ownerEmployeeId: OWNER_EMPLOYEES[workspaceId],
   }
 }
+
+/** In the demo, the owner account (Alex) is linked to each workspace's managing director. */
+const OWNER_EMPLOYEES: Record<string, string> = { ws_atlas: "emp_sara", ws_northwind: "emp_ava" }
 
 const read = (workspaceId: string) => readDocument("settings", workspaceId, () => seedSettings(workspaceId))
 const write = (workspaceId: string, value: WorkspaceSettings) => writeDocument("settings", workspaceId, value)
 
 export async function getSettingsApi(workspaceId: string): Promise<WorkspaceSettings> {
-  const settings = read(workspaceId)
+  const stored = read(workspaceId)
+  // Demo workspaces saved before the owner link existed get the seeded one; null means "not linked" on purpose
+  const settings = stored.ownerEmployeeId === undefined && OWNER_EMPLOYEES[workspaceId] ? { ...stored, ownerEmployeeId: OWNER_EMPLOYEES[workspaceId] } : stored
   // Demo workspaces saved before the payment fields existed pick them up from the seed
   const seed = COMPANIES[workspaceId]
   if (!seed) return settings
@@ -236,6 +242,15 @@ export async function updateKpiSettingsApi(workspaceId: string, kpi: KpiSettings
   if (["utilization", "onTime", "estimateAccuracy"].some((k) => kpi.targets[k as keyof KpiSettings["targets"]] > 200)) throw new Error("Rate targets must be 200% or less")
   recordAudit(workspaceId, { action: "KPI targets updated", actionKey: "settings.kpi", category: "Settings", target: "KPI targets and visibility" })
   const next = { ...read(workspaceId), kpi }
+  write(workspaceId, next)
+  return next
+}
+
+/** Links the owner's account to an employee record, or unlinks it with null. */
+export async function updateOwnerEmployeeApi(workspaceId: string, employeeId: string | null): Promise<WorkspaceSettings> {
+  recordAudit(workspaceId, { action: "Owner's employee profile changed", actionKey: "settings.owner_employee", category: "Settings", target: "Workspace owner" })
+  // An empty string keeps "unlinked" distinct from "never set"
+  const next = { ...read(workspaceId), ownerEmployeeId: employeeId ?? "" }
   write(workspaceId, next)
   return next
 }

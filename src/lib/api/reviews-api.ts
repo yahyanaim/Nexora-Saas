@@ -52,12 +52,12 @@ export async function listReviewsApi(workspaceId: string) {
 
 /**
  * Starts a review cycle (HR-9): one review per chosen employee, reviewed by
- * their manager, or by `fallbackReviewerId` for people without one. People who
- * already have a review for this cycle are skipped.
+ * the reviewer picked for them, or else their manager. People without either,
+ * and people who already have a review for this cycle, are skipped.
  */
 export async function startReviewCycleApi(
   workspaceId: string,
-  input: { period: string; from: string; to: string; employeeIds: string[]; fallbackReviewerId?: string },
+  input: { period: string; from: string; to: string; employeeIds: string[]; reviewerIds?: Record<string, string> },
   employees: Employee[]
 ) {
   const period = input.period.trim()
@@ -70,8 +70,8 @@ export async function startReviewCycleApi(
     if (existing.has(id)) continue
     const person = employees.find((e) => e.id === id)
     if (!person) continue
-    const reviewerId = person.managerId ?? input.fallbackReviewerId
-    if (!reviewerId || reviewerId === id) continue
+    const reviewerId = input.reviewerIds?.[id] || person.managerId
+    if (!reviewerId || reviewerId === id || !employees.some((e) => e.id === reviewerId)) continue
     created.push(reviews.create(workspaceId, { employeeId: id, reviewerId, period, from: input.from, to: input.to, status: ReviewStatus.SELF }))
   }
   recordAudit(workspaceId, { action: `Review cycle ${period} started (${created.length})`, actionKey: "reviews.start", category: "Team", target: period })
@@ -128,4 +128,15 @@ export async function deleteReviewApi(workspaceId: string, id: string, viewer: R
   if (!viewer.isAdmin) throw new Error("Only an admin can cancel a review")
   if (r.status === ReviewStatus.DONE) throw new Error("A completed review can't be cancelled")
   reviews.remove(workspaceId, id)
+}
+
+/**
+ * Open reviews given by someone who leaves go to another reviewer, usually
+ * their manager; without one they wait for an admin to cancel or restart them.
+ */
+export async function reassignOpenReviewsApi(workspaceId: string, fromReviewerId: string, toReviewerId?: string) {
+  for (const r of reviews.list(workspaceId)) {
+    if (r.reviewerId !== fromReviewerId || r.status === ReviewStatus.DONE) continue
+    if (toReviewerId && toReviewerId !== r.employeeId) reviews.update(workspaceId, r.id, { reviewerId: toReviewerId })
+  }
 }

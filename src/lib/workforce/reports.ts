@@ -48,6 +48,8 @@ export interface ReportData {
   tasks: WorkTask[]
   leave: LeaveRequest[]
   holidays?: string[]
+  /** Overhead per logged hour (CST-4); adds an overhead column and makes profit net */
+  overheadRate?: number
 }
 
 export interface Report {
@@ -260,6 +262,7 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
       break
     }
     case "profitability": {
+      const overheadRate = data.overheadRate ?? 0
       columns = [
         { key: "project", label: "project", type: "text" },
         { key: "client", label: "client", type: "text" },
@@ -267,8 +270,9 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
         { key: "revenue", label: "anRevenueEarned", type: "money" },
         { key: "laborCost", label: "anLaborCost", type: "money", sensitive: true },
         { key: "expenses", label: "expenses", type: "money" },
-        { key: "profit", label: "anGrossProfit", type: "money", sensitive: true },
-        { key: "margin", label: "anGrossMargin", type: "percent", sensitive: true },
+        ...(overheadRate > 0 ? [{ key: "overhead", label: "overhead", type: "money" as const, sensitive: true }] : []),
+        { key: "profit", label: overheadRate > 0 ? "netProfit" : "anGrossProfit", type: "money", sensitive: true },
+        { key: "margin", label: overheadRate > 0 ? "netMargin" : "anGrossMargin", type: "percent", sensitive: true },
       ]
       const byProject = new Map<string, { hours: number; revenue: number; cost: number; expenses: number }>()
       const get = (id: string) => byProject.get(id) ?? byProject.set(id, { hours: 0, revenue: 0, cost: 0, expenses: 0 }).get(id)!
@@ -295,7 +299,8 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
       rows = [...byProject.entries()]
         .map(([projectId, v]) => {
           const project = projectById.get(projectId)
-          const profit = v.revenue - v.cost - v.expenses
+          const overhead = v.hours * overheadRate
+          const profit = v.revenue - v.cost - v.expenses - overhead
           return {
             project: project ? `${project.code} · ${project.name}` : "",
             client: project?.clientId ? (clientById.get(project.clientId)?.name ?? "") : "",
@@ -303,6 +308,7 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
             revenue: r2(v.revenue),
             laborCost: r2(v.cost),
             expenses: r2(v.expenses),
+            ...(overheadRate > 0 ? { overhead: r2(overhead) } : {}),
             profit: r2(profit),
             margin: v.revenue > 0 ? r1((profit / v.revenue) * 100) : null,
           }

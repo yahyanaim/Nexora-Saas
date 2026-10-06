@@ -27,6 +27,54 @@ export interface NotificationItem {
   category: "security" | "billing" | "team" | "system"
   timestamp: string
   isRead: boolean
+  /** Page where the item is handled; the title becomes a link */
+  href?: string
+}
+
+export interface NotificationLabels {
+  title: string
+  newCount: (n: number) => string
+  markAllRead: string
+  all: string
+  unread: string
+  empty: string
+  open: string
+  unreadSr: (n: number) => string
+  markRead: string
+  markUnread: string
+  dismiss: string
+}
+
+const ENGLISH: NotificationLabels = {
+  title: "Notifications",
+  newCount: (n) => `${n} new`,
+  markAllRead: "Mark all read",
+  all: "All",
+  unread: "Unread",
+  empty: "No notifications to display.",
+  open: "Open notifications",
+  unreadSr: (n) => `${n} unread`,
+  markRead: "Mark as read",
+  markUnread: "Mark as unread",
+  dismiss: "Dismiss",
+}
+
+function readIds(key?: string): string[] {
+  if (!key) return []
+  try {
+    const v = JSON.parse(localStorage.getItem(key) ?? "[]")
+    return Array.isArray(v) ? v.filter((x) => typeof x === "string") : []
+  } catch {
+    return []
+  }
+}
+function writeIds(key: string | undefined, ids: Set<string>) {
+  if (!key) return
+  try {
+    localStorage.setItem(key, JSON.stringify([...ids].slice(-300)))
+  } catch {
+    // Storage full or blocked: read state just isn't remembered
+  }
 }
 
 const INITIAL_NOTIFICATIONS: NotificationItem[] = [
@@ -69,10 +117,30 @@ const INITIAL_NOTIFICATIONS: NotificationItem[] = [
  * Renders in DashboardHeader with unread counter, categorized event feed,
  * and dismissal controls.
  */
-export function NotificationCenter() {
+export function NotificationCenter({
+  items = INITIAL_NOTIFICATIONS,
+  labels = ENGLISH,
+  storageKey,
+  onNavigate,
+}: {
+  items?: NotificationItem[]
+  labels?: NotificationLabels
+  /** Remembers read and dismissed items in this browser */
+  storageKey?: string
+  onNavigate?: (href: string) => void
+} = {}) {
   const [open, setOpen] = React.useState(false)
-  const [notifications, setNotifications] = React.useState<NotificationItem[]>(INITIAL_NOTIFICATIONS)
+  const [readSet, setReadSet] = React.useState(() => new Set(readIds(storageKey && `${storageKey}:read`)))
+  const [hidden, setHidden] = React.useState(() => new Set(readIds(storageKey && `${storageKey}:hidden`)))
   const [filter, setFilter] = React.useState<"all" | "unread">("all")
+  const notifications = React.useMemo(
+    () => items.filter((n) => !hidden.has(n.id)).map((n) => ({ ...n, isRead: n.isRead !== readSet.has(n.id) })),
+    [items, hidden, readSet]
+  )
+  const updateRead = (next: Set<string>) => {
+    setReadSet(next)
+    writeIds(storageKey && `${storageKey}:read`, next)
+  }
 
   const unreadCount = React.useMemo(
     () => notifications.filter((n) => !n.isRead).length,
@@ -86,18 +154,31 @@ export function NotificationCenter() {
     return notifications
   }, [notifications, filter])
 
+  // An item's read flag flips when its id is in the set, so items that start read can be marked unread
   const markAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    const next = new Set(readSet)
+    for (const n of notifications) if (!n.isRead) next.has(n.id) ? next.delete(n.id) : next.add(n.id)
+    updateRead(next)
   }
 
   const toggleRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: !n.isRead } : n))
-    )
+    const next = new Set(readSet)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    updateRead(next)
   }
 
   const deleteNotification = (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id))
+    const next = new Set(hidden).add(id)
+    setHidden(next)
+    writeIds(storageKey && `${storageKey}:hidden`, next)
+  }
+
+  const follow = (n: NotificationItem) => {
+    if (!n.href) return
+    if (!n.isRead) toggleRead(n.id)
+    setOpen(false)
+    onNavigate?.(n.href)
   }
 
   const getCategoryIcon = (category: NotificationItem["category"]) => {
@@ -119,14 +200,14 @@ export function NotificationCenter() {
       <PopoverTrigger asChild>
         <button
           className={cn(navIconButton, "relative")}
-          aria-label="Open notifications"
+          aria-label={labels.open}
           type="button"
         >
           <Bell className="size-[18px] pointer-events-none" />
           {unreadCount > 0 && (
             <>
               <span className="pointer-events-none absolute top-2.5 right-2.5 size-2 rounded-full bg-destructive ring-2 ring-card animate-in zoom-in-50" />
-              <span className="sr-only">{unreadCount} unread</span>
+              <span className="sr-only">{labels.unreadSr(unreadCount)}</span>
             </>
           )}
         </button>
@@ -140,11 +221,11 @@ export function NotificationCenter() {
         <div className="flex items-center justify-between border-b border-border/60 px-4 py-3 bg-muted/30">
           <div className="flex items-center gap-2">
             <h4 className="text-sm font-semibold tracking-tight text-foreground">
-              Notifications
+              {labels.title}
             </h4>
             {unreadCount > 0 && (
               <Badge variant="secondary" className="text-xs h-5 px-1.5 tabular-nums">
-                {unreadCount} new
+                {labels.newCount(unreadCount)}
               </Badge>
             )}
           </div>
@@ -155,8 +236,8 @@ export function NotificationCenter() {
               onClick={markAllAsRead}
               className="h-7 text-xs text-primary hover:text-primary/90 px-2"
             >
-              <Check className="mr-1 size-3" />
-              Mark all read
+              <Check className="me-1 size-3" />
+              {labels.markAllRead}
             </Button>
           )}
         </div>
@@ -173,7 +254,7 @@ export function NotificationCenter() {
                 : ""
             )}
           >
-            All ({notifications.length})
+            {labels.all} ({notifications.length})
           </button>
           <button
             type="button"
@@ -185,7 +266,7 @@ export function NotificationCenter() {
                 : ""
             )}
           >
-            Unread ({unreadCount})
+            {labels.unread} ({unreadCount})
           </button>
         </div>
 
@@ -193,7 +274,7 @@ export function NotificationCenter() {
         <div className="max-h-80 overflow-y-auto divide-y divide-border/40">
           {filteredNotifications.length === 0 ? (
             <div className="py-8 text-center text-xs text-muted-foreground">
-              No notifications to display.
+              {labels.empty}
             </div>
           ) : (
             filteredNotifications.map((n) => (
@@ -207,9 +288,13 @@ export function NotificationCenter() {
                 <div className="mt-0.5">{getCategoryIcon(n.category)}</div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
-                    <p className="text-xs font-semibold text-foreground truncate">
-                      {n.title}
-                    </p>
+                    {n.href ? (
+                      <button type="button" onClick={() => follow(n)} className="truncate text-start text-xs font-semibold text-foreground hover:text-primary hover:underline">
+                        {n.title}
+                      </button>
+                    ) : (
+                      <p className="text-xs font-semibold text-foreground truncate">{n.title}</p>
+                    )}
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {n.timestamp}
                     </span>
@@ -222,7 +307,8 @@ export function NotificationCenter() {
                   <button
                     type="button"
                     onClick={() => toggleRead(n.id)}
-                    title={n.isRead ? "Mark as unread" : "Mark as read"}
+                    title={n.isRead ? labels.markUnread : labels.markRead}
+                    aria-label={n.isRead ? labels.markUnread : labels.markRead}
                     className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors"
                   >
                     <Check className={cn("size-3.5", n.isRead ? "text-primary" : "opacity-40")} />
@@ -230,7 +316,8 @@ export function NotificationCenter() {
                   <button
                     type="button"
                     onClick={() => deleteNotification(n.id)}
-                    title="Dismiss"
+                    title={labels.dismiss}
+                    aria-label={labels.dismiss}
                     className="p-1 text-muted-foreground hover:text-destructive rounded transition-colors"
                   >
                     <Trash2 className="size-3.5" />

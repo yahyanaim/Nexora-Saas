@@ -80,7 +80,24 @@ export async function changeRateApi(
   return employees.update(workspaceId, id, { rateHistory, ...now })
 }
 
+/**
+ * Deletes an employee added by mistake. Someone with logged time, expenses or
+ * reviews has history that reports and invoices rely on, so they are set to
+ * Former employee instead (HR-5).
+ */
 export async function deleteEmployeeApi(workspaceId: string, id: string): Promise<void> {
+  const [{ listTimeEntriesApi }, { listExpensesApi }, { listReviewsApi, reassignOpenReviewsApi }] = await Promise.all([
+    import("./work-billing-api"),
+    import("./expenses-api"),
+    import("./reviews-api"),
+  ])
+  const hasHistory =
+    (await listTimeEntriesApi(workspaceId)).some((e) => e.employeeId === id) ||
+    (await listExpensesApi(workspaceId)).some((x) => x.employeeId === id) ||
+    (await listReviewsApi(workspaceId)).some((r) => r.employeeId === id)
+  if (hasHistory) throw new Error("This person has logged time, expenses or reviews. Set them to Former employee instead, so their history stays.")
+  // Reviews they were giving go to their own manager
+  await reassignOpenReviewsApi(workspaceId, id, employees.get(workspaceId, id)?.managerId)
   // Reports of the removed employee lose their manager instead of pointing at nothing
   for (const report of employees.list(workspaceId).filter((e) => e.managerId === id)) {
     employees.update(workspaceId, report.id, { managerId: undefined })

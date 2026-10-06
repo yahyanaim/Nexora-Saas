@@ -15,6 +15,7 @@ import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { useLeave } from "@/hooks/workforce/use-leave"
+import { overheadRate } from "@/lib/workforce/overhead"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { REPORT_IDS, buildReport, type ReportColumn, type ReportId, type ReportRow } from "@/lib/workforce/reports"
 import { todayIso } from "@/lib/workforce/project-metrics"
@@ -90,7 +91,7 @@ export default function ReportsPage() {
     () =>
       buildReport(
         reportId,
-        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date) },
+        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees) },
         { ...range, clientId: clientId || undefined, projectId: projectId || undefined, employeeId: employeeId || undefined, departmentId: departmentId || undefined },
         { canSeeCosts, today }
       ),

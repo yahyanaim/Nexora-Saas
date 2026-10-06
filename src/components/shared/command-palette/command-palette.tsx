@@ -88,6 +88,8 @@ export function CommandPalette({ open: controlledOpen, onOpenChange: setControll
     [setOpen]
   )
 
+  // Custom field values (PLT-12) are searchable too, e.g. a PO number
+  const extra = (values?: Record<string, string>) => Object.values(values ?? {}).join(" ")
   const clientName = (id?: string) => clients.find((c) => c.id === id)?.name
   const q = query.trim().toLowerCase()
   const match = (hits: Hit[]) => (q.length < MIN_QUERY ? [] : hits.filter((h) => h.keywords.toLowerCase().includes(q)).slice(0, PER_GROUP))
@@ -97,19 +99,19 @@ export function CommandPalette({ open: controlledOpen, onOpenChange: setControll
       key: "employees",
       heading: t("employees"),
       icon: Users,
-      hits: allowed.employees ? match(employees.map((e) => ({ id: e.id, label: e.name, detail: e.jobTitle, keywords: `${e.name} ${e.email} ${e.jobTitle}`, href: "/dashboard/employees" }))) : [],
+      hits: allowed.employees ? match(employees.map((e) => ({ id: e.id, label: e.name, detail: e.jobTitle, keywords: `${e.name} ${e.email} ${e.jobTitle} ${extra(e.customFields)}`, href: "/dashboard/employees" }))) : [],
     },
     {
       key: "clients",
       heading: t("clients"),
       icon: Handshake,
-      hits: allowed.clients ? match(clients.map((c) => ({ id: c.id, label: c.name, detail: c.industry, keywords: `${c.name} ${c.legalName ?? ""} ${c.email} ${c.ice ?? ""} ${c.contacts.map((x) => x.name).join(" ")}`, href: "/dashboard/clients" }))) : [],
+      hits: allowed.clients ? match(clients.map((c) => ({ id: c.id, label: c.name, detail: c.industry, keywords: `${c.name} ${c.legalName ?? ""} ${c.email} ${c.ice ?? ""} ${c.contacts.map((x) => x.name).join(" ")} ${extra(c.customFields)}`, href: "/dashboard/clients" }))) : [],
     },
     {
       key: "projects",
       heading: t("projects"),
       icon: FolderKanban,
-      hits: allowed.projects ? match(projects.map((p) => ({ id: p.id, label: `${p.code} · ${p.name}`, detail: clientName(p.clientId), keywords: `${p.code} ${p.name} ${clientName(p.clientId) ?? ""}`, href: `/dashboard/projects/${p.id}` }))) : [],
+      hits: allowed.projects ? match(projects.map((p) => ({ id: p.id, label: `${p.code} · ${p.name}`, detail: clientName(p.clientId), keywords: `${p.code} ${p.name} ${clientName(p.clientId) ?? ""} ${extra(p.customFields)}`, href: `/dashboard/projects/${p.id}` }))) : [],
     },
     {
       key: "tasks",
