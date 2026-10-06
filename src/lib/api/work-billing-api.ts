@@ -35,6 +35,7 @@ import { listExpensesApi, releaseInvoiceExpenses, setExpensesInvoice } from "./e
 import { recordAudit } from "@/lib/workforce/audit"
 import { AUTO_APPROVER, approvalDecision, approverRef, assertNotSelfApproval, stepsRequired, type Approver } from "@/lib/workforce/approvals"
 import { ApprovalSubject } from "@/types/work-settings"
+import { roundMoney } from "@/lib/workforce/money"
 
 /**
  * Timesheets, approvals and client invoices. Backed by the browser demo store
@@ -601,7 +602,7 @@ export async function recordPaymentApi(workspaceId: string, id: string, payment:
   }
   if (invoice.kind === InvoiceKind.CREDIT_NOTE) throw new Error("Credit notes don't take payments")
   const balance = invoiceBalance(invoice, invoices.list(workspaceId))
-  const amount = Math.round(payment.amount * 100) / 100
+  const amount = roundMoney(payment.amount)
   if (!(amount > 0)) throw new Error("Enter an amount above zero")
   if (amount > balance + 0.001) throw new Error(`Only ${balance} is left to pay`)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(payment.date)) throw new Error("Pick the payment date")

@@ -17,6 +17,7 @@ import { useCurrentWorkspace } from "@/store/workspace-store"
 import { deleteSavedReportApi, listSavedReportsApi, saveReportApi, type SavedReport } from "@/lib/api/saved-reports-api"
 import { WORK_ROLES, WorkRole } from "@/types/workforce"
 import { WORK_ROLE_LABEL } from "../workforce-chunks/workforce-labels"
+import { translateError } from "@/lib/errors/translate-error"
 
 const PRIVATE = "__private__"
 type Filters = SavedReport["filters"]
@@ -34,7 +35,7 @@ export function SavedReportsBar({ reportId, filters, reportName, onApply }: { re
   const [open, setOpen] = useState(false)
   const [name, setName] = useState("")
   const [share, setShare] = useState<string>(PRIVATE)
-  const onError = (e: unknown) => toast.error(e instanceof Error ? e.message : t("somethingWentWrong"))
+  const onError = (e: unknown) => toast.error(translateError(e, t))
   const refresh = () => qc.invalidateQueries({ queryKey: ["saved-reports", ws] })
 
   const save = useMutation({

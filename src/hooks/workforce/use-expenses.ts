@@ -13,6 +13,7 @@ import {
 } from "@/lib/api/expenses-api"
 import type { ExpenseInput } from "@/types/work-costs"
 import { useApprover } from "@/hooks/workforce/use-current-employee"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useExpenses() {
   const { id } = useCurrentWorkspace()
@@ -29,7 +30,7 @@ export function useExpenseMutations() {
     refresh()
   }
   const onError = (err: unknown) =>
-    toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+    toast.error(translateError(err, t))
 
   const submit = useMutation({
     mutationFn: (input: ExpenseInput) => submitExpenseApi(workspaceId, input),

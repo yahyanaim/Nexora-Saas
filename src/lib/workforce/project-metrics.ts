@@ -7,8 +7,28 @@ import {
   type WorkTask,
 } from "@/types/work-projects"
 
-/** Today as yyyy-mm-dd in local time, so date-only fields compare correctly. */
-export function todayIso(now = new Date()) {
+let companyTimeZone: string | undefined
+
+/**
+ * Business dates follow the company's time zone (Settings → Company), not the
+ * browser's (M2): "today", "overdue" and period locks are the same for a user
+ * in Casablanca and one travelling. Set from the workspace settings.
+ */
+export function setCompanyTimeZone(timeZone: string | undefined) {
+  try {
+    if (timeZone) new Intl.DateTimeFormat("en-CA", { timeZone })
+    companyTimeZone = timeZone || undefined
+  } catch {
+    companyTimeZone = undefined
+  }
+}
+
+/** Today as yyyy-mm-dd in the company time zone (local time until it is known). */
+export function todayIso(now = new Date(), timeZone = companyTimeZone) {
+  if (timeZone) {
+    // en-CA formats dates as yyyy-mm-dd
+    return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now)
+  }
   const y = now.getFullYear()
   const m = String(now.getMonth() + 1).padStart(2, "0")
   const d = String(now.getDate()).padStart(2, "0")

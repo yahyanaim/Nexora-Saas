@@ -8,6 +8,7 @@ import { addDays, entryBillRate, entryCostRate, invoiceTotals, receivablesAging,
 import { employeeWorkDays, hoursPerDay, leaveDays } from "./planning"
 import { todayIso } from "./project-metrics"
 import { UTILIZATION_TARGET } from "./kpis"
+import { roundMoney } from "./money"
 
 /**
  * Business analytics for the Analytics page: revenue, margin, cash, capacity
@@ -42,7 +43,7 @@ export interface AnalyticsFilters {
 
 export { UTILIZATION_TARGET }
 
-const round = (n: number) => Math.round(n * 100) / 100
+const round = roundMoney
 const round1 = (n: number) => Math.round(n * 10) / 10
 const pct = (part: number, whole: number) => (whole > 0 ? round1((part / whole) * 100) : null)
 

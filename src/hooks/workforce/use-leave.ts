@@ -7,6 +7,7 @@ import { useCurrentWorkspace } from "@/store/workspace-store"
 import { cancelLeaveApi, decideLeaveApi, listLeaveApi, requestLeaveApi } from "@/lib/api/leave-api"
 import type { LeaveRequestInput } from "@/types/work-planning"
 import { useApprover } from "@/hooks/workforce/use-current-employee"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useLeave() {
   const { id } = useCurrentWorkspace()
@@ -19,7 +20,7 @@ export function useLeaveMutations() {
   const queryClient = useQueryClient()
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["leave", workspaceId] })
   const onError = (err: unknown) =>
-    toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+    toast.error(translateError(err, t))
 
   const request = useMutation({
     mutationFn: (input: LeaveRequestInput) => requestLeaveApi(workspaceId, input),

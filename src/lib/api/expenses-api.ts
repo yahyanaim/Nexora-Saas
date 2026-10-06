@@ -7,6 +7,7 @@ import { listProjectsApi } from "./work-projects-api"
 import { recordAudit } from "@/lib/workforce/audit"
 import { AUTO_APPROVER, approvalDecision, approverRef, assertNotSelfApproval, stepsRequired, type Approver } from "@/lib/workforce/approvals"
 import { ApprovalSubject } from "@/types/work-settings"
+import { roundMoney } from "@/lib/workforce/money"
 
 const STAMP = "2026-01-05T09:00:00.000Z"
 
@@ -61,7 +62,7 @@ export async function submitExpenseApi(workspaceId: string, input: ExpenseInput)
   return expenses.create(workspaceId, {
     ...input,
     description: input.description.trim(),
-    amount: Math.round(input.amount * 100) / 100,
+    amount: roundMoney(input.amount),
     // Only project expenses can be re-billed
     billable: input.billable && !!input.projectId,
     status: auto ? ExpenseStatus.APPROVED : ExpenseStatus.SUBMITTED,

@@ -1,5 +1,6 @@
 import { EmployeeStatus, type Employee } from "@/types/workforce"
 import type { OverheadItem } from "@/types/work-settings"
+import { roundMoney } from "./money"
 
 const WEEKS_PER_MONTH = 52 / 12
 
@@ -20,5 +21,5 @@ export function monthlyCapacityHours(employees: Employee[]) {
 export function overheadRate(items: OverheadItem[] | undefined, employees: Employee[]) {
   const hours = monthlyCapacityHours(employees)
   const total = monthlyOverhead(items)
-  return hours > 0 && total > 0 ? Math.round((total / hours) * 100) / 100 : 0
+  return hours > 0 && total > 0 ? roundMoney(total / hours) : 0
 }

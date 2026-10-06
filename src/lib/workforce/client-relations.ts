@@ -13,6 +13,7 @@ import {
 } from "@/types/work-crm"
 import { invoiceBalance, invoiceTotals, toBase } from "./billing"
 import { quoteTotals } from "./quotes"
+import { roundMoney } from "./money"
 
 /** Contracts whose renewal date is this close show "renewal due". */
 export const RENEWAL_WINDOW_DAYS = 30
@@ -166,7 +167,7 @@ export function periodLabel(date: string, frequency: RecurringFrequency) {
 
 export function recurringAmount(s: Pick<RecurringInvoice, "lines" | "taxRate">) {
   const net = s.lines.reduce((sum, l) => sum + l.quantity * l.unitPrice, 0)
-  return { net: Math.round(net * 100) / 100, total: Math.round(net * (1 + s.taxRate / 100) * 100) / 100 }
+  return { net: roundMoney(net), total: roundMoney(net * (1 + s.taxRate / 100)) }
 }
 
 // ---------- Overdue reminders (BIL-15) ----------

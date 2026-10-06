@@ -31,6 +31,7 @@ import {
 import type { Payment } from "@/types/work-billing"
 import { discardTimerApi, getTimerApi, startTimerApi, stopTimerApi, type RunningTimer } from "@/lib/api/timer-api"
 import { useApprover } from "@/hooks/workforce/use-current-employee"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useTimeEntries() {
   const { id } = useCurrentWorkspace()
@@ -53,7 +54,7 @@ function useHelpers() {
     queryClient.invalidateQueries({ queryKey: ["expenses", workspaceId] })
   }
   const onError = (err: unknown) =>
-    toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+    toast.error(translateError(err, t))
   return { t, workspaceId, refresh, onError }
 }
 

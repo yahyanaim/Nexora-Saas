@@ -1,6 +1,7 @@
 import { FLAT_UNIT, QuoteStatus, type Quote, type QuoteDisplayStatus, type QuoteLine } from "@/types/work-quotes"
 import type { InvoiceLine } from "@/types/work-billing"
 import { fiscalYearOf, formatInvoiceNumber } from "./billing"
+import { roundMoney } from "./money"
 
 /**
  * Rules for quotes (devis). Pure functions: totals with a commercial discount
@@ -8,7 +9,7 @@ import { fiscalYearOf, formatInvoiceNumber } from "./billing"
  * accepted quote turns into.
  */
 
-const round = (n: number) => Math.round(n * 100) / 100
+const round = roundMoney
 
 export interface QuoteTotals {
   subtotal: number

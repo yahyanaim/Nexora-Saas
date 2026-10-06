@@ -19,6 +19,7 @@ import {
   updateClientApi,
 } from "@/lib/api/clients-api"
 import type { ClientInput, EmployeeInput, RateChange } from "@/types/workforce"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useEmployees() {
   const { id } = useCurrentWorkspace()
@@ -57,7 +58,7 @@ function useCollectionMutations<TInput>(
     queryClient.invalidateQueries({ queryKey: [key, workspaceId] })
   }
   const onError = (err: unknown) =>
-    toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+    toast.error(translateError(err, t))
 
   const create = useMutation({
     mutationFn: (input: TInput) => fns.create(workspaceId, input),
@@ -99,7 +100,7 @@ export function useRateChange() {
       toast.success(t("ratesUpdated"))
       queryClient.invalidateQueries({ queryKey: ["employees", workspaceId] })
     },
-    onError: (err: unknown) => toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong")),
+    onError: (err: unknown) => toast.error(translateError(err, t)),
   })
 }
 

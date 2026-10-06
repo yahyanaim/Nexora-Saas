@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
+import { setCompanyTimeZone } from "@/lib/workforce/project-metrics"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import {
   createDepartmentApi,
@@ -19,10 +20,19 @@ import {
   updateOwnerEmployeeApi,
 } from "@/lib/api/settings-api"
 import type { ApprovalRule, CompanySettings, CustomFieldDef, Holiday, OverheadItem, WorkspaceSettings } from "@/types/work-settings"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useWorkspaceSettings() {
   const { id } = useCurrentWorkspace()
-  return useQuery({ queryKey: ["settings", id], queryFn: () => getSettingsApi(id) })
+  return useQuery({
+    queryKey: ["settings", id],
+    queryFn: async () => {
+      const settings = await getSettingsApi(id)
+      // Business dates follow the company's time zone (M2)
+      setCompanyTimeZone(settings.company.timeZone)
+      return settings
+    },
+  })
 }
 
 type Lists = Pick<WorkspaceSettings, "leaveTypes" | "expenseCategories" | "taskLabels" | "receiptRequiredAbove">
@@ -32,8 +42,9 @@ export function useSettingsMutations() {
   const { id: workspaceId } = useCurrentWorkspace()
   const queryClient = useQueryClient()
   const onError = (err: unknown) =>
-    toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+    toast.error(translateError(err, t))
   const saved = (data: WorkspaceSettings) => {
+    setCompanyTimeZone(data.company.timeZone)
     queryClient.setQueryData(["settings", workspaceId], data)
     toast.success(t("settingsSaved"))
   }

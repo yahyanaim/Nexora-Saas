@@ -6,6 +6,7 @@ import type { LeaveRequest } from "@/types/work-planning"
 import { addDays, entryBillRate } from "./billing"
 import { employeeWorkDays, hoursPerDay, leaveDays } from "./planning"
 import { todayIso } from "./project-metrics"
+import { roundMoney } from "./money"
 
 export type KpiPeriod = "month" | "30d" | "quarter"
 
@@ -102,7 +103,7 @@ export function employeeKpis(employee: Employee, data: Data, from: string, to: s
     loggedHours,
     billableHours,
     utilization: ratio(billableHours, availableHours),
-    revenue: Math.round(revenue * 100) / 100,
+    revenue: roundMoney(revenue),
     tasksCompleted: completed.length,
     onTime: ratio(onTimeCount, withDue.length),
     estimateAccuracy: ratio(estimated, actual),

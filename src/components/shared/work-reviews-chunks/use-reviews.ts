@@ -15,6 +15,7 @@ import {
 import type { ReviewViewer } from "@/lib/workforce/reviews"
 import type { ReviewKpiSnapshot, ReviewRatings } from "@/types/work-reviews"
 import type { Employee } from "@/types/workforce"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useReviews() {
   const { id } = useCurrentWorkspace()
@@ -29,7 +30,7 @@ export function useReviewMutations(viewer: ReviewViewer) {
     qc.invalidateQueries({ queryKey: ["reviews", ws] })
     toast.success(t(key))
   }
-  const onError = (e: unknown) => toast.error(e instanceof Error && e.message ? e.message : t("somethingWentWrong"))
+  const onError = (e: unknown) => toast.error(translateError(e, t))
   return {
     start: useMutation({
       mutationFn: ({ input, employees }: { input: Parameters<typeof startReviewCycleApi>[1]; employees: Employee[] }) => startReviewCycleApi(ws, input, employees),
