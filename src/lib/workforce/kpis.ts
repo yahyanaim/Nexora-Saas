@@ -184,12 +184,16 @@ export function canSeeIndividual(
   const rule = settings.visibility[key]
   if (rule === "everyone") return true
   if (rule === "self" || !viewer.employeeId) return false
-  // Walk up the reporting line from the person
+  return isAboveInReportingLine(viewer.employeeId, personId, employees)
+}
+
+/** True when `managerId` is the person's manager, or their manager's manager, and so on. */
+export function isAboveInReportingLine(managerId: string, personId: string, employees: Pick<Employee, "id" | "managerId">[]) {
   const byId = new Map(employees.map((e) => [e.id, e]))
   let current = byId.get(personId)?.managerId
   const seen = new Set<string>()
   while (current && !seen.has(current)) {
-    if (current === viewer.employeeId) return true
+    if (current === managerId) return true
     seen.add(current)
     current = byId.get(current)?.managerId
   }

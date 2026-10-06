@@ -79,6 +79,7 @@ It replaces several separate tools:
 | **Client portal** | Each client contact can get a login (invite, resend, revoke; unused logins expire after 90 days). The client sees only its own projects with progress and milestones, approves finished milestones or asks for changes with a comment, and downloads its invoices and quotes; staff can preview any client's portal |
 | **KPIs and search** | A KPI page compares each person's utilization, on-time tasks, estimate accuracy and revenue with company targets (green / amber / red); admins set the targets and who may see individual figures (self, manager chain or everyone). Ctrl+K searches people, clients, projects, tasks, invoices and quotes, filtered by role. Reports can be saved with their filters and shared with everyone or a role |
 | **Overheads and custom fields** | Monthly running costs (rent, software, admin salaries) become an overhead rate per hour (total ÷ team monthly capacity) that every logged hour carries, so project profit and the close snapshot show the real cost. Admins add text, number, date or choice fields (optionally required) to clients, projects and employees; they appear on the forms and profiles |
+| **Performance reviews** | HR starts a cycle (e.g. H2 2026) for chosen people; each person's manager is the reviewer. The employee rates five criteria from 1 to 5 with a summary, the reviewer rates them next to the self-rating, writes feedback and goals, and the period's KPIs are frozen; the employee then acknowledges. Only the employee, the reviewer, managers above and admins see a review |
 | **Recurring invoices** | Monthly, quarterly or yearly schedules (retainers, licences, support) that draft the invoice for review; nothing is issued without a person |
 | **Receivables** | Open balances by days overdue: not due, 1–30, 31–60, 61–90 and 90+ days. Overdue reminders in 3 levels (default 3, 15 and 30 days late) with an editable message, a switch per client and a log of what was sent |
 | **Expenses & profitability** | Expenses with receipts and approval, re-billing to clients. Margin and budget use per project |
@@ -313,7 +314,8 @@ Security already in place:
 | 5 (rest) | CSV import | Planned |
 | 6a | KPI targets with traffic lights and per-KPI visibility, search across all records (Ctrl+K), saved and shared reports | ✅ Done |
 | 6b | Overhead costs spread over logged hours in project profit; custom fields on clients, projects and employees | ✅ Done |
-| 6 (rest) | Performance reviews, scheduled reports (need email from the server) | Planned |
+| 6c | Performance reviews: cycles, self-assessment, reviewer assessment with goals, frozen KPIs, acknowledgement | ✅ Done |
+| 6 (rest) | Scheduled reports (need email from the server) | Planned |
 | 7 | Server version: database, secure sign-in, permissions enforced on the server, files, email, backups | Planned |
 
 ---
