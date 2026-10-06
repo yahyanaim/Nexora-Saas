@@ -24,7 +24,7 @@ import {
   Trash2,
   Warning,
 } from "@/components/ui/carbon/icons"
-import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
 import { useClientInvoices } from "@/hooks/workforce/use-work-billing"
 import { useProjects } from "@/hooks/workforce/use-work-projects"
 import { useQuotes } from "@/hooks/workforce/use-quotes"
@@ -228,7 +228,7 @@ const ACTIVITY_ICON: Record<ClientActivity["kind"], typeof Calendar> = {
 export function ClientActivitySection({ client, employees }: { client: Client; employees: Employee[] }) {
   const t = useTranslations()
   const locale = useLocale()
-  const { authedUser } = useAuthGuard()
+  const currentEmployee = useCurrentEmployee()
   const { data: projects = [] } = useProjects()
   const { data: quotes = [] } = useQuotes()
   const { data: invoices = [] } = useClientInvoices()
@@ -240,7 +240,7 @@ export function ClientActivitySection({ client, employees }: { client: Client; e
   const [showAll, setShowAll] = useState(false)
   const timeline = clientTimeline({ clientId: client.id, projects, quotes, invoices, contracts, notes })
   const shown = showAll ? timeline : timeline.slice(0, 8)
-  const me = employees.find((e) => e.email === authedUser?.email)
+  const me = currentEmployee
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso}T00:00:00`))
 
   const detail = (a: ClientActivity) => {

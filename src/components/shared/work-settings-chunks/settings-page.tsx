@@ -25,6 +25,7 @@ import { LEAVE_TYPE_LABEL } from "../work-planning-chunks/planning-labels"
 import { DEFAULT_CARRY_OVER_DAYS, LeaveType } from "@/types/work-planning"
 import { EXPENSE_CATEGORY_LABEL } from "../work-costs-chunks/cost-labels"
 import { CustomFieldsTab, OverheadsTab } from "./costs-fields-tabs"
+import { OwnerEmployeeCard } from "./owner-employee-card"
 import {
   AMOUNT_SUBJECTS,
   ApprovalMode,
@@ -607,6 +608,7 @@ export default function SettingsPage() {
                 content: (
                   <div className="flex flex-col gap-6">
                     <CompanyTab initial={settings.company} />
+                    <OwnerEmployeeCard initial={settings.ownerEmployeeId} />
                     <PeriodLockCard initial={settings.lockedThrough} />
                     <DataCard />
                   </div>

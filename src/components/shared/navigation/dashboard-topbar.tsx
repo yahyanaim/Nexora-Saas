@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { Menu, Search, LockKeyholeOpen } from "@/components/ui/carbon/icons"
 import { CommandPalette } from "@/components/shared/command-palette/command-palette"
-import { NotificationCenter } from "@/components/shared/notifications/notification-center"
+import { WorkNotificationCenter } from "@/components/shared/notifications/work-notification-center"
 import { ChangeLanguage } from "@/components/shared/header-chunks/change-language"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
@@ -91,7 +91,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           >
             <Search className="size-[18px]" />
           </button>
-          <NotificationCenter />
+          <WorkNotificationCenter />
           <ChangeLanguage className="hidden sm:inline-flex" />
           {isPasscodeLocked && (
             <button type="button" onClick={lock} aria-label={t("lockScreen")} className={navIconButton}>

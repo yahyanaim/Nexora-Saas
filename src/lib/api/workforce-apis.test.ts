@@ -71,10 +71,16 @@ describe("workforce demo APIs", () => {
   })
 
   it("clears the manager of direct reports when an employee is deleted", async () => {
-    await deleteEmployeeApi("ws_atlas", "emp_karim")
+    const lead = await createEmployeeApi("ws_atlas", { ...employeeInput, email: "temp.lead@example.com" })
+    await updateEmployeeApi("ws_atlas", "emp_noah", { managerId: lead.id })
+    await deleteEmployeeApi("ws_atlas", lead.id)
     const employees = await listEmployeesApi("ws_atlas")
-    expect(employees.some((e) => e.id === "emp_karim")).toBe(false)
-    expect(employees.find((e) => e.id === "emp_lina")?.managerId).toBeUndefined()
+    expect(employees.some((e) => e.id === lead.id)).toBe(false)
+    expect(employees.find((e) => e.id === "emp_noah")?.managerId).toBeUndefined()
+  })
+
+  it("keeps people with history: they become former employees instead of being deleted", async () => {
+    await expect(deleteEmployeeApi("ws_atlas", "emp_karim")).rejects.toThrow(/Former employee/)
   })
 
   it("reseeds when stored data is corrupt", async () => {

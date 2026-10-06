@@ -14,8 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { CheckCircle2, ClipboardCheck, Clock, Plus, Star, Trash2, Users } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { cn } from "@/lib/utils"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
 import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useTimeEntries } from "@/hooks/workforce/use-work-billing"
@@ -26,19 +26,21 @@ import { can } from "@/lib/permissions/can"
 import { employeeKpis } from "@/lib/workforce/kpis"
 import { averageRating, canSeeReview, reviewAction, reviewCandidates } from "@/lib/workforce/reviews"
 import { AdminPermissionsPlatform } from "@/types/roles"
-import { WorkRole, type Employee } from "@/types/workforce"
+import type { Employee } from "@/types/workforce"
 import { ReviewStatus, type PerformanceReview } from "@/types/work-reviews"
 import { REVIEW_STATUS_CLASS, REVIEW_STATUS_LABEL } from "./review-labels"
 import { ReviewSheet } from "./review-sheet"
 import { useReviewMutations, useReviews } from "./use-reviews"
 
 const ALL = "__all__"
+const NONE = "__none__"
 
 /** Performance reviews (HR-9): cycles, self-assessments, reviewer assessments and goals. */
 export default function ReviewsPage() {
   const t = useTranslations()
   const workspace = useCurrentWorkspace()
   const { authedUser } = useAuthGuard()
+  const currentEmployee = useCurrentEmployee()
   const { data: reviews = [], isLoading } = useReviews()
   const { data: employees = [] } = useEmployees()
   const { data: entries = [] } = useTimeEntries()
@@ -54,7 +56,7 @@ export default function ReviewsPage() {
 
   const isAdmin = can(authedUser, AdminPermissionsPlatform.ROLES_UPDATE)
   const canStart = can(authedUser, AdminPermissionsPlatform.EMPLOYEES_UPDATE)
-  const me = employees.find((e) => e.id === (authedUser as { employeeId?: string } | undefined)?.employeeId || e.email === authedUser?.email)
+  const me = currentEmployee
   const viewer = { employeeId: me?.id, isAdmin }
   const m = useReviewMutations(viewer)
   const holidays = useMemo(() => settings?.holidays.map((h) => h.date) ?? [], [settings])
@@ -177,7 +179,6 @@ export default function ReviewsPage() {
       {starting && (
         <StartCycleDialog
           employees={employees}
-          fallbackReviewerId={me?.id ?? employees.find((e) => e.role === WorkRole.ADMIN)?.id}
           pending={m.start.isPending}
           onClose={() => setStarting(false)}
           onStart={(input) => m.start.mutate({ input, employees }, { onSuccess: () => setStarting(false) })}
@@ -201,19 +202,17 @@ export default function ReviewsPage() {
   )
 }
 
-/** Picks the cycle name, period and people; each person's manager becomes the reviewer. */
+/** Picks the cycle name, period, people and each person's reviewer (their manager by default). */
 function StartCycleDialog({
   employees,
-  fallbackReviewerId,
   pending,
   onClose,
   onStart,
 }: {
   employees: Employee[]
-  fallbackReviewerId?: string
   pending: boolean
   onClose: () => void
-  onStart: (input: { period: string; from: string; to: string; employeeIds: string[]; fallbackReviewerId?: string }) => void
+  onStart: (input: { period: string; from: string; to: string; employeeIds: string[]; reviewerIds: Record<string, string> }) => void
 }) {
   const t = useTranslations()
   const year = new Date().getFullYear()
@@ -222,13 +221,14 @@ function StartCycleDialog({
   const [from, setFrom] = useState(h2 ? `${year}-07-01` : `${year}-01-01`)
   const [to, setTo] = useState(h2 ? `${year}-12-31` : `${year}-06-30`)
   const candidates = reviewCandidates(employees)
-  const [picked, setPicked] = useState<Set<string>>(() => new Set(candidates.map((e) => e.id)))
+  const [reviewers, setReviewers] = useState<Record<string, string>>(() => Object.fromEntries(candidates.map((e) => [e.id, e.managerId ?? ""])))
+  const [picked, setPicked] = useState<Set<string>>(() => new Set(candidates.filter((e) => e.managerId).map((e) => e.id)))
   const toggle = (id: string, on: boolean) => setPicked((s) => { const n = new Set(s); if (on) n.add(id); else n.delete(id); return n })
-  const reviewerOf = (e: Employee) => employees.find((x) => x.id === (e.managerId ?? fallbackReviewerId))
+  const chosen = candidates.filter((e) => picked.has(e.id) && reviewers[e.id] && reviewers[e.id] !== e.id)
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t("reviewStartCycle")}</DialogTitle>
           <DialogDescription>{t("reviewStartHint")}</DialogDescription>
@@ -247,30 +247,44 @@ function StartCycleDialog({
             <Input id="rv-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </div>
         </div>
-        <ul className="flex max-h-72 flex-col gap-1 overflow-y-auto rounded-2xl border border-border p-2">
+        <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto rounded-2xl border border-border p-2">
           {candidates.map((e) => {
-            const reviewer = reviewerOf(e)
-            const noReviewer = !reviewer || reviewer.id === e.id
+            const reviewerId = reviewers[e.id] ?? ""
+            const reviewer = employees.find((x) => x.id === reviewerId)
             return (
-              <li key={e.id}>
-                <label className={cn("flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm hover:bg-muted/60", noReviewer && "opacity-60")}>
-                  <Checkbox checked={picked.has(e.id) && !noReviewer} disabled={noReviewer} onCheckedChange={(v) => toggle(e.id, !!v)} />
-                  <span className="min-w-0 flex-1 truncate font-medium">{e.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">{noReviewer ? t("reviewNoReviewer") : t("reviewedBy", { name: reviewer.name })}</span>
-                </label>
+              <li key={e.id} className="flex items-center gap-3 rounded-xl px-2 py-1.5 text-sm hover:bg-muted/60">
+                <Checkbox
+                  aria-label={e.name}
+                  checked={picked.has(e.id) && !!reviewerId}
+                  disabled={!reviewerId}
+                  onCheckedChange={(v) => toggle(e.id, !!v)}
+                />
+                <span className="min-w-0 flex-1 truncate font-medium">{e.name}</span>
+                <Select
+                  value={reviewerId || NONE}
+                  onValueChange={(v) => {
+                    setReviewers((r) => ({ ...r, [e.id]: v === NONE ? "" : v }))
+                    toggle(e.id, v !== NONE)
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-52" aria-label={t("reviewReviewerFor", { name: e.name })}>
+                    <SelectValue>{reviewer ? reviewer.name : t("reviewPickReviewer")}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NONE}>{t("reviewPickReviewer")}</SelectItem>
+                    {candidates.filter((x) => x.id !== e.id).map((x) => (
+                      <SelectItem key={x.id} value={x.id}>{x.name}{x.id === e.managerId ? ` · ${t("reviewManager")}` : ""}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </li>
             )
           })}
         </ul>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={onClose}>{t("cancel")}</Button>
-          <Button
-            disabled={pending}
-            onClick={() =>
-              onStart({ period, from, to, fallbackReviewerId, employeeIds: candidates.filter((e) => picked.has(e.id) && reviewerOf(e) && reviewerOf(e)!.id !== e.id).map((e) => e.id) })
-            }
-          >
-            {t("reviewStart", { count: candidates.filter((e) => picked.has(e.id) && reviewerOf(e) && reviewerOf(e)!.id !== e.id).length })}
+          <Button disabled={pending || chosen.length === 0} onClick={() => onStart({ period, from, to, employeeIds: chosen.map((e) => e.id), reviewerIds: reviewers })}>
+            {t("reviewStart", { count: chosen.length })}
           </Button>
         </DialogFooter>
       </DialogContent>

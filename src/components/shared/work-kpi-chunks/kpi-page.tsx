@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/shared/page-header"
 import { cn } from "@/lib/utils"
 import { toast } from "@/lib/utils/toast"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
 import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useTimeEntries } from "@/hooks/workforce/use-work-billing"
@@ -46,6 +47,7 @@ export default function KpiPage() {
   const workspace = useCurrentWorkspace()
   const qc = useQueryClient()
   const { authedUser } = useAuthGuard()
+  const currentEmployee = useCurrentEmployee()
   const { data: employees = [], isLoading } = useEmployees()
   const { data: entries = [] } = useTimeEntries()
   const { data: tasks = [] } = useTasks()
@@ -58,7 +60,7 @@ export default function KpiPage() {
 
   const kpi = settings?.kpi ?? DEFAULT_KPI_SETTINGS
   const isAdmin = can(authedUser, AdminPermissionsPlatform.ROLES_UPDATE)
-  const me = employees.find((e) => e.id === (authedUser as { employeeId?: string } | undefined)?.employeeId || e.email === authedUser?.email)
+  const me = currentEmployee
   const viewer = { employeeId: me?.id, isAdmin }
   const { from, to } = periodRange(period)
   const holidays = useMemo(() => settings?.holidays.map((h) => h.date) ?? [], [settings])

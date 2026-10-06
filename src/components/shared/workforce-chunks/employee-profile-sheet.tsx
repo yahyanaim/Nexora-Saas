@@ -30,6 +30,14 @@ import {
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { fieldsFor } from "@/lib/workforce/custom-fields"
 import { CustomFieldValuesList } from "./custom-fields"
+import { Star } from "@/components/ui/carbon/icons"
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
+import { can } from "@/lib/permissions/can"
+import { AdminPermissionsPlatform } from "@/types/roles"
+import { averageRating, canSeeReview } from "@/lib/workforce/reviews"
+import { useReviews } from "../work-reviews-chunks/use-reviews"
+import { REVIEW_STATUS_CLASS, REVIEW_STATUS_LABEL } from "../work-reviews-chunks/review-labels"
 
 interface Props {
   employee: Employee | null
@@ -57,6 +65,14 @@ export function EmployeeProfileSheet({ employee, employees, departments, currenc
   const { data: accounts = [] } = useQuery({ queryKey: ["accounts", wsId], queryFn: () => listAccountsApi(wsId), enabled: canSeeDocuments })
   const account = employee ? accounts.find((a) => a.employeeId === employee.id) : undefined
   const today = todayIso()
+  // Reviews of this person the viewer is allowed to see (HR-9)
+  const { authedUser } = useAuthGuard()
+  const currentEmployee = useCurrentEmployee()
+  const { data: allReviews = [] } = useReviews()
+  const reviewViewer = { employeeId: currentEmployee?.id, isAdmin: can(authedUser, AdminPermissionsPlatform.ROLES_UPDATE) }
+  const personReviews = employee
+    ? allReviews.filter((r) => r.employeeId === employee.id && canSeeReview(r, reviewViewer, employees)).sort((a, b) => b.to.localeCompare(a.to))
+    : []
   const docs = employee && canSeeDocuments ? latestDocuments(allDocs.filter((d) => d.employeeId === employee.id)) : []
   const contract = employee ? currentContract(docs, employee.id, today) : undefined
 
@@ -184,6 +200,24 @@ export function EmployeeProfileSheet({ employee, employees, departments, currenc
                 />
               </Section>
 
+              {personReviews.length > 0 && (
+                <Section title={t("reviews")}>
+                  <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border">
+                    {personReviews.slice(0, 4).map((r) => {
+                      const avg = averageRating(r.manager?.ratings)
+                      return (
+                        <li key={r.id}>
+                          <Link href="/dashboard/reviews" className="flex items-center gap-3 px-3 py-2 text-sm hover:bg-muted/60">
+                            <span className="min-w-0 flex-1 truncate font-medium">{r.period}</span>
+                            {avg !== null && <span className="flex items-center gap-1 tabular-nums"><Star className="size-3.5 fill-primary text-primary" />{avg}</span>}
+                            <Badge variant="outline" className={REVIEW_STATUS_CLASS[r.status]}>{t(REVIEW_STATUS_LABEL[r.status])}</Badge>
+                          </Link>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </Section>
+              )}
               {fieldsFor(settings?.customFields, "employee").some((d) => employee.customFields?.[d.id]) && (
                 <Section title={t("customFields")}>
                   <CustomFieldValuesList entity="employee" values={employee.customFields} />

@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
-import { AlertTriangle, CalendarDays, CheckCircle, Clock, FolderKanban, TreePalm } from "@/components/ui/carbon/icons"
+import { AlertTriangle, CalendarDays, CheckCircle, Clock, FolderKanban, Star, TreePalm } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
+import { useReviews } from "../work-reviews-chunks/use-reviews"
+import { reviewAction } from "@/lib/workforce/reviews"
 import { useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useTimeEntries } from "@/hooks/workforce/use-work-billing"
@@ -34,7 +36,8 @@ const REASON_CLASS = {
 export default function MyWorkPage() {
   const t = useTranslations()
   const locale = useLocale()
-  const { authedUser } = useAuthGuard()
+  const currentEmployee = useCurrentEmployee()
+  const { data: reviews = [] } = useReviews()
   const { data: employees = [], isLoading: loadingPeople } = useEmployees()
   const { data: tasks = [], isLoading: loadingTasks } = useTasks()
   const { data: projects = [] } = useProjects()
@@ -43,8 +46,8 @@ export default function MyWorkPage() {
   const { data: settings } = useWorkspaceSettings()
 
   const staff = useMemo(() => employees.filter((e) => e.status !== EmployeeStatus.INACTIVE), [employees])
-  // The signed-in person, matched by email; anyone can be picked to preview their view
-  const matched = staff.find((e) => authedUser?.email && e.email.toLowerCase() === authedUser.email.toLowerCase())
+  // The signed-in person; anyone can be picked to preview their view
+  const matched = staff.find((e) => e.id === currentEmployee?.id)
   const [picked, setPicked] = useState("")
   const employee = staff.find((e) => e.id === (picked || matched?.id)) ?? staff.find((e) => e.billableRate > 0) ?? staff[0]
 
@@ -61,6 +64,9 @@ export default function MyWorkPage() {
     [employee, tasks, entries, leave, settings, today]
   )
   const isLoading = loadingPeople || loadingTasks
+  // Reviews where it is this person's turn: rate themselves, review someone, or read a finished review
+  const reviewTodos = employee ? reviews.filter((r) => reviewAction(r, { employeeId: employee.id, isAdmin: false })) : []
+  const nameOf = (id: string) => employees.find((e) => e.id === id)?.name ?? "—"
   const projectOf = (id: string) => projects.find((p) => p.id === id)
   const dayName = (iso: string) => new Intl.DateTimeFormat(locale, { weekday: "short" }).format(new Date(`${iso}T00:00:00`))
 
@@ -125,6 +131,28 @@ export default function MyWorkPage() {
         }
       />
       <MetricCardGrid cards={cards} isLoading={isLoading} />
+
+      {reviewTodos.length > 0 && (
+        <section className="rounded-3xl border border-primary/30 bg-info-soft/40 p-5 shadow-panel">
+          <header className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-semibold"><Star className="size-4 text-primary" />{t("dashReviewsWaiting")}</h2>
+            <Link href="/dashboard/reviews" className="text-sm text-primary hover:underline">{t("reviews")}</Link>
+          </header>
+          <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border bg-card">
+            {reviewTodos.map((r) => {
+              const action = reviewAction(r, { employeeId: employee!.id, isAdmin: false })!
+              return (
+                <li key={r.id}>
+                  <Link href="/dashboard/reviews" className="flex items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-muted/60">
+                    <span className="min-w-0 truncate font-medium">{r.employeeId === employee!.id ? r.period : `${nameOf(r.employeeId)} · ${r.period}`}</span>
+                    <span className="shrink-0 rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-primary-foreground">{t(`reviewAction_${action}`)}</span>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="rounded-3xl border border-border bg-card p-5 shadow-panel lg:col-span-2">

@@ -114,6 +114,12 @@ export interface WorkspaceSettings {
   kpi?: KpiSettings
   /** Monthly running costs (rent, software, admin staff) spread over logged hours (CST-4) */
   overheads?: OverheadItem[]
+  /**
+   * Employee record of the workspace owner's account. Accounts created from
+   * Team access carry their own employee link; the owner signs up before any
+   * employee exists, so the link is set here.
+   */
+  ownerEmployeeId?: string
   /** Extra fields the company adds to clients, projects and employees (PLT-12) */
   customFields?: CustomFieldDef[]
 }

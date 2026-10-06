@@ -12,7 +12,7 @@ import { Star, Users, X } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 import { toast } from "@/lib/utils/toast"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
-import { useEmployees } from "@/hooks/workforce/use-workforce"
+import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { deleteSavedReportApi, listSavedReportsApi, saveReportApi, type SavedReport } from "@/lib/api/saved-reports-api"
 import { WORK_ROLES, WorkRole } from "@/types/workforce"
@@ -27,8 +27,8 @@ export function SavedReportsBar({ reportId, filters, reportName, onApply }: { re
   const { id: ws } = useCurrentWorkspace()
   const qc = useQueryClient()
   const { authedUser } = useAuthGuard()
-  const { data: employees = [] } = useEmployees()
-  const me = employees.find((e) => e.id === (authedUser as { employeeId?: string } | undefined)?.employeeId || e.email === authedUser?.email)
+  const currentEmployee = useCurrentEmployee()
+  const me = currentEmployee
   const viewer = { id: authedUser?.id ?? "me", role: me?.role ?? (authedUser?.role === "admin" ? WorkRole.ADMIN : undefined) }
   const { data: saved = [] } = useQuery({ queryKey: ["saved-reports", ws, viewer.id, viewer.role], queryFn: () => listSavedReportsApi(ws, viewer) })
   const [open, setOpen] = useState(false)
