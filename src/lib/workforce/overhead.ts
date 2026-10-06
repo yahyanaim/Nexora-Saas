@@ -1,0 +1,24 @@
+import { EmployeeStatus, type Employee } from "@/types/workforce"
+import type { OverheadItem } from "@/types/work-settings"
+
+const WEEKS_PER_MONTH = 52 / 12
+
+/** Total monthly overhead. */
+export function monthlyOverhead(items: OverheadItem[] | undefined) {
+  return (items ?? []).reduce((sum, i) => sum + (i.monthlyAmount > 0 ? i.monthlyAmount : 0), 0)
+}
+
+/** Hours the current team can work in a month (former employees excluded). */
+export function monthlyCapacityHours(employees: Employee[]) {
+  return employees.filter((e) => e.status !== EmployeeStatus.INACTIVE).reduce((sum, e) => sum + e.weeklyCapacity * WEEKS_PER_MONTH, 0)
+}
+
+/**
+ * Overhead added to each logged hour (CST-4): monthly overhead divided by the
+ * team's monthly capacity, so a fully booked team recovers it exactly.
+ */
+export function overheadRate(items: OverheadItem[] | undefined, employees: Employee[]) {
+  const hours = monthlyCapacityHours(employees)
+  const total = monthlyOverhead(items)
+  return hours > 0 && total > 0 ? Math.round((total / hours) * 100) / 100 : 0
+}

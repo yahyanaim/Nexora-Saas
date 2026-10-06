@@ -18,10 +18,11 @@ function round(n: number) {
  * - Retainer projects earn what has been invoiced for them.
  * - Non-billable projects earn nothing.
  * Billable expenses are re-billed, so they add to revenue as well as cost.
+ * With an overhead rate, each logged hour also carries its share of overhead.
  */
 export function projectProfit(
   project: WorkProject,
-  data: { entries: TimeEntry[]; tasks: WorkTask[]; expenses: Expense[]; employees: Employee[]; clients: Client[]; invoices?: ClientInvoice[] }
+  data: { entries: TimeEntry[]; tasks: WorkTask[]; expenses: Expense[]; employees: Employee[]; clients: Client[]; invoices?: ClientInvoice[]; overheadRate?: number }
 ): ProjectProfit {
   const client = data.clients.find((c) => c.id === project.clientId)
   const entries = data.entries.filter((e) => e.projectId === project.id && e.status !== TimeEntryStatus.REJECTED)
@@ -47,14 +48,17 @@ export function projectProfit(
 
   const laborCost = entries.reduce((sum, e) => sum + e.hours * entryCostRate(e, employee(e.employeeId)), 0)
   const expenseTotal = expenses.reduce((sum, x) => sum + x.amount, 0)
-  const profit = revenue - laborCost - expenseTotal
+  const hours = entries.reduce((sum, e) => sum + e.hours, 0)
+  const overhead = hours * (data.overheadRate ?? 0)
+  const profit = revenue - laborCost - expenseTotal - overhead
 
   return {
     projectId: project.id,
     revenue: round(revenue),
     laborCost: round(laborCost),
-    hours: round(entries.reduce((sum, e) => sum + e.hours, 0)),
+    hours: round(hours),
     expenses: round(expenseTotal),
+    overhead: round(overhead),
     profit: round(profit),
     margin: revenue > 0 ? Math.round((profit / revenue) * 1000) / 10 : null,
   }

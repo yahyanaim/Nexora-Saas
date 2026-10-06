@@ -11,6 +11,8 @@ import { CheckCircle2, Lock, RotateCcw, XCircle } from "@/components/ui/carbon/i
 import { cn } from "@/lib/utils"
 import { projectProfit } from "@/lib/workforce/profitability"
 import { closeChecklist } from "@/lib/workforce/scheduling"
+import { overheadRate } from "@/lib/workforce/overhead"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { useProjectMutations } from "@/hooks/workforce/use-work-projects"
 import { BudgetType, type Milestone, type WorkProject, type WorkTask } from "@/types/work-projects"
 import type { ClientInvoice, TimeEntry } from "@/types/work-billing"
@@ -39,14 +41,15 @@ export function CloseProjectDialog({ open, onOpenChange, ...data }: Data & { ope
   const { project } = data
   const checks = closeChecklist({ ...data, billable: project.budgetType !== BudgetType.NON_BILLABLE })
   const openItems = checks.filter((c) => c.open > 0).length
-  const profit = projectProfit(project, data)
+  const { data: settings } = useWorkspaceSettings()
+  const profit = projectProfit(project, { ...data, overheadRate: overheadRate(settings?.overheads, data.employees) })
   const money = (n: number) => formatMoney(n, data.currency, locale)
 
   const confirm = () =>
     close.mutate(
       {
         id: project.id,
-        snapshot: { revenue: profit.revenue, laborCost: profit.laborCost, expenses: profit.expenses, profit: profit.profit, margin: profit.margin, hours: profit.hours, currency: data.currency },
+        snapshot: { revenue: profit.revenue, laborCost: profit.laborCost, expenses: profit.expenses, overhead: profit.overhead || undefined, profit: profit.profit, margin: profit.margin, hours: profit.hours, currency: data.currency },
       },
       { onSuccess: () => onOpenChange(false) }
     )
@@ -74,6 +77,12 @@ export function CloseProjectDialog({ open, onOpenChange, ...data }: Data & { ope
           <span className="text-end tabular-nums">{money(profit.laborCost)}</span>
           <span className="text-muted-foreground">{t("expenses")}</span>
           <span className="text-end tabular-nums">{money(profit.expenses)}</span>
+          {profit.overhead > 0 && (
+            <>
+              <span className="text-muted-foreground">{t("overhead")}</span>
+              <span className="text-end tabular-nums">{money(profit.overhead)}</span>
+            </>
+          )}
           <span className="font-medium">{t("profit")}</span>
           <span className={cn("text-end font-semibold tabular-nums", profit.profit < 0 && "text-destructive")}>
             {money(profit.profit)}
@@ -112,7 +121,7 @@ export function ClosedProjectSummary({ project, canEdit }: { project: WorkProjec
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium">{t("projectClosedOn", { date, name: s.closedBy })}</p>
         <p className="text-xs text-muted-foreground">
-          {t("revenue")} {money(s.revenue)} · {t("laborCost")} {money(s.laborCost)} · {t("expenses")} {money(s.expenses)} · {t("profit")} {money(s.profit)}
+          {t("revenue")} {money(s.revenue)} · {t("laborCost")} {money(s.laborCost)} · {t("expenses")} {money(s.expenses)}{s.overhead ? ` · ${t("overhead")} ${money(s.overhead)}` : ""} · {t("profit")} {money(s.profit)}
           {s.margin !== null ? ` (${Math.round(s.margin)}%)` : ""} · {s.hours} h
         </p>
       </div>

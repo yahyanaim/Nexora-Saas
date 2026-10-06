@@ -101,6 +101,8 @@ export interface Employee {
   /** Effective-dated rates, oldest first; hourlyCost/billableRate mirror the one in force today (HR-3, BR-4) */
   rateHistory?: RateChange[]
   skills: string[]
+  /** Values of the workspace's custom fields (PLT-12) */
+  customFields?: Record<string, string>
   createdAt: string
   updatedAt: string
 }
@@ -179,6 +181,8 @@ export interface Client {
   /** Turns overdue payment reminders off for this client (BIL-15) */
   remindersOff?: boolean
   notes?: string
+  /** Values of the workspace's custom fields (PLT-12) */
+  customFields?: Record<string, string>
   createdAt: string
   updatedAt: string
 }

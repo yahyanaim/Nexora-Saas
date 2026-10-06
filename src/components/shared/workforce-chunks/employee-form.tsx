@@ -23,6 +23,7 @@ import {
   NONE,
   WORK_ROLE_LABEL,
 } from "./workforce-labels"
+import { CustomFieldInputs, useCustomFields } from "./custom-fields"
 
 export interface EmployeeFormHandle {
   submit: () => void
@@ -46,6 +47,7 @@ const schema = z.object({
   weeklyCapacity: z.number({ error: "required" }).min(0).max(80),
   workingDays: z.array(z.number().int().min(0).max(6)).min(1),
   skills: z.string(),
+  customFields: z.record(z.string(), z.string().optional()),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -67,12 +69,15 @@ function toFormValues(employee?: Employee): FormValues {
     weeklyCapacity: employee?.weeklyCapacity ?? 40,
     workingDays: employee?.workingDays?.length ? employee.workingDays : DEFAULT_WORKING_DAYS,
     skills: employee?.skills.join(", ") ?? "",
+    customFields: employee?.customFields ?? {},
   }
 }
 
 function toInput(values: FormValues): EmployeeInput {
   return {
     ...values,
+    // Checked and cleaned by useCustomFields when saving
+    customFields: undefined,
     phone: values.phone || undefined,
     departmentId: values.departmentId === NONE ? undefined : values.departmentId,
     managerId: values.managerId === NONE ? undefined : values.managerId,
@@ -110,8 +115,14 @@ export const EmployeeForm = forwardRef<EmployeeFormHandle, Props>(function Emplo
     form.reset(toFormValues(employee))
   }, [employee, form])
 
+  const custom = useCustomFields("employee")
+
   useImperativeHandle(ref, () => ({
-    submit: () => form.handleSubmit((values) => onValid(toInput(values)))(),
+    submit: () =>
+      form.handleSubmit((values) => {
+        const customFields = custom.check(form, values.customFields)
+        if (customFields !== false) onValid({ ...toInput(values), customFields })
+      })(),
   }))
 
   const managers = employees.filter((e) => e.id !== employee?.id)
@@ -214,6 +225,8 @@ export const EmployeeForm = forwardRef<EmployeeFormHandle, Props>(function Emplo
             </FormItem>
           )}
         />
+
+        <CustomFieldInputs entity="employee" />
 
         <TextField
           control={form.control}

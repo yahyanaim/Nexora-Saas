@@ -14,6 +14,9 @@ import type { Client, Employee } from "@/types/workforce"
 import { PortalAccessManager } from "../work-portal-chunks/portal-access-manager"
 import { ClientActivitySection, ClientBalanceSection, ClientContractsSection } from "./client-crm-sections"
 import { CLIENT_STATUS_CLASS, CLIENT_STATUS_LABEL, formatMoney } from "./workforce-labels"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
+import { fieldsFor } from "@/lib/workforce/custom-fields"
+import { CustomFieldValuesList } from "./custom-fields"
 
 interface Props {
   client: Client | null
@@ -25,6 +28,7 @@ interface Props {
 /** Client profile: balance, billing details, contacts, contracts, quotes and the activity timeline. */
 export function ClientProfileSheet({ client, employees, currency, onOpenChange }: Props) {
   const t = useTranslations()
+  const { data: settings } = useWorkspaceSettings()
   const locale = useLocale()
   const { data: allQuotes = [] } = useQuotes()
   const clientQuotes = client ? allQuotes.filter((q) => q.clientId === client.id) : []
@@ -147,6 +151,11 @@ export function ClientProfileSheet({ client, employees, currency, onOpenChange }
 
               <ClientActivitySection client={client} employees={employees} />
 
+              {fieldsFor(settings?.customFields, "client").some((d) => client.customFields?.[d.id]) && (
+                <Section title={t("customFields")}>
+                  <CustomFieldValuesList entity="client" values={client.customFields} />
+                </Section>
+              )}
               {client.notes && (
                 <Section title={t("notes")}>
                   <p className="whitespace-pre-line text-sm">{client.notes}</p>

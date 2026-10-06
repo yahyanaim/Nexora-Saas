@@ -42,6 +42,7 @@ import { ProjectForm, type ProjectFormHandle } from "./project-form"
 import { TaskForm, type TaskFormHandle } from "./task-form"
 import { ProjectGantt } from "./project-gantt"
 import { CloseProjectDialog, ClosedProjectSummary, SaveTemplateDialog } from "./project-close"
+import { CustomFieldValuesList } from "../workforce-chunks/custom-fields"
 import { dependencyIssues } from "@/lib/workforce/scheduling"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { TaskBoard } from "./task-board"
@@ -267,6 +268,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
               </div>
             ))}
           </dl>
+          <CustomFieldValuesList entity="project" values={project.customFields} />
         </div>
       </PageHeader>
 

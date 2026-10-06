@@ -54,6 +54,8 @@ export interface ProjectProfit {
   hours: number
   /** Approved and reimbursed expenses on the project */
   expenses: number
+  /** Logged hours × the workspace overhead rate (CST-4); 0 without overheads */
+  overhead: number
   profit: number
   /** Profit as a share of revenue, or null without revenue */
   margin: number | null

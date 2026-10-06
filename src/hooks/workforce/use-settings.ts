@@ -14,8 +14,10 @@ import {
   updateHolidaysApi,
   updatePeriodLockApi,
   updateListsApi,
+  updateCustomFieldsApi,
+  updateOverheadsApi,
 } from "@/lib/api/settings-api"
-import type { ApprovalRule, CompanySettings, Holiday, WorkspaceSettings } from "@/types/work-settings"
+import type { ApprovalRule, CompanySettings, CustomFieldDef, Holiday, OverheadItem, WorkspaceSettings } from "@/types/work-settings"
 
 export function useWorkspaceSettings() {
   const { id } = useCurrentWorkspace()
@@ -42,6 +44,8 @@ export function useSettingsMutations() {
     holidays: useMutation({ mutationFn: (h: Holiday[]) => updateHolidaysApi(workspaceId, h), onSuccess: saved, onError }),
     periodLock: useMutation({ mutationFn: (date: string | null) => updatePeriodLockApi(workspaceId, date), onSuccess: saved, onError }),
     lists: useMutation({ mutationFn: (l: Lists) => updateListsApi(workspaceId, l), onSuccess: saved, onError }),
+    overheads: useMutation({ mutationFn: (o: OverheadItem[]) => updateOverheadsApi(workspaceId, o), onSuccess: saved, onError }),
+    customFields: useMutation({ mutationFn: (f: CustomFieldDef[]) => updateCustomFieldsApi(workspaceId, f), onSuccess: saved, onError }),
     createDepartment: useMutation({
       mutationFn: (name: string) => createDepartmentApi(workspaceId, name),
       onSuccess: refreshDepartments,
