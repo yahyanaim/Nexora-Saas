@@ -7,6 +7,8 @@ import { rangesOverlap, workingDays } from "@/lib/workforce/planning"
 import { recordAudit } from "@/lib/workforce/audit"
 import { balanceProblem } from "@/lib/workforce/leave-balances"
 import { listEmployeesApi } from "./employees-api"
+import { AUTO_APPROVER, approvalDecision, approverRef, assertNotSelfApproval, stepsRequired, type Approver } from "@/lib/workforce/approvals"
+import { ApprovalSubject } from "@/types/work-settings"
 
 const STAMP = "2026-01-05T09:00:00.000Z"
 
@@ -65,11 +67,20 @@ export async function requestLeaveApi(workspaceId: string, input: LeaveRequestIn
     const problem = balanceProblem(leave.list(workspaceId), person, settings.leaveTypes, input, settings.holidays.map((h) => h.date))
     if (problem) throw new Error(problem)
   }
-  return leave.create(workspaceId, { ...input, note: input.note || undefined, halfDay: input.halfDay || undefined, status: LeaveStatus.PENDING })
+  // Workspaces that don't approve leave approve it on request (PLT-8)
+  const auto = stepsRequired(settings.approvals, ApprovalSubject.LEAVE) === 0
+  return leave.create(workspaceId, {
+    ...input,
+    note: input.note || undefined,
+    halfDay: input.halfDay || undefined,
+    status: auto ? LeaveStatus.APPROVED : LeaveStatus.PENDING,
+    approvedBy: auto ? AUTO_APPROVER : undefined,
+  })
 }
 
 export async function decideLeaveApi(
   workspaceId: string,
+  approver: Approver,
   id: string,
   approved: boolean,
   decisionNote?: string
@@ -77,7 +88,16 @@ export async function decideLeaveApi(
   const request = leave.get(workspaceId, id)
   if (!request) throw new Error("Leave request not found")
   if (request.status !== LeaveStatus.PENDING) throw new Error("Only pending requests can be decided")
+  assertNotSelfApproval(approver.employeeId, request.employeeId)
   if (!approved && !decisionNote?.trim()) throw new Error("Give a reason when declining")
+  if (approved) {
+    const { approvals } = await getSettingsApi(workspaceId)
+    const outcome = approvalDecision({ rules: approvals, subject: ApprovalSubject.LEAVE, submitterId: request.employeeId, approver, firstApprovedBy: request.firstApprovedBy })
+    if (outcome === "first_step") {
+      recordAudit(workspaceId, { action: "Leave approved (first step)", actionKey: "leave.first_approval", category: "Approvals", target: `${request.type} ${request.startDate} → ${request.endDate}` })
+      return leave.update(workspaceId, id, { firstApprovedBy: approverRef(approver) })
+    }
+  }
   recordAudit(workspaceId, {
     action: approved ? "Leave approved" : "Leave declined",
     actionKey: approved ? "leave.approved" : "leave.declined",
@@ -89,6 +109,7 @@ export async function decideLeaveApi(
   return leave.update(workspaceId, id, {
     status: approved ? LeaveStatus.APPROVED : LeaveStatus.REJECTED,
     decisionNote: decisionNote?.trim() || undefined,
+    approvedBy: approved ? approverRef(approver) : undefined,
   })
 }
 

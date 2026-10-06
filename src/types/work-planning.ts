@@ -33,6 +33,10 @@ export interface LeaveRequest {
   status: LeaveStatus
   /** Why a manager declined */
   decisionNote?: string
+  /** Who approved (employee id, "admin" or "auto") – BR-3 */
+  approvedBy?: string
+  /** First approver when the workspace needs two steps */
+  firstApprovedBy?: string
   createdAt: string
   updatedAt: string
 }

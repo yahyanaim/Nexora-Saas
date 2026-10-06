@@ -6,6 +6,7 @@ import type { LeaveRequest } from "@/types/work-planning"
 import { AGING_BUCKETS, displayStatus, entryBillRate, entryCostRate, invoiceBalance, invoiceTotals, receivablesAging, toBase } from "./billing"
 import { employeeKpis } from "./kpis"
 import { todayIso } from "./project-metrics"
+import { roundMoney } from "./money"
 
 /**
  * The standard reports (RPT-4). Every report takes the same filters and
@@ -60,7 +61,7 @@ export interface Report {
   totals: ReportRow
 }
 
-const r2 = (n: number) => Math.round(n * 100) / 100
+const r2 = roundMoney
 const r1 = (n: number) => Math.round(n * 10) / 10
 
 export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, opts: { canSeeCosts: boolean; today?: string }): Report {

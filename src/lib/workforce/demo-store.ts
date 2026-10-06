@@ -40,7 +40,11 @@ export function readCollection<T extends Identified>(
     // Unreadable storage falls through to a fresh seed
   }
   const seeded = seed()
-  writeCollection(collection, workspaceId, seeded)
+  try {
+    writeCollection(collection, workspaceId, seeded)
+  } catch {
+    // A seed that can't be stored is still shown; changes to it will report the failure
+  }
   return seeded
 }
 
@@ -53,15 +57,20 @@ export function writeCollection<T extends Identified>(
   try {
     localStorage.setItem(storageKey(collection, workspaceId), JSON.stringify(items))
   } catch {
-    // Storage full or blocked: keep working in memory for this session
+    // Storage full or blocked: say so, so the screen shows a failure instead of a false success (H4)
+    throw new Error(STORAGE_FULL)
   }
 }
 
+/** Thrown when the browser refuses to store a change. */
+export const STORAGE_FULL = "Storage is full; this change was not saved"
+
+/** Prefixed ids with a full UUID, so ids never collide even in large collections (M7). */
 export function createId(prefix: string) {
   const random =
     typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID().slice(0, 8)
-      : Math.random().toString(36).slice(2, 10)
+      ? crypto.randomUUID().replace(/-/g, "")
+      : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`
   return `${prefix}_${random}`
 }
 
@@ -128,7 +137,11 @@ export function readDocument<T extends object>(name: string, workspaceId: string
     // Unreadable storage falls through to a fresh seed
   }
   const seeded = seed()
-  writeDocument(name, workspaceId, seeded)
+  try {
+    writeDocument(name, workspaceId, seeded)
+  } catch {
+    // Shown from memory; the next change reports the failure
+  }
   return seeded
 }
 
@@ -137,6 +150,6 @@ export function writeDocument<T extends object>(name: string, workspaceId: strin
   try {
     localStorage.setItem(storageKey(name, workspaceId), JSON.stringify(value))
   } catch {
-    // Storage full or blocked: keep working in memory for this session
+    throw new Error(STORAGE_FULL)
   }
 }

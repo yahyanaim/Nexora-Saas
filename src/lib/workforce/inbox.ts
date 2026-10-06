@@ -61,12 +61,13 @@ export function buildInbox(d: InboxInput): InboxItem[] {
   }
 
   if (d.rights.approveTime) {
-    const sheets = d.entries.filter((e) => e.status === TimeEntryStatus.SUBMITTED && e.employeeId !== me)
+    const mine = (by?: string) => !!by && by === (me ?? (d.viewer.isAdmin ? "admin" : ""))
+    const sheets = d.entries.filter((e) => e.status === TimeEntryStatus.SUBMITTED && e.employeeId !== me && !mine(e.firstApprovedBy))
     const people = new Set(sheets.map((e) => e.employeeId)).size
     if (sheets.length) items.push({ id: `time:${sheets.length}`, category: "team", title: "inboxTimesheets", message: "inboxTimesheetsMessage", values: { count: people, hours: sheets.reduce((s, e) => s + e.hours, 0) }, href: "/dashboard/time-approvals" })
-    const leave = d.leave.filter((l) => l.status === LeaveStatus.PENDING && l.employeeId !== me)
+    const leave = d.leave.filter((l) => l.status === LeaveStatus.PENDING && l.employeeId !== me && !mine(l.firstApprovedBy))
     if (leave.length) items.push({ id: `leave:${leave.map((l) => l.id).join(",")}`, category: "team", title: "inboxLeave", message: "inboxLeaveMessage", values: { count: leave.length }, href: "/dashboard/leave" })
-    const expenses = d.expenses.filter((x) => x.status === ExpenseStatus.SUBMITTED && x.employeeId !== me)
+    const expenses = d.expenses.filter((x) => x.status === ExpenseStatus.SUBMITTED && x.employeeId !== me && !mine(x.firstApprovedBy))
     if (expenses.length) items.push({ id: `expenses:${expenses.map((x) => x.id).join(",")}`, category: "billing", title: "inboxExpenses", message: "inboxExpensesMessage", values: { count: expenses.length }, href: "/dashboard/expenses" })
   }
 

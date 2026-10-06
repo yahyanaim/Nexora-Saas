@@ -13,6 +13,7 @@ import {
 import { setHealthOverrideApi } from "@/lib/api/work-projects-api"
 import type { Employee } from "@/types/workforce"
 import type { ProjectHealth } from "@/types/work-projects"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useTaskComments(taskId: string) {
   const { id } = useCurrentWorkspace()
@@ -26,7 +27,7 @@ export function useTaskActivity(taskId: string) {
 
 function useOnError() {
   const t = useTranslations()
-  return (err: unknown) => toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+  return (err: unknown) => toast.error(translateError(err, t))
 }
 
 export function useTaskCommentMutations(taskId: string) {

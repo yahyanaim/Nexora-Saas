@@ -47,6 +47,8 @@ import { HalfDay, LeaveStatus, LeaveType, type LeaveRequest } from "@/types/work
 import { includesFilter } from "../workforce-chunks/workforce-labels"
 import { LEAVE_STATUS_CLASS, LEAVE_STATUS_LABEL, LEAVE_TYPE_LABEL, formatRange } from "./planning-labels"
 import { useSelfScope } from "@/hooks/workforce/use-current-employee"
+import { useApprover } from "@/hooks/workforce/use-current-employee"
+import { approverRef } from "@/lib/workforce/approvals"
 
 export default function LeavePage() {
   const t = useTranslations()
@@ -59,6 +61,7 @@ export default function LeavePage() {
   const { data: employees = [] } = useEmployees()
   const { request, decide, cancel } = useLeaveMutations()
   const canApprove = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE)
+  const approver = useApprover()
 
   // Without the approve right a person only sees and requests their own leave
   const self = useSelfScope()
@@ -189,7 +192,11 @@ export default function LeavePage() {
                   </div>
                 </div>
                 {r.note && <p className="rounded-xl bg-muted/50 px-3 py-2 text-sm text-muted-foreground">{r.note}</p>}
-                {canApprove && (
+                {r.firstApprovedBy && <span className="w-fit rounded-full bg-info-soft px-2.5 py-0.5 text-xs font-medium text-info-foreground">{t("approvalOneOfTwo")}</span>}
+                {canApprove && (r.employeeId === approver.employeeId || r.firstApprovedBy === approverRef(approver)) && (
+                  <p className="text-end text-sm text-muted-foreground">{t(r.employeeId === approver.employeeId ? "approvalOwnRequest" : "approvalWaitingSecond")}</p>
+                )}
+                {canApprove && r.employeeId !== approver.employeeId && r.firstApprovedBy !== approverRef(approver) && (
                   <div className="flex justify-end gap-2">
                     <Button variant="outline" size="sm" onClick={() => { setReason(""); setDeclining(r) }}>
                       <XCircle className="size-4" />

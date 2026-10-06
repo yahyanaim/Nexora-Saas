@@ -33,6 +33,9 @@ import { listClientsApi } from "./clients-api"
 import { unbilledExpenses } from "@/lib/workforce/profitability"
 import { listExpensesApi, releaseInvoiceExpenses, setExpensesInvoice } from "./expenses-api"
 import { recordAudit } from "@/lib/workforce/audit"
+import { AUTO_APPROVER, approvalDecision, approverRef, assertNotSelfApproval, stepsRequired, type Approver } from "@/lib/workforce/approvals"
+import { ApprovalSubject } from "@/types/work-settings"
+import { roundMoney } from "@/lib/workforce/money"
 
 /**
  * Timesheets, approvals and client invoices. Backed by the browser demo store
@@ -195,23 +198,64 @@ export async function submitTimesheetApi(
     .filter((e) => e.employeeId === employeeId && e.date >= from && e.date <= to && EDITABLE.includes(e.status))
   if (toSubmit.length === 0) throw new Error("No hours to submit")
   for (const e of toSubmit) {
-    entries.update(workspaceId, e.id, { status: TimeEntryStatus.SUBMITTED, rejectionReason: undefined })
+    entries.update(workspaceId, e.id, { status: TimeEntryStatus.SUBMITTED, rejectionReason: undefined, firstApprovedBy: undefined })
+  }
+  // Workspaces that don't approve timesheets approve them on submission (PLT-8)
+  const { approvals } = await getSettingsApi(workspaceId)
+  if (stepsRequired(approvals, ApprovalSubject.TIMESHEET) === 0) {
+    await freezeAndApprove(workspaceId, toSubmit.map((e) => e.id), AUTO_APPROVER)
   }
   return toSubmit.length
 }
 
-/** Approves submitted hours and freezes the rates they bill and cost at (TIM-9). */
-export async function approveTimeEntriesApi(workspaceId: string, ids: string[]): Promise<number> {
+/** Marks entries approved and freezes the rates they bill and cost at (TIM-9). */
+async function freezeAndApprove(workspaceId: string, ids: string[], approvedBy: string) {
   const [projects, employees, clients] = await Promise.all([listProjectsApi(workspaceId), listEmployeesApi(workspaceId), listClientsApi(workspaceId)])
   const approvedAt = new Date().toISOString()
-  return review(workspaceId, ids, { status: TimeEntryStatus.APPROVED, rejectionReason: undefined, approvedAt }, (entry) => {
+  for (const id of ids) {
+    const entry = entries.get(workspaceId, id)
+    if (!entry) continue
     const employee = employees.find((e) => e.id === entry.employeeId)
     const client = clients.find((c) => c.id === projects.find((p) => p.id === entry.projectId)?.clientId)
-    return {
+    entries.update(workspaceId, id, {
+      status: TimeEntryStatus.APPROVED,
+      rejectionReason: undefined,
+      approvedAt,
+      approvedBy,
       billRate: hourlyRate(employee, client, entry.date),
       costRate: employee ? rateOn(employee, entry.date).hourlyCost : 0,
+    })
+  }
+}
+
+/**
+ * Approves submitted hours (TIM-9) under the workspace rules (BR-3, PLT-8):
+ * never the approver's own hours; with two steps the first approval is
+ * recorded and the hours stay submitted until a second person approves.
+ * Returns how many entries are now fully approved.
+ */
+export async function approveTimeEntriesApi(workspaceId: string, approver: Approver, ids: string[]): Promise<number> {
+  const { approvals } = await getSettingsApi(workspaceId)
+  const pending = ids.map((id) => entries.get(workspaceId, id)).filter((e): e is TimeEntry => !!e && e.status === TimeEntryStatus.SUBMITTED)
+  if (pending.length === 0) throw new Error("Only submitted hours can be reviewed")
+  const done: string[] = []
+  let firstSteps = 0
+  for (const e of pending) {
+    const outcome = approvalDecision({ rules: approvals, subject: ApprovalSubject.TIMESHEET, submitterId: e.employeeId, approver, firstApprovedBy: e.firstApprovedBy })
+    if (outcome === "approved") done.push(e.id)
+    else {
+      entries.update(workspaceId, e.id, { firstApprovedBy: approverRef(approver) })
+      firstSteps++
     }
+  }
+  await freezeAndApprove(workspaceId, done, approverRef(approver))
+  recordAudit(workspaceId, {
+    action: done.length ? "Hours approved" : "Hours approved (first step)",
+    actionKey: done.length ? "time.approved" : "time.first_approval",
+    category: "Approvals",
+    target: `${done.length + firstSteps} time ${done.length + firstSteps === 1 ? "entry" : "entries"}`,
   })
+  return done.length
 }
 
 /**
@@ -233,24 +277,27 @@ export async function reopenTimeEntriesApi(workspaceId: string, ids: string[], r
   return count
 }
 
-export async function rejectTimeEntriesApi(workspaceId: string, ids: string[], reason: string): Promise<number> {
+export async function rejectTimeEntriesApi(workspaceId: string, approver: Approver, ids: string[], reason: string): Promise<number> {
   if (!reason.trim()) throw new Error("Give a reason so the employee knows what to fix")
-  return review(workspaceId, ids, { status: TimeEntryStatus.REJECTED, rejectionReason: reason.trim() })
+  for (const id of ids) {
+    const e = entries.get(workspaceId, id)
+    if (e) assertNotSelfApproval(approver.employeeId, e.employeeId)
+  }
+  return review(workspaceId, ids, { status: TimeEntryStatus.REJECTED, rejectionReason: reason.trim(), firstApprovedBy: undefined })
 }
 
-function review(workspaceId: string, ids: string[], patch: Partial<TimeEntry>, perEntry?: (e: TimeEntry) => Partial<TimeEntry>) {
+function review(workspaceId: string, ids: string[], patch: Partial<TimeEntry>) {
   let count = 0
   for (const id of ids) {
     const e = entries.get(workspaceId, id)
     if (!e || e.status !== TimeEntryStatus.SUBMITTED) continue
-    entries.update(workspaceId, id, { ...patch, ...perEntry?.(e) })
+    entries.update(workspaceId, id, patch)
     count++
   }
   if (count === 0) throw new Error("Only submitted hours can be reviewed")
-  const approved = patch.status === TimeEntryStatus.APPROVED
   recordAudit(workspaceId, {
-    action: approved ? "Hours approved" : "Hours rejected",
-    actionKey: approved ? "time.approved" : "time.rejected",
+    action: "Hours rejected",
+    actionKey: "time.rejected",
     category: "Approvals",
     target: `${count} time ${count === 1 ? "entry" : "entries"}`,
     after: patch.rejectionReason,
@@ -555,7 +602,7 @@ export async function recordPaymentApi(workspaceId: string, id: string, payment:
   }
   if (invoice.kind === InvoiceKind.CREDIT_NOTE) throw new Error("Credit notes don't take payments")
   const balance = invoiceBalance(invoice, invoices.list(workspaceId))
-  const amount = Math.round(payment.amount * 100) / 100
+  const amount = roundMoney(payment.amount)
   if (!(amount > 0)) throw new Error("Enter an amount above zero")
   if (amount > balance + 0.001) throw new Error(`Only ${balance} is left to pay`)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(payment.date)) throw new Error("Pick the payment date")

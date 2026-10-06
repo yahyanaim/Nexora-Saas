@@ -23,6 +23,7 @@ import {
 import { sendReminderApi } from "@/lib/api/work-billing-api"
 import { updateRemindersApi } from "@/lib/api/settings-api"
 import type { ClientNote, ContractInput, RecurringInput, ReminderSettings } from "@/types/work-crm"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useContracts() {
   const { id } = useCurrentWorkspace()
@@ -44,7 +45,7 @@ function useHelpers(keys: string[]) {
   const { id: ws } = useCurrentWorkspace()
   const qc = useQueryClient()
   const refresh = () => keys.forEach((k) => qc.invalidateQueries({ queryKey: [k, ws] }))
-  const onError = (err: unknown) => toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+  const onError = (err: unknown) => toast.error(translateError(err, t))
   const ok = (message: string) => () => {
     toast.success(message)
     refresh()

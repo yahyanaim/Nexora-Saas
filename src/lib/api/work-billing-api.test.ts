@@ -53,17 +53,17 @@ describe("timesheets", () => {
     await submitTimesheetApi(WS, "emp_lina", DAY, DAY)
     await expect(setTimesheetCellApi(WS, { employeeId: "emp_lina", projectId: "prj_orbit", date: DAY, hours: 4 })).rejects.toThrow(/can't be changed/)
 
-    await expect(rejectTimeEntriesApi(WS, [e.id], " ")).rejects.toThrow(/reason/)
-    await rejectTimeEntriesApi(WS, [e.id], "Wrong project")
+    await expect(rejectTimeEntriesApi(WS, { isAdmin: true }, [e.id], " ")).rejects.toThrow(/reason/)
+    await rejectTimeEntriesApi(WS, { isAdmin: true }, [e.id], "Wrong project")
     const fixed = await setTimesheetCellApi(WS, { employeeId: "emp_lina", projectId: "prj_orbit", date: DAY, hours: 4 })
     expect(fixed).toMatchObject({ status: TimeEntryStatus.DRAFT, rejectionReason: undefined })
   })
 
   it("only reviews submitted hours", async () => {
     const e = (await setTimesheetCellApi(WS, { employeeId: "emp_lina", projectId: "prj_orbit", date: DAY, hours: 3 }))!
-    await expect(approveTimeEntriesApi(WS, [e.id])).rejects.toThrow(/submitted/)
+    await expect(approveTimeEntriesApi(WS, { isAdmin: true }, [e.id])).rejects.toThrow(/submitted/)
     await submitTimesheetApi(WS, "emp_lina", DAY, DAY)
-    expect(await approveTimeEntriesApi(WS, [e.id])).toBe(1)
+    expect(await approveTimeEntriesApi(WS, { isAdmin: true }, [e.id])).toBe(1)
   })
 })
 

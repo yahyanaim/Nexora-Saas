@@ -17,6 +17,7 @@ import {
   updateQuoteApi,
 } from "@/lib/api/quotes-api"
 import type { QuoteInput } from "@/types/work-quotes"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useQuotes() {
   const { id } = useCurrentWorkspace()
@@ -36,7 +37,7 @@ export function useQuoteMutations() {
     toast.success(message)
     refresh()
   }
-  const onError = (err: unknown) => toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+  const onError = (err: unknown) => toast.error(translateError(err, t))
   return {
     create: useMutation({ mutationFn: (input: QuoteInput) => createQuoteApi(ws, input), onSuccess: ok(t("quoteSaved")), onError }),
     update: useMutation({ mutationFn: ({ id, input }: { id: string; input: QuoteInput }) => updateQuoteApi(ws, id, input), onSuccess: ok(t("quoteSaved")), onError }),

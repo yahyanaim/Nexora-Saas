@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -44,28 +45,36 @@ function WorkInbox() {
   const { data: documents = [] } = useDocuments()
   const { data: tasks = [] } = useTasks()
 
-  const inbox = buildInbox({
-    viewer: { employeeId: me?.id, isAdmin: can(authedUser, P.ROLES_UPDATE) },
-    rights: { approveTime: can(authedUser, P.TIME_APPROVE), invoices: can(authedUser, P.INVOICES_READ), hr: can(authedUser, P.EMPLOYEES_UPDATE) },
-    employees,
-    reviews,
-    entries,
-    leave,
-    expenses,
-    invoices,
-    documents,
-    tasks,
-    today: todayIso(),
-  })
-  const items: NotificationItem[] = inbox.map((i) => ({
-    id: i.id,
-    title: t(i.title, i.values),
-    message: t(i.message, i.values),
-    category: i.category,
-    timestamp: t(`inboxCategory_${i.category}`),
-    isRead: false,
-    href: i.href,
-  }))
+  const isAdmin = can(authedUser, P.ROLES_UPDATE)
+  const rights = { approveTime: can(authedUser, P.TIME_APPROVE), invoices: can(authedUser, P.INVOICES_READ), hr: can(authedUser, P.EMPLOYEES_UPDATE) }
+  const rightsKey = `${rights.approveTime}${rights.invoices}${rights.hr}`
+  // The bell is on every page: rebuild the inbox only when its data changes (M3)
+  const items = useMemo<NotificationItem[]>(
+    () =>
+      buildInbox({
+        viewer: { employeeId: me?.id, isAdmin },
+        rights,
+        employees,
+        reviews,
+        entries,
+        leave,
+        expenses,
+        invoices,
+        documents,
+        tasks,
+        today: todayIso(),
+      }).map((i) => ({
+        id: i.id,
+        title: t(i.title, i.values),
+        message: t(i.message, i.values),
+        category: i.category,
+        timestamp: t(`inboxCategory_${i.category}`),
+        isRead: false,
+        href: i.href,
+      })),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- rights is rebuilt each render; rightsKey carries its value
+    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, t]
+  )
   const labels: NotificationLabels = {
     title: t("notifications"),
     newCount: (n) => t("inboxNew", { count: n }),

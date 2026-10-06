@@ -30,6 +30,7 @@ import { AdminPermissionsPlatform } from "@/types/roles"
 import { EmployeeStatus } from "@/types/workforce"
 import type { KpiKey, KpiSettings, KpiVisibility } from "@/types/work-settings"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
+import { translateError } from "@/lib/errors/translate-error"
 
 const KEYS: KpiKey[] = ["utilization", "onTime", "estimateAccuracy", "revenue"]
 const LIGHT_CLASS: Record<Light, string> = {
@@ -93,7 +94,7 @@ export default function KpiPage() {
       qc.invalidateQueries({ queryKey: ["settings", workspace.id] })
       setEditing(null)
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("somethingWentWrong")),
+    onError: (e) => toast.error(translateError(e, t)),
   })
 
   const cards: MetricCardItem[] = KEYS.map((key) => {

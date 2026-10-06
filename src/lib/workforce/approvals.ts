@@ -35,3 +35,42 @@ export function stepsRequired(rules: ApprovalRule[], subject: ApprovalSubject, a
   }
   return 2
 }
+
+/** Who is approving: their employee record (when linked) and whether they are an admin. */
+export interface Approver {
+  employeeId?: string
+  isAdmin: boolean
+}
+
+/** Recorded on a request when the workspace rules need no approval. */
+export const AUTO_APPROVER = "auto"
+
+export type ApprovalOutcome = "approved" | "first_step"
+
+/**
+ * The approval rule in one place (BR-3, PLT-8), used by every approve action:
+ * - nobody approves their own request, admins included;
+ * - with two steps, the first approval is recorded and the request waits for a
+ *   second, different person; the second approval completes it;
+ * - with one step (or none), one approval completes it.
+ */
+export function approvalDecision(input: {
+  rules: ApprovalRule[]
+  subject: ApprovalSubject
+  amount?: number
+  submitterId: string
+  approver: Approver
+  firstApprovedBy?: string
+}): ApprovalOutcome {
+  const me = input.approver.employeeId
+  assertNotSelfApproval(me, input.submitterId)
+  if (stepsRequired(input.rules, input.subject, input.amount ?? 0) < 2) return "approved"
+  if (!input.firstApprovedBy) return "first_step"
+  if (me && input.firstApprovedBy === me) throw new Error("The second approval must come from someone else")
+  return "approved"
+}
+
+/** Stored as approvedBy / firstApprovedBy: the employee, or "admin" for an admin account without one. */
+export function approverRef(approver: Approver) {
+  return approver.employeeId ?? (approver.isAdmin ? "admin" : "unknown")
+}

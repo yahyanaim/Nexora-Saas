@@ -104,9 +104,9 @@ describe("leave API", () => {
 
   it("approves, declines with a reason, and cancels only future leave", async () => {
     const a = await requestLeaveApi("ws_atlas", base)
-    await expect(decideLeaveApi("ws_atlas", a.id, false)).rejects.toThrow(/reason/)
-    expect((await decideLeaveApi("ws_atlas", a.id, true)).status).toBe(LeaveStatus.APPROVED)
-    await expect(decideLeaveApi("ws_atlas", a.id, true)).rejects.toThrow(/pending/)
+    await expect(decideLeaveApi("ws_atlas", { isAdmin: true }, a.id, false)).rejects.toThrow(/reason/)
+    expect((await decideLeaveApi("ws_atlas", { isAdmin: true }, a.id, true)).status).toBe(LeaveStatus.APPROVED)
+    await expect(decideLeaveApi("ws_atlas", { isAdmin: true }, a.id, true)).rejects.toThrow(/pending/)
     await expect(cancelLeaveApi("ws_atlas", a.id, "2030-06-04")).rejects.toThrow(/started/)
     expect((await cancelLeaveApi("ws_atlas", a.id, "2030-06-01")).status).toBe(LeaveStatus.CANCELLED)
     // A cancelled request frees the dates again

@@ -5,6 +5,9 @@ import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { listProjectsApi } from "./work-projects-api"
 import { recordAudit } from "@/lib/workforce/audit"
+import { AUTO_APPROVER, approvalDecision, approverRef, assertNotSelfApproval, stepsRequired, type Approver } from "@/lib/workforce/approvals"
+import { ApprovalSubject } from "@/types/work-settings"
+import { roundMoney } from "@/lib/workforce/money"
 
 const STAMP = "2026-01-05T09:00:00.000Z"
 
@@ -54,21 +57,38 @@ export async function submitExpenseApi(workspaceId: string, input: ExpenseInput)
   if (input.amount > settings.receiptRequiredAbove && !input.receiptName) {
     throw new Error(`Attach a receipt for expenses above ${settings.receiptRequiredAbove}`)
   }
+  // Workspaces that don't approve expenses approve them on submission (PLT-8)
+  const auto = stepsRequired(settings.approvals, ApprovalSubject.EXPENSE, input.amount) === 0
   return expenses.create(workspaceId, {
     ...input,
     description: input.description.trim(),
-    amount: Math.round(input.amount * 100) / 100,
+    amount: roundMoney(input.amount),
     // Only project expenses can be re-billed
     billable: input.billable && !!input.projectId,
-    status: ExpenseStatus.SUBMITTED,
+    status: auto ? ExpenseStatus.APPROVED : ExpenseStatus.SUBMITTED,
+    approvedBy: auto ? AUTO_APPROVER : undefined,
   })
 }
 
-export async function reviewExpenseApi(workspaceId: string, id: string, approved: boolean, reason?: string) {
+/**
+ * Approves or rejects a submitted expense (EXP-3) under the workspace rules
+ * (BR-3, PLT-8): never your own; above the two-step amount the first approval
+ * is recorded and a second, different person completes it.
+ */
+export async function reviewExpenseApi(workspaceId: string, approver: Approver, id: string, approved: boolean, reason?: string) {
   const expense = expenses.get(workspaceId, id)
   if (!expense) throw new Error("Expense not found")
   if (expense.status !== ExpenseStatus.SUBMITTED) throw new Error("Only submitted expenses can be reviewed")
+  assertNotSelfApproval(approver.employeeId, expense.employeeId)
   if (!approved && !reason?.trim()) throw new Error("Give a reason when rejecting")
+  if (approved) {
+    const { approvals } = await getSettingsApi(workspaceId)
+    const outcome = approvalDecision({ rules: approvals, subject: ApprovalSubject.EXPENSE, amount: expense.amount, submitterId: expense.employeeId, approver, firstApprovedBy: expense.firstApprovedBy })
+    if (outcome === "first_step") {
+      recordAudit(workspaceId, { action: "Expense approved (first step)", actionKey: "expense.first_approval", category: "Approvals", target: `${expense.description} (${expense.amount})` })
+      return expenses.update(workspaceId, id, { firstApprovedBy: approverRef(approver) })
+    }
+  }
   recordAudit(workspaceId, {
     action: approved ? "Expense approved" : "Expense rejected",
     actionKey: approved ? "expense.approved" : "expense.rejected",
@@ -80,6 +100,8 @@ export async function reviewExpenseApi(workspaceId: string, id: string, approved
   return expenses.update(workspaceId, id, {
     status: approved ? ExpenseStatus.APPROVED : ExpenseStatus.REJECTED,
     rejectionReason: approved ? undefined : reason!.trim(),
+    approvedBy: approved ? approverRef(approver) : undefined,
+    firstApprovedBy: approved ? expense.firstApprovedBy : undefined,
   })
 }
 

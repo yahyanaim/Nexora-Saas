@@ -53,6 +53,8 @@ import {
   RECEIPT_TYPES,
 } from "./cost-labels"
 import { useSelfScope } from "@/hooks/workforce/use-current-employee"
+import { useApprover } from "@/hooks/workforce/use-current-employee"
+import { approverRef } from "@/lib/workforce/approvals"
 
 const emptyForm = () => ({
   employeeId: "",
@@ -82,6 +84,7 @@ export default function ExpensesPage() {
   const { data: projects = [] } = useProjects()
   const { submit, review, reimburse, remove } = useExpenseMutations()
   const canReview = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE)
+  const approver = useApprover()
 
   const staff = self.restrict(employees.filter((e) => e.status !== EmployeeStatus.INACTIVE))
   const money = (n: number) => formatMoney(n, workspace.currency, locale)
@@ -235,6 +238,10 @@ export default function ExpensesPage() {
                   <FileText className="size-3.5" />
                   {x.receiptName ?? t("noReceipt")}
                 </p>
+                {x.firstApprovedBy && <span className="w-fit rounded-full bg-info-soft px-2.5 py-0.5 text-xs font-medium text-info-foreground">{t("approvalOneOfTwo")}</span>}
+                {x.employeeId === approver.employeeId || x.firstApprovedBy === approverRef(approver) ? (
+                  <p className="text-end text-sm text-muted-foreground">{t(x.employeeId === approver.employeeId ? "approvalOwnRequest" : "approvalWaitingSecond")}</p>
+                ) : (
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" size="sm" onClick={() => { setReason(""); setRejecting(x) }}>
                     <XCircle className="size-4" />
@@ -245,6 +252,7 @@ export default function ExpensesPage() {
                     {t("approve")}
                   </Button>
                 </div>
+                )}
               </li>
             ))}
           </ul>

@@ -32,6 +32,7 @@ import type {
   WorkTask,
   WorkTaskInput,
 } from "@/types/work-projects"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useProjects() {
   const { id } = useCurrentWorkspace()
@@ -68,7 +69,7 @@ function useHelpers() {
     for (const key of keys) queryClient.invalidateQueries({ queryKey: [key, workspaceId] })
   }
   const onError = (err: unknown) =>
-    toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+    toast.error(translateError(err, t))
   return { t, workspaceId, queryClient, refresh, onError }
 }
 

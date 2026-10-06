@@ -30,6 +30,8 @@ import { BudgetType } from "@/types/work-projects"
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 import { formatHours } from "./billing-labels"
+import { useApprover } from "@/hooks/workforce/use-current-employee"
+import { approverRef } from "@/lib/workforce/approvals"
 
 interface Group {
   key: string
@@ -50,6 +52,11 @@ export default function ApprovalsPage() {
   const { data: clients = [] } = useClients()
   const { approve, reject } = useTimesheetMutations()
   const canReview = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE)
+  // Nobody approves their own hours, and a first approver waits for someone else (BR-3)
+  const approver = useApprover()
+  const myRef = approverRef(approver)
+  const blockedFor = (group: Group) =>
+    group.employeeId === approver.employeeId ? "approvalOwnRequest" : group.entries.every((e) => e.firstApprovedBy === myRef) ? "approvalWaitingSecond" : null
 
   const [rejecting, setRejecting] = useState<Group | null>(null)
   const [reason, setReason] = useState("")
@@ -91,7 +98,7 @@ export default function ApprovalsPage() {
       <PageHeader
         actions={
           canReview && groups.length > 1 && (
-            <Button onClick={() => approve.mutate(submitted.map((e) => e.id))} disabled={approve.isPending}>
+            <Button onClick={() => approve.mutate(groups.filter((g) => !blockedFor(g)).flatMap((g) => g.entries.filter((e) => e.firstApprovedBy !== myRef).map((e) => e.id)))} disabled={approve.isPending || groups.every((g) => blockedFor(g))}>
               <CheckCircle2 className="size-4" />
               {t("approveAll")}
             </Button>
@@ -148,7 +155,11 @@ export default function ApprovalsPage() {
                   <span className="text-sm text-muted-foreground">
                     {t("billableValueIs", { amount: formatMoney(billableValue(group.entries), workspace.currency, locale) })}
                   </span>
-                  {canReview && (
+                  {group.entries.some((e) => e.firstApprovedBy) && (
+                    <span className="rounded-full bg-info-soft px-2.5 py-0.5 text-xs font-medium text-info-foreground">{t("approvalOneOfTwo")}</span>
+                  )}
+                  {canReview && blockedFor(group) && <span className="text-sm text-muted-foreground">{t(blockedFor(group)!)}</span>}
+                  {canReview && !blockedFor(group) && (
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
@@ -160,7 +171,7 @@ export default function ApprovalsPage() {
                         <XCircle className="size-4" />
                         {t("sendBack")}
                       </Button>
-                      <Button onClick={() => approve.mutate(group.entries.map((e) => e.id))} disabled={approve.isPending}>
+                      <Button onClick={() => approve.mutate(group.entries.filter((e) => e.firstApprovedBy !== myRef).map((e) => e.id))} disabled={approve.isPending}>
                         <CheckCircle2 className="size-4" />
                         {t("approve")}
                       </Button>

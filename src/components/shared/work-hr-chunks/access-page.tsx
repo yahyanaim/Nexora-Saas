@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils"
 import { AccountStatus } from "@/types/work-access"
 import { EmployeeStatus, WORK_ROLES, WorkRole } from "@/types/workforce"
 import { WORK_ROLE_LABEL } from "../workforce-chunks/workforce-labels"
+import { translateError } from "@/lib/errors/translate-error"
 
 const STATUS_CLASS: Record<AccountStatus | "none", string> = {
   [AccountStatus.ACTIVE]: "bg-success-soft text-success-foreground border-transparent",
@@ -53,7 +54,7 @@ export default function AccessPage() {
     qc.invalidateQueries({ queryKey: ["accounts", ws] })
     qc.invalidateQueries({ queryKey: ["employees", ws] })
   }
-  const onError = (err: unknown) => toast.error(err instanceof Error ? err.message : t("somethingWentWrong"))
+  const onError = (err: unknown) => toast.error(translateError(err, t))
   const invite = useMutation({ mutationFn: (id: string) => inviteEmployeeApi(ws, id), onSuccess: () => { toast.success(t("accessInvited")); refresh() }, onError })
   const toggle = useMutation({ mutationFn: ({ id, on }: { id: string; on: boolean }) => setAccountEnabledApi(ws, id, on), onSuccess: () => { toast.success(t("accessUpdated")); refresh() }, onError })
   const role = useMutation({ mutationFn: ({ id, value }: { id: string; value: WorkRole }) => changeAccessRoleApi(ws, id, value), onSuccess: () => { toast.success(t("accessRoleChanged")); refresh() }, onError })

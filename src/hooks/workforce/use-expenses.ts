@@ -12,6 +12,8 @@ import {
   submitExpenseApi,
 } from "@/lib/api/expenses-api"
 import type { ExpenseInput } from "@/types/work-costs"
+import { useApprover } from "@/hooks/workforce/use-current-employee"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useExpenses() {
   const { id } = useCurrentWorkspace()
@@ -28,17 +30,18 @@ export function useExpenseMutations() {
     refresh()
   }
   const onError = (err: unknown) =>
-    toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+    toast.error(translateError(err, t))
 
   const submit = useMutation({
     mutationFn: (input: ExpenseInput) => submitExpenseApi(workspaceId, input),
     onSuccess: done(t("expenseSubmitted")),
     onError,
   })
+  const approver = useApprover()
   const review = useMutation({
     mutationFn: ({ id, approved, reason }: { id: string; approved: boolean; reason?: string }) =>
-      reviewExpenseApi(workspaceId, id, approved, reason),
-    onSuccess: (_x, { approved }) => done(approved ? t("expenseApproved") : t("expenseRejected"))(),
+      reviewExpenseApi(workspaceId, approver, id, approved, reason),
+    onSuccess: (x, { approved }) => done(!approved ? t("expenseRejected") : x.status === "submitted" ? t("approvalFirstStep") : t("expenseApproved"))(),
     onError,
   })
   const reimburse = useMutation({

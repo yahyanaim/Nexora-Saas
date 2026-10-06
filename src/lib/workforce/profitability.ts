@@ -4,12 +4,11 @@ import { ClientInvoiceStatus, TimeEntryStatus, type ClientInvoice, type TimeEntr
 import { ExpenseStatus, type Expense, type ProjectProfit } from "@/types/work-costs"
 import { entryBillRate, entryCostRate } from "./billing"
 import { taskProgress } from "./project-metrics"
+import { roundMoney } from "./money"
 
 const SPENT = [ExpenseStatus.APPROVED, ExpenseStatus.REIMBURSED]
 
-function round(n: number) {
-  return Math.round(n * 100) / 100
-}
+const round = roundMoney
 
 /**
  * Revenue, cost and profit of one project so far.

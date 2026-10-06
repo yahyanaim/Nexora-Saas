@@ -34,6 +34,10 @@ export interface Expense {
   receiptName?: string
   status: ExpenseStatus
   rejectionReason?: string
+  /** Who approved (employee id, "admin" or "auto") – BR-3 */
+  approvedBy?: string
+  /** First approver when the workspace needs two steps */
+  firstApprovedBy?: string
   /** Set once re-billed on a client invoice */
   invoiceId?: string
   createdAt: string

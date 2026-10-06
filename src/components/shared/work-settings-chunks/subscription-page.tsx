@@ -20,6 +20,7 @@ import { toast } from "@/lib/utils/toast"
 import { cn } from "@/lib/utils"
 import { InvoiceMethod, InvoiceStatus, type Invoice } from "@/types/invoices"
 import type { BillingCycle, ErpPlan, SubscriptionInvoice } from "@/types/workspace-subscription"
+import { translateError } from "@/lib/errors/translate-error"
 
 /** The company's own Nexora subscription: plan, seats, invoices and plan changes (SUB-1…SUB-4). */
 export default function SubscriptionPage() {
@@ -43,7 +44,7 @@ export default function SubscriptionPage() {
       qc.invalidateQueries({ queryKey: ["subscription", ws] })
       qc.invalidateQueries({ queryKey: ["subscription-invoices", ws] })
     },
-    onError: (err) => toast.error(err instanceof Error ? err.message : t("somethingWentWrong")),
+    onError: (err) => toast.error(translateError(err, t)),
   })
 
   const usd = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n)

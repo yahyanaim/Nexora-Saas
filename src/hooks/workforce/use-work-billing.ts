@@ -30,6 +30,8 @@ import {
 } from "@/lib/api/work-billing-api"
 import type { Payment } from "@/types/work-billing"
 import { discardTimerApi, getTimerApi, startTimerApi, stopTimerApi, type RunningTimer } from "@/lib/api/timer-api"
+import { useApprover } from "@/hooks/workforce/use-current-employee"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useTimeEntries() {
   const { id } = useCurrentWorkspace()
@@ -52,7 +54,7 @@ function useHelpers() {
     queryClient.invalidateQueries({ queryKey: ["expenses", workspaceId] })
   }
   const onError = (err: unknown) =>
-    toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+    toast.error(translateError(err, t))
   return { t, workspaceId, refresh, onError }
 }
 
@@ -81,16 +83,18 @@ export function useTimesheetMutations() {
     },
     onError,
   })
+  const approver = useApprover()
   const approve = useMutation({
-    mutationFn: (ids: string[]) => approveTimeEntriesApi(workspaceId, ids),
+    mutationFn: (ids: string[]) => approveTimeEntriesApi(workspaceId, approver, ids),
     onSuccess: (count) => {
-      toast.success(t("hoursApproved", { count }))
+      // 0 fully approved means the rules need a second approver
+      toast.success(count > 0 ? t("hoursApproved", { count }) : t("approvalFirstStep"))
       refresh()
     },
     onError,
   })
   const reject = useMutation({
-    mutationFn: ({ ids, reason }: { ids: string[]; reason: string }) => rejectTimeEntriesApi(workspaceId, ids, reason),
+    mutationFn: ({ ids, reason }: { ids: string[]; reason: string }) => rejectTimeEntriesApi(workspaceId, approver, ids, reason),
     onSuccess: (count) => {
       toast.success(t("hoursRejected", { count }))
       refresh()

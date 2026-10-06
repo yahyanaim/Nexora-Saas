@@ -1,13 +1,14 @@
 import { ClientInvoiceStatus, InvoiceKind, type ClientInvoice, type InvoiceLine, type TimeEntry } from "@/types/work-billing"
 import { BudgetType, type Milestone, type WorkProject } from "@/types/work-projects"
 import { roundHours } from "./billing"
+import { roundMoney } from "./money"
 
 /**
  * Lines for the invoice types other than hours (BIL-3), and how much of a
  * fixed price has been billed (BIL-18). Pure functions; the API applies them.
  */
 
-const round = (n: number) => Math.round(n * 100) / 100
+const round = roundMoney
 const counts = (i: ClientInvoice) => i.status !== ClientInvoiceStatus.VOID && i.status !== ClientInvoiceStatus.DRAFT
 
 /**

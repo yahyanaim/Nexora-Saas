@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { decideMilestoneApi, invitePortalContactApi, listPortalAccessApi, portalInactivityDays, revokePortalAccessApi } from "@/lib/api/portal-api"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function usePortalAccess() {
   const { id } = useCurrentWorkspace()
@@ -20,7 +21,7 @@ export function usePortalMutations() {
   const t = useTranslations()
   const { id: ws } = useCurrentWorkspace()
   const qc = useQueryClient()
-  const onError = (err: unknown) => toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+  const onError = (err: unknown) => toast.error(translateError(err, t))
   const done = (message: string, keys: string[]) => () => {
     toast.success(message)
     keys.forEach((k) => qc.invalidateQueries({ queryKey: [k, ws] }))

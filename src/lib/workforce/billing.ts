@@ -11,6 +11,7 @@ import {
 } from "@/types/work-billing"
 import { todayIso } from "./project-metrics"
 import { rateOn } from "./rates"
+import { roundMoney } from "./money"
 
 // ---------- Dates ----------
 
@@ -158,9 +159,6 @@ export function roundHours(hours: number) {
   return Math.round(hours * 100) / 100
 }
 
-function roundMoney(amount: number) {
-  return Math.round(amount * 100) / 100
-}
 
 export interface InvoiceTotals {
   subtotal: number

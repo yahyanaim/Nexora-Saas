@@ -6,6 +6,7 @@ import { toast } from "@/lib/utils/toast"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { createDocumentApi, deleteDocumentApi, listDocumentsApi, updateDocumentApi } from "@/lib/api/documents-api"
 import type { EmployeeDocumentInput } from "@/types/work-hr"
+import { translateError } from "@/lib/errors/translate-error"
 
 export function useDocuments() {
   const { id } = useCurrentWorkspace()
@@ -20,7 +21,7 @@ export function useDocumentMutations() {
     toast.success(message)
     queryClient.invalidateQueries({ queryKey: ["documents", workspaceId] })
   }
-  const onError = (err: unknown) => toast.error(err instanceof Error && err.message ? err.message : t("somethingWentWrong"))
+  const onError = (err: unknown) => toast.error(translateError(err, t))
 
   const create = useMutation({ mutationFn: (input: EmployeeDocumentInput) => createDocumentApi(workspaceId, input), onSuccess: done(t("documentSaved")), onError })
   const update = useMutation({
