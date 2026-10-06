@@ -100,6 +100,13 @@ export function useDashboardNav() {
             permission: AdminPermissionsPlatform.TIME_APPROVE,
           },
           {
+            title: t("kpis"),
+            url: "/dashboard/kpis",
+            icon: Gauge,
+            descriptionKey: "pageDescKpis",
+            permission: AdminPermissionsPlatform.VIEW_ANALYTICS,
+          },
+          {
             title: t("analytics"),
             url: "/dashboard/overview",
             icon: ChartNoAxesCombined,

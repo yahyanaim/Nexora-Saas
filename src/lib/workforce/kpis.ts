@@ -1,4 +1,5 @@
 import type { Client, Employee } from "@/types/workforce"
+import type { KpiKey, KpiSettings } from "@/types/work-settings"
 import { BudgetType, TaskStatus, type WorkProject, type WorkTask } from "@/types/work-projects"
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import type { LeaveRequest } from "@/types/work-planning"
@@ -148,4 +149,49 @@ export function weeklyRevenue(
     }
     return { week: monday, revenue: Math.round(revenue), hours: round1(hours) }
   })
+}
+
+// ---------- Targets and visibility (KPI-6, KPI-11) ----------
+
+export const DEFAULT_KPI_SETTINGS: KpiSettings = {
+  targets: { utilization: UTILIZATION_TARGET, onTime: 85, estimateAccuracy: 90, revenue: 15000 },
+  visibility: { utilization: "manager", onTime: "manager", estimateAccuracy: "manager", revenue: "manager" },
+}
+
+export type Light = "green" | "amber" | "red" | "none"
+
+/** Traffic light against a target: on target, within 80% of it, or below. */
+export function kpiLight(value: number | null, target: number): Light {
+  if (value === null || !(target > 0)) return "none"
+  if (value >= target) return "green"
+  if (value >= target * 0.8) return "amber"
+  return "red"
+}
+
+/**
+ * Whether a viewer may see one person's individual KPI. Admins (who see
+ * costs and settings) always may; everyone sees their own; managers see the
+ * people who report to them, directly or further down, when allowed.
+ */
+export function canSeeIndividual(
+  key: KpiKey,
+  viewer: { employeeId?: string; isAdmin: boolean },
+  personId: string,
+  employees: Pick<Employee, "id" | "managerId">[],
+  settings: KpiSettings = DEFAULT_KPI_SETTINGS
+) {
+  if (viewer.isAdmin || viewer.employeeId === personId) return true
+  const rule = settings.visibility[key]
+  if (rule === "everyone") return true
+  if (rule === "self" || !viewer.employeeId) return false
+  // Walk up the reporting line from the person
+  const byId = new Map(employees.map((e) => [e.id, e]))
+  let current = byId.get(personId)?.managerId
+  const seen = new Set<string>()
+  while (current && !seen.has(current)) {
+    if (current === viewer.employeeId) return true
+    seen.add(current)
+    current = byId.get(current)?.managerId
+  }
+  return false
 }
