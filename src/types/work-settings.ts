@@ -130,7 +130,26 @@ export interface WorkspaceSettings {
   ownerEmployeeId?: string
   /** Extra fields the company adds to clients, projects and employees (PLT-12) */
   customFields?: CustomFieldDef[]
+  /** Account numbers used by the accounting journal export; CGNC defaults (Phase 6e.4) */
+  accounts?: Partial<Record<AccountKey, string>>
 }
+
+/** The accounts the journal export posts to. */
+export type AccountKey =
+  | "clients"
+  | "sales"
+  | "vatCollected"
+  | "withholding"
+  | "bank"
+  | "cash"
+  | "employees"
+  | "vatDeductible"
+  | "expenseTravel"
+  | "expenseMeals"
+  | "expenseSoftware"
+  | "expenseHardware"
+  | "expenseSubcontractor"
+  | "expenseOther"
 
 /** A monthly running cost not tied to a project. */
 export interface OverheadItem {

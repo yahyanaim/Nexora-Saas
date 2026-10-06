@@ -1,6 +1,7 @@
+import { ACCOUNT_PATTERN, DEFAULT_ACCOUNTS } from "@/lib/workforce/journal"
 import { assertCompanyIds, cleanId, isMoroccan } from "@/lib/workforce/tax-ids"
 import type { ReminderSettings } from "@/types/work-crm"
-import type { CustomFieldDef, KpiSettings, OverheadItem } from "@/types/work-settings"
+import type { AccountKey, CustomFieldDef, KpiSettings, OverheadItem } from "@/types/work-settings"
 import { validateFieldDefs } from "@/lib/workforce/custom-fields"
 import { ExpenseCategory } from "@/types/work-costs"
 import { LeaveType } from "@/types/work-planning"
@@ -265,6 +266,20 @@ export async function updateOverheadsApi(workspaceId: string, overheads: Overhea
   if (rows.some((o) => !(o.monthlyAmount >= 0))) throw new Error("Amounts can't be negative")
   recordAudit(workspaceId, { action: "Overheads updated", actionKey: "settings.overheads", category: "Settings", target: "Overhead costs" })
   const next = { ...read(workspaceId), overheads: rows }
+  write(workspaceId, next)
+  return next
+}
+
+/** Account numbers for the accounting journal export (Phase 6e.4); blank keeps the CGNC default. */
+export async function updateAccountsApi(workspaceId: string, accounts: Partial<Record<AccountKey, string>>): Promise<WorkspaceSettings> {
+  const clean = Object.fromEntries(
+    Object.entries(accounts)
+      .map(([k, v]) => [k, (v ?? "").trim()])
+      .filter(([k, v]) => v && v !== DEFAULT_ACCOUNTS[k as AccountKey])
+  ) as Partial<Record<AccountKey, string>>
+  if (Object.values(clean).some((v) => !ACCOUNT_PATTERN.test(v!))) throw new Error("Account numbers have 4 to 8 digits")
+  recordAudit(workspaceId, { action: "Accounting accounts updated", actionKey: "settings.accounts", category: "Settings", target: "Accounting" })
+  const next = { ...read(workspaceId), accounts: clean }
   write(workspaceId, next)
   return next
 }

@@ -16,10 +16,11 @@ import {
   updatePeriodLockApi,
   updateListsApi,
   updateCustomFieldsApi,
+  updateAccountsApi,
   updateOverheadsApi,
   updateOwnerEmployeeApi,
 } from "@/lib/api/settings-api"
-import type { ApprovalRule, CompanySettings, CustomFieldDef, Holiday, OverheadItem, WorkspaceSettings } from "@/types/work-settings"
+import type { AccountKey, ApprovalRule, CompanySettings, CustomFieldDef, Holiday, OverheadItem, WorkspaceSettings } from "@/types/work-settings"
 import { translateError } from "@/lib/errors/translate-error"
 
 export function useWorkspaceSettings() {
@@ -59,6 +60,7 @@ export function useSettingsMutations() {
     ownerEmployee: useMutation({ mutationFn: (id: string | null) => updateOwnerEmployeeApi(workspaceId, id), onSuccess: saved, onError }),
     overheads: useMutation({ mutationFn: (o: OverheadItem[]) => updateOverheadsApi(workspaceId, o), onSuccess: saved, onError }),
     customFields: useMutation({ mutationFn: (f: CustomFieldDef[]) => updateCustomFieldsApi(workspaceId, f), onSuccess: saved, onError }),
+    accounts: useMutation({ mutationFn: (a: Partial<Record<AccountKey, string>>) => updateAccountsApi(workspaceId, a), onSuccess: saved, onError }),
     createDepartment: useMutation({
       mutationFn: (name: string) => createDepartmentApi(workspaceId, name),
       onSuccess: refreshDepartments,

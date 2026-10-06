@@ -7,6 +7,8 @@ import { AGING_BUCKETS, displayStatus, entryBillRate, entryCostRate, invoiceBala
 import { employeeKpis } from "./kpis"
 import { todayIso } from "./project-metrics"
 import { roundMoney } from "./money"
+import { accountsWithDefaults, buildJournal } from "./journal"
+import type { AccountKey } from "@/types/work-settings"
 import { collectedVatLines, deductibleVatLines, vatReturn, type VatPeriod, type VatRegime } from "./vat"
 
 /**
@@ -17,8 +19,8 @@ import { collectedVatLines, deductibleVatLines, vatReturn, type VatPeriod, type 
  * permission (RPT-8).
  */
 
-export type ReportId = "timesheet" | "billable" | "unbilled" | "invoices" | "aging" | "expenses" | "profitability" | "vat" | "vatDetail"
-export const REPORT_IDS: ReportId[] = ["timesheet", "billable", "unbilled", "invoices", "aging", "expenses", "profitability", "vat", "vatDetail"]
+export type ReportId = "timesheet" | "billable" | "unbilled" | "invoices" | "aging" | "expenses" | "profitability" | "vat" | "vatDetail" | "journal"
+export const REPORT_IDS: ReportId[] = ["timesheet", "billable", "unbilled", "invoices", "aging", "expenses", "profitability", "vat", "vatDetail", "journal"]
 
 export type ColumnType = "text" | "date" | "hours" | "money" | "percent" | "number"
 export interface ReportColumn {
@@ -57,6 +59,8 @@ export interface ReportData {
   /** VAT return settings (Phase 6e.3) */
   vatRegime?: VatRegime
   vatPeriod?: VatPeriod
+  /** Account numbers for the journal (Phase 6e.4); CGNC defaults when absent */
+  accounts?: Partial<Record<AccountKey, string>>
 }
 
 export interface Report {
@@ -352,6 +356,24 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
         due: p.due,
         creditOut: p.creditOut,
       }))
+      break
+    }
+    case "journal": {
+      columns = [
+        { key: "journal", label: "jrnJournal", type: "text" },
+        { key: "date", label: "date", type: "date" },
+        { key: "piece", label: "jrnPiece", type: "text" },
+        { key: "account", label: "jrnAccount", type: "text" },
+        { key: "label", label: "jrnLabel", type: "text" },
+        { key: "debit", label: "jrnDebit", type: "money" },
+        { key: "credit", label: "jrnCredit", type: "money" },
+      ]
+      rows = buildJournal(data.invoices, data.expenses, accountsWithDefaults(data.accounts), {
+        client: (id) => clientById.get(id)?.name ?? "",
+        employee: (id) => employeeById.get(id)?.name ?? "",
+      })
+        .filter((l) => inPeriod(l.date))
+        .map((l) => ({ ...l }))
       break
     }
     case "vatDetail": {
