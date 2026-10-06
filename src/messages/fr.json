@@ -2885,5 +2885,7 @@
   "err_approveTheBillBeforePaying": "Validez la facture avant de la payer",
   "err_thePaymentIsMoreThan": "Le paiement dépasse le reste à payer",
   "err_approvedBillsCanTBe2": "Une facture validée ne peut pas être supprimée",
-  "err_thisSupplierHasBillsSo": "Ce fournisseur a des factures : il peut seulement être archivé"
+  "err_thisSupplierHasBillsSo": "Ce fournisseur a des factures : il peut seulement être archivé",
+  "guide_suppliers": "Les entreprises et freelances auprès de qui vous achetez, avec ce qu'il faut pour saisir et payer leurs factures.\nCartes : fournisseurs actifs, sous-traitants et fournisseurs marocains sans ICE.\nListe : recherche par nom, ICE, IF ou e-mail ; le bouton affiche les fournisseurs archivés.\nNouveau fournisseur : identifiants (ICE 15 chiffres, IF), contacts, délai de paiement et banque (RIB de 24 chiffres au Maroc).\nArchiver : gardez un fournisseur inutilisé avec son historique ; supprimez seulement les erreurs.",
+  "guide_supplier_bills": "Les factures que vos fournisseurs vous envoient, de la saisie au paiement.\nCartes : factures à valider, montant à payer, montant en retard et paiements des 30 derniers jours.\nSaisir une facture : fournisseur, son numéro, les dates (échéance selon le délai du fournisseur), projet facultatif et lignes avec leur taux de TVA.\nValider ou rejeter : une autre personne que celle qui a saisi décide ; une facture rejetée peut être corrigée et renvoyée.\nPayer : enregistrez des paiements complets ou partiels ; les factures validées comptent comme coûts des projets, leur TVA comme TVA déductible, et elles passent au journal des achats."
 }
