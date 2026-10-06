@@ -29,6 +29,7 @@ import { ClientInvoiceStatus, InvoiceKind, PaymentMethod, type ClientInvoice, ty
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 import { formatShortDate } from "../work-projects-chunks/project-labels"
 import { INVOICE_STATUS_CLASS, INVOICE_STATUS_LABEL } from "./billing-labels"
+import { EInvoicePanel } from "./e-invoice-panel"
 
 const CURRENCIES = ["MAD", "EUR", "USD", "GBP", "CAD", "AED", "SAR", "CHF"]
 const DEFAULT_RATE = "__default__"
@@ -378,6 +379,8 @@ export function InvoiceSheet(props: Props) {
             </section>
           )}
 
+          {company && !isDraft && <EInvoicePanel invoice={invoice} company={company} client={client} canEdit={canEdit} />}
+
           {invoice.notes && <p className="whitespace-pre-line rounded-2xl bg-muted/50 p-3 text-sm text-muted-foreground">{invoice.notes}</p>}
         </div>
 
@@ -416,7 +419,7 @@ export function InvoiceSheet(props: Props) {
               </>
             ) : (
               <>
-                {isOpen && !(invoice.payments?.length) && (
+                {isOpen && !(invoice.payments?.length) && !invoice.eInvoice && (
                   <Button variant="outline" className="flex-1" disabled={busy} onClick={() => setConfirm("void")}>
                     <Ban className="size-4" />
                     {t("cancelInvoice")}

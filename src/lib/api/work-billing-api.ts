@@ -1,6 +1,8 @@
 import { invoiceIdProblems } from "@/lib/workforce/tax-ids"
+import { buildUblXml, eInvoiceFileName, eInvoiceProblems, eInvoiceStatus, needsEInvoice } from "@/lib/workforce/e-invoice"
 import {
   ClientInvoiceStatus,
+  EInvoiceStatus,
   InvoiceKind,
   PaymentMethod,
   TimeEntryStatus,
@@ -637,6 +639,63 @@ export async function markInvoicePaidApi(workspaceId: string, id: string) {
   })
 }
 
+// ---------- DGI e-invoicing (Phase 6e.2) ----------
+
+async function eInvoiceContext(workspaceId: string, id: string) {
+  const invoice = invoices.get(workspaceId, id)
+  if (!invoice) throw new Error("Invoice not found")
+  const { company } = await getSettingsApi(workspaceId)
+  const client = (await listClientsApi(workspaceId)).find((c) => c.id === invoice.clientId)
+  const corrected = invoice.creditNoteFor ? invoices.get(workspaceId, invoice.creditNoteFor) : undefined
+  return { invoice, company, client, corrected }
+}
+
+/** The UBL 2.1 XML of an issued invoice or credit note. */
+export async function getEInvoiceXmlApi(workspaceId: string, id: string) {
+  const { invoice, company, client, corrected } = await eInvoiceContext(workspaceId, id)
+  if (!invoice.number) throw new Error("Issue the invoice before sending it to the DGI")
+  return { fileName: eInvoiceFileName(invoice), xml: buildUblXml(invoice, company, client, corrected) }
+}
+
+/**
+ * Sends the e-invoice to the DGI. Simulated until the backend exists: the
+ * file is built and checked, and the invoice waits for the platform's answer.
+ */
+export async function sendEInvoiceApi(workspaceId: string, id: string): Promise<ClientInvoice> {
+  const { invoice, company, client } = await eInvoiceContext(workspaceId, id)
+  if (!needsEInvoice(invoice, company)) throw new Error("E-invoicing applies to issued invoices of Moroccan companies")
+  const status = eInvoiceStatus(invoice, company)
+  if (status === EInvoiceStatus.SENT || status === EInvoiceStatus.ACCEPTED) throw new Error("This invoice was already sent to the DGI")
+  const [problem] = eInvoiceProblems(invoice, company, client)
+  if (problem) throw new Error(problem)
+  const sent = invoices.update(workspaceId, id, { eInvoice: { status: EInvoiceStatus.SENT, sentAt: new Date().toISOString() } })
+  recordAudit(workspaceId, { action: "E-invoice sent to the DGI", actionKey: "invoice.einvoice_sent", category: "Billing", target: `Invoice ${invoice.number}` })
+  return sent
+}
+
+/**
+ * Asks the DGI for the decision on a sent e-invoice. Simulated: the demo
+ * platform accepts complete files and gives them a reference.
+ */
+export async function checkEInvoiceStatusApi(workspaceId: string, id: string): Promise<ClientInvoice> {
+  const { invoice, company, client } = await eInvoiceContext(workspaceId, id)
+  const state = invoice.eInvoice
+  if (state?.status !== EInvoiceStatus.SENT) return invoice
+  const [problem] = eInvoiceProblems(invoice, company, client)
+  const decidedAt = new Date().toISOString()
+  const next = problem
+    ? { ...state, status: EInvoiceStatus.REJECTED, decidedAt, reason: problem }
+    : { ...state, status: EInvoiceStatus.ACCEPTED, decidedAt, reference: `DGI-${invoice.number}-${invoice.id.replace(/\W/g, "").slice(-6).toUpperCase()}` }
+  const updated = invoices.update(workspaceId, id, { eInvoice: next })
+  recordAudit(workspaceId, {
+    action: problem ? "E-invoice rejected by the DGI" : "E-invoice accepted by the DGI",
+    actionKey: problem ? "invoice.einvoice_rejected" : "invoice.einvoice_accepted",
+    category: "Billing",
+    target: `Invoice ${invoice.number}`,
+  })
+  return updated
+}
+
 function auditInvoice(workspaceId: string, invoice: ClientInvoice, action: string, actionKey: string, before: string) {
   recordAudit(workspaceId, { action, actionKey, category: "Billing", target: `Invoice ${invoice.number}`, before, after: invoice.status })
 }
@@ -648,6 +707,8 @@ function auditInvoice(workspaceId: string, invoice: ClientInvoice, action: strin
 export async function voidInvoiceApi(workspaceId: string, id: string) {
   const current = invoices.get(workspaceId, id)
   if (current?.payments?.length) throw new Error("This invoice has payments; issue a credit note instead")
+  // Once sent through e-invoicing it exists at the DGI: only a credit note can correct it
+  if (current?.eInvoice) throw new Error("This invoice was sent to the DGI; issue a credit note instead")
   const invoice = await transition(workspaceId, id, [ClientInvoiceStatus.ISSUED, ClientInvoiceStatus.SENT], { status: ClientInvoiceStatus.VOID })
   releaseHours(workspaceId, invoice.id)
   auditInvoice(workspaceId, invoice, "Invoice cancelled", "invoice.voided", current!.status)
