@@ -1,4 +1,5 @@
 import type { ReminderSettings } from "@/types/work-crm"
+import type { KpiSettings } from "@/types/work-settings"
 import { ExpenseCategory } from "@/types/work-costs"
 import { LeaveType } from "@/types/work-planning"
 import type { Department } from "@/types/workforce"
@@ -224,6 +225,16 @@ export async function updateRemindersApi(workspaceId: string, reminders: Reminde
   }
   recordAudit(workspaceId, { action: "Payment reminders updated", actionKey: "settings.reminders", category: "Settings", target: "Workspace settings" })
   const next = { ...read(workspaceId), reminders }
+  write(workspaceId, next)
+  return next
+}
+
+/** Saves KPI targets and who may see individual KPIs (KPI-6, KPI-11). */
+export async function updateKpiSettingsApi(workspaceId: string, kpi: KpiSettings): Promise<WorkspaceSettings> {
+  if (Object.values(kpi.targets).some((v) => !(v >= 0))) throw new Error("Targets can't be negative")
+  if (["utilization", "onTime", "estimateAccuracy"].some((k) => kpi.targets[k as keyof KpiSettings["targets"]] > 200)) throw new Error("Rate targets must be 200% or less")
+  recordAudit(workspaceId, { action: "KPI targets updated", actionKey: "settings.kpi", category: "Settings", target: "KPI targets and visibility" })
+  const next = { ...read(workspaceId), kpi }
   write(workspaceId, next)
   return next
 }

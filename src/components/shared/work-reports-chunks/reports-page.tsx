@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
+import { SavedReportsBar } from "./saved-reports-bar"
 import { DownloadIcon, FileSpreadsheet, FileText, Lock } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -224,7 +225,21 @@ export default function ReportsPage() {
           </div>
         }
       >
-        <div className="flex flex-wrap gap-2" role="tablist" aria-label={t("repChooseReport")}>
+        <SavedReportsBar
+          reportId={reportId}
+          reportName={t(`rep_${reportId}`)}
+          filters={{ preset, from: preset === "custom" ? custom.from : undefined, to: preset === "custom" ? custom.to : undefined, clientId, projectId, employeeId, departmentId }}
+          onApply={(id, f) => {
+            setReportId(id as ReportId)
+            setPreset(f.preset as Preset)
+            if (f.preset === "custom" && f.from && f.to) setCustom({ from: f.from, to: f.to })
+            setClientId(f.clientId ?? "")
+            setProjectId(f.projectId ?? "")
+            setEmployeeId(f.employeeId ?? "")
+            setDepartmentId(f.departmentId ?? "")
+          }}
+        />
+        <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label={t("repChooseReport")}>
           {REPORT_IDS.map((id) => (
             <button
               key={id}

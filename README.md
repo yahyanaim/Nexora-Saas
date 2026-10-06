@@ -77,6 +77,7 @@ It replaces several separate tools:
 | **Invoicing** | Invoices from approved hours (grouped by person, task or day), fixed-price share, milestone, retainer, deposit and free-form invoices. Gapless numbering at issue. Several tax rates, withholding tax, multiple currencies, partial payments, credit notes. Professional branded PDF (logo, colour, bank details, VAT per rate, payments, stamps, legal footer) and CSV |
 | **Quotes (devis)** | Draft → sent (numbered DEV-YYYY-NNN) → accepted / declined / expired; lines with units and flat rates, discount before VAT, validity and delivery dates; one click to a draft invoice and a fixed-price project; duplicate to revise; Classic (French / Moroccan devis) or Modern PDF |
 | **Client portal** | Each client contact can get a login (invite, resend, revoke; unused logins expire after 90 days). The client sees only its own projects with progress and milestones, approves finished milestones or asks for changes with a comment, and downloads its invoices and quotes; staff can preview any client's portal |
+| **KPIs and search** | A KPI page compares each person's utilization, on-time tasks, estimate accuracy and revenue with company targets (green / amber / red); admins set the targets and who may see individual figures (self, manager chain or everyone). Ctrl+K searches people, clients, projects, tasks, invoices and quotes, filtered by role. Reports can be saved with their filters and shared with everyone or a role |
 | **Recurring invoices** | Monthly, quarterly or yearly schedules (retainers, licences, support) that draft the invoice for review; nothing is issued without a person |
 | **Receivables** | Open balances by days overdue: not due, 1–30, 31–60, 61–90 and 90+ days. Overdue reminders in 3 levels (default 3, 15 and 30 days late) with an editable message, a switch per client and a log of what was sent |
 | **Expenses & profitability** | Expenses with receipts and approval, re-billing to clients. Margin and budget use per project |
@@ -307,8 +308,10 @@ Security already in place:
 | Analytics | Analytics on ERP data, PDF/CSV report, assistant | ✅ Done |
 | 4 | My work and Team dashboards, standard reports, Excel/CSV/PDF export, freshness indicator, phone cards and empty/loading states on every list | ✅ Done |
 | 5a | Org chart, documents and contracts with expiry alerts, leave balances with half-days and carry-over | ✅ Done |
-| 5 (rest) | CSV import, templates, client portal, Gantt, quotes, recurring invoices, payment reminders | Planned |
-| 6 | Goals and KPIs, reviews, overhead costs, scheduled reports, branding, custom fields, global search | Planned |
+| 5b–5d | Quotes, recurring invoices, payment reminders, client contracts, client portal, task dependencies, Gantt, project close, templates | ✅ Done |
+| 5 (rest) | CSV import | Planned |
+| 6a | KPI targets with traffic lights and per-KPI visibility, search across all records (Ctrl+K), saved and shared reports | ✅ Done |
+| 6 (rest) | Reviews, overhead costs, scheduled reports, custom fields | Planned |
 | 7 | Server version: database, secure sign-in, permissions enforced on the server, files, email, backups | Planned |
 
 ---

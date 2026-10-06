@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
 import {
   CommandDialog,
@@ -11,57 +11,63 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command"
-import {
-  Users,
-  ShieldUser,
-  Ban,
-  Receipt,
-  CreditCard,
-  BadgeCheck,
-  FolderKanban,
-  Files,
-  ChartNoAxesCombined,
-  Sun,
-  Moon,
-  LockKeyhole,
-  LogOut,
-  ArrowRight,
-  User as UserIcon,
-  Terminal,
-  History,
-} from "@/components/ui/carbon/icons"
-import { getDemoUsers, getDemoInvoices } from "@/lib/demo-data"
-import { SpaceAvatar } from "@/components/ui/space-avatar"
+import { FileSignature, FileText, FolderKanban, Handshake, ClipboardCheck, LockKeyhole, LogOut, Moon, Sun, Users } from "@/components/ui/carbon/icons"
+import { useRouter } from "@/i18n/navigation"
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 import { useLogout } from "@/hooks/auth/use-logout"
+import { useDashboardNav } from "@/components/shared/navigation/use-dashboard-nav"
+import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
+import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
+import { useClientInvoices } from "@/hooks/workforce/use-work-billing"
+import { useQuotes } from "@/hooks/workforce/use-quotes"
+import { can } from "@/lib/permissions/can"
+import { AdminPermissionsPlatform as P } from "@/types/roles"
 
 export interface CommandPaletteProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
 
+const MIN_QUERY = 2
+const PER_GROUP = 6
+
+type Hit = { id: string; label: string; detail?: string; keywords: string; href: string }
+
 /**
- * Enterprise Global Command Palette for Nexora SaaS.
- * Triggered via Cmd+K / Ctrl+K or clicking the search trigger in DashboardHeader.
- * Provides instant keyboard navigation across pages, users, invoices, and system actions.
+ * Search across the whole ERP (PLT-11), opened with Ctrl+K / Cmd+K or the top
+ * bar: pages, employees, clients, projects, tasks, invoices and quotes. Each
+ * kind of record only appears for roles allowed to see it.
  */
-export function CommandPalette({
-  open: controlledOpen,
-  onOpenChange: setControlledOpen,
-}: CommandPaletteProps) {
+export function CommandPalette({ open: controlledOpen, onOpenChange: setControlledOpen }: CommandPaletteProps) {
+  const t = useTranslations()
   const [internalOpen, setInternalOpen] = React.useState(false)
   const isControlled = controlledOpen !== undefined
   const open = isControlled ? controlledOpen : internalOpen
   const setOpen = isControlled && setControlledOpen ? setControlledOpen : setInternalOpen
+  const [query, setQuery] = React.useState("")
 
   const router = useRouter()
   const { setTheme } = useTheme()
   const { lock } = useLockScreenStore()
   const { mutation: logoutMutation } = useLogout()
+  const { authedUser } = useAuthGuard()
+  const { groups } = useDashboardNav()
 
-  // Register global Cmd+K / Ctrl+K keyboard shortcut
+  const allowed = {
+    employees: can(authedUser, P.EMPLOYEES_READ),
+    clients: can(authedUser, P.CLIENTS_READ),
+    projects: can(authedUser, P.PROJECTS_READ),
+    invoices: can(authedUser, P.INVOICES_READ),
+  }
+  const { data: employees = [] } = useEmployees()
+  const { data: clients = [] } = useClients()
+  const { data: projects = [] } = useProjects()
+  const { data: tasks = [] } = useTasks()
+  const { data: invoices = [] } = useClientInvoices()
+  const { data: quotes = [] } = useQuotes()
+
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -69,216 +75,131 @@ export function CommandPalette({
         setOpen(!open)
       }
     }
-
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [open, setOpen])
 
-  const runCommand = React.useCallback(
+  const run = React.useCallback(
     (command: () => void) => {
       setOpen(false)
+      setQuery("")
       command()
     },
     [setOpen]
   )
 
-  const demoUsers = React.useMemo(() => {
-    try {
-      return getDemoUsers().slice(0, 6)
-    } catch {
-      return []
-    }
-  }, [])
+  const clientName = (id?: string) => clients.find((c) => c.id === id)?.name
+  const q = query.trim().toLowerCase()
+  const match = (hits: Hit[]) => (q.length < MIN_QUERY ? [] : hits.filter((h) => h.keywords.toLowerCase().includes(q)).slice(0, PER_GROUP))
 
-  const demoInvoices = React.useMemo(() => {
-    try {
-      return getDemoInvoices().slice(0, 5)
-    } catch {
-      return []
-    }
-  }, [])
+  const records: { key: string; heading: string; icon: typeof Users; hits: Hit[] }[] = [
+    {
+      key: "employees",
+      heading: t("employees"),
+      icon: Users,
+      hits: allowed.employees ? match(employees.map((e) => ({ id: e.id, label: e.name, detail: e.jobTitle, keywords: `${e.name} ${e.email} ${e.jobTitle}`, href: "/dashboard/employees" }))) : [],
+    },
+    {
+      key: "clients",
+      heading: t("clients"),
+      icon: Handshake,
+      hits: allowed.clients ? match(clients.map((c) => ({ id: c.id, label: c.name, detail: c.industry, keywords: `${c.name} ${c.legalName ?? ""} ${c.email} ${c.ice ?? ""} ${c.contacts.map((x) => x.name).join(" ")}`, href: "/dashboard/clients" }))) : [],
+    },
+    {
+      key: "projects",
+      heading: t("projects"),
+      icon: FolderKanban,
+      hits: allowed.projects ? match(projects.map((p) => ({ id: p.id, label: `${p.code} · ${p.name}`, detail: clientName(p.clientId), keywords: `${p.code} ${p.name} ${clientName(p.clientId) ?? ""}`, href: `/dashboard/projects/${p.id}` }))) : [],
+    },
+    {
+      key: "tasks",
+      heading: t("tasks"),
+      icon: ClipboardCheck,
+      hits: allowed.projects
+        ? match(tasks.map((x) => {
+            const p = projects.find((pr) => pr.id === x.projectId)
+            return { id: x.id, label: x.title, detail: p ? `${p.code} · ${p.name}` : undefined, keywords: `${x.title} ${p?.code ?? ""} ${p?.name ?? ""}`, href: `/dashboard/projects/${x.projectId}` }
+          }))
+        : [],
+    },
+    {
+      key: "invoices",
+      heading: t("invoices"),
+      icon: FileText,
+      hits: allowed.invoices
+        ? match(invoices.filter((i) => i.number).map((i) => ({ id: i.id, label: i.number, detail: clientName(i.clientId), keywords: `${i.number} ${clientName(i.clientId) ?? ""} ${i.subject ?? ""}`, href: "/dashboard/client-invoices" })))
+        : [],
+    },
+    {
+      key: "quotes",
+      heading: t("quotes"),
+      icon: FileSignature,
+      hits: allowed.invoices
+        ? match(quotes.map((x) => ({ id: x.id, label: x.number || x.subject, detail: clientName(x.clientId), keywords: `${x.number} ${x.subject} ${clientName(x.clientId) ?? ""}`, href: "/dashboard/quotes" })))
+        : [],
+    },
+  ]
 
   return (
     <CommandDialog
       open={open}
-      onOpenChange={setOpen}
-      title="Quick Navigation & Command Palette"
-      description="Search across pages, users, invoices, and system actions"
+      onOpenChange={(o) => {
+        setOpen(o)
+        if (!o) setQuery("")
+      }}
+      title={t("searchTitle")}
+      description={t("searchDescription")}
     >
-      <CommandInput placeholder="Type a command or search..." />
+      {/* Records are filtered here (with permissions); cmdk's own filter would hide them otherwise */}
+      <CommandInput placeholder={t("searchPlaceholder")} value={query} onValueChange={setQuery} />
       <CommandList>
-        <CommandEmpty>No matching results found.</CommandEmpty>
+        <CommandEmpty>{q.length < MIN_QUERY ? t("searchTypeMore") : t("searchNoResults")}</CommandEmpty>
 
-        {/* 1. Navigation Pages */}
-        <CommandGroup heading="Navigation">
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/overview"))}
-          >
-            <ChartNoAxesCombined className="mr-2 size-4 text-primary" />
-            <span>Dashboard Analytics</span>
-            <CommandShortcut>G O</CommandShortcut>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/users"))}
-          >
-            <Users className="mr-2 size-4 text-primary" />
-            <span>Users Management</span>
-            <CommandShortcut>G U</CommandShortcut>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/staffs"))}
-          >
-            <ShieldUser className="mr-2 size-4 text-info-foreground" />
-            <span>Staff Directory</span>
-            <CommandShortcut>G S</CommandShortcut>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/banned-users"))}
-          >
-            <Ban className="mr-2 size-4 text-destructive" />
-            <span>Banned Accounts & Sanctions</span>
-            <CommandShortcut>G B</CommandShortcut>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/subscriptions"))}
-          >
-            <BadgeCheck className="mr-2 size-4 text-success-foreground" />
-            <span>Subscriptions & Usage</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/plans"))}
-          >
-            <CreditCard className="mr-2 size-4 text-primary" />
-            <span>Plans Catalog</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/invoices"))}
-          >
-            <Receipt className="mr-2 size-4 text-primary" />
-            <span>Invoices</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/projects"))}
-          >
-            <FolderKanban className="mr-2 size-4 text-warning-foreground" />
-            <span>Projects Workspace</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/files"))}
-          >
-            <Files className="mr-2 size-4 text-muted-foreground" />
-            <span>Files Explorer</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/developer"))}
-          >
-            <Terminal className="mr-2 size-4 text-info-foreground" />
-            <span>Developer & API Portal</span>
-            <CommandShortcut>G D</CommandShortcut>
-          </CommandItem>
-          <CommandItem
-            onSelect={() => runCommand(() => router.push("/en/dashboard/audit-logs"))}
-          >
-            <History className="mr-2 size-4 text-success-foreground" />
-            <span>Audit Logs & Security Timeline</span>
-            <CommandShortcut>G A</CommandShortcut>
-          </CommandItem>
+        {records
+          .filter((g) => g.hits.length > 0)
+          .map((g) => (
+            <CommandGroup key={g.key} heading={g.heading}>
+              {g.hits.map((h) => (
+                <CommandItem key={h.id} value={`${g.key}:${h.id} ${h.keywords}`} onSelect={() => run(() => router.push(h.href))}>
+                  <g.icon className="me-2 size-4 text-muted-foreground" />
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate text-sm font-medium">{h.label}</span>
+                    {h.detail && <span className="truncate text-xs text-muted-foreground">{h.detail}</span>}
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ))}
+
+        <CommandGroup heading={t("searchPages")}>
+          {groups.flatMap((group) =>
+            group.items.map((item) => (
+              <CommandItem key={item.url} value={`page ${group.title} ${item.title}`} onSelect={() => run(() => router.push(item.url))}>
+                <item.icon className="me-2 size-4 text-primary" />
+                <span>{item.title}</span>
+                <span className="ms-auto text-xs text-muted-foreground">{group.title}</span>
+              </CommandItem>
+            ))
+          )}
         </CommandGroup>
 
         <CommandSeparator />
-
-        {/* 2. Platform Users */}
-        {demoUsers.length > 0 && (
-          <CommandGroup heading="Platform Users">
-            {demoUsers.map((user) => (
-              <CommandItem
-                key={user.id}
-                value={`${user.name} ${user.email} user`}
-                onSelect={() =>
-                  runCommand(() => router.push(`/en/dashboard/users`))
-                }
-              >
-                <SpaceAvatar
-                  src={user.avatar}
-                  name={user.name}
-                  profileColor={user.profileColor}
-                  size="xs"
-                  className="mr-2"
-                />
-                <div className="flex flex-col">
-                  <span className="font-medium text-xs">{user.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {user.email}
-                  </span>
-                </div>
-                <ArrowRight className="ml-auto size-3 text-muted-foreground" />
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        )}
-
-        <CommandSeparator />
-
-        {/* 3. Invoices */}
-        {demoInvoices.length > 0 && (
-          <CommandGroup heading="Recent Invoices">
-            {demoInvoices.map((inv) => (
-              <CommandItem
-                key={inv.id}
-                value={`${inv.invoiceNumber} ${inv.user?.name || "Client"} invoice`}
-                onSelect={() =>
-                  runCommand(() => router.push(`/en/dashboard/invoices`))
-                }
-              >
-                <Receipt className="mr-2 size-4 text-muted-foreground" />
-                <div className="flex flex-col">
-                  <span className="font-medium text-xs">
-                    {inv.invoiceNumber} — {inv.user?.name || "Client"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    ${inv.total?.toLocaleString() ?? "0"} · {inv.status}
-                  </span>
-                </div>
-                <span className="ml-auto text-xs uppercase text-muted-foreground">
-                  {inv.status}
-                </span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        )}
-
-        <CommandSeparator />
-
-        {/* 4. Quick Actions */}
-        <CommandGroup heading="Actions & System">
-          <CommandItem onSelect={() => runCommand(() => setTheme("light"))}>
-            <Sun className="mr-2 size-4 text-warning-foreground" />
-            <span>Switch to IBM Carbon Light Mode</span>
+        <CommandGroup heading={t("searchActions")}>
+          <CommandItem value="action light theme" onSelect={() => run(() => setTheme("light"))}>
+            <Sun className="me-2 size-4" />
+            <span>{t("searchLightTheme")}</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => setTheme("dark"))}>
-            <Moon className="mr-2 size-4 text-indigo-400" />
-            <span>Switch to IBM Carbon Dark Mode</span>
+          <CommandItem value="action dark theme" onSelect={() => run(() => setTheme("dark"))}>
+            <Moon className="me-2 size-4" />
+            <span>{t("searchDarkTheme")}</span>
           </CommandItem>
-          <CommandItem onSelect={() => runCommand(() => lock())}>
-            <LockKeyhole className="mr-2 size-4 text-muted-foreground" />
-            <span>Lock Workstation Screen</span>
-            <CommandShortcut>⌘L</CommandShortcut>
+          <CommandItem value="action lock screen" onSelect={() => run(() => lock())}>
+            <LockKeyhole className="me-2 size-4" />
+            <span>{t("searchLock")}</span>
           </CommandItem>
-          <CommandItem
-            onSelect={() =>
-              runCommand(() => router.push("/en/dashboard/settings"))
-            }
-          >
-            <UserIcon className="mr-2 size-4 text-muted-foreground" />
-            <span>Account Profile & Security</span>
-          </CommandItem>
-          <CommandItem
-            onSelect={() =>
-              runCommand(() => logoutMutation.mutate())
-            }
-          >
-            <LogOut className="mr-2 size-4 text-destructive" />
-            <span className="text-destructive">Sign Out of Nexora</span>
+          <CommandItem value="action sign out logout" onSelect={() => run(() => logoutMutation.mutate())}>
+            <LogOut className="me-2 size-4 text-destructive" />
+            <span className="text-destructive">{t("searchSignOut")}</span>
           </CommandItem>
         </CommandGroup>
       </CommandList>

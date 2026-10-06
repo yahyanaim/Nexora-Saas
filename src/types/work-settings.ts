@@ -110,6 +110,19 @@ export interface WorkspaceSettings {
   reminders?: ReminderSettings
   /** Portal logins unused for this many days expire (CRM-12); default 90 */
   portalInactivityDays?: number
+  /** KPI targets and who may see individual figures (KPI-6, KPI-11) */
+  kpi?: KpiSettings
+}
+
+export type KpiKey = "utilization" | "onTime" | "estimateAccuracy" | "revenue"
+
+/** Who sees another person's individual KPI: only themselves, also their manager, or everyone. */
+export type KpiVisibility = "self" | "manager" | "everyone"
+
+export interface KpiSettings {
+  /** Target per KPI: percent for rates, base-currency amount per person for revenue */
+  targets: Record<KpiKey, number>
+  visibility: Record<KpiKey, KpiVisibility>
 }
 
 /** Subjects whose second step can depend on an amount. */
