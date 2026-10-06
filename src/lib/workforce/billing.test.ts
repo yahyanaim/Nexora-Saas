@@ -107,3 +107,17 @@ describe("invoice numbers and status", () => {
     expect(displayStatus({ ...invoice, status: ClientInvoiceStatus.PAID }, "2026-04-01")).toBe(ClientInvoiceStatus.PAID)
   })
 })
+
+describe("addDays with a company time zone", () => {
+  it("moves by calendar days whatever the company time zone (no endless date loops)", async () => {
+    const { setCompanyTimeZone } = await import("./project-metrics")
+    // Behind the browser's zone, local midnight is still "yesterday" there
+    setCompanyTimeZone("Pacific/Pago_Pago")
+    try {
+      expect(addDays("2026-07-01", 1)).toBe("2026-07-02")
+      expect(addDays("2026-10-25", 1)).toBe("2026-10-26")
+    } finally {
+      setCompanyTimeZone(undefined)
+    }
+  })
+})

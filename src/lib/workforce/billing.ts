@@ -9,7 +9,7 @@ import {
   type InvoiceLine,
   type TimeEntry,
 } from "@/types/work-billing"
-import { todayIso } from "./project-metrics"
+import { todayIso, calendarIso } from "./project-metrics"
 import { rateOn } from "./rates"
 import { roundMoney } from "./money"
 
@@ -22,7 +22,7 @@ function parseIso(iso: string) {
 export function addDays(iso: string, days: number) {
   const d = parseIso(iso)
   d.setDate(d.getDate() + days)
-  return todayIso(d)
+  return calendarIso(d)
 }
 
 /** Monday of the week containing `iso`. */

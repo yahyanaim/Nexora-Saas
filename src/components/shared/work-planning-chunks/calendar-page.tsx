@@ -11,7 +11,7 @@ import { useEmployees } from "@/hooks/workforce/use-workforce"
 import { useMilestones, useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useLeave } from "@/hooks/workforce/use-leave"
 import { addDays, weekStart } from "@/lib/workforce/billing"
-import { todayIso } from "@/lib/workforce/project-metrics"
+import { todayIso, calendarIso } from "@/lib/workforce/project-metrics"
 import { isWeekend, workingDays } from "@/lib/workforce/planning"
 import { TaskStatus, WorkProjectStatus } from "@/types/work-projects"
 import { LeaveStatus } from "@/types/work-planning"
@@ -86,7 +86,7 @@ export default function CalendarPage() {
   const shiftMonth = (delta: number) => {
     const d = new Date(`${first}T00:00:00`)
     d.setMonth(d.getMonth() + delta)
-    setMonth(todayIso(d).slice(0, 7))
+    setMonth(calendarIso(d).slice(0, 7))
   }
 
   const monthLabel = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(`${first}T00:00:00`))
