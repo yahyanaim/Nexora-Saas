@@ -2486,5 +2486,6 @@
   "inboxUnreadSr": "{count} unread",
   "inboxMarkRead": "Mark as read",
   "inboxMarkUnread": "Mark as unread",
-  "inboxDismiss": "Dismiss"
+  "inboxDismiss": "Dismiss",
+  "kpiIndicator": "Indicator"
 }

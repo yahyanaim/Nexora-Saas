@@ -99,13 +99,15 @@ It replaces several separate tools:
 
 Each person has a work role. The role grants a set of permissions, and the menu, buttons and columns follow those permissions.
 
-| Role | Main permissions | Typical use |
+| Role | Main permissions | What they see and do |
 | :--- | :--- | :--- |
-| **Admin** | everything (`*`) | Owner, IT |
-| **Manager** | employees (read/update), clients, projects, files, `time:track`, `time:approve`, `analytics:view` | Project and team leads |
-| **Accountant** | employees (read), clients, invoices, transactions, `analytics:view`, `costs:read` | Finance |
-| **Employee** | projects (read), files, `time:track` | Everyone who logs time |
-| **Client** | projects (read), invoices (read) | Client portal (Phase 5) |
+| **Admin** | everything (`*`) | All pages, settings, overheads, custom fields, KPI targets, review cycles, costs and margins. Never approves their own items |
+| **Manager** | employees (read/update), clients, projects, files, `time:track`, `time:approve`, `analytics:view` | Projects, clients, employees and documents; the whole team's timesheets, leave and expenses with approval; Team dashboard, KPIs, reports; reviews their reports. No invoices, costs or settings |
+| **Accountant** | employees (read), clients, invoices, transactions, `analytics:view`, `costs:read`, `time:track` | Quotes, invoices, receivables, recurring invoices, profitability, reports; their own timesheet, leave, expenses and reviews |
+| **Employee** | projects (read), files, `time:track` | My work, their own timesheet, leave, expenses, reviews and KPIs, the projects they work on. Never colleagues' records, rates, invoices or approvals |
+| **Client** | projects (read), invoices (read) | The client portal only: their projects and milestones, invoices and quotes |
+
+Without `time:approve`, Timesheets, Expenses and Leave show only the person's own records (the employee picker is locked). The full page-by-page matrix is in chapter 04 of `documentation/doc.html`.
 
 Defined in `src/types/workforce.ts` (`WORK_ROLE_PERMISSIONS`) and checked with `can(user, AdminPermissionsPlatform.X)`.
 
@@ -182,7 +184,7 @@ Variables are validated with Zod at startup. A production build with demo mode o
 | :--- | :--- |
 | `npm run dev` | Development server (Turbopack) |
 | `npm run build` / `npm start` | Production build and server |
-| `npm test` | Unit tests (Vitest, 442 tests) |
+| `npm test` | Unit tests (Vitest, 492 tests) |
 | `npm run test:watch` | Unit tests in watch mode |
 | `npm run typecheck` | TypeScript check |
 | `npm run lint` | ESLint, zero warnings allowed |

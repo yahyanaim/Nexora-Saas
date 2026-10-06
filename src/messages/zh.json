@@ -2486,5 +2486,6 @@
   "inboxUnreadSr": "{count} 条未读",
   "inboxMarkRead": "标为已读",
   "inboxMarkUnread": "标为未读",
-  "inboxDismiss": "忽略"
+  "inboxDismiss": "忽略",
+  "kpiIndicator": "指标"
 }

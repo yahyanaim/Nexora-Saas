@@ -52,6 +52,7 @@ import {
   RECEIPT_MAX_BYTES,
   RECEIPT_TYPES,
 } from "./cost-labels"
+import { useSelfScope } from "@/hooks/workforce/use-current-employee"
 
 const emptyForm = () => ({
   employeeId: "",
@@ -69,7 +70,10 @@ export default function ExpensesPage() {
   const locale = useLocale()
   const { authedUser } = useAuthGuard()
   const workspace = useCurrentWorkspace()
-  const { data: expenses = [], isLoading } = useExpenses()
+  const { data: allExpenses = [], isLoading } = useExpenses()
+  // Without the approve right a person only sees and submits their own expenses
+  const self = useSelfScope()
+  const expenses = allExpenses.filter((x) => self.isMine(x.employeeId))
   const { data: settings } = useWorkspaceSettings()
   const enabledCategories = settings
     ? settings.expenseCategories.filter((c) => c.enabled).map((c) => c.category)
@@ -79,7 +83,7 @@ export default function ExpensesPage() {
   const { submit, review, reimburse, remove } = useExpenseMutations()
   const canReview = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE)
 
-  const staff = employees.filter((e) => e.status !== EmployeeStatus.INACTIVE)
+  const staff = self.restrict(employees.filter((e) => e.status !== EmployeeStatus.INACTIVE))
   const money = (n: number) => formatMoney(n, workspace.currency, locale)
   const nameOf = (id: string) => employees.find((e) => e.id === id)?.name ?? "—"
   const projectOf = (id?: string) => projects.find((p) => p.id === id)

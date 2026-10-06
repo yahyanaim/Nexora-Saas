@@ -280,7 +280,7 @@ export function useDashboardNav() {
             url: "/dashboard/leave",
             icon: TreePalm,
             descriptionKey: "pageDescLeave",
-            permission: AdminPermissionsPlatform.EMPLOYEES_READ,
+            permission: AdminPermissionsPlatform.TIME_TRACK,
           },
         ],
       },

@@ -192,33 +192,41 @@ export default function KpiPage() {
       </section>
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>{t("kpiSettings")}</DialogTitle>
             <DialogDescription>{t("kpiSettingsHint")}</DialogDescription>
           </DialogHeader>
           {editing && (
-            <div className="grid gap-3">
+            <div className="flex flex-col gap-3">
+              {/* Column titles once, on wide screens; each field keeps its own label for screen readers and phones */}
+              <div className="hidden grid-cols-[minmax(0,1fr)_8rem_minmax(0,17rem)] gap-3 px-1 text-xs font-medium text-muted-foreground sm:grid">
+                <span>{t("kpiIndicator")}</span>
+                <span>{t("target")}</span>
+                <span>{t("kpiWhoSees")}</span>
+              </div>
               {KEYS.map((key) => (
-                <div key={key} className="grid grid-cols-[1fr_7rem_10rem] items-end gap-2">
-                  <Label className="pb-2.5">{t(`kpi_${key}`)}</Label>
-                  <div className="grid gap-1">
-                    <span className="text-[11px] text-muted-foreground">{key === "revenue" ? t("kpiTargetAmount") : t("kpiTargetPercent")}</span>
+                <div key={key} className="grid gap-2 rounded-2xl border border-border p-3 sm:grid-cols-[minmax(0,1fr)_8rem_minmax(0,17rem)] sm:items-center sm:gap-3">
+                  <Label htmlFor={`kpi-target-${key}`} className="text-sm font-medium">{t(`kpi_${key}`)}</Label>
+                  <div className="relative">
                     <Input
+                      id={`kpi-target-${key}`}
                       type="number"
                       min={0}
-                      aria-label={`${t(`kpi_${key}`)} ${t("target")}`}
+                      max={key === "revenue" ? undefined : 200}
+                      className="pe-12 text-end tabular-nums"
+                      aria-label={`${t(`kpi_${key}`)} · ${key === "revenue" ? t("kpiTargetAmount") : t("kpiTargetPercent")}`}
                       value={editing.targets[key]}
                       onChange={(e) => setEditing({ ...editing, targets: { ...editing.targets, [key]: Number(e.target.value) } })}
                     />
+                    <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center text-xs text-muted-foreground">{key === "revenue" ? workspace.currency : "%"}</span>
                   </div>
-                  <div className="grid gap-1">
-                    <span className="text-[11px] text-muted-foreground">{t("kpiWhoSees")}</span>
-                    <Select value={editing.visibility[key]} onValueChange={(v) => setEditing({ ...editing, visibility: { ...editing.visibility, [key]: v as KpiVisibility } })}>
-                      <SelectTrigger className="w-full bg-card"><SelectValue>{t(`kpiVis_${editing.visibility[key]}`)}</SelectValue></SelectTrigger>
-                      <SelectContent>{(["self", "manager", "everyone"] as KpiVisibility[]).map((v) => <SelectItem key={v} value={v}>{t(`kpiVis_${v}`)}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
+                  <Select value={editing.visibility[key]} onValueChange={(v) => setEditing({ ...editing, visibility: { ...editing.visibility, [key]: v as KpiVisibility } })}>
+                    <SelectTrigger className="w-full min-w-0 bg-card" aria-label={`${t(`kpi_${key}`)} · ${t("kpiWhoSees")}`}>
+                      <SelectValue><span className="block truncate">{t(`kpiVis_${editing.visibility[key]}`)}</span></SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>{(["self", "manager", "everyone"] as KpiVisibility[]).map((v) => <SelectItem key={v} value={v}>{t(`kpiVis_${v}`)}</SelectItem>)}</SelectContent>
+                  </Select>
                 </div>
               ))}
               <p className="text-xs text-muted-foreground">{t("kpiVisibilityNote")}</p>

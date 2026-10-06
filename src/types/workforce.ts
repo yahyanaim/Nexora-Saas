@@ -49,6 +49,8 @@ export const WORK_ROLE_PERMISSIONS: Record<WorkRole, AdminPermissionsPlatform[]>
     P.TRANSACTIONS_READ,
     P.VIEW_ANALYTICS,
     P.COSTS_READ,
+    // Accountants are employees too: own timesheet, expenses, leave and reviews
+    P.TIME_TRACK,
   ],
   [WorkRole.EMPLOYEE]: [P.PROJECTS_READ, P.FILES_READ, P.FILES_CREATE, P.TIME_TRACK],
   [WorkRole.CLIENT]: [P.PROJECTS_READ, P.INVOICES_READ],
