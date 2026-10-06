@@ -2486,5 +2486,6 @@
   "inboxUnreadSr": "{count} अपठित",
   "inboxMarkRead": "पढ़ा हुआ करें",
   "inboxMarkUnread": "अपठित करें",
-  "inboxDismiss": "हटाएँ"
+  "inboxDismiss": "हटाएँ",
+  "kpiIndicator": "संकेतक"
 }

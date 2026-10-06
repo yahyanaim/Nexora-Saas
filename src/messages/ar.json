@@ -2486,5 +2486,6 @@
   "inboxUnreadSr": "{count} غير مقروءة",
   "inboxMarkRead": "تعليم كمقروء",
   "inboxMarkUnread": "تعليم كغير مقروء",
-  "inboxDismiss": "تجاهل"
+  "inboxDismiss": "تجاهل",
+  "kpiIndicator": "المؤشر"
 }

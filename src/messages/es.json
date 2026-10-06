@@ -2486,5 +2486,6 @@
   "inboxUnreadSr": "{count} sin leer",
   "inboxMarkRead": "Marcar como leída",
   "inboxMarkUnread": "Marcar como no leída",
-  "inboxDismiss": "Descartar"
+  "inboxDismiss": "Descartar",
+  "kpiIndicator": "Indicador"
 }

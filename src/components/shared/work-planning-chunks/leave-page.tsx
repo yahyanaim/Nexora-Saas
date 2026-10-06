@@ -46,6 +46,7 @@ import { EmployeeStatus } from "@/types/workforce"
 import { HalfDay, LeaveStatus, LeaveType, type LeaveRequest } from "@/types/work-planning"
 import { includesFilter } from "../workforce-chunks/workforce-labels"
 import { LEAVE_STATUS_CLASS, LEAVE_STATUS_LABEL, LEAVE_TYPE_LABEL, formatRange } from "./planning-labels"
+import { useSelfScope } from "@/hooks/workforce/use-current-employee"
 
 export default function LeavePage() {
   const t = useTranslations()
@@ -59,7 +60,10 @@ export default function LeavePage() {
   const { request, decide, cancel } = useLeaveMutations()
   const canApprove = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE)
 
-  const staff = employees.filter((e) => e.status !== EmployeeStatus.INACTIVE)
+  // Without the approve right a person only sees and requests their own leave
+  const self = useSelfScope()
+  const staff = self.restrict(employees.filter((e) => e.status !== EmployeeStatus.INACTIVE))
+  const visible = requests.filter((r) => self.isMine(r.employeeId))
   const today = todayIso()
   const monday = weekStart(today)
 
@@ -69,7 +73,8 @@ export default function LeavePage() {
   const [reason, setReason] = useState("")
 
   const nameOf = (id: string) => employees.find((e) => e.id === id)?.name ?? "—"
-  const pending = requests.filter((r) => r.status === LeaveStatus.PENDING)
+  // People without the approve right only see their own pending requests
+  const pending = visible.filter((r) => r.status === LeaveStatus.PENDING)
   const approved = requests.filter((r) => r.status === LeaveStatus.APPROVED)
 
   const cards: MetricCardItem[] = [
@@ -238,7 +243,7 @@ export default function LeavePage() {
         title={t("allRequests")}
         isLoading={isLoading}
         columns={columns}
-        data={[...requests].reverse()}
+        data={[...visible].reverse()}
         searchColumnId="employee"
         searchPlaceholder={t("searchByEmployee")}
         exportFilename="leave"

@@ -2486,5 +2486,6 @@
   "inboxUnreadSr": "Непрочитанных: {count}",
   "inboxMarkRead": "Отметить прочитанным",
   "inboxMarkUnread": "Отметить непрочитанным",
-  "inboxDismiss": "Скрыть"
+  "inboxDismiss": "Скрыть",
+  "kpiIndicator": "Показатель"
 }

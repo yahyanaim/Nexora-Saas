@@ -36,6 +36,7 @@ import { EmployeeStatus } from "@/types/workforce"
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import { TaskStatus, WorkProjectStatus } from "@/types/work-projects"
 import { TIME_STATUS_CELL, TIME_STATUS_CLASS, TIME_STATUS_LABEL, formatHours } from "./billing-labels"
+import { useSelfScope } from "@/hooks/workforce/use-current-employee"
 
 const EDITABLE = [TimeEntryStatus.DRAFT, TimeEntryStatus.REJECTED]
 const INVOICED_CLASS = "bg-muted text-foreground border-transparent"
@@ -64,7 +65,9 @@ export default function TimesheetPage() {
   const [reopening, setReopening] = useState(false)
   const [reopenReason, setReopenReason] = useState("")
 
-  const staff = employees.filter((e) => e.status !== EmployeeStatus.INACTIVE)
+  // Without the approve right a person only sees and fills in their own timesheet
+  const self = useSelfScope()
+  const staff = self.restrict(employees.filter((e) => e.status !== EmployeeStatus.INACTIVE))
   const [pickedEmployeeId, setEmployeeId] = useState<string>("")
   const [monday, setMonday] = useState(() => weekStart(todayIso()))
   // Rows added by hand belong to one person and week; switching either starts clean
@@ -75,7 +78,7 @@ export default function TimesheetPage() {
 
   // Until someone is picked, show whoever logged time most recently
   const latestLogger = [...entries].reverse().find((e) => staff.some((s) => s.id === e.employeeId))?.employeeId
-  const employeeId = pickedEmployeeId || latestLogger || staff[0]?.id || ""
+  const employeeId = (self.scoped ? self.me?.id : pickedEmployeeId || self.me?.id || latestLogger || staff[0]?.id) ?? ""
   const view = `${employeeId}:${monday}`
   const extraRows = useMemo(() => (added.view === view ? added.rows : []), [added, view])
   const setExtraRows = (update: (rows: Row[]) => Row[]) => setAdded({ view, rows: update(extraRows) })

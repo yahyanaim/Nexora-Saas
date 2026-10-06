@@ -2486,5 +2486,6 @@
   "inboxUnreadSr": "{count} نہ پڑھے",
   "inboxMarkRead": "پڑھا ہوا نشان زد کریں",
   "inboxMarkUnread": "نہ پڑھا نشان زد کریں",
-  "inboxDismiss": "ہٹائیں"
+  "inboxDismiss": "ہٹائیں",
+  "kpiIndicator": "اشاریہ"
 }

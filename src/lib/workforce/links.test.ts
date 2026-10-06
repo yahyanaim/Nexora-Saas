@@ -76,3 +76,14 @@ describe("links between modules", () => {
     expect(created.map((r) => [r.employeeId, r.reviewerId])).toEqual([["sara", "dev"], ["dev", "sara"]])
   })
 })
+
+describe("role rights", () => {
+  it("lets every staff role track time (timesheet, expenses, leave, reviews), but only managers and admins approve", async () => {
+    const { WORK_ROLE_PERMISSIONS, WorkRole } = await import("@/types/workforce")
+    const { AdminPermissionsPlatform: P } = await import("@/types/roles")
+    for (const role of [WorkRole.MANAGER, WorkRole.ACCOUNTANT, WorkRole.EMPLOYEE]) expect(WORK_ROLE_PERMISSIONS[role]).toContain(P.TIME_TRACK)
+    expect(WORK_ROLE_PERMISSIONS[WorkRole.EMPLOYEE]).not.toContain(P.TIME_APPROVE)
+    expect(WORK_ROLE_PERMISSIONS[WorkRole.ACCOUNTANT]).not.toContain(P.TIME_APPROVE)
+    expect(WORK_ROLE_PERMISSIONS[WorkRole.CLIENT]).not.toContain(P.TIME_TRACK)
+  })
+})
