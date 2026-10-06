@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 import { useClients } from "@/hooks/workforce/use-workforce"
 import { useMilestones, useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { addDays } from "@/lib/workforce/billing"
-import { MilestoneState, milestoneState, projectStatsById, todayIso } from "@/lib/workforce/project-metrics"
+import { MilestoneState, milestoneState, projectStatsById, todayIso, calendarIso } from "@/lib/workforce/project-metrics"
 import { ProjectHealth, WorkProjectStatus } from "@/types/work-projects"
 import { HEALTH_CLASS, HEALTH_LABEL, formatShortDate } from "../work-projects-chunks/project-labels"
 
@@ -28,7 +28,7 @@ const BAR: Record<ProjectHealth, { fill: string; soft: string; icon: string; dot
 function monthStart(iso: string, delta = 0) {
   const d = new Date(`${iso.slice(0, 7)}-01T00:00:00`)
   d.setMonth(d.getMonth() + delta)
-  return todayIso(d)
+  return calendarIso(d)
 }
 
 function days(from: string, to: string) {
