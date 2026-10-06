@@ -63,6 +63,7 @@ const emptyForm = () => ({
   category: ExpenseCategory.TRAVEL,
   description: "",
   amount: "",
+  vatAmount: "",
   billable: false,
   receiptName: "",
 })
@@ -291,6 +292,7 @@ export default function ExpensesPage() {
               category: form.category,
               description: form.description,
               amount: Number(form.amount.replace(",", ".")),
+              vatAmount: form.vatAmount.trim() ? Number(form.vatAmount.replace(",", ".")) : undefined,
               billable: form.billable,
               receiptName: form.receiptName || undefined,
             },
@@ -319,6 +321,11 @@ export default function ExpensesPage() {
               <Label htmlFor="exp-date">{t("date")}</Label>
               <Input id="exp-date" type="date" max={todayIso()} value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
             </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="exp-vat">{`${t("expenseVat")} (${workspace.currency})`}</Label>
+            <Input id="exp-vat" inputMode="decimal" value={form.vatAmount} onChange={(e) => setForm((f) => ({ ...f, vatAmount: e.target.value }))} placeholder="0" />
+            <p className="text-xs text-muted-foreground">{t("expenseVatHint")}</p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">

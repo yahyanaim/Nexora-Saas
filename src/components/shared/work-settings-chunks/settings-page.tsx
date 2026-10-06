@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { vatPeriodOf, vatRegimeOf } from "@/lib/workforce/vat"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -148,6 +149,24 @@ function CompanyTab({ initial }: { initial: CompanySettings }) {
               <SelectContent>
                 <SelectItem value="monday">{t("monday")}</SelectItem>
                 <SelectItem value="sunday">{t("sunday")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label={t("vatRegime")} hint={t("vatRegimeHint")}>
+            <Select value={vatRegimeOf(form)} onValueChange={(v) => set("vatRegime", v as CompanySettings["vatRegime"])}>
+              <SelectTrigger><SelectValue>{t(vatRegimeOf(form) === "payment" ? "vatRegimePayment" : "vatRegimeInvoice")}</SelectValue></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="payment">{t("vatRegimePayment")}</SelectItem>
+                <SelectItem value="invoice">{t("vatRegimeInvoice")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label={t("vatPeriodSetting")}>
+            <Select value={vatPeriodOf(form)} onValueChange={(v) => set("vatPeriod", v as CompanySettings["vatPeriod"])}>
+              <SelectTrigger><SelectValue>{t(vatPeriodOf(form) === "monthly" ? "vatMonthly" : "vatQuarterly")}</SelectValue></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="monthly">{t("vatMonthly")}</SelectItem>
+                <SelectItem value="quarterly">{t("vatQuarterly")}</SelectItem>
               </SelectContent>
             </Select>
           </Field>

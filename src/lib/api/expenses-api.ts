@@ -16,9 +16,9 @@ function seedExpenses(workspaceId: string): Expense[] {
   const rows: Omit<Expense, "workspaceId" | "createdAt" | "updatedAt">[] =
     workspaceId === "ws_atlas"
       ? [
-          { id: "ex_1", employeeId: "emp_karim", projectId: "prj_helio", date: addDays(monday, -16), category: ExpenseCategory.TRAVEL, description: "Train to Casablanca for the site visit", amount: 180, billable: true, receiptName: "train-ticket.pdf", status: ExpenseStatus.REIMBURSED },
-          { id: "ex_2", employeeId: "emp_lina", projectId: "prj_helio", date: addDays(monday, -9), category: ExpenseCategory.SOFTWARE, description: "Charting library licence", amount: 420, billable: true, receiptName: "licence-invoice.pdf", status: ExpenseStatus.APPROVED },
-          { id: "ex_3", employeeId: "emp_omar", projectId: "prj_orbit", date: addDays(monday, -6), category: ExpenseCategory.HARDWARE, description: "GPS tracker test units", amount: 650, billable: false, receiptName: "trackers.jpg", status: ExpenseStatus.APPROVED },
+          { id: "ex_1", employeeId: "emp_karim", projectId: "prj_helio", date: addDays(monday, -16), category: ExpenseCategory.TRAVEL, description: "Train to Casablanca for the site visit", amount: 180, vatAmount: 22.11, billable: true, receiptName: "train-ticket.pdf", status: ExpenseStatus.REIMBURSED },
+          { id: "ex_2", employeeId: "emp_lina", projectId: "prj_helio", date: addDays(monday, -9), category: ExpenseCategory.SOFTWARE, description: "Charting library licence", amount: 420, vatAmount: 70, billable: true, receiptName: "licence-invoice.pdf", status: ExpenseStatus.APPROVED },
+          { id: "ex_3", employeeId: "emp_omar", projectId: "prj_orbit", date: addDays(monday, -6), category: ExpenseCategory.HARDWARE, description: "GPS tracker test units", amount: 650, vatAmount: 108.33, billable: false, receiptName: "trackers.jpg", status: ExpenseStatus.APPROVED },
           { id: "ex_4", employeeId: "emp_julia", projectId: "prj_orbit", date: addDays(monday, -2), category: ExpenseCategory.MEALS, description: "Workshop lunch with Orbit team", amount: 95, billable: false, status: ExpenseStatus.SUBMITTED },
           { id: "ex_5", employeeId: "emp_emma", date: addDays(monday, -1), category: ExpenseCategory.TRAVEL, description: "Taxi to client pitch", amount: 38, billable: false, receiptName: "taxi.png", status: ExpenseStatus.SUBMITTED },
         ]
@@ -42,6 +42,7 @@ export async function listExpensesApi(workspaceId: string): Promise<Expense[]> {
 
 export async function submitExpenseApi(workspaceId: string, input: ExpenseInput): Promise<Expense> {
   if (!(input.amount > 0) || input.amount > MAX_EXPENSE) throw new Error("Enter an amount above zero")
+  if (input.vatAmount !== undefined && !(input.vatAmount >= 0 && input.vatAmount < input.amount)) throw new Error("The VAT must be less than the amount")
   if (input.date > todayIso()) throw new Error("Expenses can't be in the future")
   await assertPeriodOpen(workspaceId, input.date)
   if (!input.description.trim()) throw new Error("Describe the expense")

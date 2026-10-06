@@ -17,6 +17,7 @@ import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { useLeave } from "@/hooks/workforce/use-leave"
 import { overheadRate } from "@/lib/workforce/overhead"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
+import { vatPeriodOf, vatRegimeOf } from "@/lib/workforce/vat"
 import { REPORT_IDS, buildReport, type ReportColumn, type ReportId, type ReportRow } from "@/lib/workforce/reports"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { exportToCsv } from "@/lib/utils/export-data"
@@ -91,12 +92,14 @@ export default function ReportsPage() {
     () =>
       buildReport(
         reportId,
-        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees) },
+        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees), ...(settings ? { vatRegime: vatRegimeOf(settings.company), vatPeriod: vatPeriodOf(settings.company) } : {}) },
         { ...range, clientId: clientId || undefined, projectId: projectId || undefined, employeeId: employeeId || undefined, departmentId: departmentId || undefined },
         { canSeeCosts, today }
       ),
     [reportId, entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, settings, range.from, range.to, clientId, projectId, employeeId, departmentId, canSeeCosts, today] // eslint-disable-line react-hooks/exhaustive-deps
   )
+  // The VAT return covers the whole company, so only the period filter applies
+  const isVatReport = reportId === "vat" || reportId === "vatDetail"
   const hiddenCosts = !canSeeCosts && ["timesheet", "billable", "profitability"].includes(reportId)
   const visibleProjects = projects.filter((p) => !clientId || p.clientId === clientId)
 
@@ -136,7 +139,7 @@ export default function ReportsPage() {
     downloadXlsx(
       {
         name: title,
-        columns: report.columns.map((c) => ({ label: t(c.label), width: c.type === "text" ? 28 : 14 })),
+        columns: report.columns.map((c) => ({ label: t(c.label, c.labelValues), width: c.type === "text" ? 28 : 14 })),
         rows: [...report.rows.map((r) => report.columns.map((c) => exportValue(c, r[c.key] ?? null))), report.columns.map((c, i) => (i === 0 ? t("total") : (report.totals[c.key] ?? null)))],
       },
       fileBase
@@ -145,7 +148,7 @@ export default function ReportsPage() {
     exportToCsv(
       report.rows.map((r) => Object.fromEntries(report.columns.map((c) => [c.key, exportValue(c, r[c.key] ?? null)]))),
       fileBase,
-      report.columns.map((c) => ({ key: c.key, label: t(c.label) }))
+      report.columns.map((c) => ({ key: c.key, label: t(c.label, c.labelValues) }))
     )
   const exportPdf = async () => {
     // PDFs use the user's language when the PDF fonts can draw it (see pdf-i18n)
@@ -186,12 +189,14 @@ export default function ReportsPage() {
         ...(employeeId ? ([[pt("repEmployee"), employees.find((e) => e.id === employeeId)?.name ?? ""]] as [string, string][]) : []),
         ...(departmentId ? ([[pt("repDepartment"), departments.find((d) => d.id === departmentId)?.name ?? ""]] as [string, string][]) : []),
         ...(hiddenCosts ? ([[pt("pdfNote"), pt("repCostsHidden")]] as [string, string][]) : []),
+        ...(reportId === "vat" || reportId === "vatDetail" ? ([[pt("vatRegime"), pt(vatRegimeOf(company ?? { country: "" }) === "payment" ? "vatRegimePayment" : "vatRegimeInvoice")]] as [string, string][]) : []),
       ],
       tiles: [
         { label: pt("pdfRows"), value: report.rows.length.toLocaleString(pl) },
-        ...numeric.slice(0, 4).map((c) => ({ label: pt(c.label), value: pDisplay(c, report.totals[c.key] ?? null) })),
+        // The VAT return's tiles are its key figures, not the first columns
+        ...(reportId === "vat" ? numeric.filter((c) => ["collected", "deductible", "due", "creditOut"].includes(c.key)) : numeric.slice(0, 4)).map((c) => ({ label: pt(c.label, c.labelValues), value: pDisplay(c, report.totals[c.key] ?? null) })),
       ],
-      columns: report.columns.map((c) => ({ label: pt(c.label), align: c.type === "text" || c.type === "date" ? "left" : "right" })),
+      columns: report.columns.map((c) => ({ label: pt(c.label, c.labelValues), align: c.type === "text" || c.type === "date" ? "left" : "right" })),
       rows: report.rows.map((r) => report.columns.map((c) => pDisplay(c, r[c.key] ?? null))),
       totals: report.columns.map((c, i) => (i === 0 ? pt("total") : report.totals[c.key] !== undefined ? pDisplay(c, report.totals[c.key] ?? null) : "")),
       emptyText: pt("repEmpty"),
@@ -273,6 +278,7 @@ export default function ReportsPage() {
               <input type="date" className={SELECT} value={custom.to} min={custom.from} onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))} aria-label={t("repTo")} />
             </>
           )}
+          {!isVatReport && (<>
           <select className={SELECT} value={clientId} onChange={(e) => { setClientId(e.target.value); setProjectId("") }} aria-label={t("client")}>
             <option value="">{t("allClients")}</option>
             {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -289,6 +295,7 @@ export default function ReportsPage() {
             <option value="">{t("allTeams")}</option>
             {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
+          </>)}
         </div>
         {hiddenCosts && (
           <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -322,7 +329,7 @@ export default function ReportsPage() {
                   <dl className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs">
                     {report.columns.slice(1).map((c) => (
                       <div key={c.key} className="contents">
-                        <dt className="text-muted-foreground">{t(c.label)}</dt>
+                        <dt className="text-muted-foreground">{t(c.label, c.labelValues)}</dt>
                         <dd className="text-end tabular-nums">{display(c, r[c.key] ?? null)}</dd>
                       </div>
                     ))}
@@ -335,7 +342,7 @@ export default function ReportsPage() {
                 <thead className="bg-muted/40 text-xs text-muted-foreground">
                   <tr>
                     {report.columns.map((c) => (
-                      <th key={c.key} className={cn("whitespace-nowrap px-4 py-2.5 font-medium", c.type === "text" || c.type === "date" ? "text-start" : "text-end")}>{t(c.label)}</th>
+                      <th key={c.key} className={cn("whitespace-nowrap px-4 py-2.5 font-medium", c.type === "text" || c.type === "date" ? "text-start" : "text-end")}>{t(c.label, c.labelValues)}</th>
                     ))}
                   </tr>
                 </thead>

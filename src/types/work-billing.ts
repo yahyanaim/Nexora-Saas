@@ -82,7 +82,6 @@ export interface Payment {
   reference?: string
 }
 
-/** One email of the invoice to the client (BIL-11). */
 /** Where an invoice stands with the DGI e-invoicing platform (Phase 6e.2). */
 export enum EInvoiceStatus {
   TO_SEND = "to_send",
@@ -102,6 +101,7 @@ export interface EInvoiceState {
   reason?: string
 }
 
+/** One email of the invoice to the client (BIL-11). */
 export interface InvoiceDelivery {
   to: string
   /** ISO timestamp */
