@@ -51,6 +51,7 @@ import { TaskList } from "./task-list"
 import { MilestonesPanel } from "./milestones-panel"
 import { BudgetPanel } from "./budget-panel"
 import { RevenueSection } from "./revenue-section"
+import { FeedbackSection } from "../work-portal-chunks/satisfaction"
 import { useChangeOrders } from "@/hooks/workforce/use-change-orders"
 import { revisedBudget, withChanges } from "@/lib/workforce/phase-budgets"
 import { TeamPanel } from "./team-panel"
@@ -319,6 +320,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             id: "milestones",
             label: t("milestones"),
             content: (
+              <div className="flex flex-col gap-8">
               <MilestonesPanel
                 projectId={project.id}
                 milestones={milestones}
@@ -329,6 +331,8 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                 onApprove={(id, approved) => milestoneMutations.approve.mutate({ id, approved })}
                 onDelete={(id) => milestoneMutations.remove.mutate(id)}
               />
+              {project.clientId && <FeedbackSection projectId={project.id} />}
+              </div>
             ),
           },
           {

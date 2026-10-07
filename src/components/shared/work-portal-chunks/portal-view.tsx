@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { BadgeCheck, CreditCard, DownloadIcon, FileSignature, FileText, Flag, FolderKanban, Receipt, XCircle } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
+import { SatisfactionSurveys } from "./satisfaction"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClients } from "@/hooks/workforce/use-workforce"
 import { useMilestones, useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
@@ -96,6 +97,7 @@ export function PortalView({ clientId, viewerName, preview }: Props) {
   return (
     <div className="space-y-6">
       <MetricCardGrid cards={cards} />
+      <SatisfactionSurveys clientId={clientId} viewerName={viewerName} projects={projects} milestones={milestones} preview={preview} />
 
       <div className="grid gap-6 xl:grid-cols-3">
         {/* Projects and milestones */}

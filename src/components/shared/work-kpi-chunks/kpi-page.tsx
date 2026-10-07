@@ -10,7 +10,7 @@ import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card
 import { ListSkeleton } from "@/components/ui/empty-state"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Gauge, Information, Lock, Settings, Flag, TrendingUp } from "@/components/ui/carbon/icons"
+import { Gauge, Information, Lock, Settings, Flag, Star, TrendingUp } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { cn } from "@/lib/utils"
 import { toast } from "@/lib/utils/toast"
@@ -20,6 +20,8 @@ import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useLeave } from "@/hooks/workforce/use-leave"
+import { useSatisfaction } from "@/hooks/workforce/use-satisfaction"
+import { satisfactionStats } from "@/lib/workforce/satisfaction"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -55,6 +57,7 @@ export default function KpiPage() {
   const { data: projects = [] } = useProjects()
   const { data: clients = [] } = useClients()
   const { data: leave = [] } = useLeave()
+  const { data: responses = [] } = useSatisfaction()
   const { data: settings } = useWorkspaceSettings()
   const [period, setPeriod] = useState<KpiPeriod>("month")
   const [editing, setEditing] = useState<KpiSettings | null>(null)
@@ -108,6 +111,13 @@ export default function KpiPage() {
     }
   })
 
+  // Client satisfaction from the portal surveys (Phase 6h.2), all time
+  const csat = satisfactionStats(responses)
+  const satisfactionCards: MetricCardItem[] = [
+    { key: "csat", title: t("csatKpi"), value: csat.average === null ? "—" : `${csat.average} / 5`, valueClassName: csat.average !== null && csat.average < 3.5 ? "text-warning-foreground" : undefined, footer: { icon: Star, text: t("csatKpiHint", { count: csat.count }) } },
+    { key: "nps", title: t("csatNps"), value: csat.nps === null ? "—" : csat.nps > 0 ? `+${csat.nps}` : csat.nps, valueClassName: csat.nps !== null && csat.nps < 0 ? "text-destructive" : undefined, footer: { icon: Star, text: t("csatNpsHint", { promoters: csat.promoters, detractors: csat.detractors }) } },
+  ]
+
   return (
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader
@@ -125,7 +135,7 @@ export default function KpiPage() {
           </>
         }
       />
-      <MetricCardGrid cards={cards} isLoading={isLoading} />
+      <MetricCardGrid cards={[...cards, ...satisfactionCards]} isLoading={isLoading} />
 
       <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
         <h2 className="mb-1 flex items-center gap-2 text-base font-semibold"><Gauge className="size-4" /> {t("kpiPerPerson")}</h2>
