@@ -128,6 +128,15 @@ export type ConsoleAuditAction =
   | "invoice.credit_note"
   | "payment.refund"
   | "console.signed_in"
+  | "health.outage_simulated"
+  | "health.service_restored"
+  | "incident.created"
+  | "incident.updated"
+  | "incident.notified"
+  | "incident.resolved"
+  | "maintenance.scheduled"
+  | "maintenance.updated"
+  | "backup.restore_tested"
 
 /** Append-only (AUD-01, AUD-02): no role can edit or delete an event. */
 export interface ConsoleAuditEvent {
@@ -139,7 +148,7 @@ export interface ConsoleAuditEvent {
   actorRole: ConsoleRole | "customer"
   action: ConsoleAuditAction
   /** Kind and label of what was acted on, e.g. "staff" / "Liam O'Connor" */
-  targetType: "staff" | "session" | "customer" | "user" | "support" | "subscription" | "invoice" | "payment" | "audit" | "console"
+  targetType: "staff" | "session" | "customer" | "user" | "support" | "subscription" | "invoice" | "payment" | "audit" | "console" | "health" | "incident" | "backup"
   targetLabel: string
   customerId?: string
   before?: string

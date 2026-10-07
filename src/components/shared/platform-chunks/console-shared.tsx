@@ -52,6 +52,15 @@ export const ACTION_LABEL: Record<ConsoleAuditAction, string> = {
   "invoice.credit_note": "auaCreditNote",
   "payment.refund": "auaRefund",
   "console.signed_in": "auaSignedIn",
+  "health.outage_simulated": "auaOutage",
+  "health.service_restored": "auaRestored",
+  "incident.created": "auaIncCreated",
+  "incident.updated": "auaIncUpdated",
+  "incident.notified": "auaIncNotified",
+  "incident.resolved": "auaIncResolved",
+  "maintenance.scheduled": "auaMntScheduled",
+  "maintenance.updated": "auaMntUpdated",
+  "backup.restore_tested": "auaRestoreTest",
 }
 
 export const ROLE_LABEL: Record<ConsoleRole, string> = {
