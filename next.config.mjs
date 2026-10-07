@@ -65,6 +65,14 @@ const nextConfig = {
   },
   async headers() {
     return [
+      // The service worker must always be fetched fresh, or updates never reach phones (Phase 6h.3)
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Content-Type", value: "application/javascript; charset=utf-8" },
+        ],
+      },
       {
         source: "/(.*)",
         headers: [

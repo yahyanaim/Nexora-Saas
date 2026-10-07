@@ -34,6 +34,8 @@ export interface Expense {
   billable: boolean
   /** Name of the attached receipt (the file itself stays with the backend later) */
   receiptName?: string
+  /** Small JPEG of a receipt photo taken on the phone (Phase 6h.3) */
+  receiptImage?: string
   status: ExpenseStatus
   rejectionReason?: string
   /** Who approved (employee id, "admin" or "auto") – BR-3 */
@@ -48,7 +50,7 @@ export interface Expense {
 
 export type ExpenseInput = Pick<
   Expense,
-  "employeeId" | "projectId" | "date" | "category" | "description" | "amount" | "vatAmount" | "billable" | "receiptName"
+  "employeeId" | "projectId" | "date" | "category" | "description" | "amount" | "vatAmount" | "billable" | "receiptName" | "receiptImage"
 >
 
 export interface ProjectProfit {

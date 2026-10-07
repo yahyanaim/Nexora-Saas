@@ -1,4 +1,5 @@
 "use client"
+import { InstallHint } from "./pwa/pwa-setup"
 import React, { useState } from "react"
 import { DashboardTopbar } from "./navigation/dashboard-topbar"
 import { DashboardRail } from "./navigation/dashboard-rail"
@@ -49,6 +50,7 @@ export const DashboardLayout = ({ children }: Props) => {
         <DashboardRail className="my-6 hidden md:flex" />
         <main className="min-w-0 flex-1 overflow-y-auto">
           <ErrorBoundary>{outsidePortal ? <PortalRedirect /> : blocked ? <PlatformOnly /> : denied ? <NoAccess /> : children}</ErrorBoundary>
+          <InstallHint />
         </main>
       </div>
       <MobileNavDrawer open={menuOpen} onOpenChange={setMenuOpen} />

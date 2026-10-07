@@ -1,4 +1,5 @@
 "use client"
+import { ServiceWorkerRegistration } from "@/components/shared/pwa/pwa-setup"
 import { useState } from "react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ThemeProvider } from "./theme-provider"
@@ -26,6 +27,7 @@ const ProviderContexts = ({
               {children}
             </ErrorBoundary>
             <Toaster position="top-center" />
+            <ServiceWorkerRegistration />
           </AuthGuardProvider>
         </TooltipProvider>
       </ThemeProvider>

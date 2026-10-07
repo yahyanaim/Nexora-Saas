@@ -39,8 +39,18 @@ export async function generateMetadata({
       template: `%s | ${t("appName")}`,
     },
     description: t("appBio"),
-    icons: "/app-logo.png",
+    icons: { icon: "/app-logo.png", apple: "/icons/apple-touch-icon.png" },
+    // Installable on phones (Phase 6h.3)
+    manifest: "/manifest.webmanifest",
+    appleWebApp: { capable: true, title: "Nexora", statusBarStyle: "default" as const },
   }
+}
+
+export const viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#2684ff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f141b" },
+  ],
 }
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))

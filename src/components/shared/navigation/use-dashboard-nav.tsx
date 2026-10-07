@@ -27,6 +27,7 @@ import {
   Globe,
   Handshake,
   Funnel,
+  Sunrise,
   Landmark,
   ChartLineData,
   Clock,
@@ -106,6 +107,12 @@ export function useDashboardNav() {
             url: "/dashboard/my-work",
             icon: Briefcase,
             descriptionKey: "pageDescMyWork",
+          },
+          {
+            title: t("todayNav"),
+            url: "/dashboard/today",
+            icon: Sunrise,
+            descriptionKey: "pageDescToday",
           },
           {
             title: t("teamDashboard"),

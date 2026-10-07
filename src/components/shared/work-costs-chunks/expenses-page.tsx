@@ -1,6 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { receiptPreview } from "@/lib/receipt-photo"
 import type { ColumnDef } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
@@ -26,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { CheckCircle2, Clock, DollarSign, FileText, Plus, Receipt, Trash2, XCircle } from "@/components/ui/carbon/icons"
+import { Camera, CheckCircle2, Clock, DollarSign, FileText, Plus, Receipt, Trash2, XCircle } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTable } from "../data-table-chunks/data-table"
 import { DataTableColumnHeader } from "../data-table-chunks/data-table-column-header"
@@ -66,6 +68,7 @@ const emptyForm = () => ({
   vatAmount: "",
   billable: false,
   receiptName: "",
+  receiptImage: "",
 })
 
 export default function ExpensesPage() {
@@ -94,6 +97,14 @@ export default function ExpensesPage() {
 
   const [formOpen, setFormOpen] = useState(false)
   const [form, setForm] = useState(emptyForm)
+  // ?new=1 (home-screen shortcut "New expense") opens the form once the people are known
+  const wantsNew = useSearchParams().get("new") === "1"
+  const [newHandled, setNewHandled] = useState(false)
+  if (wantsNew && !newHandled && staff[0]) {
+    setNewHandled(true)
+    setForm({ ...emptyForm(), employeeId: staff[0].id })
+    setFormOpen(true)
+  }
   const [rejecting, setRejecting] = useState<Expense | null>(null)
   const [reason, setReason] = useState("")
 
@@ -110,11 +121,14 @@ export default function ExpensesPage() {
 
   const memberProjects = projects.filter((p) => p.memberIds.includes(form.employeeId))
 
-  const onReceipt = (file?: File) => {
-    if (!file) return setForm((f) => ({ ...f, receiptName: "" }))
-    if (!RECEIPT_TYPES.includes(file.type)) return toast.error(t("receiptType"))
-    if (file.size > RECEIPT_MAX_BYTES) return toast.error(t("receiptTooLarge"))
-    setForm((f) => ({ ...f, receiptName: file.name }))
+  const onReceipt = async (file?: File) => {
+    if (!file) return setForm((f) => ({ ...f, receiptName: "", receiptImage: "" }))
+    // Phone cameras may give HEIC or other image types: any image is accepted and shrunk to a JPEG
+    const photo = file.type.startsWith("image/")
+    if (!photo && !RECEIPT_TYPES.includes(file.type)) return toast.error(t("receiptType"))
+    if (!photo && file.size > RECEIPT_MAX_BYTES) return toast.error(t("receiptTooLarge"))
+    const receiptImage = photo ? ((await receiptPreview(file)) ?? "") : ""
+    setForm((f) => ({ ...f, receiptName: file.name || "receipt.jpg", receiptImage }))
   }
 
   const columns = useMemo<ColumnDef<Expense>[]>(
@@ -239,6 +253,10 @@ export default function ExpensesPage() {
                   <FileText className="size-3.5" />
                   {x.receiptName ?? t("noReceipt")}
                 </p>
+                {x.receiptImage && (
+                  // eslint-disable-next-line @next/next/no-img-element -- local data URL preview
+                  <img src={x.receiptImage} alt={t("receiptPhotoAlt")} className="max-h-32 w-fit rounded-xl border border-border object-contain" />
+                )}
                 {x.firstApprovedBy && <span className="w-fit rounded-full bg-info-soft px-2.5 py-0.5 text-xs font-medium text-info-foreground">{t("approvalOneOfTwo")}</span>}
                 {x.employeeId === approver.employeeId || x.firstApprovedBy === approverRef(approver) ? (
                   <p className="text-end text-sm text-muted-foreground">{t(x.employeeId === approver.employeeId ? "approvalOwnRequest" : "approvalWaitingSecond")}</p>
@@ -295,6 +313,7 @@ export default function ExpensesPage() {
               vatAmount: form.vatAmount.trim() ? Number(form.vatAmount.replace(",", ".")) : undefined,
               billable: form.billable,
               receiptName: form.receiptName || undefined,
+              receiptImage: form.receiptImage || undefined,
             },
             { onSuccess: () => setFormOpen(false) }
           )
@@ -355,7 +374,18 @@ export default function ExpensesPage() {
           </label>
           <div className="flex flex-col gap-2">
             <Label htmlFor="exp-receipt">{t("receipt")}</Label>
-            <Input id="exp-receipt" type="file" accept={RECEIPT_TYPES.join(",")} onChange={(e) => onReceipt(e.target.files?.[0])} />
+            <div className="flex flex-wrap items-center gap-2">
+              <Input id="exp-receipt" type="file" className="min-w-0 flex-1" accept={RECEIPT_TYPES.join(",")} onChange={(e) => onReceipt(e.target.files?.[0])} />
+              {/* Opens the rear camera on phones; desktops fall back to choosing a picture */}
+              <label className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-3 text-sm font-medium hover:bg-muted">
+                <Camera className="size-4" /> {t("receiptTakePhoto")}
+                <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => onReceipt(e.target.files?.[0])} />
+              </label>
+            </div>
+            {form.receiptImage && (
+              // eslint-disable-next-line @next/next/no-img-element -- local data URL preview
+              <img src={form.receiptImage} alt={t("receiptPhotoAlt")} className="max-h-40 w-fit rounded-xl border border-border object-contain" />
+            )}
             <p className="text-xs text-muted-foreground">{form.receiptName || t("receiptHint")}</p>
           </div>
         </div>
