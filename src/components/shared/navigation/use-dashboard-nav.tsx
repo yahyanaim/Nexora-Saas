@@ -27,6 +27,7 @@ import {
   Globe,
   Handshake,
   Funnel,
+  Landmark,
   ChartLineData,
   Clock,
   ClipboardCheck,
@@ -251,6 +252,12 @@ export function useDashboardNav() {
             url: "/dashboard/receivables",
             icon: HandCoins,
             descriptionKey: "pageDescReceivables",
+          },
+          {
+            title: t("bankImport"),
+            url: "/dashboard/bank-import",
+            icon: Landmark,
+            descriptionKey: "pageDescBankImport",
           },
           {
             title: t("expenses"),

@@ -178,6 +178,7 @@ import {
   UsersRound as LUsersRound,
   CalendarRange as LCalendarRange,
   Funnel as LFunnel,
+  Landmark as LLandmark,
 } from "lucide-react"
 
 export type LucideIcon = React.ComponentType<{ className?: string; size?: number | string; [key: string]: unknown }>
@@ -389,3 +390,4 @@ export const BadgeDollarSign = icon(LBadgeDollarSign, "BadgeDollarSign")
 export const UsersRound = icon(LUsersRound, "UsersRound")
 export const CalendarRange = icon(LCalendarRange, "CalendarRange")
 export const Funnel = icon(LFunnel, "Funnel")
+export const Landmark = icon(LLandmark, "Landmark")
