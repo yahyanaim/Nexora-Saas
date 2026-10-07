@@ -1,6 +1,6 @@
 import type { Client, Employee } from "@/types/workforce"
 import { EmployeeStatus } from "@/types/workforce"
-import { TaskStatus, WorkProjectStatus, type WorkProject, type WorkTask } from "@/types/work-projects"
+import { TaskStatus, WorkProjectStatus, type ChangeOrder, type WorkProject, type WorkTask } from "@/types/work-projects"
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import { ExpenseStatus, type Expense } from "@/types/work-costs"
 import { LeaveStatus, LeaveType, type LeaveRequest } from "@/types/work-planning"
@@ -111,6 +111,7 @@ export function teamOverview(
     expenses: Expense[]
     leave: LeaveRequest[]
     holidays?: string[]
+    changeOrders?: ChangeOrder[]
   },
   /** Restrict to the people and projects this manager looks after; all when omitted */
   scope?: { employeeIds?: string[]; projectIds?: string[] },

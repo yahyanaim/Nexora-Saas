@@ -1,7 +1,8 @@
 import type { SupplierBill } from "@/types/work-purchases"
 import { projectBillCost } from "./supplier-bills"
 import type { Client, Employee } from "@/types/workforce"
-import { BudgetType, type WorkProject, type WorkTask } from "@/types/work-projects"
+import { BudgetType, type ChangeOrder, type WorkProject, type WorkTask } from "@/types/work-projects"
+import { revisedBudget } from "./phase-budgets"
 import { ClientInvoiceStatus, TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/work-billing"
 import { ExpenseStatus, type Expense, type ProjectProfit } from "@/types/work-costs"
 import { entryBillRate, entryCostRate } from "./billing"
@@ -85,9 +86,10 @@ export type BudgetAlert = "none" | "warning" | "over"
  */
 export function budgetUsage(
   project: WorkProject,
-  data: { entries: TimeEntry[]; expenses: Expense[]; employees: Employee[]; clients: Client[]; bills?: SupplierBill[] }
+  data: { entries: TimeEntry[]; expenses: Expense[]; employees: Employee[]; clients: Client[]; bills?: SupplierBill[]; changeOrders?: ChangeOrder[] }
 ): { used: number; budget: number; percent: number | null; alert: BudgetAlert } {
-  const budget = project.budgetAmount ?? 0
+  // Approved change orders raise (or lower) the budget (Phase 6g.4)
+  const budget = data.changeOrders ? revisedBudget(project, data.changeOrders) : project.budgetAmount ?? 0
   if (project.budgetType === BudgetType.NON_BILLABLE || budget <= 0) return { used: 0, budget, percent: null, alert: "none" }
   const client = data.clients.find((c) => c.id === project.clientId)
   const entries = data.entries.filter((e) => e.projectId === project.id && e.status !== TimeEntryStatus.REJECTED)

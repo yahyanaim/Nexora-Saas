@@ -167,6 +167,9 @@ export interface Milestone {
   dueDate: string
   /** The client must sign off before the milestone counts as reached */
   requiresApproval: boolean
+  /** Phase budget (Phase 6g.4): hours and amount planned for the work under this milestone */
+  budgetHours?: number
+  budgetAmount?: number
   /** ISO timestamp of the client sign-off */
   approvedAt?: string
   /** ISO timestamp of a client asking for changes instead (cleared by a later approval) */
@@ -213,3 +216,37 @@ export enum ProjectHealth {
   LATE = "late",
   DONE = "done",
 }
+
+/** A change to the scope agreed with the client, adding to (or taking from) the budget (Phase 6g.4). */
+export enum ChangeOrderStatus {
+  DRAFT = "draft",
+  SENT = "sent",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+}
+
+export interface ChangeOrder {
+  id: string
+  workspaceId: string
+  projectId: string
+  /** Phase the change belongs to; the project as a whole when unset */
+  milestoneId?: string
+  /** CO-ORB-01-01, given when the change is created */
+  number: string
+  title: string
+  description?: string
+  /** Price change before VAT; negative when scope is removed */
+  amount: number
+  /** Hours added to (or removed from) the budget */
+  hours: number
+  status: ChangeOrderStatus
+  sentAt?: string
+  decidedAt?: string
+  /** Who recorded the client's decision */
+  decidedBy?: string
+  rejectionReason?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type ChangeOrderInput = Pick<ChangeOrder, "projectId" | "title" | "amount" | "hours"> & Partial<Pick<ChangeOrder, "milestoneId" | "description">>

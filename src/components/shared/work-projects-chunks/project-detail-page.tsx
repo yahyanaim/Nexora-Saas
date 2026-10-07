@@ -49,6 +49,9 @@ import { todayIso } from "@/lib/workforce/project-metrics"
 import { TaskBoard } from "./task-board"
 import { TaskList } from "./task-list"
 import { MilestonesPanel } from "./milestones-panel"
+import { BudgetPanel } from "./budget-panel"
+import { useChangeOrders } from "@/hooks/workforce/use-change-orders"
+import { revisedBudget } from "@/lib/workforce/phase-budgets"
 import { TeamPanel } from "./team-panel"
 import {
   BUDGET_TYPE_LABEL,
@@ -81,6 +84,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const { data: invoices = [] } = useClientInvoices()
   const { data: expenses = [] } = useExpenses()
   const { data: bills = [] } = useSupplierBills()
+  const { data: changeOrders = [] } = useChangeOrders(projectId)
   const labels = settings?.taskLabels ?? []
   const [filters, setFilters] = useState<TaskFilterValues>(NO_FILTERS)
   const [healthDialog, setHealthDialog] = useState(false)
@@ -134,7 +138,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const progress = taskProgress(tasks)
   const health = projectHealth(project, tasks)
   const done = tasks.filter((task) => task.status === TaskStatus.DONE).length
-  const budget = budgetUsage(project, { entries, expenses, employees, clients, bills })
+  const budget = budgetUsage(project, { entries, expenses, employees, clients, bills, changeOrders })
   const visibleTasks = applyTaskFilters(tasks, filters)
 
   const saveTask = (input: WorkTaskInput) => {
@@ -165,7 +169,9 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
       value:
         project.budgetType === BudgetType.NON_BILLABLE || !project.budgetAmount
           ? t(BUDGET_TYPE_LABEL[project.budgetType])
-          : `${formatMoney(project.budgetAmount, workspace.currency, locale)} · ${t(BUDGET_TYPE_LABEL[project.budgetType])}`,
+          : revisedBudget(project, changeOrders) !== project.budgetAmount
+            ? `${formatMoney(revisedBudget(project, changeOrders), workspace.currency, locale)} · ${t("pbWithChanges")}`
+            : `${formatMoney(project.budgetAmount, workspace.currency, locale)} · ${t(BUDGET_TYPE_LABEL[project.budgetType])}`,
     },
     project.budgetType === BudgetType.FIXED && project.budgetAmount
       ? (() => {
@@ -336,6 +342,24 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                 canEdit={canEdit}
                 onOpen={openTask}
                 onReschedule={(id, dates) => taskMutations.update.mutate({ id, input: dates })}
+              />
+            ),
+          },
+          {
+            id: "budget",
+            label: t("pbTab"),
+            content: (
+              <BudgetPanel
+                project={project}
+                milestones={milestones}
+                tasks={tasks}
+                entries={entries}
+                employees={employees}
+                clients={clients}
+                currency={workspace.currency}
+                canEdit={canEdit}
+                deciderName={authedUser?.name || t("admin")}
+                onSetPhaseBudget={(id, input, close) => milestoneMutations.update.mutate({ id, input }, { onSuccess: close })}
               />
             ),
           },
