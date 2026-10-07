@@ -34,6 +34,15 @@ export const ACTION_LABEL: Record<ConsoleAuditAction, string> = {
   "user.suspended": "auaUserSuspended",
   "user.suspension_lifted": "auaUserLifted",
   "subscription.started": "auaSubStarted",
+  "support.request_created": "auaSupCreated",
+  "support.replied": "auaSupReplied",
+  "support.assigned": "auaSupAssigned",
+  "support.status_changed": "auaSupStatus",
+  "support.session_requested": "auaSesRequested",
+  "support.session_approved": "auaSesApproved",
+  "support.session_refused": "auaSesRefused",
+  "support.session_ended": "auaSesEnded",
+  "support.page_viewed": "auaSesPage",
   "plan.version_created": "auaPriceChanged",
   "billing.jobs_run": "auaJobsRun",
   "payment.recorded": "auaPaymentRecorded",
@@ -65,8 +74,9 @@ const ROLE_CLASS: Record<ConsoleRole, string> = {
   [ConsoleRole.READ_ONLY]: "bg-muted text-muted-foreground",
 }
 
-export function RoleBadge({ role }: { role: ConsoleRole }) {
+export function RoleBadge({ role }: { role: ConsoleRole | "customer" }) {
   const t = useTranslations()
+  if (role === "customer") return <Badge variant="outline" className="border-transparent bg-muted text-muted-foreground">{t("crCustomer")}</Badge>
   return <Badge variant="outline" className={cn("border-transparent", ROLE_CLASS[role])}>{t(ROLE_LABEL[role])}</Badge>
 }
 

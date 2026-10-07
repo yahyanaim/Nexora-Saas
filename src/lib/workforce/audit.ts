@@ -31,7 +31,7 @@ const MAX_ENTRIES = 500
 
 export function recordAudit(
   workspaceId: string,
-  entry: { action: string; actionKey: string; category: AuditLogCategory; target: string; before?: unknown; after?: unknown }
+  entry: { action: string; actionKey: string; category: AuditLogCategory; target: string; before?: unknown; after?: unknown; actor?: Actor }
 ) {
   const details =
     entry.before !== undefined || entry.after !== undefined
@@ -39,7 +39,8 @@ export function recordAudit(
       : undefined
   const row: AuditLogEntry = {
     id: createId("aud"),
-    actor: { ...actor },
+    // a Nexora support agent acting in a session is named, not the signed-in user (SUP-07)
+    actor: { ...(entry.actor ?? actor) },
     action: entry.action,
     actionKey: entry.actionKey,
     category: entry.category,

@@ -111,6 +111,15 @@ export type ConsoleAuditAction =
   | "user.suspension_lifted"
   | "subscription.changed"
   | "subscription.started"
+  | "support.request_created"
+  | "support.replied"
+  | "support.assigned"
+  | "support.status_changed"
+  | "support.session_requested"
+  | "support.session_approved"
+  | "support.session_refused"
+  | "support.session_ended"
+  | "support.page_viewed"
   | "plan.version_created"
   | "billing.jobs_run"
   | "payment.recorded"
@@ -126,10 +135,11 @@ export interface ConsoleAuditEvent {
   workspaceId: string
   actorId: string
   actorName: string
-  actorRole: ConsoleRole
+  /** "customer" when a customer administrator acted (support approvals) */
+  actorRole: ConsoleRole | "customer"
   action: ConsoleAuditAction
   /** Kind and label of what was acted on, e.g. "staff" / "Liam O'Connor" */
-  targetType: "staff" | "session" | "customer" | "user" | "subscription" | "invoice" | "payment" | "audit" | "console"
+  targetType: "staff" | "session" | "customer" | "user" | "support" | "subscription" | "invoice" | "payment" | "audit" | "console"
   targetLabel: string
   customerId?: string
   before?: string
