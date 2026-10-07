@@ -26,6 +26,7 @@ import {
   Briefcase,
   Globe,
   Handshake,
+  Funnel,
   Clock,
   ClipboardCheck,
   Star,
@@ -202,6 +203,12 @@ export function useDashboardNav() {
         title: t("finance"),
         icon: DollarSign,
         items: [
+          {
+            title: t("deals"),
+            url: "/dashboard/deals",
+            icon: Funnel,
+            descriptionKey: "pageDescDeals",
+          },
           {
             title: t("quotes"),
             url: "/dashboard/quotes",
