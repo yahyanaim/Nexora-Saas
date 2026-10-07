@@ -39,10 +39,11 @@ export const billingApi = {
       if (response?.data) return response.data
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to fetch subscription info")
-      logger.error("[API Error] getSubscription failed:", message)
       if (shouldUseDemoFallback(error)) {
+        logger.debug("[demo] getSubscription uses demo data:", message)
         return DEMO_SUBSCRIPTION_INFO
       }
+      logger.error("[API Error] getSubscription failed:", message)
       throw error
     }
     if (isDemoMode()) return DEMO_SUBSCRIPTION_INFO

@@ -64,7 +64,7 @@ export default function ResourcingPage() {
   const conf4 = next4.flat().reduce((s, w) => s + w.confirmed, 0)
   const tent4 = next4.flat().reduce((s, w) => s + w.tentative, 0)
   const overPeople = next4.filter((weeks) => weeks.some((w) => w.load === "over")).length
-  const roleHours = roles.reduce((s, r) => s + (r.weeks[0] ?? 0), 0)
+  const roleHours = roles.reduce((s, r) => s + r.weeks.slice(0, 4).reduce((a, h) => a + h, 0), 0)
 
   const cards: MetricCardItem[] = [
     { key: "booked", title: t("resBooked4"), value: cap4 > 0 ? `${Math.round((conf4 / cap4) * 100)}%` : "—", valueClassName: "text-primary", footer: { icon: CalendarRange, text: t("resBooked4Hint", { hours: Math.round(conf4), capacity: Math.round(cap4) }) } },

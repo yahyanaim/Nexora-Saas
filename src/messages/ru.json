@@ -2925,7 +2925,7 @@
   "resBooked4Hint": "{hours} ч из {capacity} ч",
   "resOverbooked": "Перегружены",
   "resOverbookedHint": "Сверх загрузки в ближайшую неделю",
-  "resOpenRoles": "Открытые роли на неделе",
+  "resOpenRoles": "Открытые роли, ближайшие 4 недели",
   "resOpenRolesHint": "{count} ролей без исполнителя",
   "resTentative": "Предварительно на 4 недели",
   "resTentativeHint": "Не учитывается до подтверждения",

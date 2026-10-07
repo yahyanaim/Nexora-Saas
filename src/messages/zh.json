@@ -2925,7 +2925,7 @@
   "resBooked4Hint": "可用 {capacity} 小时中的 {hours} 小时",
   "resOverbooked": "超负荷人员",
   "resOverbookedHint": "未来某周超出产能",
-  "resOpenRoles": "本周空缺角色",
+  "resOpenRoles": "未分配角色，未来 4 周",
   "resOpenRolesHint": "{count} 个角色预订待指派",
   "resTentative": "未来 4 周暂定",
   "resTentativeHint": "确认前不计入",

@@ -2925,7 +2925,7 @@
   "resBooked4Hint": "{capacity} में से {hours} घंटे",
   "resOverbooked": "ज़्यादा बुक लोग",
   "resOverbookedHint": "किसी आने वाले सप्ताह में क्षमता से अधिक",
-  "resOpenRoles": "इस सप्ताह खुली भूमिकाएँ",
+  "resOpenRoles": "खुली भूमिकाएँ, अगले 4 सप्ताह",
   "resOpenRolesHint": "{count} भूमिका बुकिंग बाकी",
   "resTentative": "अस्थायी, अगले 4 सप्ताह",
   "resTentativeHint": "पक्का होने तक नहीं गिना जाता",
