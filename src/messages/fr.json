@@ -3243,5 +3243,7 @@
   "pwaInstallIos": "Touchez Partager, puis Sur l'écran d'accueil.",
   "pwaInstall": "Installer",
   "receiptTakePhoto": "Prendre une photo",
-  "receiptPhotoAlt": "Photo du justificatif"
+  "receiptPhotoAlt": "Photo du justificatif",
+  "timerNoProjects": "Vous ne faites partie de l'équipe d'aucun projet actif. Demandez à un chef de projet de vous ajouter : vos projets apparaîtront ici.",
+  "timerOpenProjects": "Voir les projets"
 }

@@ -3243,5 +3243,7 @@
   "pwaInstallIos": "点击分享，然后选择添加到主屏幕。",
   "pwaInstall": "安装",
   "receiptTakePhoto": "拍照",
-  "receiptPhotoAlt": "收据照片"
+  "receiptPhotoAlt": "收据照片",
+  "timerNoProjects": "您尚未加入任何进行中项目的团队。请项目经理添加您，之后项目会显示在这里。",
+  "timerOpenProjects": "打开项目"
 }

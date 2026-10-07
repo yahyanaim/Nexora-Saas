@@ -17,6 +17,7 @@ import { addDays, weekStart } from "@/lib/workforce/billing"
 import { hoursPerDay } from "@/lib/workforce/planning"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { TimeEntryStatus } from "@/types/work-billing"
+import { WorkProjectStatus } from "@/types/work-projects"
 
 /**
  * The phone home screen of the installed app (Phase 6h.3): the timer first,
@@ -43,7 +44,7 @@ export default function TodayPage() {
   const weekHours = mine.filter((e) => e.date >= monday && e.date <= addDays(monday, 6)).reduce((s, e) => s + e.hours, 0)
   const target = me ? Math.round(hoursPerDay(me) * 10) / 10 : 8
   const recent = [...mine].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)).slice(0, 8)
-  const myProjects = projects.filter((p) => !me || p.memberIds.includes(me.id))
+  const myProjects = projects.filter((p) => (!me || p.memberIds.includes(me.id)) && p.status !== WorkProjectStatus.CANCELLED && p.status !== WorkProjectStatus.COMPLETED)
   const project = (id: string) => projects.find((p) => p.id === id)
   const day = (iso: string) => (iso === today ? t("today") : new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${iso}T00:00:00`)))
 
@@ -57,9 +58,11 @@ export default function TodayPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl p-4 md:p-6 space-y-5">
+    <div className="p-4 md:p-6 space-y-5">
       <PageHeader />
 
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+      <div className="flex flex-col gap-5">
       <div ref={timerRef} className="scroll-mt-24">
         {me && <TimerBar employeeId={me.id} projects={myProjects} tasks={tasks} />}
       </div>
@@ -87,6 +90,8 @@ export default function TodayPage() {
         ))}
       </div>
 
+      </div>
+
       <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
         <h2 className="mb-3 text-base font-semibold">{t("todayRecent")}</h2>
         {isLoading ? (
@@ -107,6 +112,7 @@ export default function TodayPage() {
           </ul>
         )}
       </section>
+      </div>
     </div>
   )
 }
