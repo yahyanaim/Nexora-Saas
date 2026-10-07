@@ -75,6 +75,14 @@ export interface ConsoleActor {
 
 const ERR_FORBIDDEN = "Your console role does not allow this"
 
+/** A customer administrator's decision, recorded in the console trail too (SUP-07). */
+export function auditCustomer(person: { name: string; email: string }, customerId: string, action: ConsoleAuditAction, targetLabel: string, extra: Partial<Pick<ConsoleAuditEvent, "before" | "after">> = {}) {
+  return auditStore.create(PLATFORM_WS, {
+    actorId: `customer:${person.email}`, actorName: person.name, actorRole: "customer", action, targetType: "support", targetLabel,
+    ip: "—", sessionId: "—", at: new Date().toISOString(), customerId, ...extra,
+  })
+}
+
 /** Writes one audit event (AUD-01). Events are only ever appended. */
 export function audit(actor: ConsoleActor, action: ConsoleAuditAction, targetType: ConsoleAuditEvent["targetType"], targetLabel: string, extra: Partial<Pick<ConsoleAuditEvent, "before" | "after" | "customerId">> = {}) {
   return auditStore.create(PLATFORM_WS, {

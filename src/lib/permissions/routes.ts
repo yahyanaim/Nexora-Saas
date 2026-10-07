@@ -56,6 +56,8 @@ export const ROUTE_PERMISSIONS: Record<string, P> = {
   "/dashboard/roles": P.ROLES_READ,
   "/dashboard/sessions": P.SESSIONS_READ,
   "/dashboard/platform-audit": P.SESSIONS_READ,
+  "/dashboard/support-desk": P.SUBSCRIPTIONS_READ,
+  "/dashboard/support-access": P.SUBSCRIPTIONS_READ,
   "/dashboard/audit-logs": P.SESSIONS_READ,
 }
 

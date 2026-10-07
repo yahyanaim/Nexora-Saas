@@ -4,6 +4,10 @@ import { useCallback, useMemo } from "react"
 import { useTranslations } from "next-intl"
 import {
   Users,
+  CircleHelp,
+  LifeBuoy,
+  Headset,
+  DoorOpen,
   UserX,
   KeyRound,
   MonitorSmartphone,
@@ -362,6 +366,12 @@ export function useDashboardNav() {
             icon: History,
             descriptionKey: "pageDescAuditLogs",
           },
+          {
+            title: t("helpNav"),
+            url: "/dashboard/help",
+            icon: CircleHelp,
+            descriptionKey: "pageDescHelp",
+          },
         ],
       },
       {
@@ -425,6 +435,26 @@ export function useDashboardNav() {
             url: "/dashboard/taxes",
             icon: Percent,
             descriptionKey: "pageDescTaxes",
+          },
+        ],
+      },
+      {
+        // Helping customer companies: their requests and access to their workspace
+        id: "console-support",
+        title: t("cgSupport"),
+        icon: LifeBuoy,
+        items: [
+          {
+            title: t("supportDesk"),
+            url: "/dashboard/support-desk",
+            icon: Headset,
+            descriptionKey: "pageDescSupportDesk",
+          },
+          {
+            title: t("supportAccess"),
+            url: "/dashboard/support-access",
+            icon: DoorOpen,
+            descriptionKey: "pageDescSupportAccess",
           },
         ],
       },

@@ -39,7 +39,7 @@ describe("useDashboardNav", () => {
 
   it("gives the Nexora team its own console menus, without the ERP ones", () => {
     renderIntl(<NavProbe />)
-    expect(screen.getByTestId("groups").textContent).toBe("console-customers,console-billing,console-operations,console-team")
+    expect(screen.getByTestId("groups").textContent).toBe("console-customers,console-billing,console-support,console-operations,console-team")
     expect(screen.getByTestId("active-group").textContent).toBe("console-billing")
     expect(screen.getByTestId("active-item").textContent).toBe("/dashboard/invoices")
   })
@@ -72,8 +72,8 @@ describe("useDashboardNav", () => {
       permissions: [AdminPermissionsPlatform.USERS_READ, AdminPermissionsPlatform.INVOICES_READ],
     }
     renderIntl(<NavProbe />)
-    // Invoice readers also see client invoices under Finance; platform sections stay hidden for non-operators
-    expect(screen.getByTestId("groups").textContent).toBe("finance")
+    // Invoice readers also see client invoices under Finance; Help & support is open to everyone; platform sections stay hidden for non-operators
+    expect(screen.getByTestId("groups").textContent).toBe("finance,system")
   })
 })
 

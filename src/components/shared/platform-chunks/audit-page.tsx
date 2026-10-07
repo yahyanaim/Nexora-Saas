@@ -53,7 +53,7 @@ export default function ConsoleAuditPage() {
 
   const doExport = () => {
     const ok = exportToCsv(
-      rows.map((e) => ({ at: e.at, actor: e.actorName, role: t(ROLE_LABEL[e.actorRole]), action: t(ACTION_LABEL[e.action]), target: e.targetLabel, before: value(e.before), after: value(e.after), ip: e.ip, session: e.sessionId })),
+      rows.map((e) => ({ at: e.at, actor: e.actorName, role: e.actorRole === "customer" ? t("crCustomer") : t(ROLE_LABEL[e.actorRole]), action: t(ACTION_LABEL[e.action]), target: e.targetLabel, before: value(e.before), after: value(e.after), ip: e.ip, session: e.sessionId })),
       `nexora-console-audit-${new Date().toISOString().slice(0, 10)}`,
       [
         { key: "at", label: t("audWhen") }, { key: "actor", label: t("audWho") }, { key: "role", label: t("stfRole") }, { key: "action", label: t("audAction") },

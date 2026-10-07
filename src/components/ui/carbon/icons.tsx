@@ -183,6 +183,7 @@ import {
   Sunrise as LSunrise,
   ListChecks as LListChecks,
   Store as LStore, ScrollText as LScrollText,
+  LifeBuoy as LLifeBuoy, Headset as LHeadset, DoorOpen as LDoorOpen,
 } from "lucide-react"
 
 export type LucideIcon = React.ComponentType<{ className?: string; size?: number | string; [key: string]: unknown }>
@@ -261,7 +262,6 @@ export const LogOut = icon(LLogOut, "LogOut")
 export const Mail = icon(LMail, "Mail")
 export const MailCheck = icon(LMailCheck, "MailCheck")
 export const Megaphone = icon(LMegaphone, "Megaphone")
-export const MessagesSquare = icon(LMessagesSquare, "MessagesSquare")
 export const Monitor = icon(LMonitor, "Monitor")
 export const MonitorSmartphone = icon(LMonitorSmartphone, "MonitorSmartphone")
 export const MoreHorizontal = icon(LEllipsis, "MoreHorizontal")
@@ -400,3 +400,7 @@ export const Sunrise = icon(LSunrise, "Sunrise")
 export const ListChecks = icon(LListChecks, "ListChecks")
 export const Store = icon(LStore, "Store")
 export const ScrollText = icon(LScrollText, "ScrollText")
+export const LifeBuoy = icon(LLifeBuoy, "LifeBuoy")
+export const Headset = icon(LHeadset, "Headset")
+export const DoorOpen = icon(LDoorOpen, "DoorOpen")
+export const MessagesSquare = icon(LMessagesSquare, "MessagesSquare")
