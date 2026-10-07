@@ -33,6 +33,7 @@ export const ROUTE_PERMISSIONS: Record<string, P> = {
   "/dashboard/timeline": P.PROJECTS_READ,
   "/dashboard/calendar": P.PROJECTS_READ,
   "/dashboard/workload": P.EMPLOYEES_READ,
+  "/dashboard/resourcing": P.PROJECTS_UPDATE,
   "/dashboard/leave": P.TIME_TRACK,
   "/dashboard/users": P.USERS_READ,
   "/dashboard/staffs": P.STAFFS_READ,

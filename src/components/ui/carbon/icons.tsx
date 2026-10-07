@@ -175,7 +175,8 @@ import {
   HandCoins as LHandCoins,
   Wallet as LWallet,
   BadgeDollarSign as LBadgeDollarSign,
-  UsersRound as LUsersRound
+  UsersRound as LUsersRound,
+  CalendarRange as LCalendarRange,
 } from "lucide-react"
 
 export type LucideIcon = React.ComponentType<{ className?: string; size?: number | string; [key: string]: unknown }>
@@ -385,3 +386,4 @@ export const HandCoins = icon(LHandCoins, "HandCoins")
 export const Wallet = icon(LWallet, "Wallet")
 export const BadgeDollarSign = icon(LBadgeDollarSign, "BadgeDollarSign")
 export const UsersRound = icon(LUsersRound, "UsersRound")
+export const CalendarRange = icon(LCalendarRange, "CalendarRange")

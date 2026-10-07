@@ -48,3 +48,28 @@ export const ANNUAL_VACATION_DAYS = 25
 
 /** Unused vacation days that move to the next year by default. */
 export const DEFAULT_CARRY_OVER_DAYS = 5
+
+/**
+ * Hours reserved for a person, or for a role not yet staffed, on a project
+ * over a date range (Phase 6g.1). Tentative bookings are possible work that
+ * isn't confirmed yet (e.g. a quote waiting for an answer).
+ */
+export interface ResourceBooking {
+  id: string
+  workspaceId: string
+  projectId: string
+  /** The person booked; empty for a placeholder */
+  employeeId?: string
+  /** Placeholder role, e.g. "Senior developer", when nobody is named yet */
+  roleTitle?: string
+  /** yyyy-mm-dd, inclusive */
+  startDate: string
+  endDate: string
+  hoursPerWeek: number
+  tentative: boolean
+  note?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type ResourceBookingInput = Pick<ResourceBooking, "projectId" | "employeeId" | "roleTitle" | "startDate" | "endDate" | "hoursPerWeek" | "tentative" | "note">
