@@ -37,14 +37,25 @@ describe("useDashboardNav", () => {
     mockUser = { id: "u1", role: "admin", platformOperator: true } as Partial<User>
   })
 
-  it("shows every section to an admin and resolves the active page", () => {
+  it("gives the Nexora team its own console menus, without the ERP ones", () => {
     renderIntl(<NavProbe />)
-    expect(screen.getByTestId("groups").textContent).toBe(
-      // The Nexora team's console comes first; the ERP sections follow
-      "platform,dashboard,organization,finance,planning,management,system"
-    )
-    expect(screen.getByTestId("active-group").textContent).toBe("platform")
+    expect(screen.getByTestId("groups").textContent).toBe("console-customers,console-billing,console-operations,console-team")
+    expect(screen.getByTestId("active-group").textContent).toBe("console-billing")
     expect(screen.getByTestId("active-item").textContent).toBe("/dashboard/invoices")
+  })
+
+  it("shows the ERP menus only while the Nexora team looks at a workspace", () => {
+    mockPathname = "/dashboard/clients"
+    renderIntl(<NavProbe />)
+    expect(screen.getByTestId("groups").textContent).toBe("dashboard,organization,finance,planning,management,system")
+    expect(screen.getByTestId("active-item").textContent).toBe("/dashboard/clients")
+  })
+
+  it("never shows the console to a company admin", () => {
+    mockUser = { id: "u3", role: "admin" } as Partial<User>
+    mockPathname = "/dashboard/clients"
+    renderIntl(<NavProbe />)
+    expect(screen.getByTestId("groups").textContent).not.toContain("console-")
   })
 
   it("matches nested routes to their page", () => {
@@ -77,7 +88,7 @@ describe("PageHeader", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(messages.invoices)
     expect(screen.getByText(messages.pageDescInvoices)).toBeInTheDocument()
     const crumb = screen.getByRole("navigation", { name: "Breadcrumb" })
-    expect(crumb.textContent).toContain(messages.platformAdmin)
+    expect(crumb.textContent).toContain(messages.cgBilling)
   })
 
   it("lets pages override the title and add actions", () => {

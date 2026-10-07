@@ -9,6 +9,7 @@ import {
   KeyRound,
   MonitorSmartphone,
   ScrollText,
+  ShieldCheck,
   Bug,
   ShieldUser,
   FolderKanban,
@@ -365,9 +366,9 @@ export function useDashboardNav() {
         ],
       },
       {
-        // The Nexora platform console: only the Nexora team sees it (Phase 6h.4)
-        id: "platform",
-        title: t("platformAdmin"),
+        // Nexora team console (only operators): the companies using Nexora and their people
+        id: "console-customers",
+        title: t("cgCustomers"),
         icon: Crown,
         items: [
           {
@@ -383,17 +384,19 @@ export function useDashboardNav() {
             descriptionKey: "pageDescUsers",
           },
           {
-            title: t("staffs"),
-            url: "/dashboard/staffs",
-            icon: ShieldUser,
-            descriptionKey: "pageDescStaffs",
-          },
-          {
             title: t("bannedUsers"),
             url: "/dashboard/banned-users",
             icon: UserX,
             descriptionKey: "pageDescBannedUsers",
           },
+        ],
+      },
+      {
+        // What customers pay Nexora
+        id: "console-billing",
+        title: t("cgBilling"),
+        icon: Wallet,
+        items: [
           {
             title: t("plans"),
             url: "/dashboard/plans",
@@ -424,17 +427,39 @@ export function useDashboardNav() {
             icon: Percent,
             descriptionKey: "pageDescTaxes",
           },
+        ],
+      },
+      {
+        // Running the platform
+        id: "console-operations",
+        title: t("cgOperations"),
+        icon: Gauge,
+        items: [
+          {
+            title: t("systemIssues"),
+            url: "/dashboard/system-issues",
+            icon: Bug,
+            descriptionKey: "pageDescSystemIssues",
+          },
           {
             title: t("reports"),
             url: "/dashboard/content-reports",
             icon: Flag,
             descriptionKey: "pageDescReports",
           },
+        ],
+      },
+      {
+        // The Nexora team, its access and the audit trail
+        id: "console-team",
+        title: t("cgTeam"),
+        icon: ShieldCheck,
+        items: [
           {
-            title: t("systemIssues"),
-            url: "/dashboard/system-issues",
-            icon: Bug,
-            descriptionKey: "pageDescSystemIssues",
+            title: t("staffs"),
+            url: "/dashboard/staffs",
+            icon: ShieldUser,
+            descriptionKey: "pageDescStaffs",
           },
           {
             title: t("rolesPermissions"),
@@ -461,21 +486,22 @@ export function useDashboardNav() {
   )
 
   const isClient = !!(authedUser as { clientId?: string } | undefined)?.clientId
+  const operator = isPlatformOperator(authedUser)
+  // The Nexora team works in its console; ERP menus appear only while it looks at a customer's workspace
+  const mode: "console" | "workspace" | "erp" = operator ? (isPlatformPath(pathname) ? "console" : "workspace") : "erp"
   const groups = useMemo(
     () =>
       // Client contacts only ever see their portal (CRM-9)
       isClient
         ? [{ id: "portal", title: t("clientPortal"), icon: Globe, items: [{ title: t("clientPortal"), url: "/dashboard/portal", icon: Globe, descriptionKey: "pageDescPortal" }] }]
         : allGroups
-        .map((group) => ({
-          ...group,
-          // Platform console pages are only for the Nexora team, never for ERP companies
-          items: group.items.filter((item) => hasPermission(item.permission ?? ROUTE_PERMISSIONS[item.url]) && (!isPlatformPath(item.url) || isPlatformOperator(authedUser))),
-        }))
-        .filter((group) => group.items.length > 0)
-        // The Nexora team starts from its console; the ERP menus follow for looking at a workspace
-        .sort((a, b) => Number(b.id === "platform") - Number(a.id === "platform")),
-    [allGroups, hasPermission, authedUser, isClient, t]
+            .filter((group) => (mode === "console") === group.id.startsWith("console-"))
+            .map((group) => ({
+              ...group,
+              items: group.items.filter((item) => hasPermission(item.permission ?? ROUTE_PERMISSIONS[item.url]) && (!isPlatformPath(item.url) || operator)),
+            }))
+            .filter((group) => group.items.length > 0),
+    [allGroups, hasPermission, operator, mode, isClient, t]
   )
 
   const { activeGroup, activeItem } = useMemo(() => {
@@ -488,5 +514,5 @@ export function useDashboardNav() {
 
   const isActive = useCallback((url: string) => isUnderPath(pathname, url), [pathname])
 
-  return { groups, activeGroup, activeItem, isActive }
+  return { groups, activeGroup, activeItem, isActive, mode }
 }

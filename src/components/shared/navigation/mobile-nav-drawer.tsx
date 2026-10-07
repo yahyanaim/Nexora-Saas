@@ -25,7 +25,7 @@ export function MobileNavDrawer({
   onOpenChange: (open: boolean) => void
 }) {
   const t = useTranslations()
-  const { groups, isActive } = useDashboardNav()
+  const { groups, isActive, mode } = useDashboardNav()
   const { authedUser, myEmail } = useAuthGuard()
   const { dir } = useGetDirection()
   const [logoutOpen, setLogoutOpen] = useState(false)
@@ -44,7 +44,7 @@ export function MobileNavDrawer({
             <span className="text-[15px] font-semibold tracking-tight text-foreground">{t("appName")}</span>
           </div>
 
-          <WorkspaceSwitcher className="w-full justify-start" showName />
+          {mode !== "console" && <WorkspaceSwitcher className="w-full justify-start" showName />}
 
           <nav aria-label={t("mainNavigation")} className="flex flex-col gap-5">
             {groups.map((group) => (
