@@ -84,13 +84,13 @@ export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, on
           )}
         >
           <header className="flex items-center justify-between px-1.5 pt-0.5">
-            <h3 className="flex items-center gap-2 text-sm font-semibold">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
               <span className={cn("size-2 rounded-full", TASK_STATUS_DOT[status])} aria-hidden />
               {t(TASK_STATUS_LABEL[status])}
               <span className="rounded-full bg-card px-2 text-xs font-medium text-muted-foreground tabular-nums">
                 {columnTasks.length}
               </span>
-            </h3>
+            </h2>
             {canEdit && (
               <button
                 type="button"

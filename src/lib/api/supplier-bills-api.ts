@@ -1,4 +1,5 @@
 import { createCollection, createId } from "@/lib/workforce/demo-store"
+import { listMilestonesApi } from "./work-projects-api"
 import { assertBill, billTotals } from "@/lib/workforce/supplier-bills"
 import { addDays } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
@@ -22,7 +23,7 @@ const bills = createCollection<SupplierBill>("supplier-bills", "bil", (workspace
       taxRate: 20, status: SupplierBillStatus.PAID, submittedBy: "emp_yassine", approvedBy: "emp_sara", payments: [{ id: "bp1", date: addDays(t, -12), amount: 5760, method: "bank_transfer", reference: "VIR-0412" }], fileName: "mc-0412.pdf",
     },
     {
-      id: "bil_dev_1", supplierId: "sup_dev", number: "YA-031", issueDate: addDays(t, -18), dueDate: addDays(t, -3), projectId: "prj_orbit", lines: [line("b2", "Mobile tracking screens (subcontracted)", 8, 3500)],
+      id: "bil_dev_1", supplierId: "sup_dev", number: "YA-031", issueDate: addDays(t, -18), dueDate: addDays(t, -3), projectId: "prj_orbit", milestoneId: "ms_orbit_beta", lines: [line("b2", "Mobile tracking screens (subcontracted)", 8, 3500)],
       taxRate: 20, status: SupplierBillStatus.APPROVED, submittedBy: "emp_karim", approvedBy: "emp_sara", payments: [], fileName: "ya-031.pdf",
     },
     {
@@ -44,8 +45,15 @@ export async function listSupplierBillsApi(workspaceId: string): Promise<Supplie
 }
 
 /** Records a bill; it waits for approval. */
+/** A phase must belong to the bill's project. */
+async function assertPhase(workspaceId: string, input: Pick<SupplierBillInput, "projectId" | "milestoneId">) {
+  if (!input.projectId || !input.milestoneId) return
+  if (!(await listMilestonesApi(workspaceId, input.projectId)).some((m) => m.id === input.milestoneId)) throw new Error("This phase is not part of the project")
+}
+
 export async function createSupplierBillApi(workspaceId: string, input: SupplierBillInput, submittedBy: string): Promise<SupplierBill> {
-  const clean = { ...input, number: input.number.trim() }
+  const clean = { ...input, number: input.number.trim(), milestoneId: input.projectId ? input.milestoneId || undefined : undefined }
+  await assertPhase(workspaceId, clean)
   assertBill(clean, bills.list(workspaceId))
   await assertPeriodOpen(workspaceId, clean.issueDate)
   const created = bills.create(workspaceId, { ...clean, status: SupplierBillStatus.SUBMITTED, submittedBy, payments: [] })
@@ -58,7 +66,8 @@ export async function updateSupplierBillApi(workspaceId: string, id: string, inp
   const bill = bills.get(workspaceId, id)
   if (!bill) throw new Error("Bill not found")
   if (bill.status !== SupplierBillStatus.SUBMITTED && bill.status !== SupplierBillStatus.REJECTED) throw new Error("Approved bills can't be changed")
-  const clean = { ...input, number: input.number.trim() }
+  const clean = { ...input, number: input.number.trim(), milestoneId: input.projectId ? input.milestoneId || undefined : undefined }
+  await assertPhase(workspaceId, clean)
   assertBill(clean, bills.list(workspaceId), id)
   await assertPeriodOpen(workspaceId, clean.issueDate)
   return bills.update(workspaceId, id, { ...clean, status: SupplierBillStatus.SUBMITTED, rejectionReason: undefined })

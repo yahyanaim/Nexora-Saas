@@ -139,59 +139,59 @@
 }
 
 .purple {
-  --url-wallpaper: url("/images/wallpapers/light/purple.png");
+  --url-wallpaper: url("/images/wallpapers/light/purple.webp");
   --bg-wallpaper: linear-gradient(135deg, #fff, #ceb1f8 100%);
 }
 
 .animals {
-  --url-wallpaper: url("/images/wallpapers/light/animals.png");
+  --url-wallpaper: url("/images/wallpapers/light/animals.webp");
   --bg-wallpaper: linear-gradient(135deg, #fff 0%, #7dbf80 100%);
 }
 
 .game {
-  --url-wallpaper: url("/images/wallpapers/light/game.png");
+  --url-wallpaper: url("/images/wallpapers/light/game.webp");
   --bg-wallpaper: linear-gradient(135deg, #fff 0%, #d0a040 100%);
 }
 
 .ice {
-  --url-wallpaper: url("/images/wallpapers/light/ice.png");
+  --url-wallpaper: url("/images/wallpapers/light/ice.webp");
   --bg-wallpaper: linear-gradient(135deg, #fff 0%, #80c0d8 100%);
 }
 
 .love {
-  --url-wallpaper: url("/images/wallpapers/light/love.png");
+  --url-wallpaper: url("/images/wallpapers/light/love.webp");
   --bg-wallpaper: linear-gradient(135deg, #fff 0%, #c87070 100%);
 }
 
 .occasions {
-  --url-wallpaper: url("/images/wallpapers/light/occasions.png");
+  --url-wallpaper: url("/images/wallpapers/light/occasions.webp");
   --bg-wallpaper: linear-gradient(135deg, #fff 0%, #d0a850 100%);
 }
 
 .rose {
-  --url-wallpaper: url("/images/wallpapers/light/rose.png");
+  --url-wallpaper: url("/images/wallpapers/light/rose.webp");
   --bg-wallpaper: linear-gradient(135deg, #fff 0%, #c88088 100%);
 }
 
 .study {
-  --url-wallpaper: url("/images/wallpapers/light/study.png");
+  --url-wallpaper: url("/images/wallpapers/light/study.webp");
   --bg-wallpaper: linear-gradient(135deg, #fff 0%, #8098c0 100%);
 }
 
 .substantial {
-  --url-wallpaper: url("/images/wallpapers/light/substantial.png");
+  --url-wallpaper: url("/images/wallpapers/light/substantial.webp");
   --bg-wallpaper: linear-gradient(135deg, #fff 0%, #a8a090 100%);
 }
 
 .pharaohs {
-  --url-wallpaper: url("/images/wallpapers/light/pharaohs.png");
+  --url-wallpaper: url("/images/wallpapers/light/pharaohs.webp");
   --bg-wallpaper: linear-gradient(135deg, #fff 0%, #a8a090 100%);
 }
 
 
 
 .dark.purple {
-  --url-wallpaper: url("/images/wallpapers/dark/purple.png");
+  --url-wallpaper: url("/images/wallpapers/dark/purple.webp");
   --bg-wallpaper: linear-gradient(
     135deg,
     lab(29% 26.64 -45.47) 0%,
@@ -201,47 +201,47 @@
 }
 
 .dark.animals {
-  --url-wallpaper: url("/images/wallpapers/dark/animals.png");
+  --url-wallpaper: url("/images/wallpapers/dark/animals.webp");
   --bg-wallpaper: linear-gradient(135deg, #1b3a1e 0%, #0f2a12 100%);
 }
 
 .dark.game {
-  --url-wallpaper: url("/images/wallpapers/dark/game.png");
+  --url-wallpaper: url("/images/wallpapers/dark/game.webp");
   --bg-wallpaper: linear-gradient(135deg, #4a2e0f 0%, #3a220a 100%);
 }
 
 .dark.ice {
-  --url-wallpaper: url("/images/wallpapers/dark/ice.png");
+  --url-wallpaper: url("/images/wallpapers/dark/ice.webp");
   --bg-wallpaper: linear-gradient(135deg, #1a3a4d 0%, #0f2a3a 100%);
 }
 
 .dark.love {
-  --url-wallpaper: url("/images/wallpapers/dark/love.png");
+  --url-wallpaper: url("/images/wallpapers/dark/love.webp");
   --bg-wallpaper: linear-gradient(135deg, #4a1e1e 0%, #3a1515 100%);
 }
 
 .dark.occasions {
-  --url-wallpaper: url("/images/wallpapers/dark/occasions.png");
+  --url-wallpaper: url("/images/wallpapers/dark/occasions.webp");
   --bg-wallpaper: linear-gradient(135deg, #4a3a0f 0%, #3a2e0a 100%);
 }
 
 .dark.rose {
-  --url-wallpaper: url("/images/wallpapers/dark/rose.png");
+  --url-wallpaper: url("/images/wallpapers/dark/rose.webp");
   --bg-wallpaper: linear-gradient(135deg, #4a1e33 0%, #3a1528 100%);
 }
 
 .dark.study {
-  --url-wallpaper: url("/images/wallpapers/dark/study.png");
+  --url-wallpaper: url("/images/wallpapers/dark/study.webp");
   --bg-wallpaper: linear-gradient(135deg, #1e1e3a 0%, #151528 100%);
 }
 
 .dark.substantial {
-  --url-wallpaper: url("/images/wallpapers/dark/substantial.png");
+  --url-wallpaper: url("/images/wallpapers/dark/substantial.webp");
   --bg-wallpaper: linear-gradient(135deg, #3a3630 0%, #2a2620 100%);
 }
 
 .dark.pharaohs {
-  --url-wallpaper: url("/images/wallpapers/dark/pharaohs.png");
+  --url-wallpaper: url("/images/wallpapers/dark/pharaohs.webp");
   --bg-wallpaper: linear-gradient(135deg, #3a3630 0%, #2a2620 100%);
 }
 

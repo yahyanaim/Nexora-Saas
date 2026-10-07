@@ -362,6 +362,8 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                 entries={entries}
                 employees={employees}
                 clients={clients}
+                expenses={expenses}
+                bills={bills}
                 currency={workspace.currency}
                 canEdit={canEdit}
                 deciderName={authedUser?.name || t("admin")}

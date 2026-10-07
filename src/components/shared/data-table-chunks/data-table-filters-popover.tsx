@@ -72,6 +72,7 @@ export function DataTableFiltersPopover<TData>({
         <Button
           variant="outline"
           size="icon"
+          aria-label={t("filters")}
           className="h-9 w-9 shrink-0 overflow-visible rounded-lg border-border/60 bg-background/60 hover:bg-muted/80"
         >
           <ListFilter className="size-4" />

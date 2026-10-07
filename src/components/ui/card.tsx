@@ -41,8 +41,9 @@ export function CardTitle({
   className,
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
+  // h2: card titles sit right under the page's h1 (screen-reader heading order)
   return (
-    <h3
+    <h2
       data-slot="card-title"
       className={cn(
         "text-lg font-semibold leading-snug tracking-tight text-foreground",

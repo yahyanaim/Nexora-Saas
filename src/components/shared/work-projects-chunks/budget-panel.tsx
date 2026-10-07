@@ -19,6 +19,8 @@ import { changeTotals, phaseBudgets, unallocatedBudget, type PhaseAlert } from "
 import { cn } from "@/lib/utils"
 import type { Client, Employee } from "@/types/workforce"
 import type { TimeEntry } from "@/types/work-billing"
+import type { Expense } from "@/types/work-costs"
+import type { SupplierBill } from "@/types/work-purchases"
 import { BudgetType, ChangeOrderStatus, type ChangeOrder, type ChangeOrderInput, type Milestone, type WorkProject, type WorkTask } from "@/types/work-projects"
 
 const PROJECT = "__project__"
@@ -43,6 +45,8 @@ interface Props {
   entries: TimeEntry[]
   employees: Employee[]
   clients: Client[]
+  expenses?: Expense[]
+  bills?: SupplierBill[]
   currency: string
   canEdit: boolean
   deciderName: string
@@ -50,7 +54,7 @@ interface Props {
 }
 
 /** Budget per phase and the change orders agreed with the client (Phase 6g.4). */
-export function BudgetPanel({ project, milestones, tasks, entries, employees, clients, currency, canEdit, deciderName, onSetPhaseBudget }: Props) {
+export function BudgetPanel({ project, milestones, tasks, entries, employees, clients, expenses, bills, currency, canEdit, deciderName, onSetPhaseBudget }: Props) {
   const t = useTranslations()
   const locale = useLocale()
   const { data: orders = [] } = useChangeOrders(project.id)
@@ -64,7 +68,7 @@ export function BudgetPanel({ project, milestones, tasks, entries, employees, cl
   const money = (n: number) => formatMoney(n, currency, locale)
   const signed = (n: number) => (n > 0 ? `+${money(n)}` : money(n))
   const signedHours = (n: number) => (n > 0 ? `+${n} h` : `${n} h`)
-  const rows = phaseBudgets(project, { milestones, tasks, entries, employees, clients, changeOrders: orders })
+  const rows = phaseBudgets(project, { milestones, tasks, entries, employees, clients, changeOrders: orders, expenses, bills })
   const totals = changeTotals(orders, project.id)
   const original = project.budgetAmount ?? 0
   const unallocated = unallocatedBudget(project, milestones)
@@ -116,6 +120,7 @@ export function BudgetPanel({ project, milestones, tasks, entries, employees, cl
                     <td className="px-3 py-2">
                       <p className={cn("font-medium", !r.milestone && "italic text-muted-foreground")}>{r.milestone?.title ?? t("pbNoPhase")}</p>
                       {(r.changeAmount !== 0 || r.changeHours !== 0) && <p className="text-xs text-muted-foreground">{t("pbIncludesChanges", { amount: signed(r.changeAmount), hours: signedHours(r.changeHours) })}</p>}
+                      {r.costs > 0 && <p className="text-xs text-muted-foreground">{t("pbIncludesCosts", { amount: money(r.costs) })}</p>}
                     </td>
                     <td className="px-3 py-2 text-end tabular-nums">{r.hours} / {r.budgetHours || "—"}</td>
                     <td className="px-3 py-2 text-end tabular-nums">{money(r.amount)} / {r.budgetAmount ? money(r.budgetAmount) : "—"}</td>

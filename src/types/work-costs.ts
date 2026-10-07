@@ -22,6 +22,8 @@ export interface Expense {
   workspaceId: string
   employeeId: string
   projectId?: string
+  /** Project phase (milestone) the cost counts against (Phase 6h.5) */
+  milestoneId?: string
   /** yyyy-mm-dd */
   date: string
   category: ExpenseCategory
@@ -50,7 +52,7 @@ export interface Expense {
 
 export type ExpenseInput = Pick<
   Expense,
-  "employeeId" | "projectId" | "date" | "category" | "description" | "amount" | "vatAmount" | "billable" | "receiptName" | "receiptImage"
+  "employeeId" | "projectId" | "milestoneId" | "date" | "category" | "description" | "amount" | "vatAmount" | "billable" | "receiptName" | "receiptImage"
 >
 
 export interface ProjectProfit {

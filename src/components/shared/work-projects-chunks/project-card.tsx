@@ -47,7 +47,7 @@ export function ProjectCard({ project, stats, client, members }: Props) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-medium tracking-wide text-muted-foreground">{project.code}</p>
-          <h3 className="truncate text-base font-semibold text-foreground group-hover:text-primary">{project.name}</h3>
+          <h2 className="truncate text-base font-semibold text-foreground group-hover:text-primary">{project.name}</h2>
           <p className="truncate text-sm text-muted-foreground">{client?.name ?? t("internalProject")}</p>
         </div>
         <Badge variant="outline" className={cn("shrink-0", PROJECT_STATUS_CLASS[project.status])}>

@@ -16,6 +16,7 @@ export const ERROR_KEYS: Record<string, string> = {
   "The chance of winning must be between 0 and 100%": "err_chanceBetween0And100",
   "Say why the deal was lost": "err_sayWhyDealLost",
   "Deal not found": "err_dealNotFound",
+  "This phase is not part of the project": "err_phaseNotInProject",
   "Choose from 1 to 5 stars": "err_chooseStars",
   "Choose a score from 0 to 10": "err_chooseNpsScore",
   "This survey was already answered": "err_surveyAlreadyAnswered",

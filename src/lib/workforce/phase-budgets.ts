@@ -2,6 +2,11 @@ import type { Client, Employee } from "@/types/workforce"
 import { BudgetType, ChangeOrderStatus, type ChangeOrder, type ChangeOrderInput, type Milestone, type WorkProject, type WorkTask } from "@/types/work-projects"
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import { entryBillRate, entryCostRate } from "./billing"
+import { billCounts, billTotals } from "./supplier-bills"
+import { ExpenseStatus, type Expense } from "@/types/work-costs"
+import type { SupplierBill } from "@/types/work-purchases"
+
+const SPENT = [ExpenseStatus.APPROVED, ExpenseStatus.REIMBURSED]
 import { roundMoney } from "./money"
 
 /**
@@ -23,7 +28,10 @@ export interface PhaseBudgetRow {
   changeHours: number
   changeAmount: number
   hours: number
+  /** Labour plus, on cost budgets, the expenses and supplier bills of the phase */
   amount: number
+  /** Part of `amount` from expenses and supplier bills */
+  costs: number
   /** Share of the amount budget used, or of the hours when there is no amount */
   percent: number | null
   alert: PhaseAlert
@@ -58,7 +66,7 @@ const alertFor = (percent: number | null): PhaseAlert => (percent === null ? "no
 
 export function phaseBudgets(
   project: WorkProject,
-  data: { milestones: Milestone[]; tasks: WorkTask[]; entries: TimeEntry[]; employees: Employee[]; clients: Client[]; changeOrders: ChangeOrder[] }
+  data: { milestones: Milestone[]; tasks: WorkTask[]; entries: TimeEntry[]; employees: Employee[]; clients: Client[]; changeOrders: ChangeOrder[]; expenses?: Expense[]; bills?: SupplierBill[] }
 ): PhaseBudgetRow[] {
   const client = data.clients.find((c) => c.id === project.clientId)
   const person = (id: string) => data.employees.find((e) => e.id === id)
@@ -68,13 +76,19 @@ export function phaseBudgets(
   const entries = data.entries.filter((e) => e.projectId === project.id && e.status !== TimeEntryStatus.REJECTED)
   const hourly = project.budgetType === BudgetType.HOURLY
 
+  // Costs count only where the budget is a cost budget (as in budgetUsage); hourly budgets track billable hours
+  const phaseExpenses = hourly ? [] : (data.expenses ?? []).filter((x) => x.projectId === project.id && SPENT.includes(x.status))
+  const phaseBills = hourly ? [] : (data.bills ?? []).filter((b) => b.projectId === project.id && billCounts(b))
+
   const actual = (milestoneId: string | undefined) => {
     const rows = entries.filter((e) => (e.taskId ? phaseOfTask.get(e.taskId) : undefined) === milestoneId)
     const hours = rows.reduce((s, e) => s + e.hours, 0)
-    const amount = hourly
+    const labour = hourly
       ? rows.filter((e) => e.billable).reduce((s, e) => s + e.hours * entryBillRate(e, person(e.employeeId), client), 0)
       : rows.reduce((s, e) => s + e.hours * entryCostRate(e, person(e.employeeId)), 0)
-    return { hours: Math.round(hours * 100) / 100, amount: roundMoney(amount) }
+    const inPhase = (id?: string) => (id ?? undefined) === milestoneId || (!milestoneId && !!id && !phases.some((m) => m.id === id))
+    const costs = phaseExpenses.filter((x) => inPhase(x.milestoneId)).reduce((s, x) => s + x.amount, 0) + phaseBills.filter((b) => inPhase(b.milestoneId)).reduce((s, b) => s + billTotals(b).subtotal, 0)
+    return { hours: Math.round(hours * 100) / 100, amount: roundMoney(labour + costs), costs: roundMoney(costs) }
   }
 
   const row = (milestone: Milestone | null): PhaseBudgetRow => {
@@ -83,15 +97,15 @@ export function phaseBudgets(
     const changeAmount = roundMoney(mine.reduce((s, o) => s + o.amount, 0))
     const budgetHours = (milestone?.budgetHours ?? 0) + changeHours
     const budgetAmount = roundMoney((milestone?.budgetAmount ?? 0) + changeAmount)
-    const { hours, amount } = actual(milestone?.id)
+    const { hours, amount, costs } = actual(milestone?.id)
     const percent = budgetAmount > 0 ? Math.round((amount / budgetAmount) * 100) : budgetHours > 0 ? Math.round((hours / budgetHours) * 100) : null
-    return { milestone, budgetHours, budgetAmount, changeHours, changeAmount, hours, amount, percent, alert: alertFor(percent) }
+    return { milestone, budgetHours, budgetAmount, changeHours, changeAmount, hours, amount, costs, percent, alert: alertFor(percent) }
   }
 
   const rows = phases.map(row)
   const loose = row(null)
   // Work outside any phase only shows when there is some
-  if (loose.hours > 0 || loose.budgetAmount !== 0 || loose.budgetHours !== 0) rows.push(loose)
+  if (loose.hours > 0 || loose.amount > 0 || loose.budgetAmount !== 0 || loose.budgetHours !== 0) rows.push(loose)
   return rows
 }
 

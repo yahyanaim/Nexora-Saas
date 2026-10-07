@@ -3,7 +3,7 @@ import { assertPeriodOpen, getSettingsApi } from "./settings-api"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
-import { listProjectsApi } from "./work-projects-api"
+import { listProjectsApi, listMilestonesApi } from "./work-projects-api"
 import { recordAudit } from "@/lib/workforce/audit"
 import { AUTO_APPROVER, approvalDecision, approverRef, assertNotSelfApproval, stepsRequired, type Approver } from "@/lib/workforce/approvals"
 import { ApprovalSubject } from "@/types/work-settings"
@@ -18,7 +18,7 @@ function seedExpenses(workspaceId: string): Expense[] {
       ? [
           { id: "ex_1", employeeId: "emp_karim", projectId: "prj_helio", date: addDays(monday, -16), category: ExpenseCategory.TRAVEL, description: "Train to Casablanca for the site visit", amount: 1800, vatAmount: 221.1, billable: true, receiptName: "train-ticket.pdf", status: ExpenseStatus.REIMBURSED },
           { id: "ex_2", employeeId: "emp_lina", projectId: "prj_helio", date: addDays(monday, -9), category: ExpenseCategory.SOFTWARE, description: "Charting library licence", amount: 4200, vatAmount: 700, billable: true, receiptName: "licence-invoice.pdf", status: ExpenseStatus.APPROVED },
-          { id: "ex_3", employeeId: "emp_omar", projectId: "prj_orbit", date: addDays(monday, -6), category: ExpenseCategory.HARDWARE, description: "GPS tracker test units", amount: 6500, vatAmount: 1083.3, billable: false, receiptName: "trackers.jpg", status: ExpenseStatus.APPROVED },
+          { id: "ex_3", employeeId: "emp_omar", projectId: "prj_orbit", milestoneId: "ms_orbit_beta", date: addDays(monday, -6), category: ExpenseCategory.HARDWARE, description: "GPS tracker test units", amount: 6500, vatAmount: 1083.3, billable: false, receiptName: "trackers.jpg", status: ExpenseStatus.APPROVED },
           { id: "ex_4", employeeId: "emp_julia", projectId: "prj_orbit", date: addDays(monday, -2), category: ExpenseCategory.MEALS, description: "Workshop lunch with Orbit team", amount: 950, billable: false, status: ExpenseStatus.SUBMITTED },
           { id: "ex_5", employeeId: "emp_emma", date: addDays(monday, -1), category: ExpenseCategory.TRAVEL, description: "Taxi to client pitch", amount: 380, billable: false, receiptName: "taxi.png", status: ExpenseStatus.SUBMITTED },
         ]
@@ -50,6 +50,7 @@ export async function submitExpenseApi(workspaceId: string, input: ExpenseInput)
     const project = (await listProjectsApi(workspaceId)).find((p) => p.id === input.projectId)
     if (!project) throw new Error("Project not found")
     if (!project.memberIds.includes(input.employeeId)) throw new Error("Only the project team can add expenses to it")
+    if (input.milestoneId && !(await listMilestonesApi(workspaceId, project.id)).some((m) => m.id === input.milestoneId)) throw new Error("This phase is not part of the project")
   }
   const settings = await getSettingsApi(workspaceId)
   if (!settings.expenseCategories.some((c) => c.category === input.category && c.enabled)) {
@@ -66,6 +67,8 @@ export async function submitExpenseApi(workspaceId: string, input: ExpenseInput)
     amount: roundMoney(input.amount),
     // Only project expenses can be re-billed
     billable: input.billable && !!input.projectId,
+    // A phase only makes sense with its project
+    milestoneId: input.projectId ? input.milestoneId || undefined : undefined,
     status: auto ? ExpenseStatus.APPROVED : ExpenseStatus.SUBMITTED,
     approvedBy: auto ? AUTO_APPROVER : undefined,
   })

@@ -81,6 +81,8 @@ export interface SupplierBill {
   dueDate: string
   /** Project the cost belongs to, if any */
   projectId?: string
+  /** Project phase (milestone) the cost counts against (Phase 6h.5) */
+  milestoneId?: string
   lines: SupplierBillLine[]
   /** Default VAT rate in percent */
   taxRate: number
@@ -97,4 +99,4 @@ export interface SupplierBill {
   updatedAt: string
 }
 
-export type SupplierBillInput = Pick<SupplierBill, "supplierId" | "number" | "issueDate" | "dueDate" | "projectId" | "lines" | "taxRate" | "fileName" | "notes">
+export type SupplierBillInput = Pick<SupplierBill, "supplierId" | "number" | "issueDate" | "dueDate" | "projectId" | "milestoneId" | "lines" | "taxRate" | "fileName" | "notes">

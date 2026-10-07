@@ -19,6 +19,11 @@ type Timers = Record<string, RunningTimer>
 
 const read = (workspaceId: string) => readDocument<Timers>("timers", workspaceId, () => ({}))
 
+/** Every running timer of the workspace, for managers (Phase 6h.5). */
+export async function listRunningTimersApi(workspaceId: string): Promise<RunningTimer[]> {
+  return Object.values(read(workspaceId))
+}
+
 export async function getTimerApi(workspaceId: string, employeeId: string): Promise<RunningTimer | null> {
   return read(workspaceId)[employeeId] ?? null
 }
