@@ -44,10 +44,10 @@ const PROJECTS: Record<string, ProjectSeed[]> = {
 
 const MILESTONES: Record<string, MilestoneSeed[]> = {
   ws_atlas: [
-    { id: "ms_orbit_design", projectId: "prj_orbit", title: "Design approved", dueDate: day(-20), requiresApproval: true, approvedAt: `${day(-22)}T10:00:00.000Z` },
-    { id: "ms_orbit_beta", projectId: "prj_orbit", title: "Beta release", dueDate: day(10), requiresApproval: true },
-    { id: "ms_orbit_launch", projectId: "prj_orbit", title: "Launch", dueDate: day(30), requiresApproval: false },
-    { id: "ms_helio_mvp", projectId: "prj_helio", title: "MVP dashboard", dueDate: day(-5), requiresApproval: true },
+    { id: "ms_orbit_design", projectId: "prj_orbit", title: "Design approved", dueDate: day(-20), requiresApproval: true, budgetHours: 120, budgetAmount: 90000, approvedAt: `${day(-22)}T10:00:00.000Z` },
+    { id: "ms_orbit_beta", projectId: "prj_orbit", title: "Beta release", dueDate: day(10), requiresApproval: true, budgetHours: 220, budgetAmount: 200000 },
+    { id: "ms_orbit_launch", projectId: "prj_orbit", title: "Launch", dueDate: day(30), requiresApproval: false, budgetHours: 80, budgetAmount: 60000 },
+    { id: "ms_helio_mvp", projectId: "prj_helio", title: "MVP dashboard", dueDate: day(-5), requiresApproval: true, budgetHours: 200, budgetAmount: 250000 },
   ],
   ws_northwind: [
     { id: "ms_lumen_cut", projectId: "prj_lumen", title: "Final cut", dueDate: day(-2), requiresApproval: true },

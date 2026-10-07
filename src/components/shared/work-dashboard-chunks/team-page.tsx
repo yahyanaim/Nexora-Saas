@@ -1,5 +1,6 @@
 "use client"
 
+import { useChangeOrders } from "@/hooks/workforce/use-change-orders"
 import { useMemo, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useQueryClient } from "@tanstack/react-query"
@@ -45,6 +46,7 @@ export default function TeamPage() {
   const { data: entries = [] } = useTimeEntries()
   const { data: clients = [] } = useClients()
   const { data: leave = [] } = useLeave()
+  const { data: changeOrders = [] } = useChangeOrders()
   const { data: expenses = [] } = useExpenses()
   const { data: settings } = useWorkspaceSettings()
   const { data: documents = [] } = useDocuments()
@@ -69,8 +71,8 @@ export default function TeamPage() {
   }, [canSeeDocs, scope, employees, documents])
 
   const overview = useMemo(
-    () => teamOverview({ projects, tasks, entries, employees, clients, expenses, leave, holidays: (settings?.holidays ?? []).map((h) => h.date) }, scope),
-    [projects, tasks, entries, employees, clients, expenses, leave, settings, scope]
+    () => teamOverview({ projects, tasks, entries, employees, clients, expenses, leave, changeOrders, holidays: (settings?.holidays ?? []).map((h) => h.date) }, scope),
+    [projects, tasks, entries, employees, clients, expenses, leave, changeOrders, settings, scope]
   )
   const { attention, budgets, workload, approvals } = overview
   const overloaded = workload.filter((w) => w.load > 100).length
