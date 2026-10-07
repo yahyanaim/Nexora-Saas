@@ -1,7 +1,9 @@
 import { ExpenseStatus, type Expense } from "@/types/work-costs"
 import { TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/work-billing"
 import { LeaveStatus, type LeaveRequest } from "@/types/work-planning"
-import { TaskStatus, type WorkTask } from "@/types/work-projects"
+import { TaskStatus, type WorkProject, type WorkTask } from "@/types/work-projects"
+import type { SatisfactionResponse } from "@/types/work-feedback"
+import { lowRatingsFor } from "./satisfaction"
 import type { EmployeeDocument } from "@/types/work-hr"
 import type { PerformanceReview } from "@/types/work-reviews"
 import { EmployeeStatus, type Employee } from "@/types/workforce"
@@ -34,6 +36,9 @@ export interface InboxInput {
   invoices: ClientInvoice[]
   documents: EmployeeDocument[]
   tasks: WorkTask[]
+  /** Client answers and projects, for low ratings (Phase 6h.2) */
+  feedback?: SatisfactionResponse[]
+  projects?: WorkProject[]
   today: string
 }
 
@@ -80,6 +85,12 @@ export function buildInbox(d: InboxInput): InboxItem[] {
     const staff = d.employees.filter((e) => e.status !== EmployeeStatus.INACTIVE).map((e) => e.id)
     const docs = documentsNeedingAction(d.documents, staff, d.today)
     if (docs.length) items.push({ id: `docs:${docs.map((x) => `${x.doc.id}-${x.status}`).join(",")}`, category: "security", title: "inboxDocuments", message: "inboxDocumentsMessage", values: { count: docs.length }, href: "/dashboard/documents" })
+  }
+
+  const low = lowRatingsFor(d.feedback ?? [], d.projects ?? [], d.viewer)
+  if (low.length) {
+    const first = d.projects?.find((p) => p.id === low[0]!.projectId)
+    items.push({ id: `csat:${low.map((r) => r.id).join(",")}`, category: "team", title: "inboxLowRating", message: "inboxLowRatingMessage", values: { count: low.length, project: first?.name ?? "" }, href: first ? `/dashboard/projects/${first.id}` : "/dashboard/projects" })
   }
 
   if (me) {

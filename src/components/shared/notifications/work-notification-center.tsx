@@ -6,7 +6,8 @@ import { useRouter } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
 import { useEmployees } from "@/hooks/workforce/use-workforce"
-import { useTasks } from "@/hooks/workforce/use-work-projects"
+import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
+import { useSatisfaction } from "@/hooks/workforce/use-satisfaction"
 import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useLeave } from "@/hooks/workforce/use-leave"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
@@ -44,6 +45,8 @@ function WorkInbox() {
   const { data: invoices = [] } = useClientInvoices()
   const { data: documents = [] } = useDocuments()
   const { data: tasks = [] } = useTasks()
+  const { data: feedback = [] } = useSatisfaction()
+  const { data: projects = [] } = useProjects()
 
   const isAdmin = can(authedUser, P.ROLES_UPDATE)
   const rights = { approveTime: can(authedUser, P.TIME_APPROVE), invoices: can(authedUser, P.INVOICES_READ), hr: can(authedUser, P.EMPLOYEES_UPDATE) }
@@ -62,6 +65,8 @@ function WorkInbox() {
         invoices,
         documents,
         tasks,
+        feedback,
+        projects,
         today: todayIso(),
       }).map((i) => ({
         id: i.id,
@@ -73,7 +78,7 @@ function WorkInbox() {
         href: i.href,
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- rights is rebuilt each render; rightsKey carries its value
-    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, t]
+    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, feedback, projects, t]
   )
   const labels: NotificationLabels = {
     title: t("notifications"),

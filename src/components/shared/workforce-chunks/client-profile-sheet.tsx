@@ -12,6 +12,7 @@ import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { Star } from "@/components/ui/carbon/icons"
 import type { Client, Employee } from "@/types/workforce"
 import { PortalAccessManager } from "../work-portal-chunks/portal-access-manager"
+import { FeedbackSection } from "../work-portal-chunks/satisfaction"
 import { ClientActivitySection, ClientBalanceSection, ClientContractsSection } from "./client-crm-sections"
 import { CLIENT_STATUS_CLASS, CLIENT_STATUS_LABEL, formatMoney } from "./workforce-labels"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
@@ -123,6 +124,7 @@ export function ClientProfileSheet({ client, employees, currency, onOpenChange }
               )}
 
               <ClientContractsSection client={client} currency={currency} />
+              <FeedbackSection clientId={client.id} />
 
               <Section title={t("quotes")}>
                 {clientQuotes.length === 0 ? (
