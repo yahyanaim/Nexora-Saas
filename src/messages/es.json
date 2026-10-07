@@ -2925,7 +2925,7 @@
   "resBooked4Hint": "{hours} h de {capacity} h disponibles",
   "resOverbooked": "Personas sobrecargadas",
   "resOverbookedHint": "Por encima de su capacidad alguna semana",
-  "resOpenRoles": "Roles abiertos esta semana",
+  "resOpenRoles": "Puestos abiertos, próximas 4 semanas",
   "resOpenRolesHint": "{count} reservas de rol por cubrir",
   "resTentative": "Provisional, próximas 4 semanas",
   "resTentativeHint": "No cuenta hasta confirmarse",

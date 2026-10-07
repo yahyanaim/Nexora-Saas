@@ -2925,7 +2925,7 @@
   "resBooked4Hint": "{hours} h of {capacity} h available",
   "resOverbooked": "Over-booked people",
   "resOverbookedHint": "Above capacity in a coming week",
-  "resOpenRoles": "Open roles this week",
+  "resOpenRoles": "Open roles, next 4 weeks",
   "resOpenRolesHint": "{count} placeholder bookings to staff",
   "resTentative": "Tentative, next 4 weeks",
   "resTentativeHint": "Not counted until confirmed",

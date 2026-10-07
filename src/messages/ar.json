@@ -2925,7 +2925,7 @@
   "resBooked4Hint": "{hours} س من {capacity} س متاحة",
   "resOverbooked": "أشخاص مثقلون",
   "resOverbookedHint": "فوق طاقتهم في أسبوع قادم",
-  "resOpenRoles": "أدوار شاغرة هذا الأسبوع",
+  "resOpenRoles": "أدوار شاغرة، الأسابيع الأربعة القادمة",
   "resOpenRolesHint": "{count} حجوزات أدوار لإسنادها",
   "resTentative": "مبدئي، الأسابيع الأربعة القادمة",
   "resTentativeHint": "لا يُحتسب قبل التأكيد",

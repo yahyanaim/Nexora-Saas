@@ -203,10 +203,11 @@ export const fetchMyAccountApi = async (): Promise<AuthUser> => {
     if (data?.id) return data
   } catch (error) {
     const msg = apiErrorMessage(error, "Backend session not active")
-    logger.error("fetchMyAccountApi error:", msg)
     if (!shouldUseDemoFallback(error)) {
+      logger.error("fetchMyAccountApi error:", msg)
       throw error
     }
+    logger.debug("[demo] fetchMyAccountApi uses the demo session:", msg)
   }
 
   // Only provide demo user when demo mode is on and the backend is unreachable
