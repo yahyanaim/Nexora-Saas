@@ -91,8 +91,9 @@ export function getUsersColumns(
               <div className="flex items-center gap-1.5">
                 <p className="text-sm font-medium md:text-base">{user.name}</p>
               </div>
+              {/* The company (or Nexora team role) the account belongs to */}
               <p className="text-xs text-muted-foreground md:text-sm">
-                {user.username ? `@${user.username}` : (user.email ?? "—")}
+                {user.adminTag ?? (user.username ? `@${user.username}` : (user.email ?? "—"))}
               </p>
             </div>
           </div>

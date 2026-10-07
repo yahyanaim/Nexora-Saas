@@ -16,7 +16,7 @@ const STATUS: Record<TransactionStatus, { key: string; tone: Tone }> = {
 export async function buildReceiptDocument(tx: Transaction, locale = "en"): Promise<InvoiceDocument> {
   const { t, locale: loc } = await getPdfTranslator(locale)
   const platform = await platformSeller()
-  const money = (n: number) => new Intl.NumberFormat(loc, { style: "currency", currency: "USD" }).format(n)
+  const money = (n: number) => new Intl.NumberFormat(loc, { style: "currency", currency: "MAD" }).format(n)
   const date = (iso: string) => new Intl.DateTimeFormat(loc, { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso.length === 10 ? `${iso}T00:00:00` : iso))
   const status = STATUS[tx.status] ?? STATUS[TransactionStatus.PENDING]
   const method = String(tx.method ?? "").replace(/[_-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())

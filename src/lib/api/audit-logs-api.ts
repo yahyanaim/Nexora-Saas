@@ -23,8 +23,8 @@ export async function getAuditLogsApi(workspaceId?: string): Promise<AuditLogsRe
     return withRecorded(demoAuditLogs)
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch audit logs")
-    logger.error("[API Error] getAuditLogsApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
+      logger.error("[API Error] getAuditLogsApi failed:", message, error)
       throw error
     }
     return withRecorded(demoAuditLogs)

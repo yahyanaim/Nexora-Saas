@@ -108,8 +108,8 @@ export const fetchUsersApi = async (
     }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch users")
-    logger.error("[API Error] fetchUsersApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
+      logger.error("[API Error] fetchUsersApi failed:", message, error)
       throw error
     }
   }
@@ -135,10 +135,10 @@ export const toggleStatusUserApi = async (
     return mapUser(data)
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to toggle status for user ${id}`)
-    logger.error("[API Error] toggleStatusUserApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return updateDemoUser(id, { isActive: isActive ?? true })
     }
+    logger.error("[API Error] toggleStatusUserApi failed:", message, error)
     throw error
   }
 }
@@ -151,13 +151,13 @@ export const toggleBanUserApi = async (
     return await toggleStatusUserApi(id, isBanned !== undefined ? !isBanned : undefined)
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to toggle ban for user ${id}`)
-    logger.error("[API Error] toggleBanUserApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return updateDemoUser(id, {
         status: isBanned ? UserStatus.BANNED : UserStatus.ACTIVE,
         isActive: !isBanned,
       })
     }
+    logger.error("[API Error] toggleBanUserApi failed:", message, error)
     throw error
   }
 }
@@ -174,11 +174,11 @@ export const deleteUserApi = async (id: string): Promise<void> => {
     await apiClient.delete(`/users/${id}`)
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete user ${id}`)
-    logger.error("[API Error] deleteUserApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       deleteDemoUser(id)
       return
     }
+    logger.error("[API Error] deleteUserApi failed:", message, error)
     throw error
   }
 }
@@ -193,7 +193,6 @@ export const createUserApi = async (input: {
     return mapUser(data)
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to create user")
-    logger.error("[API Error] createUserApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return addDemoUser({
         name: input.name,
@@ -201,6 +200,7 @@ export const createUserApi = async (input: {
         role: (input.role as UserRole) || "user",
       })
     }
+    logger.error("[API Error] createUserApi failed:", message, error)
     throw error
   }
 }
@@ -211,7 +211,6 @@ export const getUserApi = async (id: string): Promise<User> => {
     return mapUser(data)
   } catch (error) {
     const message = apiErrorMessage(error, `User with ID ${id} not found`)
-    logger.error("[API Error] getUserApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoUsers().find((u) => u.id === id)
       if (found) {
@@ -219,6 +218,7 @@ export const getUserApi = async (id: string): Promise<User> => {
       }
       throw new Error(`User with ID ${id} not found: ${message}`)
     }
+    logger.error("[API Error] getUserApi failed:", message, error)
     throw error
   }
 }
@@ -232,10 +232,10 @@ export const updateUserApi = async (
     return mapUser(data)
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update user ${id}`)
-    logger.error("[API Error] updateUserApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return updateDemoUser(id, input)
     }
+    logger.error("[API Error] updateUserApi failed:", message, error)
     throw error
   }
 }

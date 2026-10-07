@@ -1,5 +1,6 @@
 "use client"
 
+import { NEXORA_CURRENCY } from "@/lib/platform/nexora-catalog"
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useLocale, useTranslations } from "next-intl"
@@ -47,7 +48,8 @@ export default function SubscriptionPage() {
     onError: (err) => toast.error(translateError(err, t)),
   })
 
-  const usd = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n)
+  // Nexora bills every company in MAD (VAT 20%), whatever the workspace currency
+  const usd = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: NEXORA_CURRENCY, maximumFractionDigits: 0 }).format(n)
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso}T00:00:00`))
   const company = settings?.company.legalName || workspace.name
 

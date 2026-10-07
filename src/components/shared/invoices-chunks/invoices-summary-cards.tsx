@@ -1,4 +1,5 @@
 "use client"
+import { formatMad } from "@/lib/platform/nexora-catalog"
 
 import { useMemo } from "react"
 import { useTranslations } from "next-intl"
@@ -56,7 +57,7 @@ export function InvoicesSummaryCards({ invoices }: InvoicesSummaryCardsProps) {
     {
       key: "totalRevenue",
       title: t("totalRevenue"),
-      value: `$${summary.totalRevenue.toFixed(2)}`,
+      value: formatMad(summary.totalRevenue),
       valueClassName: "",
       badge: {
         label: "+12.5%",
