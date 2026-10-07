@@ -286,9 +286,9 @@ export function DataTable<TData, TValue>({
                     >
                       {header.isPlaceholder
                         ? null
-                        : header.column.columnDef.header
-                          ? flexRender(header.column.columnDef.header, header.getContext())
-                          : <span className="sr-only">{t("actions")}</span>}
+                        : header.column.id === "actions"
+                          ? <span>{t("actions")}</span>
+                          : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   ))}
                 </TableRow>

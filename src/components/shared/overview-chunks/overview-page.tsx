@@ -3,16 +3,19 @@
 import { AnalyticsFilterProvider } from "./analytics-filter-context"
 import { AnalyticsToolbar } from "./analytics-toolbar"
 import { AnalyticsKpiCards } from "./analytics-kpi-cards"
-import { TotalSalesChart } from "./total-sales-chart"
+import dynamic from "next/dynamic"
 import { SalesBreakdownCard } from "./sales-breakdown-card"
-import { ArrBridgeCard } from "./arr-bridge-card"
 import { AiComputeMeteringCard } from "./ai-compute-metering-card"
 import { TopProductsCard } from "./top-products-card"
-import {
-  SessionOverTimeCard,
-  AverageOrderValueCard,
-} from "./time-series-cards"
 import { AskVictorPill } from "./ask-victor-pill"
+
+// The chart library (recharts) loads in its own bundle after the page shows,
+// so the first load stays light (PERF-01); a same-size placeholder avoids layout jumps.
+const ChartPlaceholder = () => <div className="h-80 animate-pulse rounded-3xl border border-border bg-card" aria-hidden />
+const TotalSalesChart = dynamic(() => import("./total-sales-chart").then((m) => m.TotalSalesChart), { ssr: false, loading: ChartPlaceholder })
+const ArrBridgeCard = dynamic(() => import("./arr-bridge-card").then((m) => m.ArrBridgeCard), { ssr: false, loading: ChartPlaceholder })
+const SessionOverTimeCard = dynamic(() => import("./time-series-cards").then((m) => m.SessionOverTimeCard), { ssr: false, loading: ChartPlaceholder })
+const AverageOrderValueCard = dynamic(() => import("./time-series-cards").then((m) => m.AverageOrderValueCard), { ssr: false, loading: ChartPlaceholder })
 
 export default function OverviewPage() {
   return (
