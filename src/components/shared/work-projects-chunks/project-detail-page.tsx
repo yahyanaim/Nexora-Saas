@@ -50,6 +50,7 @@ import { TaskBoard } from "./task-board"
 import { TaskList } from "./task-list"
 import { MilestonesPanel } from "./milestones-panel"
 import { BudgetPanel } from "./budget-panel"
+import { RevenueSection } from "./revenue-section"
 import { useChangeOrders } from "@/hooks/workforce/use-change-orders"
 import { revisedBudget, withChanges } from "@/lib/workforce/phase-budgets"
 import { TeamPanel } from "./team-panel"
@@ -349,6 +350,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             id: "budget",
             label: t("pbTab"),
             content: (
+              <div className="flex flex-col gap-8">
               <BudgetPanel
                 project={project}
                 milestones={milestones}
@@ -361,6 +363,18 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                 deciderName={authedUser?.name || t("admin")}
                 onSetPhaseBudget={(id, input, close) => milestoneMutations.update.mutate({ id, input }, { onSuccess: close })}
               />
+              <RevenueSection
+                project={project}
+                milestones={milestones}
+                tasks={tasks}
+                entries={entries}
+                invoices={invoices}
+                changeOrders={changeOrders}
+                currency={workspace.currency}
+                canEdit={canEdit}
+                onSetMethod={(recognitionMethod) => projectMutations.update.mutate({ id: project.id, input: { recognitionMethod } })}
+              />
+              </div>
             ),
           },
           { id: "team", label: t("team"), content: <TeamPanel team={team} managerId={project.managerId} tasks={tasks} /> },

@@ -27,6 +27,8 @@ export const DEFAULT_ACCOUNTS: Record<AccountKey, string> = {
   expenseSubcontractor: "6136", // Rémunérations d'intermédiaires et honoraires
   expenseOther: "6188", // Autres charges externes
   suppliers: "4411", // Fournisseurs
+  unbilledRevenue: "3424", // Clients, produits non encore facturés
+  deferredRevenue: "4491", // Produits constatés d'avance
 }
 
 export const ACCOUNT_KEYS = Object.keys(DEFAULT_ACCOUNTS) as AccountKey[]
