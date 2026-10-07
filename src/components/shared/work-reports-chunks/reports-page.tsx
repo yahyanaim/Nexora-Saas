@@ -96,7 +96,7 @@ export default function ReportsPage() {
     () =>
       buildReport(
         reportId,
-        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees), ...(settings ? { vatRegime: vatRegimeOf(settings.company), vatPeriod: vatPeriodOf(settings.company), accounts: settings.accounts } : {}), bills, suppliers },
+        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees), ...(settings ? { vatRegime: vatRegimeOf(settings.company), vatPeriod: vatPeriodOf(settings.company), accounts: settings.accounts, country: settings.company.country } : {}), bills, suppliers },
         { ...range, clientId: clientId || undefined, projectId: projectId || undefined, employeeId: employeeId || undefined, departmentId: departmentId || undefined },
         { canSeeCosts, today }
       ),
@@ -104,7 +104,9 @@ export default function ReportsPage() {
   )
   // The VAT return covers the whole company, so only the period filter applies
   const isVatReport = reportId === "vat" || reportId === "vatDetail" || reportId === "journal"
-  const hiddenCosts = !canSeeCosts && ["timesheet", "billable", "profitability"].includes(reportId)
+  // Payroll is per person: client and project filters don't apply
+  const showClientFilters = !isVatReport && reportId !== "payroll"
+  const hiddenCosts = !canSeeCosts && ["timesheet", "billable", "profitability", "payroll"].includes(reportId)
   const visibleProjects = projects.filter((p) => !clientId || p.clientId === clientId)
 
   const money = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency: workspace.currency, maximumFractionDigits: 2 }).format(n)
@@ -282,7 +284,7 @@ export default function ReportsPage() {
               <input type="date" className={SELECT} value={custom.to} min={custom.from} onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))} aria-label={t("repTo")} />
             </>
           )}
-          {!isVatReport && (<>
+          {showClientFilters && (<>
           <select className={SELECT} value={clientId} onChange={(e) => { setClientId(e.target.value); setProjectId("") }} aria-label={t("client")}>
             <option value="">{t("allClients")}</option>
             {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -291,6 +293,8 @@ export default function ReportsPage() {
             <option value="">{t("repAllProjects")}</option>
             {visibleProjects.map((p) => <option key={p.id} value={p.id}>{p.code} · {p.name}</option>)}
           </select>
+          </>)}
+          {!isVatReport && (<>
           <select className={SELECT} value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} aria-label={t("repEmployee")}>
             <option value="">{t("repAllEmployees")}</option>
             {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}

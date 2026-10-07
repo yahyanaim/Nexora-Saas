@@ -2901,5 +2901,18 @@
   "employerMonthlyCost": "Monatliche Kosten für das Unternehmen",
   "workedHoursYear": "Arbeitsstunden pro Jahr",
   "realHourlyCost": "Echte Kosten pro Stunde",
-  "useAsHourlyCost": "Als Stundenkosten übernehmen"
+  "useAsHourlyCost": "Als Stundenkosten übernehmen",
+  "rep_payroll": "Lohndaten",
+  "repDesc_payroll": "Für jede Person im Zeitraum: Soll- und Arbeitstage, Abwesenheiten nach Art, Stunden, Überstunden und zu erstattende Auslagen, bereit für Lohnbüro oder Lohnsoftware.",
+  "employeeCin": "CIN (Ausweis)",
+  "employeeCnss": "CNSS-Nummer",
+  "payExpectedDays": "Solltage",
+  "payWorkedDays": "Arbeitstage",
+  "payVacation": "Urlaub",
+  "paySick": "Krankheit",
+  "payPersonal": "Sonderurlaub",
+  "payUnpaid": "Unbezahlt",
+  "payOvertime": "Überstunden",
+  "payExpensesToRepay": "Zu erstattende Auslagen",
+  "payEmployerCharges": "Arbeitgeberanteile"
 }

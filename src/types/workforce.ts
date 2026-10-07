@@ -93,6 +93,10 @@ export interface Employee {
   /** ISO date (yyyy-mm-dd) */
   hireDate: string
   /** Internal cost per hour, in the workspace currency */
+  /** Morocco: national ID card number (CIN), for payroll */
+  cin?: string
+  /** Morocco: the person's CNSS registration number, for payroll */
+  cnssNumber?: string
   /** Gross monthly salary, used to work out the real hourly cost (Phase 6f.3) */
   grossMonthlySalary?: number
   hourlyCost: number

@@ -8,6 +8,7 @@ import { employeeKpis } from "./kpis"
 import { todayIso } from "./project-metrics"
 import { roundMoney } from "./money"
 import { accountsWithDefaults, buildJournal } from "./journal"
+import { payrollRows } from "./payroll"
 import type { AccountKey } from "@/types/work-settings"
 import type { Supplier, SupplierBill } from "@/types/work-purchases"
 import { billCounts, billTotals } from "./supplier-bills"
@@ -21,8 +22,8 @@ import { billVatLines, collectedVatLines, deductibleVatLines, vatReturn, type Va
  * permission (RPT-8).
  */
 
-export type ReportId = "timesheet" | "billable" | "unbilled" | "invoices" | "aging" | "expenses" | "profitability" | "vat" | "vatDetail" | "journal"
-export const REPORT_IDS: ReportId[] = ["timesheet", "billable", "unbilled", "invoices", "aging", "expenses", "profitability", "vat", "vatDetail", "journal"]
+export type ReportId = "timesheet" | "billable" | "unbilled" | "invoices" | "aging" | "expenses" | "profitability" | "vat" | "vatDetail" | "journal" | "payroll"
+export const REPORT_IDS: ReportId[] = ["timesheet", "billable", "unbilled", "invoices", "aging", "expenses", "profitability", "vat", "vatDetail", "journal", "payroll"]
 
 export type ColumnType = "text" | "date" | "hours" | "money" | "percent" | "number"
 export interface ReportColumn {
@@ -63,6 +64,8 @@ export interface ReportData {
   vatPeriod?: VatPeriod
   /** Account numbers for the journal (Phase 6e.4); CGNC defaults when absent */
   accounts?: Partial<Record<AccountKey, string>>
+  /** Company country, for payroll contributions (Phase 6f.4) */
+  country?: string
   /** Supplier bills and suppliers (Phase 6f.2) */
   bills?: SupplierBill[]
   suppliers?: Supplier[]
@@ -387,6 +390,47 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
       }, data.bills ?? [], data.suppliers ?? [])
         .filter((l) => inPeriod(l.date))
         .map((l) => ({ ...l }))
+      break
+    }
+    case "payroll": {
+      columns = [
+        { key: "employee", label: "repEmployee", type: "text" },
+        { key: "cin", label: "employeeCin", type: "text" },
+        { key: "cnss", label: "employeeCnss", type: "text" },
+        { key: "expectedDays", label: "payExpectedDays", type: "number" },
+        { key: "workedDays", label: "payWorkedDays", type: "number" },
+        { key: "vacation", label: "payVacation", type: "number" },
+        { key: "sick", label: "paySick", type: "number" },
+        { key: "personal", label: "payPersonal", type: "number" },
+        { key: "unpaid", label: "payUnpaid", type: "number" },
+        { key: "hours", label: "hours", type: "hours" },
+        { key: "overtime", label: "payOvertime", type: "hours" },
+        { key: "expensesToRepay", label: "payExpensesToRepay", type: "money" },
+        { key: "gross", label: "grossMonthlySalary", type: "money", sensitive: true },
+        { key: "employerCharges", label: "payEmployerCharges", type: "money", sensitive: true },
+      ]
+      const people = data.employees.filter((e) => personOk(e.id))
+      rows = payrollRows({ employees: people, entries: data.entries, leave: data.leave, expenses: data.expenses, holidays: data.holidays }, f.from, f.to, data.country ?? "MA")
+        .map((r) => {
+          const e = employeeById.get(r.employeeId)
+          return {
+            employee: e?.name ?? "",
+            cin: e?.cin ?? "",
+            cnss: e?.cnssNumber ?? "",
+            expectedDays: r.expectedDays,
+            workedDays: r.workedDays,
+            vacation: r.vacation,
+            sick: r.sick,
+            personal: r.personal,
+            unpaid: r.unpaid,
+            hours: r.hours,
+            overtime: r.overtime,
+            expensesToRepay: r.expensesToRepay,
+            gross: r.gross ?? null,
+            employerCharges: r.employerCharges ?? null,
+          }
+        })
+        .sort((a, b) => String(a.employee).localeCompare(String(b.employee)))
       break
     }
     case "vatDetail": {

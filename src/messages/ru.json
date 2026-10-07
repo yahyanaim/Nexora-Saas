@@ -2901,5 +2901,18 @@
   "employerMonthlyCost": "Расходы компании в месяц",
   "workedHoursYear": "Часов работы в год",
   "realHourlyCost": "Реальная стоимость часа",
-  "useAsHourlyCost": "Использовать как стоимость часа"
+  "useAsHourlyCost": "Использовать как стоимость часа",
+  "rep_payroll": "Данные для зарплаты",
+  "repDesc_payroll": "По каждому сотруднику за период: дни по плану и отработанные, отсутствия по видам, часы, сверхурочные и расходы к возмещению — для бухгалтерии или программы расчёта.",
+  "employeeCin": "CIN (удостоверение)",
+  "employeeCnss": "Номер CNSS",
+  "payExpectedDays": "Дней по плану",
+  "payWorkedDays": "Отработано дней",
+  "payVacation": "Отпуск",
+  "paySick": "Больничный",
+  "payPersonal": "Личный отпуск",
+  "payUnpaid": "Без сохранения",
+  "payOvertime": "Сверхурочные",
+  "payExpensesToRepay": "Расходы к возмещению",
+  "payEmployerCharges": "Взносы работодателя"
 }

@@ -2901,5 +2901,18 @@
   "employerMonthlyCost": "Coût mensuel pour l'entreprise",
   "workedHoursYear": "Heures travaillées par an",
   "realHourlyCost": "Coût réel par heure",
-  "useAsHourlyCost": "Utiliser comme coût horaire"
+  "useAsHourlyCost": "Utiliser comme coût horaire",
+  "rep_payroll": "Éléments de paie",
+  "repDesc_payroll": "Pour chaque personne sur la période : jours prévus et travaillés, congés par type, heures, heures supplémentaires et frais à rembourser, prêts pour votre cabinet ou logiciel de paie.",
+  "employeeCin": "CIN",
+  "employeeCnss": "N° d'immatriculation CNSS",
+  "payExpectedDays": "Jours prévus",
+  "payWorkedDays": "Jours travaillés",
+  "payVacation": "Congés payés",
+  "paySick": "Maladie",
+  "payPersonal": "Congé personnel",
+  "payUnpaid": "Sans solde",
+  "payOvertime": "Heures sup.",
+  "payExpensesToRepay": "Frais à rembourser",
+  "payEmployerCharges": "Charges patronales"
 }

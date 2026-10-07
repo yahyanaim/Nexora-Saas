@@ -45,6 +45,8 @@ const schema = z.object({
   employmentType: z.enum(EmploymentType),
   status: z.enum(EmployeeStatus),
   hireDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  cin: z.string().trim().max(20).optional(),
+  cnssNumber: z.union([z.literal(""), z.string().trim().regex(/^\d{9}$/, "9 digits")]).optional(),
   grossMonthlySalary: z.number().min(0).max(10000000).optional(),
   hourlyCost: money,
   billableRate: money,
@@ -68,6 +70,8 @@ function toFormValues(employee?: Employee): FormValues {
     employmentType: employee?.employmentType ?? EmploymentType.FULL_TIME,
     status: employee?.status ?? EmployeeStatus.ACTIVE,
     hireDate: employee?.hireDate ?? new Date().toISOString().slice(0, 10),
+    cin: employee?.cin ?? "",
+    cnssNumber: employee?.cnssNumber ?? "",
     grossMonthlySalary: employee?.grossMonthlySalary,
     hourlyCost: employee?.hourlyCost ?? 0,
     billableRate: employee?.billableRate ?? 0,
@@ -84,6 +88,8 @@ function toInput(values: FormValues): EmployeeInput {
     // Checked and cleaned by useCustomFields when saving
     customFields: undefined,
     phone: values.phone || undefined,
+    cin: values.cin?.toUpperCase() || undefined,
+    cnssNumber: values.cnssNumber || undefined,
     departmentId: values.departmentId === NONE ? undefined : values.departmentId,
     managerId: values.managerId === NONE ? undefined : values.managerId,
     skills: values.skills
@@ -212,6 +218,12 @@ export const EmployeeForm = forwardRef<EmployeeFormHandle, Props>(function Emplo
               <p className="text-sm font-semibold">{t("realCostTitle")}</p>
               <p className="text-xs text-muted-foreground">{t(moroccan ? "realCostHintMa" : "realCostHint")}</p>
             </div>
+            {moroccan && (
+              <div className="grid grid-cols-2 gap-4">
+                <TextField control={form.control} name="cin" label={t("employeeCin")} />
+                <TextField control={form.control} name="cnssNumber" label={t("employeeCnss")} />
+              </div>
+            )}
             <NumberField control={form.control} name="grossMonthlySalary" label={`${t("grossMonthlySalary")} (${currency})`} optional />
             {cost && cost.gross > 0 && (
               <>
