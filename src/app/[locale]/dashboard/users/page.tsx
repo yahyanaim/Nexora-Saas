@@ -1,5 +1,5 @@
-import UsersPage from "@/components/shared/users-chunks/users-page"
+import ConsoleDirectoryPage from "@/components/shared/platform-chunks/directory-page"
 
 export default function Page() {
-  return <UsersPage />
+  return <ConsoleDirectoryPage />
 }

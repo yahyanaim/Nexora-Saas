@@ -50,7 +50,6 @@ export const ROUTE_PERMISSIONS: Record<string, P> = {
   "/dashboard/taxes": P.INVOICES_READ,
   "/dashboard/files": P.FILES_READ,
   "/dashboard/developer": P.PROJECTS_READ,
-  "/dashboard/content-reports": P.REPORTS_READ,
   "/dashboard/system-issues": P.SYSTEM_ISSUES_READ,
   "/dashboard/settings": P.ROLES_READ,
   "/dashboard/subscription": P.ROLES_READ,

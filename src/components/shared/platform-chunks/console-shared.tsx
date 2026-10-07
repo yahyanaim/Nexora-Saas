@@ -11,7 +11,33 @@ import { ShieldCheck } from "@/components/ui/carbon/icons"
 import { useConsoleActor } from "@/hooks/platform/use-platform-console"
 import { isValidStepUpCode } from "@/lib/platform/session-policy"
 import { cn } from "@/lib/utils"
-import { ConsoleRole } from "@/types/platform-console"
+import { ConsoleRole, type ConsoleAuditAction } from "@/types/platform-console"
+
+/** Audit trail action names, shared by the audit page and each customer's history. */
+export const ACTION_LABEL: Record<ConsoleAuditAction, string> = {
+  "staff.invited": "auaInvited",
+  "staff.invite_resent": "auaInviteResent",
+  "staff.role_changed": "auaRoleChanged",
+  "staff.removed": "auaRemoved",
+  "session.revoked": "auaSessionRevoked",
+  "audit.exported": "auaExported",
+  "customer.trial_created": "auaTrialCreated",
+  "customer.status_changed": "auaStatusChanged",
+  "customer.trial_extended": "auaTrialExtended",
+  "customer.suspended": "auaCustomerSuspended",
+  "customer.suspension_lifted": "auaCustomerLifted",
+  "customer.cancelled": "auaCustomerCancelled",
+  "customer.cancellation_undone": "auaCancelUndone",
+  "customer.reactivated": "auaReactivated",
+  "customer.note_added": "auaNoteAdded",
+  "user.password_reset": "auaPasswordReset",
+  "user.suspended": "auaUserSuspended",
+  "user.suspension_lifted": "auaUserLifted",
+  "subscription.changed": "auaSubscriptionChanged",
+  "invoice.credit_note": "auaCreditNote",
+  "payment.refund": "auaRefund",
+  "console.signed_in": "auaSignedIn",
+}
 
 export const ROLE_LABEL: Record<ConsoleRole, string> = {
   [ConsoleRole.OWNER]: "crOwner",

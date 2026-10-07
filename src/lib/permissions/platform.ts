@@ -13,7 +13,6 @@ export const PLATFORM_PATHS = [
   "/dashboard/transactions",
   "/dashboard/invoices",
   "/dashboard/taxes",
-  "/dashboard/content-reports",
   "/dashboard/system-issues",
   "/dashboard/roles",
   "/dashboard/sessions",
