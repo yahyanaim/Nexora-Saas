@@ -36,6 +36,8 @@ const seedUserSuspensions = (ws: string): UserSuspension[] => {
 
 const customerStore = createCollection<CustomerAccount>("platform-customers", "cus", seedCustomers)
 const userSuspensionStore = createCollection<UserSuspension>("platform-user-suspensions", "usp", seedUserSuspensions)
+/** Shared with the billing service, which moves customers through payment overdue and back. */
+export const customersCollection = customerStore
 
 const ERR_FORBIDDEN = "Your console role does not allow this"
 const ERR_TRANSITION = "This status change is not allowed"

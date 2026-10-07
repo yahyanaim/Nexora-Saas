@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils"
 interface SheetContextType {
   open: boolean
   setOpen: (open: boolean) => void
+  /** Links the panel to its SheetTitle so screen readers announce it */
+  titleId: string
 }
 
 const SheetContext = React.createContext<SheetContextType | undefined>(undefined)
@@ -46,9 +48,10 @@ export function Sheet({
 
   const close = React.useCallback(() => setOpen(false), [setOpen])
   useEscapeToClose(open, close)
+  const titleId = React.useId()
 
   return (
-    <SheetContext.Provider value={{ open, setOpen }}>
+    <SheetContext.Provider value={{ open, setOpen, titleId }}>
       {children}
     </SheetContext.Provider>
   )
@@ -117,6 +120,7 @@ export function SheetContent({
       <div
         role="dialog"
         aria-modal="true"
+        aria-labelledby={context.titleId}
         className={cn(
           "fixed z-50 flex flex-col bg-card border-border/70 p-6 shadow-[0_24px_64px_-12px_rgba(15,23,42,0.28)] overflow-y-auto duration-300 animate-in sm:p-8",
           side === "left" && "slide-in-from-left",
@@ -163,8 +167,10 @@ export function SheetTitle({
   children,
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
+  const context = React.useContext(SheetContext)
   return (
     <h3
+      id={context?.titleId}
       className={cn("font-serif text-[26px] font-normal leading-tight tracking-[-0.01em] text-foreground", className)}
       {...props}
     >

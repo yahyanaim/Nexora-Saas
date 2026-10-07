@@ -1,5 +1,5 @@
-import TransactionsPage from "@/components/shared/transactions-chunks/transactions-page"
+import ConsoleTransactionsPage from "@/components/shared/platform-chunks/transactions-page"
 
 export default function Page() {
-  return <TransactionsPage />
+  return <ConsoleTransactionsPage />
 }
