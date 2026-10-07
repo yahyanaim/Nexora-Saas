@@ -41,6 +41,16 @@ import {
   DollarSign,
   TrendingUp,
   type LucideIcon,
+  FileChartColumn,
+  IdCard,
+  HandCoins,
+  Wallet,
+  ReceiptText,
+  Truck,
+  BadgeDollarSign,
+  LockKeyhole,
+  ChartColumnStacked,
+  UsersRound,
 } from "@/components/ui/carbon/icons"
 import { usePathname } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -96,7 +106,7 @@ export function useDashboardNav() {
           {
             title: t("teamDashboard"),
             url: "/dashboard/team",
-            icon: Users,
+            icon: UsersRound,
             descriptionKey: "pageDescTeam",
           },
           {
@@ -114,7 +124,7 @@ export function useDashboardNav() {
           {
             title: t("erpReports"),
             url: "/dashboard/reports",
-            icon: FileText,
+            icon: FileChartColumn,
             descriptionKey: "pageDescErpReports",
           },
         ],
@@ -127,7 +137,7 @@ export function useDashboardNav() {
           {
             title: t("employees"),
             url: "/dashboard/employees",
-            icon: Briefcase,
+            icon: IdCard,
             descriptionKey: "pageDescEmployees",
           },
           {
@@ -212,25 +222,25 @@ export function useDashboardNav() {
           {
             title: t("suppliers"),
             url: "/dashboard/suppliers",
-            icon: Building,
+            icon: Truck,
             descriptionKey: "pageDescSuppliers",
           },
           {
             title: t("supplierBills"),
             url: "/dashboard/supplier-bills",
-            icon: Receipt,
+            icon: ReceiptText,
             descriptionKey: "pageDescSupplierBills",
           },
           {
             title: t("receivables"),
             url: "/dashboard/receivables",
-            icon: Receipt,
+            icon: HandCoins,
             descriptionKey: "pageDescReceivables",
           },
           {
             title: t("expenses"),
             url: "/dashboard/expenses",
-            icon: Receipt,
+            icon: Wallet,
             descriptionKey: "pageDescExpenses",
           },
           {
@@ -261,7 +271,7 @@ export function useDashboardNav() {
           {
             title: t("workload"),
             url: "/dashboard/workload",
-            icon: Gauge,
+            icon: ChartColumnStacked,
             descriptionKey: "pageDescWorkload",
           },
           {
@@ -386,13 +396,13 @@ export function useDashboardNav() {
           {
             title: t("mySubscription"),
             url: "/dashboard/subscription",
-            icon: CreditCard,
+            icon: BadgeDollarSign,
             descriptionKey: "pageDescMySubscription",
           },
           {
             title: t("rolesPermissions"),
             url: "/dashboard/roles",
-            icon: KeyRound,
+            icon: LockKeyhole,
             descriptionKey: "pageDescRoles",
           },
           {

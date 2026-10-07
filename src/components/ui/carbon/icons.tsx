@@ -167,6 +167,15 @@ import {
   Play as LPlay,
   Square as LSquare,
   Zap as LZap,
+  FileChartColumn as LFileChartColumn,
+  IdCard as LIdCard,
+  ChartColumnStacked as LChartColumnStacked,
+  Truck as LTruck,
+  ReceiptText as LReceiptText,
+  HandCoins as LHandCoins,
+  Wallet as LWallet,
+  BadgeDollarSign as LBadgeDollarSign,
+  UsersRound as LUsersRound
 } from "lucide-react"
 
 export type LucideIcon = React.ComponentType<{ className?: string; size?: number | string; [key: string]: unknown }>
@@ -367,3 +376,12 @@ export const Minus = icon(LMinus, "Minus")
 export const Menu = icon(LMenu, "Menu")
 export const Percent = icon(LPercent, "Percent")
 export const PanelLeft = icon(LPanelLeft, "PanelLeft")
+export const FileChartColumn = icon(LFileChartColumn, "FileChartColumn")
+export const IdCard = icon(LIdCard, "IdCard")
+export const ChartColumnStacked = icon(LChartColumnStacked, "ChartColumnStacked")
+export const Truck = icon(LTruck, "Truck")
+export const ReceiptText = icon(LReceiptText, "ReceiptText")
+export const HandCoins = icon(LHandCoins, "HandCoins")
+export const Wallet = icon(LWallet, "Wallet")
+export const BadgeDollarSign = icon(LBadgeDollarSign, "BadgeDollarSign")
+export const UsersRound = icon(LUsersRound, "UsersRound")
