@@ -23,6 +23,7 @@ export const ROUTE_PERMISSIONS: Record<string, P> = {
   "/dashboard/timesheets": P.TIME_TRACK,
   "/dashboard/time-approvals": P.TIME_APPROVE,
   "/dashboard/deals": P.CLIENTS_UPDATE,
+  "/dashboard/forecast": P.INVOICES_READ,
   "/dashboard/quotes": P.INVOICES_READ,
   "/dashboard/client-invoices": P.INVOICES_READ,
   "/dashboard/recurring-invoices": P.INVOICES_CREATE,

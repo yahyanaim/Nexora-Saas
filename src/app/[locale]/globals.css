@@ -64,6 +64,12 @@
   --chart-3: #2fbf71;
   --chart-4: #f5b83d;
   --chart-5: #7d8da0;
+
+  /* Categorical series for stacked charts (validated for colour-blind separation) */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
 }
 
 .dark,
@@ -125,6 +131,11 @@
   --chart-3: #3ad183;
   --chart-4: #f5b83d;
   --chart-5: #a8b5c5;
+
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
 }
 
 .purple {
@@ -300,6 +311,10 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-series-3: var(--series-3);
+  --color-series-4: var(--series-4);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);

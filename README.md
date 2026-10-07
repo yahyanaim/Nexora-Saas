@@ -89,6 +89,7 @@ It replaces several separate tools:
 | **Planning** | Timeline, calendar, workload against capacity, leave requests and approval, leave balances per type with half-days, carry-over and pro-rating for new hires |
 | **Analytics** | Revenue earned, gross margin, utilization and cash collected. Revenue over time against a comparison period, revenue by client, revenue bridge, clients at risk, team capacity and top projects. PDF and CSV report, and the **Victor** assistant |
 | **Deals pipeline** | Sales followed from lead to signature on a board (lead, qualified, proposal, negotiation); drag between stages; weighted forecast by chance of winning, win rate, overdue deals; lost deals need a reason; link to the client, owner and quote |
+| **Revenue forecast** | Income expected each month (3, 6 or 12 months, before VAT) from invoices still owed, recurring invoices, confirmed bookings × billable rate and weighted deals; secured share; stacked chart with hover detail and a table |
 | **Resource planning** | Book people or open roles on projects by week (confirmed or tentative); 12-week capacity forecast per person with leave and public holidays taken out; over-booked people and open roles highlighted; assign a role to a person later |
 | **Reports** | 11 standard reports: timesheet detail, utilization, unbilled hours, invoices, receivables aging, expenses, project profitability, VAT return, VAT detail, accounting journal and payroll inputs (days, leave by type, hours, overtime, expenses to repay, salary and employer contributions). Filter by period, client, project, employee and department. Export to **Excel (.xlsx), CSV and PDF**. Cost columns are hidden from people without permission |
 
@@ -326,7 +327,7 @@ Security already in place:
 | 6e | Moroccan compliance: ICE/IF/Patente/CNSS, DGI e-invoice file (UBL 2.1) and status, VAT on payments and VAT return, CGNC accounting journal | ✅ Done |
 | — | MAD as the default currency for Moroccan companies across the app | ✅ Done |
 | 6f | Purchases and payroll: suppliers, supplier bills (VAT, project costs, purchases journal), real cost from the gross salary, monthly payroll inputs | ✅ Done |
-| 6g | Forward planning: resource bookings and capacity forecast (✅ 6g.1), deals pipeline (✅ 6g.2), revenue forecast, phase budgets and change orders | In progress |
+| 6g | Forward planning: resource bookings and capacity forecast (✅ 6g.1), deals pipeline (✅ 6g.2), revenue forecast (✅ 6g.3), phase budgets and change orders | In progress |
 | 6 (rest) | Scheduled reports (need email from the server) | Planned |
 | 7 | Server version: database, secure sign-in, permissions enforced on the server, files, email, backups | Planned |
 

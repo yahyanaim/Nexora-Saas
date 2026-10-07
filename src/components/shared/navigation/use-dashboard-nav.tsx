@@ -27,6 +27,7 @@ import {
   Globe,
   Handshake,
   Funnel,
+  ChartLineData,
   Clock,
   ClipboardCheck,
   Star,
@@ -208,6 +209,12 @@ export function useDashboardNav() {
             url: "/dashboard/deals",
             icon: Funnel,
             descriptionKey: "pageDescDeals",
+          },
+          {
+            title: t("revenueForecast"),
+            url: "/dashboard/forecast",
+            icon: ChartLineData,
+            descriptionKey: "pageDescForecast",
           },
           {
             title: t("quotes"),
