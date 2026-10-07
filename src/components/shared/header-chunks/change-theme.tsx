@@ -51,7 +51,7 @@ export const ChangeTheme = () => {
                   style={{ background: gradient }}
                 >
                   <img
-                    src={`/images/wallpapers/${theme}/${name}.png`}
+                    src={`/images/wallpapers/${theme}/${name}.webp`}
                     alt={name}
                     className="absolute inset-0 h-full w-full scale-[7] object-cover mix-blend-overlay"
                   />

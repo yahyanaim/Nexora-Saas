@@ -7,7 +7,6 @@ import {
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
@@ -93,14 +92,15 @@ export function MetricCardGrid({
                   </Badge>
                 )}
               </div>
-              <CardTitle
+              {/* a value, not a heading: keeps the page's heading order clean */}
+              <p
                 className={cn(
                   "text-2xl sm:text-[28px] sm:leading-9 font-semibold tracking-tight tabular-nums pt-1",
                   card.valueClassName
                 )}
               >
                 {card.value}
-              </CardTitle>
+              </p>
             </CardHeader>
             {card.footer && (
               <CardFooter

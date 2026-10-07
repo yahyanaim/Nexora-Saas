@@ -47,6 +47,14 @@ describe("phase budgets and change orders (Phase 6g.4)", () => {
     expect(rows[2]).toMatchObject({ milestone: null, hours: 2, percent: null })
     const hourly = phaseBudgets({ ...project, budgetType: BudgetType.HOURLY }, { milestones: [ms("design", { budgetAmount: 30000 })], tasks: [task("t1", "design")], entries: [entry("t1", 40)], employees: [emp], clients: [], changeOrders: [] })
     expect(hourly[0]).toMatchObject({ amount: 32000, percent: 107, alert: "over" })
+    // Expenses and supplier bills count in their phase on cost budgets
+    const withCosts = phaseBudgets(project, {
+      milestones: [ms("design", { budgetAmount: 10000 })], tasks: [task("t1", "design")], entries: [entry("t1", 10)], employees: [emp], clients: [], changeOrders: [],
+      expenses: [{ id: "x", projectId: "p", milestoneId: "design", amount: 500, status: "approved" } as never, { id: "y", projectId: "p", amount: 300, status: "approved" } as never, { id: "z", projectId: "p", milestoneId: "design", amount: 999, status: "submitted" } as never],
+      bills: [{ id: "b", projectId: "p", milestoneId: "design", status: "approved", lines: [{ id: "l", description: "Dev", quantity: 1, unitPrice: 1000 }], taxRate: 20, payments: [] } as never],
+    })
+    expect(withCosts[0]).toMatchObject({ amount: 3500, costs: 1500, percent: 35 })
+    expect(withCosts[1]).toMatchObject({ milestone: null, amount: 300, costs: 300 })
     expect(unallocatedBudget(project, [ms("a", { budgetAmount: 60000 }), ms("b", { budgetAmount: 25000 })])).toBe(15000)
   })
 

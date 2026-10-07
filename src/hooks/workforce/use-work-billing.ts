@@ -31,7 +31,7 @@ import {
   type TimesheetCell,
 } from "@/lib/api/work-billing-api"
 import type { Payment } from "@/types/work-billing"
-import { discardTimerApi, getTimerApi, startTimerApi, stopTimerApi, type RunningTimer } from "@/lib/api/timer-api"
+import { discardTimerApi, getTimerApi, startTimerApi, stopTimerApi, type RunningTimer, listRunningTimersApi } from "@/lib/api/timer-api"
 import { useApprover } from "@/hooks/workforce/use-current-employee"
 import { translateError } from "@/lib/errors/translate-error"
 
@@ -136,10 +136,19 @@ export function useTimer(employeeId: string) {
   return useQuery({ queryKey: ["timer", id, employeeId], queryFn: () => getTimerApi(id, employeeId), enabled: !!employeeId })
 }
 
+/** All running timers, for the team view. */
+export function useRunningTimers(enabled = true) {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: ["timers", id], queryFn: () => listRunningTimersApi(id), enabled, refetchInterval: 60_000 })
+}
+
 export function useTimerMutations(employeeId: string) {
   const { t, workspaceId, refresh, onError } = useHelpers()
   const queryClient = useQueryClient()
-  const refreshTimer = () => queryClient.invalidateQueries({ queryKey: ["timer", workspaceId, employeeId] })
+  const refreshTimer = () => {
+    queryClient.invalidateQueries({ queryKey: ["timer", workspaceId, employeeId] })
+    queryClient.invalidateQueries({ queryKey: ["timers", workspaceId] })
+  }
   return {
     start: useMutation({
       mutationFn: (timer: Omit<RunningTimer, "startedAt" | "employeeId">) => startTimerApi(workspaceId, { ...timer, employeeId }),

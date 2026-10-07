@@ -18,6 +18,7 @@ import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useSuppliers } from "@/hooks/workforce/use-workforce"
 import { useProjects } from "@/hooks/workforce/use-work-projects"
+import { PhaseSelect } from "../work-projects-chunks/phase-select"
 import { useSupplierBillMutations, useSupplierBills } from "@/hooks/workforce/use-supplier-bills"
 import { useApprover } from "@/hooks/workforce/use-current-employee"
 import { can } from "@/lib/permissions/can"
@@ -163,7 +164,7 @@ export default function SupplierBillsPage() {
                     )}
                     {editable && (
                       <>
-                        <Button size="icon-sm" variant="ghost" aria-label={t("edit")} onClick={() => setEditing({ id: b.id, input: { supplierId: b.supplierId, number: b.number, issueDate: b.issueDate, dueDate: b.dueDate, projectId: b.projectId, lines: b.lines, taxRate: b.taxRate, fileName: b.fileName, notes: b.notes } })}>
+                        <Button size="icon-sm" variant="ghost" aria-label={t("edit")} onClick={() => setEditing({ id: b.id, input: { supplierId: b.supplierId, number: b.number, issueDate: b.issueDate, dueDate: b.dueDate, projectId: b.projectId, milestoneId: b.milestoneId, lines: b.lines, taxRate: b.taxRate, fileName: b.fileName, notes: b.notes } })}>
                           <Pencil className="size-4" />
                         </Button>
                         <Button size="icon-sm" variant="ghost" aria-label={t("delete")} onClick={() => setDeleting(b)}><Trash2 className="size-4" /></Button>
@@ -218,7 +219,7 @@ export default function SupplierBillsPage() {
             </div>
             <div className="col-span-2 flex flex-col gap-1.5">
               <Label>{t("billProject")}</Label>
-              <Select value={editing.input.projectId ?? NONE} onValueChange={(v) => set({ projectId: v === NONE ? undefined : v })}>
+              <Select value={editing.input.projectId ?? NONE} onValueChange={(v) => set({ projectId: v === NONE ? undefined : v, milestoneId: undefined })}>
                 <SelectTrigger className="w-full bg-card"><SelectValue>{editing.input.projectId ? projects.find((p) => p.id === editing.input.projectId)?.name : t("billNoProject")}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>{t("billNoProject")}</SelectItem>
@@ -226,6 +227,7 @@ export default function SupplierBillsPage() {
                 </SelectContent>
               </Select>
             </div>
+            <PhaseSelect className="col-span-2 flex flex-col gap-1.5" projectId={editing.input.projectId} value={editing.input.milestoneId} onChange={(v) => set({ milestoneId: v })} />
           </div>
 
           <div className="flex flex-col gap-2">

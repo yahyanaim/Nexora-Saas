@@ -16,6 +16,7 @@ import { NoAccess, PlatformOnly } from "./platform-only"
 import { isRouteDenied } from "@/lib/permissions/routes"
 import { isPortalPath } from "@/lib/workforce/portal"
 import { PortalRedirect } from "./portal-redirect"
+import { SkipLink } from "./skip-link"
 
 interface Props {
   children: React.ReactNode
@@ -43,12 +44,13 @@ export const DashboardLayout = ({ children }: Props) => {
 
   return (
     <div className="flex h-dvh w-full flex-col overflow-hidden bg-background">
+      <SkipLink />
       <div className="px-4 pt-3 md:px-6 md:pt-4">
         <DashboardTopbar onOpenMenu={() => setMenuOpen(true)} />
       </div>
       <div className="flex min-h-0 flex-1 md:ps-6">
         <DashboardRail className="my-6 hidden md:flex" />
-        <main className="min-w-0 flex-1 overflow-y-auto">
+        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto focus:outline-none">
           <ErrorBoundary>{outsidePortal ? <PortalRedirect /> : blocked ? <PlatformOnly /> : denied ? <NoAccess /> : children}</ErrorBoundary>
           <InstallHint />
         </main>

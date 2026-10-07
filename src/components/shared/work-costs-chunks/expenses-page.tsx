@@ -39,6 +39,7 @@ import { AdminPermissionsPlatform } from "@/types/roles"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useEmployees } from "@/hooks/workforce/use-workforce"
 import { useProjects } from "@/hooks/workforce/use-work-projects"
+import { PhaseSelect } from "../work-projects-chunks/phase-select"
 import { useExpenseMutations, useExpenses } from "@/hooks/workforce/use-expenses"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { todayIso } from "@/lib/workforce/project-metrics"
@@ -61,6 +62,7 @@ import { approverRef } from "@/lib/workforce/approvals"
 const emptyForm = () => ({
   employeeId: "",
   projectId: NONE,
+  milestoneId: "",
   date: todayIso(),
   category: ExpenseCategory.TRAVEL,
   description: "",
@@ -306,6 +308,7 @@ export default function ExpensesPage() {
             {
               employeeId: form.employeeId,
               projectId: form.projectId === NONE ? undefined : form.projectId,
+              milestoneId: form.projectId === NONE ? undefined : form.milestoneId || undefined,
               date: form.date,
               category: form.category,
               description: form.description,
@@ -356,7 +359,7 @@ export default function ExpensesPage() {
             </div>
             <div className="flex flex-col gap-2">
               <Label>{t("project")}</Label>
-              <Select value={form.projectId} onValueChange={(v) => setForm((f) => ({ ...f, projectId: v, billable: v === NONE ? false : f.billable }))}>
+              <Select value={form.projectId} onValueChange={(v) => setForm((f) => ({ ...f, projectId: v, milestoneId: "", billable: v === NONE ? false : f.billable }))}>
                 <SelectTrigger className="w-full bg-card" aria-label={t("project")}><SelectValue>{form.projectId === NONE ? t("general") : projectOf(form.projectId)?.code}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={NONE}>{t("general")}</SelectItem>
@@ -365,6 +368,7 @@ export default function ExpensesPage() {
               </Select>
             </div>
           </div>
+          <PhaseSelect projectId={form.projectId === NONE ? undefined : form.projectId} value={form.milestoneId} onChange={(v) => setForm((f) => ({ ...f, milestoneId: v ?? "" }))} />
           <label className="flex items-center justify-between gap-4 rounded-xl border border-border p-3 text-sm">
             <span>
               <span className="block font-medium">{t("rebillToClient")}</span>

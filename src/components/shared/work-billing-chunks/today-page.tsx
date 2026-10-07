@@ -10,6 +10,10 @@ import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { Clock, ListChecks, Receipt, Sunrise } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { TimerBar } from "./timer-bar"
+import { TeamToday } from "./team-today"
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { can } from "@/lib/permissions/can"
+import { AdminPermissionsPlatform } from "@/types/roles"
 import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
 import { useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
@@ -30,6 +34,7 @@ export default function TodayPage() {
   const { data: entries = [], isLoading } = useTimeEntries()
   const { data: projects = [] } = useProjects()
   const { data: tasks = [] } = useTasks()
+  const { authedUser } = useAuthGuard()
   const timerRef = useRef<HTMLDivElement>(null)
   // ?timer=1 (home-screen shortcut "Start timer") brings the timer into view
   const wantsTimer = useSearchParams().get("timer") === "1"
@@ -45,6 +50,8 @@ export default function TodayPage() {
   const target = me ? Math.round(hoursPerDay(me) * 10) / 10 : 8
   const recent = [...mine].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)).slice(0, 8)
   const myProjects = projects.filter((p) => (!me || p.memberIds.includes(me.id)) && p.status !== WorkProjectStatus.CANCELLED && p.status !== WorkProjectStatus.COMPLETED)
+  // admins/managers with no projects of their own see the team's day (Phase 6h.5)
+  const teamView = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE) && myProjects.length === 0
   const project = (id: string) => projects.find((p) => p.id === id)
   const day = (iso: string) => (iso === today ? t("today") : new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${iso}T00:00:00`)))
 
@@ -61,8 +68,9 @@ export default function TodayPage() {
     <div className="p-4 md:p-6 space-y-5">
       <PageHeader />
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+      <div className={teamView ? "flex flex-col gap-5" : "grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start"}>
       <div className="flex flex-col gap-5">
+      {teamView ? <TeamToday meId={me?.id} /> : <>
       <div ref={timerRef} className="scroll-mt-24">
         {me && <TimerBar employeeId={me.id} projects={myProjects} tasks={tasks} />}
       </div>
@@ -77,6 +85,7 @@ export default function TodayPage() {
         </div>
         <Progress value={Math.min(100, target > 0 ? (todayHours / target) * 100 : 0)} aria-label={t("todayLogged")} className="mt-3 h-2.5" />
       </section>
+      </>}
 
       <div className="grid grid-cols-3 gap-3">
         {[
@@ -92,7 +101,7 @@ export default function TodayPage() {
 
       </div>
 
-      <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
+      {!teamView && <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
         <h2 className="mb-3 text-base font-semibold">{t("todayRecent")}</h2>
         {isLoading ? (
           <ListSkeleton />
@@ -111,7 +120,7 @@ export default function TodayPage() {
             ))}
           </ul>
         )}
-      </section>
+      </section>}
       </div>
     </div>
   )

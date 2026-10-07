@@ -16,7 +16,7 @@ export function PlatformOnly() {
     <div className="p-4 md:p-6">
       <EmptyState
         icon={ShieldUser}
-        title={t("platformOnlyTitle")}
+        title={<span role="heading" aria-level={1}>{t("platformOnlyTitle")}</span>}
         hint={t("platformOnlyHint")}
         className="bg-card py-16"
         action={
@@ -36,7 +36,7 @@ export function NoAccess() {
     <div className="p-4 md:p-6">
       <EmptyState
         icon={ShieldUser}
-        title={t("noAccessTitle")}
+        title={<span role="heading" aria-level={1}>{t("noAccessTitle")}</span>}
         hint={t("noAccessHint")}
         className="bg-card py-16"
         action={

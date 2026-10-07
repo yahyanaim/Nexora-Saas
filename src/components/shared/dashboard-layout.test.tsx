@@ -11,6 +11,7 @@ vi.mock("./navigation/dashboard-topbar", () => ({ DashboardTopbar: () => <header
 vi.mock("./navigation/mobile-nav-drawer", () => ({ MobileNavDrawer: () => null }))
 vi.mock("@/i18n/navigation", () => ({ usePathname: () => "/dashboard" }))
 vi.mock("./platform-only", () => ({ PlatformOnly: () => <div>platform-only</div>, NoAccess: () => <div>no-access</div> }))
+vi.mock("./skip-link", () => ({ SkipLink: () => null }))
 
 describe("DashboardLayout", () => {
   beforeEach(() => {

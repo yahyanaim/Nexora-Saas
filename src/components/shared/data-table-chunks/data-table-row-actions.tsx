@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { MoreHorizontal } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,10 +30,11 @@ export function DataTableRowActions<TData>({
   actions,
 }: DataTableRowActionsProps<TData>) {
   const { dir } = useGetDirection()
+  const t = useTranslations()
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="size-8">
+        <Button variant="ghost" size="icon" className="size-8" aria-label={t("actions")}>
           <MoreHorizontal className="size-4" />
         </Button>
       </DropdownMenuTrigger>
