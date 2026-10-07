@@ -18,6 +18,7 @@ import { isPortalPath } from "@/lib/workforce/portal"
 import { PortalRedirect } from "./portal-redirect"
 import { SkipLink } from "./skip-link"
 import { ConsoleStrip } from "./platform-chunks/console-shared"
+import { WorkspaceViewBanner } from "./platform-chunks/workspace-view-banner"
 
 interface Props {
   children: React.ReactNode
@@ -36,6 +37,7 @@ export const DashboardLayout = ({ children }: Props) => {
   const pathname = usePathname()
   const blocked = !!authedUser && isPlatformPath(pathname) && !isPlatformOperator(authedUser)
   const onConsole = !!authedUser && isPlatformPath(pathname) && isPlatformOperator(authedUser)
+  const viewingWorkspace = !!authedUser && !isPlatformPath(pathname) && isPlatformOperator(authedUser)
   // Client contacts stay inside their portal
   const outsidePortal = !!(authedUser as { clientId?: string } | undefined)?.clientId && !isPortalPath(pathname)
 
@@ -53,7 +55,7 @@ export const DashboardLayout = ({ children }: Props) => {
       <div className="flex min-h-0 flex-1 md:ps-6">
         <DashboardRail className="my-6 hidden md:flex" />
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto focus:outline-none">
-          <ErrorBoundary>{outsidePortal ? <PortalRedirect /> : blocked ? <PlatformOnly /> : denied ? <NoAccess /> : <>{onConsole && <ConsoleStrip />}{children}</>}</ErrorBoundary>
+          <ErrorBoundary>{outsidePortal ? <PortalRedirect /> : blocked ? <PlatformOnly /> : denied ? <NoAccess /> : <>{onConsole && <ConsoleStrip />}{viewingWorkspace && <WorkspaceViewBanner />}{children}</>}</ErrorBoundary>
           <InstallHint />
         </main>
       </div>

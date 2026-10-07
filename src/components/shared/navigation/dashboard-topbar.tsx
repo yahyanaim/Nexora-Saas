@@ -22,7 +22,7 @@ import { navIconButton, navSurface } from "./nav-styles"
  */
 export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations()
-  const { groups, activeGroup } = useDashboardNav()
+  const { groups, activeGroup, mode } = useDashboardNav()
   const { isPasscodeLocked } = useAuthGuard()
   const { lock } = useLockScreenStore()
   const [searchOpen, setSearchOpen] = useState(false)
@@ -40,7 +40,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         </button>
 
         <Link
-          href="/dashboard/overview"
+          href={mode === "console" ? "/dashboard/platform" : "/dashboard/overview"}
           className={cn(
             navSurface,
             "flex h-12 shrink-0 items-center gap-2.5 py-1.5 pl-1.5 pr-4 lg:h-14 lg:pr-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -78,7 +78,8 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
           })}
         </nav>
 
-        <WorkspaceSwitcher className="hidden md:flex" />
+        {/* the console is not about one workspace */}
+        {mode !== "console" && <WorkspaceSwitcher className="hidden md:flex" />}
 
         <div className="flex-1" />
 
