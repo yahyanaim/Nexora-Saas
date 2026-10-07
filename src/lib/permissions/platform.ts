@@ -4,6 +4,7 @@
  * when opened directly. UI-only: the server checks the same rule.
  */
 export const PLATFORM_PATHS = [
+  "/dashboard/platform",
   "/dashboard/users",
   "/dashboard/staffs",
   "/dashboard/banned-users",

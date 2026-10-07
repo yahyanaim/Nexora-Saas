@@ -1,4 +1,5 @@
 "use client"
+import { formatMad } from "@/lib/platform/nexora-catalog"
 
 import { useMemo } from "react"
 import { useTranslations } from "next-intl"
@@ -141,7 +142,7 @@ export function SubscriptionsSummaryCards({
   // Helper function to safely format numbers
   const formatCurrency = (value: unknown): string => {
     const num = Number(value)
-    return isNaN(num) ? "$0.00" : `$${num.toFixed(2)}`
+    return isNaN(num) ? formatMad(0) : formatMad(num)
   }
 
   const formatNumber = (value: unknown): string => {

@@ -55,8 +55,8 @@ export const fetchTransactionsApi = async (
     }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch transactions")
-    logger.error("[API Error] fetchTransactionsApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
+      logger.error("[API Error] fetchTransactionsApi failed:", message, error)
       throw error
     }
   }
@@ -78,12 +78,12 @@ export const getTransactionApi = async (id: string): Promise<Transaction> => {
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Transaction ${id} not found`)
-    logger.error("[API Error] getTransactionApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoTransactions().find((t) => t.id === id)
       if (found) return found
       throw new Error(`Transaction with ID ${id} not found: ${message}`)
     }
+    logger.error("[API Error] getTransactionApi failed:", message, error)
     throw error
   }
 }
@@ -96,7 +96,6 @@ export const createTransactionApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to create transaction")
-    logger.error("[API Error] createTransactionApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const demoTx: Transaction = {
         id: `tx-demo-${Date.now()}`,
@@ -112,6 +111,7 @@ export const createTransactionApi = async (
       }
       return demoTx
     }
+    logger.error("[API Error] createTransactionApi failed:", message, error)
     throw error
   }
 }
@@ -125,12 +125,12 @@ export const updateTransactionApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update transaction ${id}`)
-    logger.error("[API Error] updateTransactionApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoTransactions().find((t) => t.id === id)
       if (!found) throw new Error(`Transaction with ID ${id} not found: ${message}`)
       return { ...found, ...payload }
     }
+    logger.error("[API Error] updateTransactionApi failed:", message, error)
     throw error
   }
 }
@@ -140,10 +140,10 @@ export const deleteTransactionApi = async (id: string): Promise<void> => {
     await httpClient.delete(`/transactions/${id}`)
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete transaction ${id}`)
-    logger.error("[API Error] deleteTransactionApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return
     }
+    logger.error("[API Error] deleteTransactionApi failed:", message, error)
     throw error
   }
 }
@@ -156,12 +156,12 @@ export const refundTransactionApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to refund transaction ${id}`)
-    logger.error("[API Error] refundTransactionApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoTransactions().find((t) => t.id === id)
       if (!found) throw new Error(`Transaction with ID ${id} not found: ${message}`)
       return { ...found, status: "refunded" as Transaction["status"] }
     }
+    logger.error("[API Error] refundTransactionApi failed:", message, error)
     throw error
   }
 }
@@ -173,8 +173,8 @@ export const fetchTransactionsSummaryApi =
       if (data?.data) return data.data
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to fetch transactions summary")
-      logger.error("[API Error] fetchTransactionsSummaryApi failed:", message, error)
       if (!shouldUseDemoFallback(error)) {
+        logger.error("[API Error] fetchTransactionsSummaryApi failed:", message, error)
         throw error
       }
     }

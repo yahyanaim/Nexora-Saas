@@ -1,4 +1,5 @@
 "use client"
+import { formatMad } from "@/lib/platform/nexora-catalog"
 
 import { ColumnDef } from "@tanstack/react-table"
 import { StatusBadge } from "@/components/ui/status-badge"
@@ -119,7 +120,7 @@ export function getSubscriptionsColumns(
         const price = row.original.price
         return (
           <span className="text-sm tabular-nums">
-            {plan ? `$${plan.price}` : price}
+            {plan ? formatMad(plan.price) : price}
             <span className="text-muted-foreground">
               {" "}
               / {plan?.period ?? row.original.period ?? t("month")}

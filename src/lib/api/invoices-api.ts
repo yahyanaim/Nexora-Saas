@@ -57,8 +57,8 @@ export const fetchInvoicesApi = async (
     }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch invoices")
-    logger.error("[API Error] fetchInvoicesApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
+      logger.error("[API Error] fetchInvoicesApi failed:", message, error)
       throw error
     }
   }
@@ -79,12 +79,12 @@ export const getInvoiceApi = async (id: string): Promise<Invoice> => {
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Invoice ${id} not found`)
-    logger.error("[API Error] getInvoiceApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoInvoices().find((i) => i.id === id)
       if (found) return found
       throw new Error(`Invoice with ID ${id} not found: ${message}`)
     }
+    logger.error("[API Error] getInvoiceApi failed:", message, error)
     throw error
   }
 }
@@ -97,10 +97,10 @@ export const createInvoiceApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to create invoice")
-    logger.error("[API Error] createInvoiceApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return addDemoInvoice(payload)
     }
+    logger.error("[API Error] createInvoiceApi failed:", message, error)
     throw error
   }
 }
@@ -114,7 +114,6 @@ export const updateInvoiceApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update invoice ${id}`)
-    logger.error("[API Error] updateInvoiceApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoInvoices().find((i) => i.id === id)
       if (!found) throw new Error(`Invoice with ID ${id} not found: ${message}`)
@@ -127,6 +126,7 @@ export const updateInvoiceApi = async (
         updatedAt: new Date().toISOString(),
       }
     }
+    logger.error("[API Error] updateInvoiceApi failed:", message, error)
     throw error
   }
 }
@@ -136,11 +136,11 @@ export const deleteInvoiceApi = async (id: string): Promise<void> => {
     await httpClient.delete(`/invoices/${id}`)
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete invoice ${id}`)
-    logger.error("[API Error] deleteInvoiceApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       deleteDemoInvoice(id)
       return
     }
+    logger.error("[API Error] deleteInvoiceApi failed:", message, error)
     throw error
   }
 }
@@ -151,10 +151,10 @@ export const sendInvoiceApi = async (id: string): Promise<unknown> => {
     return data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to send invoice ${id}`)
-    logger.error("[API Error] sendInvoiceApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return { success: true, message: "Invoice sent via email (demo)" }
     }
+    logger.error("[API Error] sendInvoiceApi failed:", message, error)
     throw error
   }
 }
@@ -165,10 +165,10 @@ export const downloadInvoiceApi = async (id: string): Promise<unknown> => {
     return data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to download invoice ${id}`)
-    logger.error("[API Error] downloadInvoiceApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return { success: true }
     }
+    logger.error("[API Error] downloadInvoiceApi failed:", message, error)
     throw error
   }
 }
@@ -179,10 +179,10 @@ export const markAsPaidApi = async (id: string): Promise<Invoice> => {
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to mark invoice ${id} as paid`)
-    logger.error("[API Error] markAsPaidApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return markDemoInvoicePaid(id)
     }
+    logger.error("[API Error] markAsPaidApi failed:", message, error)
     throw error
   }
 }
@@ -193,8 +193,8 @@ export const fetchInvoicesSummaryApi = async (): Promise<InvoicesSummary> => {
     if (data?.data) return data.data
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch invoices summary")
-    logger.error("[API Error] fetchInvoicesSummaryApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
+      logger.error("[API Error] fetchInvoicesSummaryApi failed:", message, error)
       throw error
     }
   }

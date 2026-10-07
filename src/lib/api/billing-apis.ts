@@ -59,11 +59,11 @@ export const billingApi = {
       if (response?.data?.url) return response.data
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to create checkout session")
-      logger.error("[API Error] createCheckout failed:", message)
       if (shouldUseDemoFallback(error)) {
         updateDemoPlan(plan)
         return { url: "" }
       }
+      logger.error("[API Error] createCheckout failed:", message)
       throw error
     }
     if (isDemoMode()) {
@@ -80,10 +80,10 @@ export const billingApi = {
       if (response?.data?.url) return response.data
     } catch (error) {
       const message = apiErrorMessage(error, "Failed to open billing portal")
-      logger.error("[API Error] createPortal failed:", message)
       if (shouldUseDemoFallback(error)) {
         return { url: "" }
       }
+      logger.error("[API Error] createPortal failed:", message)
       throw error
     }
     if (isDemoMode()) return { url: "" }

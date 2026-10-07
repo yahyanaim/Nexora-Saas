@@ -39,10 +39,10 @@ describe("team access and subscription", () => {
     const next = await changeWorkspacePlanApi(WS, "enterprise", "yearly", 6)
     expect(next).toMatchObject({ planId: "enterprise", cycle: "yearly" })
     expect((await getWorkspaceSubscriptionApi(WS)).plan.seats).toBe(-1)
-    expect(planPrice(ERP_PLANS[2]!, "yearly")).toBe(3990)
+    expect(planPrice(ERP_PLANS[2]!, "yearly")).toBe(39900) // 3 990 MAD a month × 10
     const invoices = await listSubscriptionInvoicesApi(WS)
     expect(invoices.length).toBeGreaterThan(0)
-    expect(invoices[0]).toMatchObject({ planId: "enterprise", subtotal: 3990, tax: 798, total: 4788 })
+    expect(invoices[0]).toMatchObject({ planId: "enterprise", subtotal: 39900, tax: 7980, total: 47880 })
   })
 
   it("keeps the platform console for the Nexora team", () => {

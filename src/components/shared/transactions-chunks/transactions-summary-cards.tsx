@@ -1,4 +1,5 @@
 "use client"
+import { formatMad } from "@/lib/platform/nexora-catalog"
 
 import { useMemo } from "react"
 import { useTranslations } from "next-intl"
@@ -57,7 +58,7 @@ export function TransactionsSummaryCards({
     {
       key: "totalRevenue",
       title: t("totalRevenue"),
-      value: `$${summary.totalRevenue.toFixed(2)}`,
+      value: formatMad(summary.totalRevenue),
       valueClassName: "",
       badge: {
         label: "+12.5%",
@@ -75,7 +76,7 @@ export function TransactionsSummaryCards({
     {
       key: "successful",
       title: t("successful"),
-      value: `$${summary.successful.toFixed(2)}`,
+      value: formatMad(summary.successful),
       valueClassName: "text-success-foreground",
       badge: {
         label: t("paid"),
@@ -94,7 +95,7 @@ export function TransactionsSummaryCards({
     {
       key: "pending",
       title: t("pending"),
-      value: `$${summary.pending.toFixed(2)}`,
+      value: formatMad(summary.pending),
       valueClassName: "text-warning-foreground",
       badge: {
         label: t("pending"),
@@ -112,7 +113,7 @@ export function TransactionsSummaryCards({
     {
       key: "failed",
       title: t("failed"),
-      value: `$${summary.failed.toFixed(2)}`,
+      value: formatMad(summary.failed),
       valueClassName: "text-destructive",
       badge: {
         label: t("failed"),

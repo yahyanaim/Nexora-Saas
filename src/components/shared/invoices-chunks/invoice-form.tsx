@@ -1,4 +1,5 @@
 "use client"
+import { formatMad } from "@/lib/platform/nexora-catalog"
 
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -316,15 +317,15 @@ export const InvoiceForm = forwardRef<InvoiceFormHandle, InvoiceFormProps>(
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("subtotal")}</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{formatMad(subtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">{t("tax")}</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>{formatMad(tax)}</span>
               </div>
               <div className="flex justify-between border-t pt-1 font-bold">
                 <span>{t("total")}</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatMad(total)}</span>
               </div>
             </div>
           </div>

@@ -27,6 +27,8 @@ import {
   Globe,
   Handshake,
   Funnel,
+  Crown,
+  Store,
   Sunrise,
   Landmark,
   ChartLineData,
@@ -318,68 +320,6 @@ export function useDashboardNav() {
         ],
       },
       {
-        id: "users",
-        title: t("users"),
-        icon: Users,
-        items: [
-          {
-            title: t("users"),
-            url: "/dashboard/users",
-            icon: Users,
-            descriptionKey: "pageDescUsers",
-          },
-          {
-            title: t("staffs"),
-            url: "/dashboard/staffs",
-            icon: ShieldUser,
-            descriptionKey: "pageDescStaffs",
-          },
-          {
-            title: t("bannedUsers"),
-            url: "/dashboard/banned-users",
-            icon: UserX,
-            descriptionKey: "pageDescBannedUsers",
-          },
-        ],
-      },
-      {
-        id: "billing",
-        title: t("billing"),
-        icon: CreditCard,
-        items: [
-          {
-            title: t("plans"),
-            url: "/dashboard/plans",
-            icon: CreditCard,
-            descriptionKey: "pageDescPlans",
-          },
-          {
-            title: t("subscriptions"),
-            url: "/dashboard/subscriptions",
-            icon: BadgeCheck,
-            descriptionKey: "pageDescSubscriptions",
-          },
-          {
-            title: t("transactions"),
-            url: "/dashboard/transactions",
-            icon: ArrowLeftRight,
-            descriptionKey: "pageDescTransactions",
-          },
-          {
-            title: t("invoices"),
-            url: "/dashboard/invoices",
-            icon: Receipt,
-            descriptionKey: "pageDescInvoices",
-          },
-          {
-            title: t("taxes"),
-            url: "/dashboard/taxes",
-            icon: Percent,
-            descriptionKey: "pageDescTaxes",
-          },
-        ],
-      },
-      {
         id: "management",
         title: t("management"),
         icon: FolderKanban,
@@ -395,25 +335,6 @@ export function useDashboardNav() {
             url: "/dashboard/developer",
             icon: Terminal,
             descriptionKey: "pageDescDeveloper",
-          },
-        ],
-      },
-      {
-        id: "support",
-        title: t("support"),
-        icon: Flag,
-        items: [
-          {
-            title: t("reports"),
-            url: "/dashboard/content-reports",
-            icon: Flag,
-            descriptionKey: "pageDescReports",
-          },
-          {
-            title: t("systemIssues"),
-            url: "/dashboard/system-issues",
-            icon: Bug,
-            descriptionKey: "pageDescSystemIssues",
           },
         ],
       },
@@ -435,6 +356,86 @@ export function useDashboardNav() {
             descriptionKey: "pageDescMySubscription",
           },
           {
+            title: t("auditLogs"),
+            url: "/dashboard/audit-logs",
+            icon: History,
+            descriptionKey: "pageDescAuditLogs",
+          },
+        ],
+      },
+      {
+        // The Nexora platform console: only the Nexora team sees it (Phase 6h.4)
+        id: "platform",
+        title: t("platformAdmin"),
+        icon: Crown,
+        items: [
+          {
+            title: t("platformCustomers"),
+            url: "/dashboard/platform",
+            icon: Store,
+            descriptionKey: "pageDescPlatform",
+          },
+          {
+            title: t("users"),
+            url: "/dashboard/users",
+            icon: Users,
+            descriptionKey: "pageDescUsers",
+          },
+          {
+            title: t("staffs"),
+            url: "/dashboard/staffs",
+            icon: ShieldUser,
+            descriptionKey: "pageDescStaffs",
+          },
+          {
+            title: t("bannedUsers"),
+            url: "/dashboard/banned-users",
+            icon: UserX,
+            descriptionKey: "pageDescBannedUsers",
+          },
+          {
+            title: t("plans"),
+            url: "/dashboard/plans",
+            icon: CreditCard,
+            descriptionKey: "pageDescPlans",
+          },
+          {
+            title: t("subscriptions"),
+            url: "/dashboard/subscriptions",
+            icon: BadgeCheck,
+            descriptionKey: "pageDescSubscriptions",
+          },
+          {
+            title: t("invoices"),
+            url: "/dashboard/invoices",
+            icon: Receipt,
+            descriptionKey: "pageDescInvoices",
+          },
+          {
+            title: t("transactions"),
+            url: "/dashboard/transactions",
+            icon: ArrowLeftRight,
+            descriptionKey: "pageDescTransactions",
+          },
+          {
+            title: t("taxes"),
+            url: "/dashboard/taxes",
+            icon: Percent,
+            descriptionKey: "pageDescTaxes",
+          },
+          {
+            title: t("reports"),
+            url: "/dashboard/content-reports",
+            icon: Flag,
+            descriptionKey: "pageDescReports",
+          },
+          {
+            title: t("systemIssues"),
+            url: "/dashboard/system-issues",
+            icon: Bug,
+            descriptionKey: "pageDescSystemIssues",
+          },
+          {
             title: t("rolesPermissions"),
             url: "/dashboard/roles",
             icon: LockKeyhole,
@@ -445,12 +446,6 @@ export function useDashboardNav() {
             url: "/dashboard/sessions",
             icon: MonitorSmartphone,
             descriptionKey: "pageDescSessions",
-          },
-          {
-            title: t("auditLogs"),
-            url: "/dashboard/audit-logs",
-            icon: History,
-            descriptionKey: "pageDescAuditLogs",
           },
         ],
       },
@@ -470,7 +465,9 @@ export function useDashboardNav() {
           // Platform console pages are only for the Nexora team, never for ERP companies
           items: group.items.filter((item) => hasPermission(item.permission ?? ROUTE_PERMISSIONS[item.url]) && (!isPlatformPath(item.url) || isPlatformOperator(authedUser))),
         }))
-        .filter((group) => group.items.length > 0),
+        .filter((group) => group.items.length > 0)
+        // The Nexora team starts from its console; the ERP menus follow for looking at a workspace
+        .sort((a, b) => Number(b.id === "platform") - Number(a.id === "platform")),
     [allGroups, hasPermission, authedUser, isClient, t]
   )
 

@@ -1,4 +1,5 @@
 "use client"
+import { formatMad } from "@/lib/platform/nexora-catalog"
 
 import { ColumnDef } from "@tanstack/react-table"
 import { DataTableColumnHeader } from "@/components/shared/data-table-chunks/data-table-column-header"
@@ -123,7 +124,7 @@ export function getTransactionsColumns(
       ),
       cell: ({ row }) => (
         <span className="text-sm font-medium tabular-nums">
-          ${row.original.amount.toFixed(2)}
+          {formatMad(row.original.amount)}
         </span>
       ),
     },

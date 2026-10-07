@@ -182,6 +182,7 @@ import {
   Camera as LCamera,
   Sunrise as LSunrise,
   ListChecks as LListChecks,
+  Store as LStore,
 } from "lucide-react"
 
 export type LucideIcon = React.ComponentType<{ className?: string; size?: number | string; [key: string]: unknown }>
@@ -397,3 +398,4 @@ export const Landmark = icon(LLandmark, "Landmark")
 export const Camera = icon(LCamera, "Camera")
 export const Sunrise = icon(LSunrise, "Sunrise")
 export const ListChecks = icon(LListChecks, "ListChecks")
+export const Store = icon(LStore, "Store")

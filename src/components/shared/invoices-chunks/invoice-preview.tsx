@@ -23,7 +23,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
     const n = typeof value === "number" ? value : Number(value ?? 0)
     return new Intl.NumberFormat(locale, {
       style: "currency",
-      currency: "USD",
+      currency: "MAD",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(Number.isFinite(n) ? n : 0)
@@ -56,7 +56,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
       : [
           {
             id: "item-default",
-            description: "Nexora Enterprise Cloud Platform - Platform & Seat Allocation",
+            description: "Nexora subscription",
             quantity: 1,
             unitPrice: invoice.subtotal || invoice.total,
             total: invoice.subtotal || invoice.total,
@@ -139,7 +139,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
             <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground mt-0.5">
               {formatCurrency(invoice.total)}
               <span className="ml-2 text-xs font-semibold uppercase tracking-normal text-muted-foreground">
-                USD
+                MAD
               </span>
             </div>
           </div>
@@ -196,7 +196,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
               </div>
               <div>
                 <span className="text-muted-foreground block">Currency:</span>
-                <span className="font-medium text-foreground">USD ($)</span>
+                <span className="font-medium text-foreground">MAD (DH)</span>
               </div>
               <div>
                 <span className="text-muted-foreground block">Fiscal Status:</span>
@@ -274,7 +274,7 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
                 <span className="text-xs text-muted-foreground">Toutes Taxes Comprises</span>
               </div>
               <span className="text-lg font-extrabold text-foreground tabular-nums">
-                {formatCurrency(invoice.total)} <span className="text-xs font-semibold">USD</span>
+                {formatCurrency(invoice.total)} <span className="text-xs font-semibold">MAD</span>
               </span>
             </div>
           </div>
@@ -283,24 +283,24 @@ export function InvoicePreview({ invoice }: InvoicePreviewProps) {
         {/* Bank Wire Details Box */}
         <div className="rounded-lg border bg-muted/20 p-4">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-            Bank Wire & ACH Remittance Details
+            Bank transfer details
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <span className="text-muted-foreground block text-xs">Bank Name</span>
-              <span className="font-medium text-foreground">Silicon Valley Bank</span>
+              <span className="text-muted-foreground block text-xs">Bank</span>
+              <span className="font-medium text-foreground">Attijariwafa Bank, Casablanca</span>
             </div>
             <div>
-              <span className="text-muted-foreground block text-xs">Routing (ABA)</span>
-              <span className="tabular-nums text-foreground">121000358</span>
+              <span className="text-muted-foreground block text-xs">Account holder</span>
+              <span className="text-foreground">Nexora SARL</span>
             </div>
             <div>
-              <span className="text-muted-foreground block text-xs">Account (USD)</span>
-              <span className="tabular-nums text-foreground">98402819034</span>
+              <span className="text-muted-foreground block text-xs">RIB (MAD)</span>
+              <span className="tabular-nums text-foreground">007 780 0001234567890123 45</span>
             </div>
             <div>
               <span className="text-muted-foreground block text-xs">SWIFT / BIC</span>
-              <span className="tabular-nums text-foreground">SVBKUS6S</span>
+              <span className="tabular-nums text-foreground">BCMAMAMC</span>
             </div>
           </div>
         </div>

@@ -16,7 +16,7 @@ const STATUS: Record<InvoiceStatus, { key: string; tone: Tone }> = {
 export async function buildSubscriptionInvoiceDocument(invoice: Invoice, locale = "en"): Promise<InvoiceDocument> {
   const { t, locale: loc } = await getPdfTranslator(locale)
   const platform = await platformSeller()
-  const money = (n: number) => new Intl.NumberFormat(loc, { style: "currency", currency: "USD" }).format(n)
+  const money = (n: number) => new Intl.NumberFormat(loc, { style: "currency", currency: "MAD" }).format(n)
   const date = (iso: string) => new Intl.DateTimeFormat(loc, { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso.length === 10 ? `${iso}T00:00:00` : iso))
   const status = STATUS[invoice.status] ?? STATUS[InvoiceStatus.PENDING]
   const isPaid = invoice.status === InvoiceStatus.PAID
@@ -32,7 +32,7 @@ export async function buildSubscriptionInvoiceDocument(invoice: Invoice, locale 
       [t("issueDate"), date(invoice.date)],
       ...(invoice.dueDate ? ([[t("dueDate"), date(invoice.dueDate)]] as [string, string][]) : []),
       [t("paymentMethod"), method.replace(/\b\w/g, (c) => c.toUpperCase())],
-      [t("currency"), "USD"],
+      [t("currency"), "MAD"],
     ],
     highlight: isPaid
       ? { label: t("pdfAmountPaid"), value: money(invoice.total), note: invoice.paidAt ? `${t("paid")} ${date(invoice.paidAt)}` : undefined }

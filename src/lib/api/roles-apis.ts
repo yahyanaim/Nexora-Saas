@@ -47,8 +47,8 @@ export const fetchRolesListApi = async (
     }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch roles")
-    logger.error("[API Error] fetchRolesListApi failed:", message, error)
     if (!shouldUseDemoFallback(error)) {
+      logger.error("[API Error] fetchRolesListApi failed:", message, error)
       throw error
     }
   }
@@ -70,10 +70,10 @@ export const createRoleApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to create role")
-    logger.error("[API Error] createRoleApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       return addDemoRole(payload)
     }
+    logger.error("[API Error] createRoleApi failed:", message, error)
     throw error
   }
 }
@@ -87,7 +87,6 @@ export const updateRoleApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to update role ${roleId}`)
-    logger.error("[API Error] updateRoleApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoRoles().find((r) => r.id === roleId)
       if (!found) throw new Error(`Role with ID ${roleId} not found: ${message}`)
@@ -106,6 +105,7 @@ export const updateRoleApi = async (
         updatedAt: new Date().toISOString(),
       }
     }
+    logger.error("[API Error] updateRoleApi failed:", message, error)
     throw error
   }
 }
@@ -115,11 +115,11 @@ export const deleteRoleApi = async (roleId: string): Promise<void> => {
     await httpClient.delete(`/roles/${roleId}`)
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to delete role ${roleId}`)
-    logger.error("[API Error] deleteRoleApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       deleteDemoRole(roleId)
       return
     }
+    logger.error("[API Error] deleteRoleApi failed:", message, error)
     throw error
   }
 }
@@ -133,12 +133,12 @@ export const toggleRoleStatusApi = async (
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Failed to toggle status for role ${roleId}`)
-    logger.error("[API Error] toggleRoleStatusApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoRoles().find((r) => r.id === roleId)
       if (!found) throw new Error(`Role with ID ${roleId} not found: ${message}`)
       return { ...found, status }
     }
+    logger.error("[API Error] toggleRoleStatusApi failed:", message, error)
     throw error
   }
 }
@@ -149,12 +149,12 @@ export const getRoleApi = async (roleId: string): Promise<Role> => {
     return data.data
   } catch (error) {
     const message = apiErrorMessage(error, `Role ${roleId} not found`)
-    logger.error("[API Error] getRoleApi failed:", message, error)
     if (shouldUseDemoFallback(error)) {
       const found = getDemoRoles().find((r) => r.id === roleId)
       if (found) return found
       throw new Error(`Role with ID ${roleId} not found: ${message}`)
     }
+    logger.error("[API Error] getRoleApi failed:", message, error)
     throw error
   }
 }

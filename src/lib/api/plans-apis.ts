@@ -2,36 +2,10 @@ export * from "./billing-apis"
 import { billingApi } from "./billing-apis"
 import { Plan, CreatePlanPayload, UpdatePlanPayload } from "@/types/plans"
 import { ApiPaginatedResponse } from "@/types/tables"
+import { consolePlans } from "@/lib/platform/console-data"
 
-const STATIC_PLANS: Plan[] = [
-  {
-    id: "free",
-    name: "Free",
-    price: "$0",
-    period: "month",
-    description: "Essential tools for personal projects.",
-    featured: false,
-    features: ["1 Workspace", "Up to 3 members", "Community support"],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "$29",
-    period: "month",
-    description: "Advanced features and power tools for scaling businesses.",
-    featured: true,
-    features: ["Unlimited workspaces", "Up to 25 members", "Priority support", "Full API access"],
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    price: "$99",
-    period: "month",
-    description: "Maximum security, scalability, and dedicated SLA.",
-    featured: false,
-    features: ["Unlimited seats", "Dedicated manager", "99.99% SLA", "SSO"],
-  },
-]
+// Nexora's own plans, from the platform catalogue
+const STATIC_PLANS: Plan[] = consolePlans()
 
 export const fetchPlansApi = async (_params?: unknown): Promise<ApiPaginatedResponse<Plan>> => {
   return {

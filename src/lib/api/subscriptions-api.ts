@@ -47,8 +47,8 @@ export const fetchSubscriptionsApi = async (
     }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch subscriptions")
-    logger.error("[API Error] fetchSubscriptionsApi failed:", message)
     if (!shouldUseDemoFallback(error)) {
+      logger.error("[API Error] fetchSubscriptionsApi failed:", message)
       throw error
     }
   }
@@ -75,8 +75,8 @@ export const fetchSubscriptionsSummaryApi = async (): Promise<SubscriptionsSumma
     }
   } catch (error) {
     const message = apiErrorMessage(error, "Failed to fetch subscriptions summary")
-    logger.error("[API Error] fetchSubscriptionsSummaryApi failed:", message)
     if (!shouldUseDemoFallback(error)) {
+      logger.error("[API Error] fetchSubscriptionsSummaryApi failed:", message)
       throw error
     }
   }

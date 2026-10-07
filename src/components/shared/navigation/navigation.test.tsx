@@ -40,9 +40,10 @@ describe("useDashboardNav", () => {
   it("shows every section to an admin and resolves the active page", () => {
     renderIntl(<NavProbe />)
     expect(screen.getByTestId("groups").textContent).toBe(
-      "dashboard,organization,finance,planning,users,billing,management,support,system"
+      // The Nexora team's console comes first; the ERP sections follow
+      "platform,dashboard,organization,finance,planning,management,system"
     )
-    expect(screen.getByTestId("active-group").textContent).toBe("billing")
+    expect(screen.getByTestId("active-group").textContent).toBe("platform")
     expect(screen.getByTestId("active-item").textContent).toBe("/dashboard/invoices")
   })
 
@@ -76,7 +77,7 @@ describe("PageHeader", () => {
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe(messages.invoices)
     expect(screen.getByText(messages.pageDescInvoices)).toBeInTheDocument()
     const crumb = screen.getByRole("navigation", { name: "Breadcrumb" })
-    expect(crumb.textContent).toContain(messages.billing)
+    expect(crumb.textContent).toContain(messages.platformAdmin)
   })
 
   it("lets pages override the title and add actions", () => {
