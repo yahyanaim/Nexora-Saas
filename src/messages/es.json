@@ -2901,5 +2901,18 @@
   "employerMonthlyCost": "Coste mensual para la empresa",
   "workedHoursYear": "Horas trabajadas al año",
   "realHourlyCost": "Coste real por hora",
-  "useAsHourlyCost": "Usar como coste por hora"
+  "useAsHourlyCost": "Usar como coste por hora",
+  "rep_payroll": "Datos de nómina",
+  "repDesc_payroll": "Para cada persona en el periodo: días previstos y trabajados, ausencias por tipo, horas, horas extra y gastos a reembolsar, listos para su gestoría o software de nómina.",
+  "employeeCin": "CIN (DNI)",
+  "employeeCnss": "N.º afiliación CNSS",
+  "payExpectedDays": "Días previstos",
+  "payWorkedDays": "Días trabajados",
+  "payVacation": "Vacaciones",
+  "paySick": "Baja por enfermedad",
+  "payPersonal": "Asuntos propios",
+  "payUnpaid": "Sin sueldo",
+  "payOvertime": "Horas extra",
+  "payExpensesToRepay": "Gastos a reembolsar",
+  "payEmployerCharges": "Cotizaciones patronales"
 }

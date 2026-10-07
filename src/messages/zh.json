@@ -2901,5 +2901,18 @@
   "employerMonthlyCost": "公司每月成本",
   "workedHoursYear": "每年工作小时",
   "realHourlyCost": "每小时真实成本",
-  "useAsHourlyCost": "设为每小时成本"
+  "useAsHourlyCost": "设为每小时成本",
+  "rep_payroll": "工资输入",
+  "repDesc_payroll": "期间内每位员工：应出勤与实际出勤天数、各类假期、工时、加班及待报销费用，可直接交给薪资服务商或软件。",
+  "employeeCin": "CIN（身份证）",
+  "employeeCnss": "CNSS 登记号",
+  "payExpectedDays": "应出勤天数",
+  "payWorkedDays": "实际出勤天数",
+  "payVacation": "带薪假",
+  "paySick": "病假",
+  "payPersonal": "事假",
+  "payUnpaid": "无薪假",
+  "payOvertime": "加班",
+  "payExpensesToRepay": "待报销费用",
+  "payEmployerCharges": "雇主缴费"
 }

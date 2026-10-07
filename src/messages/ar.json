@@ -2901,5 +2901,18 @@
   "employerMonthlyCost": "التكلفة الشهرية على الشركة",
   "workedHoursYear": "ساعات العمل في السنة",
   "realHourlyCost": "التكلفة الحقيقية للساعة",
-  "useAsHourlyCost": "استعمالها كتكلفة الساعة"
+  "useAsHourlyCost": "استعمالها كتكلفة الساعة",
+  "rep_payroll": "عناصر الأجور",
+  "repDesc_payroll": "لكل شخص خلال الفترة: الأيام المتوقعة والمعمولة، والعطل حسب النوع، والساعات، والساعات الإضافية، والمصاريف المستحقة، جاهزة لمكتب أو برنامج الأجور.",
+  "employeeCin": "رقم البطاقة الوطنية",
+  "employeeCnss": "رقم التسجيل في CNSS",
+  "payExpectedDays": "الأيام المتوقعة",
+  "payWorkedDays": "الأيام المعمولة",
+  "payVacation": "العطلة المؤدى عنها",
+  "paySick": "عطلة مرضية",
+  "payPersonal": "عطلة شخصية",
+  "payUnpaid": "عطلة بدون أجر",
+  "payOvertime": "الساعات الإضافية",
+  "payExpensesToRepay": "مصاريف للإرجاع",
+  "payEmployerCharges": "مساهمات المشغل"
 }

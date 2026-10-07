@@ -2901,5 +2901,18 @@
   "employerMonthlyCost": "कंपनी पर मासिक लागत",
   "workedHoursYear": "प्रति वर्ष काम के घंटे",
   "realHourlyCost": "प्रति घंटा वास्तविक लागत",
-  "useAsHourlyCost": "प्रति घंटा लागत के रूप में उपयोग करें"
+  "useAsHourlyCost": "प्रति घंटा लागत के रूप में उपयोग करें",
+  "rep_payroll": "पेरोल इनपुट",
+  "repDesc_payroll": "हर व्यक्ति के लिए: अपेक्षित और काम के दिन, प्रकार अनुसार छुट्टियाँ, घंटे, ओवरटाइम और लौटाए जाने वाले खर्च, पेरोल फ़र्म या सॉफ़्टवेयर के लिए तैयार।",
+  "employeeCin": "CIN (पहचान पत्र)",
+  "employeeCnss": "CNSS पंजीकरण",
+  "payExpectedDays": "अपेक्षित दिन",
+  "payWorkedDays": "काम के दिन",
+  "payVacation": "सवेतन छुट्टी",
+  "paySick": "बीमारी की छुट्टी",
+  "payPersonal": "व्यक्तिगत छुट्टी",
+  "payUnpaid": "अवैतनिक",
+  "payOvertime": "ओवरटाइम",
+  "payExpensesToRepay": "लौटाने योग्य खर्च",
+  "payEmployerCharges": "नियोक्ता अंशदान"
 }

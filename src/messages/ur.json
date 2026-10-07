@@ -2901,5 +2901,18 @@
   "employerMonthlyCost": "کمپنی پر ماہانہ لاگت",
   "workedHoursYear": "سالانہ کام کے گھنٹے",
   "realHourlyCost": "فی گھنٹہ اصل لاگت",
-  "useAsHourlyCost": "فی گھنٹہ لاگت کے طور پر استعمال کریں"
+  "useAsHourlyCost": "فی گھنٹہ لاگت کے طور پر استعمال کریں",
+  "rep_payroll": "پے رول معلومات",
+  "repDesc_payroll": "ہر شخص کے لیے: متوقع اور کام کے دن، قسم کے لحاظ سے چھٹیاں، گھنٹے، اوور ٹائم اور واپس کیے جانے والے اخراجات، پے رول فرم یا سافٹ ویئر کے لیے تیار۔",
+  "employeeCin": "CIN (شناختی کارڈ)",
+  "employeeCnss": "CNSS رجسٹریشن",
+  "payExpectedDays": "متوقع دن",
+  "payWorkedDays": "کام کے دن",
+  "payVacation": "تنخواہ دار چھٹی",
+  "paySick": "بیماری کی چھٹی",
+  "payPersonal": "ذاتی چھٹی",
+  "payUnpaid": "بلا تنخواہ",
+  "payOvertime": "اوور ٹائم",
+  "payExpensesToRepay": "واپس کرنے کے اخراجات",
+  "payEmployerCharges": "آجر کے واجبات"
 }

@@ -2901,5 +2901,18 @@
   "employerMonthlyCost": "Cost to the company per month",
   "workedHoursYear": "Hours worked per year",
   "realHourlyCost": "Real cost per hour",
-  "useAsHourlyCost": "Use as hourly cost"
+  "useAsHourlyCost": "Use as hourly cost",
+  "rep_payroll": "Payroll inputs",
+  "repDesc_payroll": "For each person in the period: days expected and worked, leave by type, hours, overtime and expenses to repay, ready for your payroll firm or software.",
+  "employeeCin": "CIN",
+  "employeeCnss": "CNSS registration",
+  "payExpectedDays": "Expected days",
+  "payWorkedDays": "Days worked",
+  "payVacation": "Paid leave",
+  "paySick": "Sick leave",
+  "payPersonal": "Personal leave",
+  "payUnpaid": "Unpaid leave",
+  "payOvertime": "Overtime",
+  "payExpensesToRepay": "Expenses to repay",
+  "payEmployerCharges": "Employer contributions"
 }
