@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { billedAgainstBudget, openAdvances } from "@/lib/workforce/invoice-builders"
+import { withChanges } from "@/lib/workforce/phase-budgets"
+import { useChangeOrders } from "@/hooks/workforce/use-change-orders"
 import { invoiceTotals } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { clientOutstanding, creditStatus } from "@/lib/workforce/client-relations"
@@ -37,6 +39,7 @@ interface Props {
 export function NewInvoiceSheet({ open, clients, projects, milestones, invoices, currency, isSubmitting, onOpenChange, onCreate }: Props) {
   const t = useTranslations()
   const locale = useLocale()
+  const { data: changeOrders = [] } = useChangeOrders()
   const money = (n: number) => formatMoney(n, currency, locale)
   const [kind, setKind] = useState<Kind>(InvoiceKind.FIXED)
   const [clientId, setClientId] = useState("")
@@ -54,7 +57,7 @@ export function NewInvoiceSheet({ open, clients, projects, milestones, invoices,
   const wantedType = kind === InvoiceKind.RETAINER ? BudgetType.RETAINER : kind === InvoiceKind.FIXED || kind === InvoiceKind.MILESTONE ? BudgetType.FIXED : undefined
   const clientProjects = projects.filter((p) => p.clientId === clientId && (!wantedType || p.budgetType === wantedType))
   const project = clientProjects.find((p) => p.id === projectId)
-  const billed = project ? billedAgainstBudget(project, invoices) : undefined
+  const billed = project ? billedAgainstBudget(withChanges(project, changeOrders), invoices) : undefined
   const advances = useMemo(() => (clientId ? openAdvances(clientId, invoices) : []), [clientId, invoices])
   const needsProject = kind !== InvoiceKind.ADVANCE && kind !== InvoiceKind.FREE
   const tax = Number(taxRate)

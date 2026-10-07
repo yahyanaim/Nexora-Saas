@@ -1,4 +1,6 @@
 import { invoiceIdProblems } from "@/lib/workforce/tax-ids"
+import { listChangeOrdersApi } from "./change-orders-api"
+import { withChanges } from "@/lib/workforce/phase-budgets"
 import { buildUblXml, eInvoiceFileName, eInvoiceProblems, eInvoiceStatus, needsEInvoice } from "@/lib/workforce/e-invoice"
 import {
   ClientInvoiceStatus,
@@ -425,12 +427,13 @@ export async function createInvoiceApi(workspaceId: string, input: NewInvoiceInp
   let coveredEntries: TimeEntry[] = []
   switch (input.kind) {
     case InvoiceKind.FIXED: {
-      const project = projectOf(input.projectId)!
+      // Approved change orders are part of the price the client owes (Phase 6g.4)
+      const project = withChanges(projectOf(input.projectId)!, await listChangeOrdersApi(workspaceId, input.projectId))
       lines = [fixedPriceLine(project, input.percent, newId(), billedAgainstBudget(project, all).billed)]
       break
     }
     case InvoiceKind.MILESTONE: {
-      const project = projectOf(input.projectId)!
+      const project = withChanges(projectOf(input.projectId)!, await listChangeOrdersApi(workspaceId, input.projectId))
       const milestone = (await listMilestonesApi(workspaceId, project.id)).find((m) => m.id === input.milestoneId)
       if (!milestone) throw new Error("Milestone not found")
       lines = [milestoneLine(project, milestone, input.amount, newId(), billedAgainstBudget(project, all).billed)]

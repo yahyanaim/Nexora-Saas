@@ -44,6 +44,12 @@ export function changeTotals(orders: ChangeOrder[], projectId: string) {
   }
 }
 
+/** The project with its price raised (or lowered) by approved change orders, for billing a fixed price. */
+export function withChanges<T extends Pick<WorkProject, "id" | "budgetAmount">>(project: T, orders: ChangeOrder[]): T {
+  if (!project.budgetAmount) return project
+  return { ...project, budgetAmount: revisedBudget(project, orders) }
+}
+
 /** The project budget after approved change orders. */
 export const revisedBudget = (project: Pick<WorkProject, "id" | "budgetAmount">, orders: ChangeOrder[]) =>
   roundMoney((project.budgetAmount ?? 0) + changeTotals(orders, project.id).amount)

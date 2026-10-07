@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { assertChangeOrder, changeTotals, nextChangeNumber, phaseBudgets, revisedBudget, unallocatedBudget } from "./phase-budgets"
+import { assertChangeOrder, changeTotals, withChanges, nextChangeNumber, phaseBudgets, revisedBudget, unallocatedBudget } from "./phase-budgets"
 import { budgetUsage } from "./profitability"
 import { decideChangeOrderApi, deleteChangeOrderApi, listChangeOrdersApi, saveChangeOrderApi, sendChangeOrderApi } from "@/lib/api/change-orders-api"
 import { EmployeeStatus, EmploymentType, WorkRole, type Employee } from "@/types/workforce"
@@ -26,6 +26,8 @@ describe("phase budgets and change orders (Phase 6g.4)", () => {
     const orders = [co({}), co({ id: "s", status: ChangeOrderStatus.SENT, amount: 5000 }), co({ id: "r", status: ChangeOrderStatus.REJECTED }), co({ id: "o", projectId: "other" })]
     expect(changeTotals(orders, "p")).toEqual({ amount: 10000, hours: 10, pendingAmount: 5000, pendingCount: 1 })
     expect(revisedBudget(project, orders)).toBe(110000)
+    expect(withChanges(project, orders).budgetAmount).toBe(110000)
+    expect(withChanges({ ...project, budgetAmount: undefined }, orders).budgetAmount).toBeUndefined()
     expect(budgetUsage(project, { entries: [], expenses: [], employees: [], clients: [], changeOrders: orders }).budget).toBe(110000)
   })
 
