@@ -44,6 +44,20 @@ export const ERROR_KEYS: Record<string, string> = {
   "This person is already suspended": "err_userSuspended",
   "The company would have no administrator; suspend the company instead": "err_lastCompanyAdmin",
   "This suspension has already been lifted": "err_suspensionLifted",
+  "Enter a price above zero": "err_priceZero",
+  "The new price starts today or later": "err_priceDate",
+  "A price already starts on that day": "err_priceSameDay",
+  "This customer already has a subscription": "err_subExists",
+  "This customer has no subscription yet": "err_noSub",
+  "Enter the amount and the bank reference": "err_transferFields",
+  "This transfer is no longer waiting": "err_transferGone",
+  "The transfer is larger than what the invoice still owes": "err_transferTooBig",
+  "This invoice no longer exists": "err_invoiceGone",
+  "Give the reason for the credit note": "err_creditReason",
+  "The credit note cannot exceed what is left on the invoice": "err_creditTooBig",
+  "Only money received can be refunded": "err_refundTooBig",
+  "This refund is not waiting for approval": "err_refundNotWaiting",
+  "Another team member must approve this refund": "err_refundSecondPerson",
   "Choose from 1 to 5 stars": "err_chooseStars",
   "Choose a score from 0 to 10": "err_chooseNpsScore",
   "This survey was already answered": "err_surveyAlreadyAnswered",
@@ -281,6 +295,7 @@ export const ERROR_KEYS: Record<string, string> = {
 
 /** Messages with values: each captured group becomes the value named at the same position in `names`. */
 export const ERROR_PATTERNS: { pattern: RegExp; key: string; names: string[] }[] = [
+  { pattern: /^Free (\d+) seats before this downgrade$/, key: "err_freeSeats", names: ["count"] },
   { pattern: /^Attach a receipt for expenses above (.+)$/, key: "err_receiptAbove", names: ["amount"] },
   { pattern: /^The period up to (.+) is locked$/, key: "err_periodLocked", names: ["date"] },
   { pattern: /^Enter the exchange rate from (\S+) to (\S+)$/, key: "err_exchangeRate", names: ["from", "to"] },

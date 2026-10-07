@@ -1,5 +1,5 @@
-import SubscriptionsPage from "@/components/shared/subscriptions-chunks/subscriptions-page"
+import ConsoleSubscriptionsPage from "@/components/shared/platform-chunks/subscriptions-page"
 
 export default function Page() {
-  return <SubscriptionsPage />
+  return <ConsoleSubscriptionsPage />
 }

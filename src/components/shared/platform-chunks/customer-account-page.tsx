@@ -1,8 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,8 +17,10 @@ import { useWorkspaceStore } from "@/store/workspace-store"
 import { useConsoleActor, useConsoleAudit, useConsoleCustomers, useConsoleMutations } from "@/hooks/platform/use-platform-console"
 import { consoleCan, needsStepUp } from "@/lib/platform/console-roles"
 import { accountMrr, canTransition, seatLimit } from "@/lib/platform/customer-lifecycle"
-import { consoleInvoices } from "@/lib/platform/console-data"
-import { formatMad, planById } from "@/lib/platform/nexora-catalog"
+import { NEXORA_PLANS, formatMad, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
+import { useBillingMutations, useNxInvoices } from "@/hooks/platform/use-platform-billing"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { InvoiceStatusBadge } from "./billing-shared"
 import { cn } from "@/lib/utils"
 import { ConsoleCapability as C, ConsoleRole } from "@/types/platform-console"
 import { ACTION_LABEL, StepUpDialog } from "./console-shared"
@@ -46,7 +47,11 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
   const [stepUp, setStepUp] = useState(false)
   const [note, setNote] = useState("")
   const c = customers.find((x) => x.id === customerId)
-  const invoices = useMemo(() => consoleInvoices().filter((i) => i.user.orgId === customerId), [customerId])
+  const { data: allInvoices = [] } = useNxInvoices()
+  const invoices = allInvoices.filter((i) => i.customerId === customerId)
+  const billing = useBillingMutations()
+  const [startOpen, setStartOpen] = useState(false)
+  const [start, setStart] = useState({ plan: "business" as NexoraPlanId, billing: "monthly" as "monthly" | "yearly", method: "card" as "card" | "transfer" })
 
   const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`))
@@ -155,10 +160,10 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
               <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border">
                 {invoices.map((i) => (
                   <li key={i.id} className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm">
-                    <span className="font-mono text-xs">{i.invoiceNumber}</span>
+                    <span className="font-mono text-xs">{i.number}</span>
                     <span className="text-xs text-muted-foreground">{date(i.date)}</span>
                     <span className="ms-auto tabular-nums">{money(i.total)}</span>
-                    <Badge variant="outline" className={cn("border-transparent", i.status === "paid" ? "bg-success-soft text-success-foreground" : "bg-warning-soft text-warning-foreground")}>{t(i.status === "paid" ? "pfPaid" : "pfOverdue")}</Badge>
+                    <InvoiceStatusBadge status={i.status} />
                   </li>
                 ))}
               </ul>
@@ -193,8 +198,11 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
               {canTrial && c.status === "trial" && !c.trialExtended && (
                 <Button variant="outline" className="justify-start" onClick={() => ask("extend")}><CalendarDays className="size-4" />{t("cuExtendTrial")}</Button>
               )}
-              {canStatus && canTransition(c.status, "active") && c.status !== "suspended" && (
-                <Button variant="outline" className="justify-start" onClick={() => ask("activate")}><CheckCircle className="size-4" />{c.status === "cancelled" ? t("cuReactivate") : c.status === "trial" ? t("cuConvert") : t("cuMarkPaid")}</Button>
+              {consoleCan(role, C.CHANGE_SUBSCRIPTION) && c.status === "trial" && (
+                <Button variant="outline" className="justify-start" onClick={() => { setStart({ plan: c.plan, billing: "monthly", method: "card" }); setStartOpen(true) }}><CheckCircle className="size-4" />{t("cuConvert")}</Button>
+              )}
+              {canStatus && canTransition(c.status, "active") && c.status !== "suspended" && c.status !== "trial" && (
+                <Button variant="outline" className="justify-start" onClick={() => ask("activate")}><CheckCircle className="size-4" />{c.status === "cancelled" ? t("cuReactivate") : t("cuMarkPaid")}</Button>
               )}
               {canSuspend && c.status === "suspended" && (
                 <Button variant="outline" className="justify-start" onClick={() => ask("lift")}><LockKeyholeOpen className="size-4" />{t("cuLift")}</Button>
@@ -264,6 +272,43 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
             <Label htmlFor="su-until">{t("cuUntilOptional")}</Label>
             <Input id="su-until" type="date" value={suspend.until} onChange={(e) => setSuspend({ ...suspend, until: e.target.value })} />
           </div>
+        </div>
+      </DataTableEntityFormSheet>
+
+      <DataTableEntityFormSheet
+        open={startOpen}
+        onOpenChange={setStartOpen}
+        mode="create"
+        createTitle={t("biStartTitle", { name: c.name })}
+        editTitle=""
+        description={t("biStartDesc")}
+        isSubmitting={billing.start.isPending}
+        submitLabel={{ create: t("biStart") }}
+        onSubmit={() => billing.start.mutate({ customerId: c.id, ...start }, { onSuccess: () => setStartOpen(false) })}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="st-plan">{t("pfPlan")}</Label>
+            <Select value={start.plan} onValueChange={(v) => setStart({ ...start, plan: v as NexoraPlanId })}>
+              <SelectTrigger id="st-plan"><SelectValue>{planById(start.plan).name}</SelectValue></SelectTrigger>
+              <SelectContent>{NEXORA_PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} · {money(p.monthly)}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="st-billing">{t("cuBilling")}</Label>
+            <Select value={start.billing} onValueChange={(v) => setStart({ ...start, billing: v as "monthly" | "yearly" })}>
+              <SelectTrigger id="st-billing"><SelectValue>{t(start.billing === "yearly" ? "pfYearly" : "pfMonthly")}</SelectValue></SelectTrigger>
+              <SelectContent><SelectItem value="monthly">{t("pfMonthly")}</SelectItem><SelectItem value="yearly">{t("pfYearly")}</SelectItem></SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="st-method">{t("subMethod")}</Label>
+            <Select value={start.method} onValueChange={(v) => setStart({ ...start, method: v as "card" | "transfer" })}>
+              <SelectTrigger id="st-method"><SelectValue>{t(start.method === "card" ? "subCard" : "subTransfer")}</SelectValue></SelectTrigger>
+              <SelectContent><SelectItem value="card">{t("subCard")}</SelectItem><SelectItem value="transfer">{t("subTransfer")}</SelectItem></SelectContent>
+            </Select>
+          </div>
+          <p className="rounded-2xl bg-info-soft p-3 text-sm text-info-foreground">{t("biStartPreview", { amount: money((start.billing === "yearly" ? 10 : 1) * planById(start.plan).monthly * (c.country === "MA" ? 1.2 : 1)) })}</p>
         </div>
       </DataTableEntityFormSheet>
 

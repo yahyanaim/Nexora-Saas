@@ -1,5 +1,5 @@
-import PlansPage from "@/components/shared/plans-chunks/plans-page"
+import ConsolePlansPage from "@/components/shared/platform-chunks/plans-page"
 
 export default function Page() {
-  return <PlansPage />
+  return <ConsolePlansPage />
 }
