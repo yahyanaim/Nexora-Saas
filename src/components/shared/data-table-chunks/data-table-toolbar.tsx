@@ -134,9 +134,9 @@ export function DataTableToolbar<TData>({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-2 sm:px-6">
       <div>
-        <h3 className="text-lg font-semibold tracking-tight text-foreground whitespace-nowrap capitalize sm:text-xl">
+        <h2 className="text-lg font-semibold tracking-tight text-foreground whitespace-nowrap capitalize sm:text-xl">
           {title}
-        </h3>
+        </h2>
       </div>
 
       <div className="flex w-full flex-wrap items-center gap-2 sm:ms-auto sm:w-auto">
