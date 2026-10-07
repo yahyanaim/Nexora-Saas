@@ -93,6 +93,8 @@ export interface Employee {
   /** ISO date (yyyy-mm-dd) */
   hireDate: string
   /** Internal cost per hour, in the workspace currency */
+  /** Gross monthly salary, used to work out the real hourly cost (Phase 6f.3) */
+  grossMonthlySalary?: number
   hourlyCost: number
   /** Default rate billed to clients per hour */
   billableRate: number
