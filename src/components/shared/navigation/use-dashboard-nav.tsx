@@ -51,6 +51,7 @@ import {
   LockKeyhole,
   ChartColumnStacked,
   UsersRound,
+  CalendarRange,
 } from "@/components/ui/carbon/icons"
 import { usePathname } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -273,6 +274,12 @@ export function useDashboardNav() {
             url: "/dashboard/workload",
             icon: ChartColumnStacked,
             descriptionKey: "pageDescWorkload",
+          },
+          {
+            title: t("resourcing"),
+            url: "/dashboard/resourcing",
+            icon: CalendarRange,
+            descriptionKey: "pageDescResourcing",
           },
           {
             title: t("leave"),

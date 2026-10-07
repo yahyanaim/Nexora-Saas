@@ -5,6 +5,11 @@
  * same keys as error codes.
  */
 export const ERROR_KEYS: Record<string, string> = {
+  "Choose a project": "err_chooseAProject",
+  "Choose a person or name the role to staff": "err_chooseAPersonOrName",
+  "The end date can't be before the start date": "err_theEndDateCanTBe",
+  "Hours per week must be between 1 and 80": "err_hoursPerWeekMustBe",
+  "Booking not found": "err_bookingNotFound",
   "Choose a supplier": "err_chooseASupplier",
   "Enter the supplier's bill number": "err_enterTheSupplierSBill",
   "The due date can't be before the bill date": "err_theDueDateCanTBe",
