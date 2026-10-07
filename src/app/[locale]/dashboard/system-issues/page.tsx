@@ -1,5 +1,11 @@
-import SystemIssuesPage from "@/components/shared/reports-chunks/system-issues-reports/system-issues-page"
+import { redirect } from "next/navigation"
 
-export default function Page() {
-  return <SystemIssuesPage />
+/** The old System issues page became System health (Lot A5); old links still work. */
+export default async function SystemIssuesRedirect({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  redirect(`/${locale}/dashboard/health`)
 }

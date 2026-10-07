@@ -16,6 +16,7 @@ vi.mock("./platform-chunks/console-shared", () => ({ ConsoleStrip: () => null })
 vi.mock("./platform-chunks/workspace-view-banner", () => ({ WorkspaceViewBanner: () => null }))
 vi.mock("./platform-chunks/workspace-status-banner", () => ({ WorkspaceStatusBanner: () => null }))
 vi.mock("./platform-chunks/support-session-banner", () => ({ SupportSessionBanner: () => null }))
+vi.mock("./platform-chunks/platform-notice-banner", () => ({ PlatformNoticeBanner: () => null }))
 
 describe("DashboardLayout", () => {
   beforeEach(() => {
