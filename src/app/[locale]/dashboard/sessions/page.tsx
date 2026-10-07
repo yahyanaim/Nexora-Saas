@@ -1,5 +1,5 @@
-import SessionsPage from "@/components/shared/sessions-chunks/sessions-page"
+import ConsoleSessionsPage from "@/components/shared/platform-chunks/sessions-page"
 
 export default function Page() {
-  return <SessionsPage />
+  return <ConsoleSessionsPage />
 }

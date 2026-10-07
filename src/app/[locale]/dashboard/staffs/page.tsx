@@ -1,5 +1,5 @@
-import StaffsPage from "@/components/shared/staffs-chunks/staffs-page"
+import ConsoleStaffPage from "@/components/shared/platform-chunks/staff-page"
 
 export default function Page() {
-  return <StaffsPage />
+  return <ConsoleStaffPage />
 }

@@ -17,6 +17,7 @@ export const PLATFORM_PATHS = [
   "/dashboard/system-issues",
   "/dashboard/roles",
   "/dashboard/sessions",
+  "/dashboard/platform-audit",
 ]
 
 /** True when a path (with or without the locale prefix) is a platform console page. */
