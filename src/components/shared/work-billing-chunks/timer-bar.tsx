@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
+import { Link } from "@/i18n/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Play, Square, X } from "@/components/ui/carbon/icons"
 import { useTimer, useTimerMutations } from "@/hooks/workforce/use-work-billing"
@@ -55,6 +56,16 @@ export function TimerBar({ employeeId, projects, tasks }: { employeeId: string; 
   }
 
   const projectTasks = tasks.filter((x) => x.projectId === projectId)
+  // Time is logged on projects the person belongs to: say so instead of showing an empty list
+  if (projects.length === 0) {
+    return (
+      <div className="flex flex-col gap-2 rounded-2xl border border-dashed border-border bg-card p-4 sm:flex-row sm:items-center">
+        <span className="text-sm font-medium sm:me-1">{t("timer")}</span>
+        <p className="flex-1 text-sm text-muted-foreground">{t("timerNoProjects")}</p>
+        <Button variant="outline" size="sm" asChild><Link href="/dashboard/projects">{t("timerOpenProjects")}</Link></Button>
+      </div>
+    )
+  }
   return (
     <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-3 sm:flex-row sm:items-center">
       <span className="text-sm font-medium sm:me-1">{t("timer")}</span>

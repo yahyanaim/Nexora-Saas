@@ -3243,5 +3243,7 @@
   "pwaInstallIos": "Tippen Sie auf Teilen und dann Zum Home-Bildschirm.",
   "pwaInstall": "Installieren",
   "receiptTakePhoto": "Foto aufnehmen",
-  "receiptPhotoAlt": "Belegfoto"
+  "receiptPhotoAlt": "Belegfoto",
+  "timerNoProjects": "Sie sind noch in keinem aktiven Projektteam. Bitten Sie eine Projektleitung, Sie hinzuzufügen; dann erscheinen Ihre Projekte hier.",
+  "timerOpenProjects": "Projekte öffnen"
 }
