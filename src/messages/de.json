@@ -2887,5 +2887,19 @@
   "err_approvedBillsCanTBe2": "Freigegebene Rechnungen können nicht gelöscht werden",
   "err_thisSupplierHasBillsSo": "Dieser Lieferant hat Rechnungen und kann nur archiviert werden",
   "guide_suppliers": "Unternehmen und Freelancer, bei denen Sie einkaufen, mit allem, was Sie zum Erfassen und Bezahlen ihrer Rechnungen brauchen.\nKarten: aktive Lieferanten, Subunternehmer und marokkanische Lieferanten ohne ICE.\nListe: Suche nach Name, ICE, IF oder E-Mail; archivierte Lieferanten per Schaltfläche anzeigen.\nNeuer Lieferant: Kennungen (ICE 15 Ziffern, IF), Kontakte, Zahlungsziel und Bank (24-stellige RIB in Marokko).\nArchivieren: unbenutzte Lieferanten mit Verlauf behalten; nur Fehler löschen.",
-  "guide_supplier_bills": "Die Rechnungen Ihrer Lieferanten, von der Erfassung bis zur Zahlung.\nKarten: freizugebende Rechnungen, offener Betrag, überfälliger Betrag und Zahlungen der letzten 30 Tage.\nRechnung erfassen: Lieferant, seine Rechnungsnummer, Daten (Fälligkeit aus dem Zahlungsziel), optionales Projekt und Positionen mit USt-Satz.\nFreigeben oder ablehnen: eine andere Person als die erfassende entscheidet; abgelehnte Rechnungen können korrigiert und erneut gesendet werden.\nBezahlen: volle oder Teilzahlungen erfassen; freigegebene Rechnungen zählen als Projektkosten, ihre Steuer als Vorsteuer, und sie werden im Einkaufsjournal gebucht."
+  "guide_supplier_bills": "Die Rechnungen Ihrer Lieferanten, von der Erfassung bis zur Zahlung.\nKarten: freizugebende Rechnungen, offener Betrag, überfälliger Betrag und Zahlungen der letzten 30 Tage.\nRechnung erfassen: Lieferant, seine Rechnungsnummer, Daten (Fälligkeit aus dem Zahlungsziel), optionales Projekt und Positionen mit USt-Satz.\nFreigeben oder ablehnen: eine andere Person als die erfassende entscheidet; abgelehnte Rechnungen können korrigiert und erneut gesendet werden.\nBezahlen: volle oder Teilzahlungen erfassen; freigegebene Rechnungen zählen als Projektkosten, ihre Steuer als Vorsteuer, und sie werden im Einkaufsjournal gebucht.",
+  "realCostTitle": "Echte Kosten aus dem Gehalt",
+  "realCostHint": "Geben Sie das Monatsgehalt inkl. Arbeitgeberkosten ein; es wird auf die Jahresarbeitsstunden verteilt.",
+  "realCostHintMa": "Geben Sie das monatliche Bruttogehalt ein: Nexora addiert die Arbeitgeberanteile für CNSS, AMO und Berufsbildungsabgabe und verteilt die Kosten auf die Jahresarbeitsstunden (ohne Urlaub und Feiertage).",
+  "grossMonthlySalary": "Monatliches Bruttogehalt",
+  "empCharge_cnssSocial": "CNSS Sozialleistungen",
+  "empCharge_cnssJobLoss": "CNSS Arbeitslosengeld",
+  "empCharge_cnssFamily": "CNSS Familienbeihilfen",
+  "empCharge_amo": "AMO Krankenversicherung",
+  "empCharge_training": "Berufsbildungsabgabe",
+  "empChargeCapped": "(auf {amount})",
+  "employerMonthlyCost": "Monatliche Kosten für das Unternehmen",
+  "workedHoursYear": "Arbeitsstunden pro Jahr",
+  "realHourlyCost": "Echte Kosten pro Stunde",
+  "useAsHourlyCost": "Als Stundenkosten übernehmen"
 }

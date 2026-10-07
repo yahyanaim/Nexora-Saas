@@ -4,10 +4,13 @@ import { forwardRef, useEffect, useImperativeHandle } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { cn } from "@/lib/utils"
 import { NumberField, SelectField, TextField } from "./form-fields"
+import { Button } from "@/components/ui/button"
+import { employerCost } from "@/lib/workforce/employer-cost"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import {
   EmployeeStatus,
   EmploymentType,
@@ -42,6 +45,7 @@ const schema = z.object({
   employmentType: z.enum(EmploymentType),
   status: z.enum(EmployeeStatus),
   hireDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  grossMonthlySalary: z.number().min(0).max(10000000).optional(),
   hourlyCost: money,
   billableRate: money,
   weeklyCapacity: z.number({ error: "required" }).min(0).max(80),
@@ -64,6 +68,7 @@ function toFormValues(employee?: Employee): FormValues {
     employmentType: employee?.employmentType ?? EmploymentType.FULL_TIME,
     status: employee?.status ?? EmployeeStatus.ACTIVE,
     hireDate: employee?.hireDate ?? new Date().toISOString().slice(0, 10),
+    grossMonthlySalary: employee?.grossMonthlySalary,
     hourlyCost: employee?.hourlyCost ?? 0,
     billableRate: employee?.billableRate ?? 0,
     weeklyCapacity: employee?.weeklyCapacity ?? 40,
@@ -110,6 +115,12 @@ export const EmployeeForm = forwardRef<EmployeeFormHandle, Props>(function Emplo
     resolver: zodResolver(schema),
     defaultValues: toFormValues(employee),
   })
+  const locale = useLocale()
+  const country = useWorkspaceSettings().data?.company.country ?? "MA"
+  const moroccan = country === "MA"
+  const [watchedGross, watchedWeekly, watchedHourlyCost] = form.watch(["grossMonthlySalary", "weeklyCapacity", "hourlyCost"])
+  const cost = typeof watchedGross === "number" && Number.isFinite(watchedGross) ? employerCost(watchedGross, Number(watchedWeekly) || 0, country) : null
+  const money = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency, maximumFractionDigits: 2 }).format(n)
 
   useEffect(() => {
     form.reset(toFormValues(employee))
@@ -194,6 +205,44 @@ export const EmployeeForm = forwardRef<EmployeeFormHandle, Props>(function Emplo
         </div>
 
         {employee && <p className="-mt-2 text-xs text-muted-foreground">{t("rateEditHint")}</p>}
+
+        {canSeeCosts && (
+          <div className="flex flex-col gap-3 rounded-2xl border border-border p-4">
+            <div>
+              <p className="text-sm font-semibold">{t("realCostTitle")}</p>
+              <p className="text-xs text-muted-foreground">{t(moroccan ? "realCostHintMa" : "realCostHint")}</p>
+            </div>
+            <NumberField control={form.control} name="grossMonthlySalary" label={`${t("grossMonthlySalary")} (${currency})`} optional />
+            {cost && cost.gross > 0 && (
+              <>
+                <dl className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 text-sm">
+                  {cost.lines.map((l) => (
+                    <div key={l.key} className="contents">
+                      <dt className="text-muted-foreground">{t(`empCharge_${l.key}`)} · {l.rate}%{l.base < cost.gross ? ` ${t("empChargeCapped", { amount: money(l.base) })}` : ""}</dt>
+                      <dd className="text-end tabular-nums">{money(l.amount)}</dd>
+                    </div>
+                  ))}
+                  <dt className="font-medium">{t("employerMonthlyCost")}</dt>
+                  <dd className="text-end font-medium tabular-nums">{money(cost.monthlyCost)}</dd>
+                  <dt className="text-muted-foreground">{t("workedHoursYear")}</dt>
+                  <dd className="text-end tabular-nums">{cost.yearlyHours.toLocaleString(locale)} h</dd>
+                  <dt className="font-semibold">{t("realHourlyCost")}</dt>
+                  <dd className="text-end font-semibold tabular-nums">{money(cost.hourlyCost)}</dd>
+                </dl>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="self-start"
+                  disabled={cost.hourlyCost === watchedHourlyCost}
+                  onClick={() => form.setValue("hourlyCost", cost.hourlyCost, { shouldDirty: true, shouldValidate: true })}
+                >
+                  {t("useAsHourlyCost")}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
 
         <FormField
           control={form.control}

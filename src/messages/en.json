@@ -2887,5 +2887,19 @@
   "err_approvedBillsCanTBe2": "Approved bills can't be deleted",
   "err_thisSupplierHasBillsSo": "This supplier has bills, so it can only be archived",
   "guide_suppliers": "The companies and freelancers you buy from, with what you need to record and pay their bills.\nCards: active suppliers, subcontractors and Moroccan suppliers still missing their ICE.\nList: search by name, ICE, IF or email; show archived suppliers with the button.\nNew supplier: identifiers (ICE 15 digits, IF), contacts, payment terms and bank (24-digit RIB in Morocco).\nArchive: keep a supplier you no longer use with its history; delete only mistakes.",
-  "guide_supplier_bills": "The bills your suppliers send you, from entry to payment.\nCards: bills to approve, amount to pay, overdue amount and payments of the last 30 days.\nRecord a bill: supplier, their bill number, dates (due date from the supplier's terms), optional project and lines with their VAT rate.\nApprove or reject: someone other than the person who entered the bill decides; a rejected bill can be corrected and sent again.\nPay: record full or partial payments; approved bills count as project costs, their VAT as deductible VAT, and they post to the purchases journal."
+  "guide_supplier_bills": "The bills your suppliers send you, from entry to payment.\nCards: bills to approve, amount to pay, overdue amount and payments of the last 30 days.\nRecord a bill: supplier, their bill number, dates (due date from the supplier's terms), optional project and lines with their VAT rate.\nApprove or reject: someone other than the person who entered the bill decides; a rejected bill can be corrected and sent again.\nPay: record full or partial payments; approved bills count as project costs, their VAT as deductible VAT, and they post to the purchases journal.",
+  "realCostTitle": "Real cost from the salary",
+  "realCostHint": "Enter the monthly salary with employer costs; it is spread over the hours worked in a year.",
+  "realCostHintMa": "Enter the gross monthly salary: Nexora adds the employer's CNSS, AMO and training tax, then spreads the cost over the hours worked in a year (paid leave and public holidays excluded).",
+  "grossMonthlySalary": "Gross monthly salary",
+  "empCharge_cnssSocial": "CNSS social benefits",
+  "empCharge_cnssJobLoss": "CNSS job-loss allowance",
+  "empCharge_cnssFamily": "CNSS family allowances",
+  "empCharge_amo": "AMO health insurance",
+  "empCharge_training": "Vocational training tax",
+  "empChargeCapped": "(on {amount})",
+  "employerMonthlyCost": "Cost to the company per month",
+  "workedHoursYear": "Hours worked per year",
+  "realHourlyCost": "Real cost per hour",
+  "useAsHourlyCost": "Use as hourly cost"
 }
