@@ -5,9 +5,9 @@
 
 | | |
 |---|---|
-| **Version** | 1.0 |
+| **Version** | 1.1 |
 | **Reference date** | 7 October 2026 |
-| **Status** | For review and approval |
+| **Status** | Decisions closed (Step 0); ready for delivery of Lot A |
 | **Scope** | Nexora admin console and the services behind it |
 | **Classification** | Confidential |
 | **Audience** | Nexora team: owner, support, finance, engineering |
@@ -113,7 +113,7 @@ The console is ready when the reference scenario of Section 13.2 runs end to end
 
 ## 3. Users and Roles
 
-The console has five kinds of users, all members of the Nexora team. They differ by what they may change, not by what they may read about customers' business, which is nothing by default. A sixth actor, the customer's own administrator, appears in the console only as the person who approves support sessions and receives billing notices.
+The console has seven roles (Table 4), all held by members of the Nexora team. They differ by what they may change, not by what they may read about customers' business, which is nothing by default. A sixth actor, the customer's own administrator, appears in the console only as the person who approves support sessions and receives billing notices.
 
 ### 3.1 Personas
 
@@ -139,6 +139,7 @@ The console has five kinds of users, all members of the Nexora team. They differ
 | Support | Customer account view, support requests, support sessions | Support agents |
 | Finance | Invoices, payments, refunds within the limit, taxes, exports | Finance officer |
 | Engineering | Health, incidents, sessions, technical logs | Engineer on call |
+| Sales | Trials, demo workspaces, conversion follow-up; customers in read mode | Sales and demos |
 | Read-only | Every console page in read mode | Advisors, auditors |
 
 ### 3.3 Role Principles
@@ -205,7 +206,7 @@ A customer is a company with one or more workspaces and one subscription. The Cu
 | CUS-02 | Filters by plan, status, country and billing period; search by name, ICE or administrator e-mail | M | Combined filters return the expected customers |
 | CUS-03 | Summary cards: MRR and ARR before VAT, paying customers, trials, people using Nexora, overdue amount | M | Cards equal the formulas of Section 6 |
 | CUS-04 | A customer account page shows identity (legal name, ICE, IF, address), administrator, plan, seats, invoices, payments, support history, notes and audit events | M | No tenant business record appears on the page |
-| CUS-05 | An operator can create a trial for a new company with its administrator's e-mail; the administrator receives an invitation | S | Trial created with end date and invitation sent |
+| CUS-05 | An operator (Owner, Admin or Sales) can create a trial for a new company with its administrator's e-mail; the administrator receives an invitation | M | Trial created with end date and invitation sent |
 | CUS-06 | A trial ends on its end date; the customer chooses a plan or the workspace becomes read-only | M | Expired trial fixture is read-only |
 | CUS-07 | Status changes follow the lifecycle of Figure 2; any other transition is refused | M | Invalid transition returns an error |
 | CUS-08 | Suspension records a reason and an expiry, makes the workspace read-only and notifies the customer administrator | M | Suspended fixture is read-only with a banner |
@@ -283,7 +284,7 @@ Transactions record every movement of money between customers and Nexora: paymen
 | PAY-04 | A failed payment starts the dunning schedule of BR-08 and sets the customer to "payment overdue" | M | Status and reminders follow the schedule |
 | PAY-05 | Each reminder is recorded on the customer page with its date and channel | M | Reminders listed |
 | PAY-06 | A successful payment during dunning stops the schedule and restores "active" | M | Status restored the same day |
-| PAY-07 | Refunds create a credit note and a refund transaction; above 1,000 MAD they need a second team member's approval | M | Approval required above the limit |
+| PAY-07 | Refunds create a credit note and a refund transaction; above 1,000 MAD VAT included they need a second team member's approval | M | Approval required above the limit |
 | PAY-08 | Chargebacks are recorded with their reason and reopen the invoice | S | Invoice returns to "unpaid" |
 | PAY-09 | Daily reconciliation compares invoices, payments and provider settlements and lists differences | S | Report lists zero differences on fixtures |
 
@@ -324,7 +325,7 @@ The Users page lets support find a person and their company. It shows account fi
 | STF-01 | The Staff page lists Nexora team members only, with console role, two-factor status and last sign-in | M | Company administrators no longer appear |
 | STF-02 | Inviting a team member requires a platform owner; the invitation expires after 72 hours | M | Expired invitation refused |
 | STF-03 | Two-factor authentication is set up before the first console page opens | M | Account without two-factor sees only the set-up page |
-| STF-04 | Console roles follow Table 23; custom roles are not allowed in the first release | M | Role editor offers the six roles only |
+| STF-04 | Console roles follow Table 23; custom roles are not allowed in the first release | M | Role editor offers the seven roles only |
 | STF-05 | The Sessions page shows each team session (device, location, start, last activity) with revocation | M | Revoked session ends at once |
 | STF-06 | Console sessions expire after 30 minutes of inactivity and 12 hours in total | M | Session timeout test |
 | STF-07 | Removing a team member revokes sessions, pending approvals and support sessions the same day | M | Off-boarding test |
@@ -462,10 +463,10 @@ before VAT, rounded to the cent, on an invoice issued the day of the change. Dow
 | BR-04 | Issued invoices are immutable; corrections use credit notes referencing the original | Invoice service |
 | BR-05 | Upgrades are prorated by day; downgrades apply at renewal; a downgrade below seats used is refused | Subscription service |
 | BR-06 | VAT is computed per line at the rate in force on the invoice date and rounded per rate | Invoice service |
-| BR-07 | VAT is collected on payments received (payment regime) | Tax summary |
+| BR-07 | VAT is due on payments received (payment regime, the usual one for services); to be confirmed in writing by the accountant before the first real invoice (D-11) | Tax summary |
 | BR-08 | Dunning after a failed payment: reminders on days 0, 3 and 7, card retries on days 1, 3 and 7; read-only on day 14; suspension on day 30; cancellation proposed on day 45 (proposed, D-03) | Dunning scheduler |
 | BR-09 | A trial lasts 14 days (proposed, D-02) and converts only on an explicit plan choice | Lifecycle service |
-| BR-10 | Refunds above 1,000 MAD need a second team member's approval | Approval service |
+| BR-10 | Refunds above 1,000 MAD VAT included need a second team member's approval | Approval service |
 | BR-11 | Support sessions last 60 minutes by default and 24 hours at most, read-only unless write scope is approved | Support service |
 | BR-12 | No console role reads tenant business tables; support sessions read them through the tenant's own permissions | Database roles |
 | BR-13 | Invoice records are kept 10 years after the financial year, even when a customer's data is deleted | Retention policy |
@@ -476,9 +477,26 @@ before VAT, rounded to the cent, on an invoice issued the day of the change. Dow
 
 The console's data lives in platform tables, separate from tenant business tables. A platform record refers to a tenant by its workspace identifier and never copies tenant business data. Figure 1 shows the nineteen entities.
 
-![Figure 1](figures/fig_datamodel.png)
+```mermaid
+erDiagram
+  Customer ||--o{ WorkspaceRef : owns
+  Customer ||--|| Subscription : has
+  Plan ||--o{ PlanVersion : versions
+  PlanVersion ||--o{ Subscription : prices
+  Subscription ||--o{ SubscriptionChange : history
+  Customer ||--o{ Invoice : billed
+  Invoice ||--o{ CreditNote : corrected_by
+  Invoice ||--o{ Payment : paid_by
+  Payment ||--o{ Refund : refunded_by
+  Invoice ||--o{ DunningRun : reminded_by
+  Customer ||--o{ SupportRequest : raises
+  SupportRequest ||--o{ SupportSession : opens
+  PlatformStaff ||--o{ StaffSession : signs_in
+  PlatformStaff ||--o{ AuditEvent : acts
+  Customer ||--o{ Suspension : target
+```
 
-*Figure 1: Platform entities. Black-bordered boxes hold money or access; dashed boxes are tenant-side references.*
+*Figure 1: Platform entities (TaxRate and Incident stand alone). WorkspaceRef is a reference to tenant data, never a copy.*
 
 ### 7.1 Conventions
 
@@ -522,35 +540,63 @@ Table 23 gives the rights of each console role. "2FA" means a fresh second facto
 
 **Table 23: Console permissions by role.**
 
-| **Capability** | **Owner** | **Admin** | **Support** | **Finance** | **Engineer** | **Read** |
-|---|---|---|---|---|---|---|
-| View customers and accounts | Yes | Yes | Yes | Yes | Yes | Yes |
-| Create trial, change status | Yes | Yes | No | No | No | No |
-| Suspend a user or customer | 2FA | 2FA | No | No | No | No |
-| Change plans and prices | 2FA | No | No | No | No | No |
-| Change a subscription | Yes | Yes | No | Yes | No | No |
-| Issue credit notes | Yes | No | No | Yes | No | No |
-| Refund up to 1,000 MAD | 2FA | No | No | 2FA | No | No |
-| Refund above 1,000 MAD | 2FA + 2P | No | No | 2FA + 2P | No | No |
-| Request a support session | Yes | Yes | Yes | No | Yes | No |
-| Manage incidents | Yes | Yes | No | No | Yes | No |
-| Manage staff and roles | 2FA | Staff only | No | No | No | No |
-| Export audit trail or directory | 2FA | No | No | No | No | No |
-| Delete a customer's data | 2FA + 2P | No | No | No | No | No |
+| **Capability** | **Owner** | **Admin** | **Support** | **Finance** | **Engineer** | **Sales** | **Read** |
+|---|---|---|---|---|---|---|---|
+| View customers and accounts | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| Create a trial, extend it once | Yes | Yes | No | No | No | Yes | No |
+| Change status (except suspension) | Yes | Yes | No | No | No | No | No |
+| Suspend a user or customer | 2FA | 2FA | No | No | No | No | No |
+| Change plans and prices | 2FA | No | No | No | No | No | No |
+| Change a subscription | Yes | Yes | No | Yes | No | No | No |
+| Issue credit notes | Yes | No | No | Yes | No | No | No |
+| Refund up to 1,000 MAD VAT included | 2FA | No | No | 2FA | No | No | No |
+| Refund above 1,000 MAD VAT included | 2FA + 2P | No | No | 2FA + 2P | No | No | No |
+| Request a support session | Yes | Yes | Yes | No | Yes | No | No |
+| Manage incidents | Yes | Yes | No | No | Yes | No | No |
+| Manage staff and roles | 2FA | Staff only | No | No | No | No | No |
+| Export audit trail or directory | 2FA | No | No | No | No | No | No |
+| Delete a customer's data | 2FA + 2P | No | No | No | No | No | No |
 
 ### 8.2 Customer Lifecycle
 
 Figure 2 shows the allowed status transitions. A trial becomes active on a plan choice; a failed payment moves an active customer to payment overdue; dunning leads to suspension and then cancellation unless the customer pays; a cancelled customer can be reactivated until its data is deleted.
 
-![Figure 2](figures/fig_lifecycle.png)
+```mermaid
+stateDiagram-v2
+  [*] --> Trial: trial created (14 days)
+  Trial --> Active: plan chosen and paid
+  Trial --> Suspended: no plan, 7 days read-only after the trial
+  Active --> PaymentOverdue: payment failed (day 0)
+  PaymentOverdue --> Active: paid
+  PaymentOverdue --> Suspended: day 30 (read-only from day 14)
+  Suspended --> Active: paid or plan chosen
+  Suspended --> Cancelled: day 45, confirmed by the team
+  Active --> Cancelled: cancelled at period end
+  Cancelled --> Active: reactivated before deletion
+  Cancelled --> Deleted: data deleted (2FA + 2P)
+  Deleted --> [*]
+```
 
-*Figure 2: Customer lifecycle and the dunning schedule.*
+*Figure 2: Customer lifecycle and the dunning schedule (BR-08, BR-09). Read-only is a flag on a status, not a status of its own.*
 
 ### 8.3 Support Session
 
 Figure 3 shows the only path from the console to a customer's business data. Each step is recorded in both the console audit trail and the customer's audit log.
 
-![Figure 3](figures/fig_support.png)
+```mermaid
+sequenceDiagram
+  participant Agent as Support agent
+  participant Console
+  participant Admin as Customer administrator
+  participant ERP as Customer workspace
+  Agent->>Console: request session (reason, scope, duration)
+  Console->>Admin: e-mail and in-app request
+  Admin-->>Console: approve or refuse
+  Console->>ERP: short-lived read-only credential, banner on
+  Agent->>ERP: views pages (each one in both audit logs)
+  Note over Console,ERP: ends at expiry, on revoke or on close
+  Console->>ERP: credential revoked, banner off
+```
 
 *Figure 3: Support session: request, customer approval, time-limited access, automatic end.*
 
@@ -577,7 +623,7 @@ The console keeps the ERP's visual language (same shell, cards, tables and side 
 | System health | Health tiles, incidents, backups | Transform | 4 |
 | Metrics | MRR, ARR, churn, conversion, overdue | New | 4 |
 | Audit trail | Console events, data requests | New | 0 |
-| Roles | Six console roles, read-only matrix | Transform | 0 |
+| Roles | Seven console roles, read-only matrix | Transform | 0 |
 | Sessions | Team sessions and revocation | Keep | 0 |
 | Configuration | Identity, templates, announcements, flags | New | 4 |
 
@@ -602,9 +648,16 @@ The console keeps the ERP's visual language (same shell, cards, tables and side 
 
 The console is part of the Nexora web application and shares its shell, design system and nine languages, but its server side is separated from the tenant ERP. Figure 4 shows the separation: console requests go to a platform API surface, run under an operator database role and reach platform tables only; tenant requests run under the tenant role with row-level security on business tables.
 
-![Figure 4](figures/fig_arch.png)
+```mermaid
+flowchart LR
+  T[Company users] -->|tenant token| TA[Tenant API]
+  TA -->|tenant role + row-level security| TB[(Tenant business tables)]
+  O[Nexora team] -->|staff token + 2FA| PA[Platform API /platform]
+  PA -->|operator role| PT[(Platform tables)]
+  PA -. support session only: short-lived tenant credential .-> TA
+```
 
-*Figure 4: Separation between the tenant ERP and the platform console.*
+*Figure 4: Separation between the tenant ERP and the platform console. A tenant token is refused by the platform API, and the reverse.*
 
 ### 10.1 Separation Rules
 
@@ -781,7 +834,7 @@ Souss Ingénierie, an engineering office in Agadir, becomes a customer. Amounts 
 1. The permission matrix and separation suites pass with no exception.
 1. The penetration test has no open high-severity finding.
 1. No critical or serious accessibility finding on console pages.
-1. Decisions D-01 to D-05 are closed.
+1. Decisions D-01 to D-07 and D-11 are closed, and the *to confirm* items are confirmed in writing.
 
 ## 14. Release 6h.5: Delivered Changes and Follow-up
 
@@ -803,18 +856,20 @@ An automated accessibility checker ran on 16 main pages. It found no colour-cont
 
 On the production build each main page downloads about 530 to 670 KB of compressed JavaScript. A 761 KB background image that was not visible accounted for half of the rest of each page load; all background images were converted to WebP, from 12.4 MB to 5.1 MB in total.
 
+A follow-up release on 8 October 2026 also updated the image library (`sharp`, 0 known vulnerabilities) and made the data-table toolbar title a level-2 heading.
+
 ### 14.3 Follow-up Requirements
 
 **Table 36: Accessibility and speed follow-up (ERP and console).**
 
 | ID | Requirement | Priority | Acceptance criterion |
 |---|---|---|---|
-| A11Y-01 | Table headers have visible text, not only a hidden label | S | Automated check reports no header finding |
-| A11Y-02 | Project tabs and console tabs use proper tab roles with arrow-key navigation | S | Screen reader announces tabs and selection |
+| A11Y-01 | Table headers have visible text, not only a hidden label | S | Automated check reports no header finding. **Delivered 8 Oct 2026** (action columns titled "Actions") |
+| A11Y-02 | Project tabs and console tabs use proper tab roles with arrow-key navigation | S | Screen reader announces tabs and selection. **Delivered 8 Oct 2026** (shared tabs component: roles, arrow keys, Home/End) |
 | A11Y-03 | The automated check runs on every console page in continuous integration and blocks critical and serious findings | M | Pipeline fails on a seeded violation |
 | A11Y-04 | The "Skip to content" link and heading order rules apply to every console page | M | Keyboard pass on all console screens |
 | A11Y-05 | Icon-only buttons in the console have accessible names | M | No unnamed button in the check |
-| PERF-01 | The chart library on the Overview page and on console metrics loads only when a chart is shown | S | Overview JavaScript drops below 500 KB compressed |
+| PERF-01 | The chart library on the Overview page and on console metrics loads only when a chart is shown | S | Overview JavaScript drops below 500 KB compressed. **Partly delivered 8 Oct 2026**: Overview charts load after the page shows (671 → 563 KB); the 500 KB target remains and console metrics must follow the same rule |
 | PERF-02 | A JavaScript budget per page is enforced in the build (500 KB compressed) | S | Build fails above the budget |
 | PERF-03 | New images use WebP or AVIF with explicit sizes | M | Image check in review |
 | PERF-04 | The documentation copy step stays in the build and start scripts | M | Removing it fails the build check |
@@ -823,9 +878,7 @@ On the production build each main page downloads about 530 to 670 KB of compress
 
 The console is delivered in six phases. Phase 0 builds the foundations that every later phase relies on; no real customer is managed in the console before Phase 2 closes.
 
-![Figure 5](figures/fig_roadmap.png)
-
-*Figure 5: Indicative schedule (weeks from start) for one full-stack developer with part-time support.*
+*Indicative schedule for one full-stack developer (weeks from start): Phase 0 weeks 1–4, Phase 1 weeks 4–7, Phase 2 weeks 7–13, Phase 3 weeks 14–17, Phase 4 weeks 17–20, Phase 5 weeks 20–22 (Table 38).*
 
 ### 15.1 Phases and Exit Gates
 
@@ -858,9 +911,7 @@ These are planning estimates, refined at the end of Phase 0. One full-stack deve
 
 ## 16. Risks, Dependencies and Open Decisions
 
-![Figure 6](figures/fig_risk.png)
-
-*Figure 6: Risk matrix before mitigation.*
+*Risk scores (L × I) from Table 39: RSK-02, RSK-07 and RSK-10 score 12; RSK-01 and RSK-04 score 10; the others 9 or less.*
 
 ### 16.1 Risks
 
@@ -874,7 +925,7 @@ These are planning estimates, refined at the end of Phase 0. One full-stack deve
 | RSK-04 | Console account taken over | 2 | 5 | Mandatory two-factor, step-up, new-device alerts |
 | RSK-05 | Wrong VAT for non-Moroccan customers | 3 | 3 | Decision D-05 with the accountant; per-country rule |
 | RSK-06 | Dunning suspends a customer by mistake | 2 | 4 | Notices before each step; manual override with audit |
-| RSK-07 | Payment provider not available for Moroccan cards | 3 | 4 | Bank transfer path from Phase 2; provider choice D-01 |
+| RSK-07 | Payment provider cannot charge saved Moroccan cards each month | 3 | 4 | Bank transfer is the default method (D-01); payment link per invoice as fallback; yearly billing encouraged |
 | RSK-08 | E-invoicing rules change during delivery | 3 | 3 | Electronic file and status built separately from submission |
 | RSK-09 | Small team overloaded by support | 3 | 3 | Priorities, response targets, help content |
 | RSK-10 | Scope too large for one developer | 4 | 3 | Minimum route of Section 15 |
@@ -892,22 +943,25 @@ These are planning estimates, refined at the end of Phase 0. One full-stack deve
 | Data-protection declaration | Real customers | 5 |
 | External penetration tester | Release | 5 |
 
-### 16.3 Open Decisions
+### 16.3 Decisions
 
-**Table 41: Open decisions with proposed answers.**
+The decisions needed before Lot A were closed on 8 October 2026 (Step 0). Items marked *to confirm* are decided for building and testing, and must be confirmed by the named adviser before the first real customer is invoiced.
 
-| **ID** | **Question** | **Proposed answer** | **Needed by** |
+**Table 41: Decisions.**
+
+| **ID** | **Question** | **Decision** | **Status** |
 |---|---|---|---|
-| D-01 | Which payment provider collects cards? | A provider supporting Moroccan cards and recurring payments, plus bank transfer | Phase 2 |
-| D-02 | How long is the trial? | 14 days, extendable once by the team | Phase 1 |
-| D-03 | Which dunning schedule? | BR-08: read-only on day 14, suspension on day 30, cancellation proposed on day 45 | Phase 2 |
-| D-04 | Payment terms for bank transfer? | 15 days from the invoice date | Phase 2 |
-| D-05 | VAT treatment of customers outside Morocco? | To decide with the accountant before the first foreign invoice | Phase 2 |
-| D-06 | Refund limit without second approval? | 1,000 MAD including VAT | Phase 2 |
-| D-07 | Audit retention? | 5 years; invoices 10 years | Phase 0 |
-| D-08 | IP allow-list for the console? | Optional, off at launch | Phase 5 |
-| D-09 | Emergency support sessions? | Allowed for security incidents only, two team members, report within 24 hours | Phase 3 |
-| D-10 | Should Enterprise customers get a dedicated database? | Offer on request after the first release | Later |
+| D-01 | How are payments collected? | **Bank transfer is the default method from day one**: the invoice shows Nexora's RIB and asks for the invoice number as reference; transfers are matched automatically (PAY-03). **Card is a second method**, through a Moroccan payment provider that accepts Moroccan cards and can charge a saved card each month. Until such a provider is signed, card customers get a payment link on each invoice. Yearly billing (ten months for twelve) is encouraged to reduce monthly collection. | Decided; provider chosen from quotes before Phase 2 |
+| D-02 | How long is the trial? | **14 days**, no card needed, extendable **once by 7 days** by Owner, Admin or Sales with a reason. Without a plan at the end: read-only for 7 days, then suspended; data kept 30 days, then deleted unless the customer asks otherwise. | Decided |
+| D-03 | Which dunning schedule? | **BR-08 as written**: reminders on days 0, 3 and 7; card retries on days 1, 3 and 7; warning on day 12; read-only on day 14; suspension on day 30; cancellation proposed to the team on day 45, never automatic. For bank transfers, day 0 is the due date. An operator can pause dunning once per invoice, for up to 15 days, with a reason. | Decided |
+| D-04 | Payment terms for bank transfer? | **15 days from the invoice date**; card payments are due on issue. Enterprise customers may get 30 days by contract. | Decided |
+| D-05 | VAT for customers outside Morocco? | Moroccan customers: 20%. Customers established abroad: **invoiced without Moroccan VAT as an exported service**, with the legal reference on the invoice (TAX-04), only when the customer gives a foreign tax number and address. No foreign customer is invoiced before the accountant confirms. | Decided; *to confirm* with the accountant |
+| D-06 | Refund limit without a second approval? | **1,000 MAD VAT included** (PAY-07, BR-10, Table 23). | Decided |
+| D-07 | How long are records kept? | **Audit events 5 years; invoices, credit notes and payments 10 years** after the financial year (BR-13); staff sessions 1 year; support conversations 3 years after closing; a deleted customer's business data purged after 30 days, except the invoice records above. | Decided |
+| D-08 | IP allow-list for the console? | Optional, off at launch. | Later (Phase 5) |
+| D-09 | Emergency support sessions? | Security incidents only, two team members, report within 24 hours. | Later (Phase 3) |
+| D-10 | Dedicated database for Enterprise customers? | Offer on request after the first release. | Later |
+| D-11 | VAT due on payment or on invoice? | **On payment received** (BR-07), the usual regime for services. | Decided; *to confirm* with the accountant |
 
 ## Annexes
 
@@ -967,5 +1021,6 @@ These are planning estimates, refined at the end of Phase 0. One full-stack deve
 | **Version** | **Date** | **Change** |
 |---|---|---|
 | 1.0 | 7 October 2026 | First version for review |
+| 1.1 | 8 October 2026 | Step 0: Sales role added (seven roles); CUS-05 made Must; refund limit stated VAT included; VAT regime marked to confirm (D-11); Section 14 updated with the 8 October fixes; figures redrawn as diagrams; decisions D-01 to D-07 and D-11 closed |
 
 Reference documents: Nexora ERP cahier des charges (functional and technical specification) and the Nexora user manual, including the platform console section and the release 6h.5 notes.
