@@ -12,6 +12,7 @@ vi.mock("./navigation/mobile-nav-drawer", () => ({ MobileNavDrawer: () => null }
 vi.mock("@/i18n/navigation", () => ({ usePathname: () => "/dashboard" }))
 vi.mock("./platform-only", () => ({ PlatformOnly: () => <div>platform-only</div>, NoAccess: () => <div>no-access</div> }))
 vi.mock("./skip-link", () => ({ SkipLink: () => null }))
+vi.mock("./platform-chunks/console-shared", () => ({ ConsoleStrip: () => null }))
 
 describe("DashboardLayout", () => {
   beforeEach(() => {

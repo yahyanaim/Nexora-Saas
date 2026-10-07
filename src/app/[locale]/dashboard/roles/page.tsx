@@ -1,5 +1,5 @@
-import RolesPage from "@/components/shared/roles-chunks/roles-page"
+import ConsoleRolesPage from "@/components/shared/platform-chunks/roles-page"
 
 export default function Page() {
-  return <RolesPage />
+  return <ConsoleRolesPage />
 }
