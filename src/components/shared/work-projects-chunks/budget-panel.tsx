@@ -46,7 +46,7 @@ interface Props {
   currency: string
   canEdit: boolean
   deciderName: string
-  onSetPhaseBudget: (id: string, budget: { budgetHours?: number; budgetAmount?: number }, done: () => void) => void
+  onSetPhaseBudget: (id: string, budget: { budgetHours?: number; budgetAmount?: number; revenueShare?: number }, done: () => void) => void
 }
 
 /** Budget per phase and the change orders agreed with the client (Phase 6g.4). */
@@ -56,7 +56,7 @@ export function BudgetPanel({ project, milestones, tasks, entries, employees, cl
   const { data: orders = [] } = useChangeOrders(project.id)
   const { save, send, decide, remove } = useChangeOrderMutations()
 
-  const [phase, setPhase] = useState<{ milestone: Milestone; hours: string; amount: string } | null>(null)
+  const [phase, setPhase] = useState<{ milestone: Milestone; hours: string; amount: string; share: string } | null>(null)
   const [editing, setEditing] = useState<{ id?: string; input: ChangeOrderInput } | null>(null)
   const [declining, setDeclining] = useState<{ order: ChangeOrder; reason: string } | null>(null)
   const [deleting, setDeleting] = useState<ChangeOrder | null>(null)
@@ -132,7 +132,7 @@ export function BudgetPanel({ project, milestones, tasks, entries, employees, cl
                     {canEdit && (
                       <td className="px-3 py-2 text-end">
                         {r.milestone && (
-                          <Button size="icon-sm" variant="ghost" aria-label={t("pbSetBudget")} onClick={() => setPhase({ milestone: r.milestone!, hours: String(r.milestone!.budgetHours ?? ""), amount: String(r.milestone!.budgetAmount ?? "") })}>
+                          <Button size="icon-sm" variant="ghost" aria-label={t("pbSetBudget")} onClick={() => setPhase({ milestone: r.milestone!, hours: String(r.milestone!.budgetHours ?? ""), amount: String(r.milestone!.budgetAmount ?? ""), share: String(r.milestone!.revenueShare ?? "") })}>
                             <Pencil className="size-4" />
                           </Button>
                         )}
@@ -210,7 +210,7 @@ export function BudgetPanel({ project, milestones, tasks, entries, employees, cl
           phase &&
           onSetPhaseBudget(
             phase.milestone.id,
-            { budgetHours: phase.hours === "" ? undefined : Math.max(0, Number(phase.hours)), budgetAmount: phase.amount === "" ? undefined : Math.max(0, Number(phase.amount)) },
+            { budgetHours: phase.hours === "" ? undefined : Math.max(0, Number(phase.hours)), budgetAmount: phase.amount === "" ? undefined : Math.max(0, Number(phase.amount)), revenueShare: phase.share === "" ? undefined : Math.min(100, Math.max(0, Number(phase.share))) },
             () => setPhase(null)
           )
         }
@@ -225,6 +225,13 @@ export function BudgetPanel({ project, milestones, tasks, entries, employees, cl
               <Label htmlFor="pb-amount">{t("pbBudgetAmount", { currency })}</Label>
               <Input id="pb-amount" type="number" min={0} value={phase.amount} onChange={(e) => setPhase({ ...phase, amount: e.target.value })} />
             </div>
+            {project.budgetType === BudgetType.FIXED && (
+              <div className="col-span-2 flex flex-col gap-1.5">
+                <Label htmlFor="pb-share">{t("recShare")}</Label>
+                <Input id="pb-share" type="number" min={0} max={100} placeholder={t("recSharePlaceholder")} value={phase.share} onChange={(e) => setPhase({ ...phase, share: e.target.value })} />
+                <p className="text-xs text-muted-foreground">{t("recShareHint")}</p>
+              </div>
+            )}
           </div>
         )}
       </DataTableEntityFormSheet>

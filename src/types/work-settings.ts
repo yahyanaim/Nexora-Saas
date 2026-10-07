@@ -151,6 +151,8 @@ export type AccountKey =
   | "expenseSubcontractor"
   | "expenseOther"
   | "suppliers"
+  | "unbilledRevenue"
+  | "deferredRevenue"
 
 /** A monthly running cost not tied to a project. */
 export interface OverheadItem {

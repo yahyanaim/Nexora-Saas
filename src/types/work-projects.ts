@@ -60,6 +60,8 @@ export interface WorkProject {
   closeSnapshot?: CloseSnapshot
   /** Values of the workspace's custom fields (PLT-12) */
   customFields?: Record<string, string>
+  /** How a fixed price is recognised as revenue (Phase 6g.5); "hours" when unset */
+  recognitionMethod?: RecognitionMethod
   createdAt: string
   updatedAt: string
 }
@@ -170,6 +172,8 @@ export interface Milestone {
   /** Phase budget (Phase 6g.4): hours and amount planned for the work under this milestone */
   budgetHours?: number
   budgetAmount?: number
+  /** Share of a fixed price earned when this milestone is reached, in percent (Phase 6g.5) */
+  revenueShare?: number
   /** ISO timestamp of the client sign-off */
   approvedAt?: string
   /** ISO timestamp of a client asking for changes instead (cleared by a later approval) */
@@ -250,3 +254,11 @@ export interface ChangeOrder {
 }
 
 export type ChangeOrderInput = Pick<ChangeOrder, "projectId" | "title" | "amount" | "hours"> & Partial<Pick<ChangeOrder, "milestoneId" | "description">>
+
+/**
+ * Revenue recognition of a fixed price (Phase 6g.5):
+ * hours = hours logged ÷ hours planned, tasks = share of the work done,
+ * milestones = the share of each milestone once it is reached.
+ */
+export type RecognitionMethod = "hours" | "tasks" | "milestones"
+export const RECOGNITION_METHODS: RecognitionMethod[] = ["hours", "tasks", "milestones"]

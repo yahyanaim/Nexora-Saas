@@ -1,5 +1,5 @@
 import type { Client, Department, Employee } from "@/types/workforce"
-import { BudgetType, type WorkProject, type WorkTask } from "@/types/work-projects"
+import { BudgetType, type ChangeOrder, type Milestone, type WorkProject, type WorkTask } from "@/types/work-projects"
 import { ClientInvoiceStatus, InvoiceKind, TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/work-billing"
 import { ExpenseStatus, type Expense } from "@/types/work-costs"
 import type { LeaveRequest } from "@/types/work-planning"
@@ -7,7 +7,8 @@ import { AGING_BUCKETS, displayStatus, entryBillRate, entryCostRate, invoiceBala
 import { employeeKpis } from "./kpis"
 import { todayIso } from "./project-metrics"
 import { roundMoney } from "./money"
-import { accountsWithDefaults, buildJournal } from "./journal"
+import { accountsWithDefaults, buildJournal, type JournalLine } from "./journal"
+import { methodOf, recognises, recognitionAt } from "./revenue-recognition"
 import { payrollRows } from "./payroll"
 import type { AccountKey } from "@/types/work-settings"
 import type { Supplier, SupplierBill } from "@/types/work-purchases"
@@ -22,8 +23,8 @@ import { billVatLines, collectedVatLines, deductibleVatLines, vatReturn, type Va
  * permission (RPT-8).
  */
 
-export type ReportId = "timesheet" | "billable" | "unbilled" | "invoices" | "aging" | "expenses" | "profitability" | "vat" | "vatDetail" | "journal" | "payroll"
-export const REPORT_IDS: ReportId[] = ["timesheet", "billable", "unbilled", "invoices", "aging", "expenses", "profitability", "vat", "vatDetail", "journal", "payroll"]
+export type ReportId = "timesheet" | "billable" | "unbilled" | "invoices" | "aging" | "expenses" | "profitability" | "vat" | "vatDetail" | "journal" | "payroll" | "recognition"
+export const REPORT_IDS: ReportId[] = ["timesheet", "billable", "unbilled", "invoices", "aging", "expenses", "profitability", "recognition", "vat", "vatDetail", "journal", "payroll"]
 
 export type ColumnType = "text" | "date" | "hours" | "money" | "percent" | "number"
 export interface ReportColumn {
@@ -69,6 +70,9 @@ export interface ReportData {
   /** Supplier bills and suppliers (Phase 6f.2) */
   bills?: SupplierBill[]
   suppliers?: Supplier[]
+  /** Milestones and change orders, for revenue recognition (Phase 6g.5) */
+  milestones?: Milestone[]
+  changeOrders?: ChangeOrder[]
 }
 
 export interface Report {
@@ -77,6 +81,37 @@ export interface Report {
   rows: ReportRow[]
   /** Sums of the numeric columns, for the total line */
   totals: ReportRow
+}
+
+const recognitionData = (data: ReportData) => ({ milestones: data.milestones ?? [], tasks: data.tasks, entries: data.entries, invoices: data.invoices, changeOrders: data.changeOrders ?? [] })
+const dayBefore = (iso: string) => {
+  const d = new Date(`${iso}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() - 1)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Month-end adjustment for fixed prices (Phase 6g.5): work in progress is
+ * added to sales (3424 / 7124) and revenue billed in advance is taken out
+ * (7124 / 4491). The accountant reverses both on the first day of the next period.
+ */
+function recognitionEntries(data: ReportData, date: string, accounts: Record<AccountKey, string>): JournalLine[] {
+  const rec = recognitionData(data)
+  const out: JournalLine[] = []
+  for (const p of data.projects.filter(recognises)) {
+    if (p.startDate > date) continue
+    const { wip, deferred } = recognitionAt(p, rec, date)
+    const piece = `REV-${p.code}-${date.slice(0, 7)}`
+    if (wip > 0) {
+      const label = `Work in progress ${p.code} (reverse next period)`
+      out.push({ journal: "OD", date, piece, account: accounts.unbilledRevenue, label, debit: wip, credit: 0 }, { journal: "OD", date, piece, account: accounts.sales, label, debit: 0, credit: wip })
+    }
+    if (deferred > 0) {
+      const label = `Billed in advance ${p.code} (reverse next period)`
+      out.push({ journal: "OD", date, piece, account: accounts.sales, label, debit: deferred, credit: 0 }, { journal: "OD", date, piece, account: accounts.deferredRevenue, label, debit: 0, credit: deferred })
+    }
+  }
+  return out
 }
 
 const r2 = roundMoney
@@ -342,6 +377,41 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
         .sort((a, b) => Number(b.revenue) - Number(a.revenue))
       break
     }
+    case "recognition": {
+      columns = [
+        { key: "project", label: "project", type: "text" },
+        { key: "client", label: "client", type: "text" },
+        { key: "method", label: "recMethod", type: "text" },
+        { key: "price", label: "recPrice", type: "money" },
+        { key: "percent", label: "recPercent", type: "percent" },
+        { key: "earnedInPeriod", label: "recEarnedInPeriod", type: "money" },
+        { key: "earned", label: "recEarned", type: "money" },
+        { key: "billed", label: "recBilled", type: "money" },
+        { key: "wip", label: "recWip", type: "money" },
+        { key: "deferred", label: "recDeferred", type: "money" },
+      ]
+      const rec = recognitionData(data)
+      rows = data.projects
+        .filter((p) => recognises(p) && projectOk(p.id) && p.startDate <= f.to)
+        .map((p) => {
+          const end = recognitionAt(p, rec, f.to < today ? f.to : today)
+          const before = recognitionAt(p, rec, dayBefore(f.from))
+          return {
+            project: `${p.code} · ${p.name}`,
+            client: p.clientId ? (clientById.get(p.clientId)?.name ?? "") : "",
+            method: `rec_${methodOf(p)}`,
+            price: end.price,
+            percent: end.percent,
+            earnedInPeriod: r2(end.earned - before.earned),
+            earned: end.earned,
+            billed: end.billed,
+            wip: end.wip,
+            deferred: end.deferred,
+          }
+        })
+        .sort((a, b) => b.wip - a.wip || b.deferred - a.deferred)
+      break
+    }
     case "vat": {
       // The VAT return covers the whole company: client, project and person filters don't apply
       const lines = [...collectedVatLines(data.invoices, data.vatRegime ?? "invoice"), ...deductibleVatLines(data.expenses), ...billVatLines(data.bills ?? [], data.vatRegime ?? "invoice")]
@@ -389,6 +459,7 @@ export function buildReport(id: ReportId, data: ReportData, f: ReportFilters, op
         supplier: (id) => data.suppliers?.find((x) => x.id === id)?.name ?? "",
       }, data.bills ?? [], data.suppliers ?? [])
         .filter((l) => inPeriod(l.date))
+        .concat(recognitionEntries(data, f.to < today ? f.to : today, accountsWithDefaults(data.accounts)))
         .map((l) => ({ ...l }))
       break
     }

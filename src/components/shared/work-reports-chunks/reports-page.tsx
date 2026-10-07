@@ -1,6 +1,8 @@
 "use client"
 
 import { useSupplierBills } from "@/hooks/workforce/use-supplier-bills"
+import { useMilestones } from "@/hooks/workforce/use-work-projects"
+import { useChangeOrders } from "@/hooks/workforce/use-change-orders"
 import { useSuppliers } from "@/hooks/workforce/use-workforce"
 import { useMemo, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
@@ -81,6 +83,8 @@ export default function ReportsPage() {
   const { data: leave = [] } = useLeave()
   const { data: settings } = useWorkspaceSettings()
   const { data: bills = [] } = useSupplierBills()
+  const { data: milestones = [] } = useMilestones()
+  const { data: changeOrders = [] } = useChangeOrders()
   const { data: suppliers = [] } = useSuppliers()
 
   const [reportId, setReportId] = useState<ReportId>("timesheet")
@@ -96,11 +100,11 @@ export default function ReportsPage() {
     () =>
       buildReport(
         reportId,
-        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees), ...(settings ? { vatRegime: vatRegimeOf(settings.company), vatPeriod: vatPeriodOf(settings.company), accounts: settings.accounts, country: settings.company.country } : {}), bills, suppliers },
+        { entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, holidays: (settings?.holidays ?? []).map((h) => h.date), overheadRate: overheadRate(settings?.overheads, employees), ...(settings ? { vatRegime: vatRegimeOf(settings.company), vatPeriod: vatPeriodOf(settings.company), accounts: settings.accounts, country: settings.company.country } : {}), bills, suppliers, milestones, changeOrders },
         { ...range, clientId: clientId || undefined, projectId: projectId || undefined, employeeId: employeeId || undefined, departmentId: departmentId || undefined },
         { canSeeCosts, today }
       ),
-    [reportId, entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, settings, bills, suppliers, range.from, range.to, clientId, projectId, employeeId, departmentId, canSeeCosts, today] // eslint-disable-line react-hooks/exhaustive-deps
+    [reportId, entries, invoices, projects, clients, employees, departments, expenses, tasks, leave, settings, bills, suppliers, milestones, changeOrders, range.from, range.to, clientId, projectId, employeeId, departmentId, canSeeCosts, today] // eslint-disable-line react-hooks/exhaustive-deps
   )
   // The VAT return covers the whole company, so only the period filter applies
   const isVatReport = reportId === "vat" || reportId === "vatDetail" || reportId === "journal"
@@ -294,7 +298,7 @@ export default function ReportsPage() {
             {visibleProjects.map((p) => <option key={p.id} value={p.id}>{p.code} · {p.name}</option>)}
           </select>
           </>)}
-          {!isVatReport && (<>
+          {!isVatReport && reportId !== "recognition" && (<>
           <select className={SELECT} value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} aria-label={t("repEmployee")}>
             <option value="">{t("repAllEmployees")}</option>
             {employees.map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
