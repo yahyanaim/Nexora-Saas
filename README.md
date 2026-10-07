@@ -67,8 +67,8 @@ It replaces several separate tools:
 | :--- | :--- |
 | **My work** | An employee's home page: today's tasks (overdue → due today → due soon → in progress), hours logged this week against expected hours, leave balance, hours sent back, upcoming leave |
 | **Team** | A manager's home page: projects needing attention and the tasks causing it, team workload, pending approvals (hours, leave, expenses), budget usage, last-updated time and refresh |
-| **Workspace settings** | Company identity (ICE, tax ID, trade register), base currency, fiscal year, invoice number format, departments, holidays, leave types, expense categories, labels, approval rules, period lock, data export |
-| **Employees** | Roles, departments, managers, statuses (starting → inactive), working days, weekly capacity, rate history with effective dates, cost figures hidden from people without permission |
+| **Workspace settings** | Company identity (ICE, IF, RC, Patente, CNSS, checked for Moroccan formats), base currency (MAD by default for a Moroccan company; changing the country follows its currency), VAT due on payment or on invoicing and monthly or quarterly returns, accounting account numbers (CGNC defaults), fiscal year, invoice number format, departments, holidays, leave types, expense categories, labels, approval rules, period lock, data export |
+| **Employees** | Roles, departments, managers, statuses (starting → inactive), working days, weekly capacity, rate history with effective dates, cost figures hidden from people without permission. Real cost per hour from the gross salary with Moroccan employer contributions (CNSS, AMO, training tax); CIN and CNSS registration for payroll |
 | **Project planning** | Task start dates and finish-to-start dependencies (loops refused, late predecessors flagged); a Gantt tab with dependency arrows, milestones and drag to reschedule; closing a project with a checklist and a frozen profit snapshot (reopen possible); project templates saved from a project and used to start new ones |
 | **Org chart & documents** | Reporting tree from each person's manager (search, department filter, away badges). Register of contracts, IDs, permits, certificates and medical checks with expiry statuses and alerts on the Team dashboard |
 | **Clients** | Legal details, billing address, currency, invoice language, payment terms, contacts, client rate cards, archive. Duplicate warning on name, ICE and tax ID; credit limit with open balance; contracts (time and materials, fixed price, retainer) with renewal warnings; activity timeline of projects, quotes, invoices, payments, contracts, notes, meetings and calls |
@@ -83,10 +83,12 @@ It replaces several separate tools:
 | **Work inbox** | The bell lists what is waiting for the signed-in person: reviews, timesheets, leave and expenses to approve (never their own), overdue invoices, expiring documents and late tasks; each item opens the page where it is handled. Read and dismissed items are remembered per person and workspace |
 | **Recurring invoices** | Monthly, quarterly or yearly schedules (retainers, licences, support) that draft the invoice for review; nothing is issued without a person |
 | **Receivables** | Open balances by days overdue: not due, 1–30, 31–60, 61–90 and 90+ days. Overdue reminders in 3 levels (default 3, 15 and 30 days late) with an editable message, a switch per client and a log of what was sent |
-| **Expenses & profitability** | Expenses with receipts and approval, re-billing to clients. Margin and budget use per project |
+| **Moroccan compliance** | Invoices can't be issued without the company's ICE and IF or a Moroccan business client's ICE. Each issued invoice has a DGI e-invoice file (UBL 2.1 XML) and a status (to send, sent, accepted, rejected; sending is simulated until the server exists); an invoice sent to the DGI is corrected only by a credit note. VAT return per month or quarter with VAT credit carried forward, and an accounting journal (VT, HA, BQ, CA, OD) on the Moroccan chart of accounts, exported to CSV |
+| **Suppliers & bills** | Suppliers with ICE, IF, payment terms and 24-digit RIB. Supplier bills with VAT per line, approval by someone other than the person who entered them, partial payments and overdue tracking; approved bills add their cost to projects, their VAT to deductible VAT and post to the purchases journal |
+| **Expenses & profitability** | Expenses with receipts, VAT included and approval, re-billing to clients. Margin and budget use per project, including supplier bills |
 | **Planning** | Timeline, calendar, workload against capacity, leave requests and approval, leave balances per type with half-days, carry-over and pro-rating for new hires |
 | **Analytics** | Revenue earned, gross margin, utilization and cash collected. Revenue over time against a comparison period, revenue by client, revenue bridge, clients at risk, team capacity and top projects. PDF and CSV report, and the **Victor** assistant |
-| **Reports** | 7 standard reports: timesheet detail, utilization, unbilled hours, invoices, receivables aging, expenses and project profitability. Filter by period, client, project, employee and department. Export to **Excel (.xlsx), CSV and PDF**. Cost columns are hidden from people without permission |
+| **Reports** | 11 standard reports: timesheet detail, utilization, unbilled hours, invoices, receivables aging, expenses, project profitability, VAT return, VAT detail, accounting journal and payroll inputs (days, leave by type, hours, overtime, expenses to repay, salary and employer contributions). Filter by period, client, project, employee and department. Export to **Excel (.xlsx), CSV and PDF**. Cost columns are hidden from people without permission |
 
 | **Team access** | Every login belongs to an employee: give access, resend the invitation, remove access, change the role (the role sets the permissions). Each account uses a seat of the plan; at least one admin always remains |
 | **My subscription** | The company's own Nexora plan, renewal date, seats used, payment method, monthly/yearly switch, upgrade/downgrade (never below the seats in use) and Nexora invoices as PDF |
@@ -103,7 +105,7 @@ Each person has a work role. The role grants a set of permissions, and the menu,
 | :--- | :--- | :--- |
 | **Admin** | everything (`*`) | All pages, settings, overheads, custom fields, KPI targets, review cycles, costs and margins. Never approves their own items |
 | **Manager** | employees (read/update), clients, projects, files, `time:track`, `time:approve`, `analytics:view` | Projects, clients, employees and documents; the whole team's timesheets, leave and expenses with approval; Team dashboard, KPIs, reports; reviews their reports. No invoices, costs or settings |
-| **Accountant** | employees (read), clients, invoices, transactions, `analytics:view`, `costs:read`, `time:track` | Quotes, invoices, receivables, recurring invoices, profitability, reports; their own timesheet, leave, expenses and reviews |
+| **Accountant** | employees (read), clients, invoices, transactions, `analytics:view`, `costs:read`, `time:track` | Quotes, invoices, e-invoices, receivables, recurring invoices, suppliers and supplier bills (approve and pay bills entered by others), VAT return, journal, payroll inputs, profitability, reports; their own timesheet, leave, expenses and reviews |
 | **Employee** | projects (read), files, `time:track` | My work, their own timesheet, leave, expenses, reviews and KPIs, the projects they work on. Never colleagues' records, rates, invoices or approvals |
 | **Client** | projects (read), invoices (read) | The client portal only: their projects and milestones, invoices and quotes |
 
@@ -319,6 +321,10 @@ Security already in place:
 | 6b | Overhead costs spread over logged hours in project profit; custom fields on clients, projects and employees | ✅ Done |
 | 6c | Performance reviews: cycles, self-assessment, reviewer assessment with goals, frozen KPIs, acknowledgement | ✅ Done |
 | 6d | Links between modules: owner's employee profile, reviewer picker, work inbox in the bell, reviews on My work and profiles, overhead in the profitability report, history-safe employee deletion, custom fields in search | ✅ Done |
+| 6e | Moroccan compliance: ICE/IF/Patente/CNSS, DGI e-invoice file (UBL 2.1) and status, VAT on payments and VAT return, CGNC accounting journal | ✅ Done |
+| — | MAD as the default currency for Moroccan companies across the app | ✅ Done |
+| 6f | Purchases and payroll: suppliers, supplier bills (VAT, project costs, purchases journal), real cost from the gross salary, monthly payroll inputs | ✅ Done |
+| 6g | Forward planning: resource bookings and capacity forecast, deals pipeline, revenue forecast, phase budgets and change orders | In progress |
 | 6 (rest) | Scheduled reports (need email from the server) | Planned |
 | 7 | Server version: database, secure sign-in, permissions enforced on the server, files, email, backups | Planned |
 
