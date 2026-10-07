@@ -4,7 +4,6 @@ import { useCallback, useMemo } from "react"
 import { useTranslations } from "next-intl"
 import {
   Users,
-  Flag,
   UserX,
   KeyRound,
   MonitorSmartphone,
@@ -381,13 +380,13 @@ export function useDashboardNav() {
             title: t("users"),
             url: "/dashboard/users",
             icon: Users,
-            descriptionKey: "pageDescUsers",
+            descriptionKey: "pageDescDirectory",
           },
           {
-            title: t("bannedUsers"),
+            title: t("suspensionsNav"),
             url: "/dashboard/banned-users",
             icon: UserX,
-            descriptionKey: "pageDescBannedUsers",
+            descriptionKey: "pageDescSuspensions",
           },
         ],
       },
@@ -440,12 +439,6 @@ export function useDashboardNav() {
             url: "/dashboard/system-issues",
             icon: Bug,
             descriptionKey: "pageDescSystemIssues",
-          },
-          {
-            title: t("reports"),
-            url: "/dashboard/content-reports",
-            icon: Flag,
-            descriptionKey: "pageDescReports",
           },
         ],
       },

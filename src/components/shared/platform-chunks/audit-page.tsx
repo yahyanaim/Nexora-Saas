@@ -13,22 +13,8 @@ import { useConsoleActor, useConsoleAudit, useConsoleMutations } from "@/hooks/p
 import { consoleCan } from "@/lib/platform/console-roles"
 import { exportToCsv } from "@/lib/utils/export-data"
 import { ConsoleCapability, type ConsoleAuditAction, type ConsoleRole } from "@/types/platform-console"
-import { ROLE_LABEL, RoleBadge, StepUpDialog } from "./console-shared"
+import { ACTION_LABEL, ROLE_LABEL, RoleBadge, StepUpDialog } from "./console-shared"
 
-const ACTION_LABEL: Record<ConsoleAuditAction, string> = {
-  "staff.invited": "auaInvited",
-  "staff.invite_resent": "auaInviteResent",
-  "staff.role_changed": "auaRoleChanged",
-  "staff.removed": "auaRemoved",
-  "session.revoked": "auaSessionRevoked",
-  "audit.exported": "auaExported",
-  "customer.trial_created": "auaTrialCreated",
-  "customer.status_changed": "auaStatusChanged",
-  "subscription.changed": "auaSubscriptionChanged",
-  "invoice.credit_note": "auaCreditNote",
-  "payment.refund": "auaRefund",
-  "console.signed_in": "auaSignedIn",
-}
 const ALL = "all"
 const PERIODS = { "7": 7, "30": 30, "90": 90 } as const
 

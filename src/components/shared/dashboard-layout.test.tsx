@@ -14,6 +14,7 @@ vi.mock("./platform-only", () => ({ PlatformOnly: () => <div>platform-only</div>
 vi.mock("./skip-link", () => ({ SkipLink: () => null }))
 vi.mock("./platform-chunks/console-shared", () => ({ ConsoleStrip: () => null }))
 vi.mock("./platform-chunks/workspace-view-banner", () => ({ WorkspaceViewBanner: () => null }))
+vi.mock("./platform-chunks/workspace-status-banner", () => ({ WorkspaceStatusBanner: () => null }))
 
 describe("DashboardLayout", () => {
   beforeEach(() => {

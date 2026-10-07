@@ -1,77 +1,82 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
+import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowRight, Store, TrendingUp, Users, Warning } from "@/components/ui/carbon/icons"
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Plus, Store, TrendingUp, Users, Warning } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { useRouter } from "@/i18n/navigation"
-import { useWorkspaceStore } from "@/store/workspace-store"
+import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
+import { Link, useRouter } from "@/i18n/navigation"
+import { useConsoleActor, useConsoleCustomers, useConsoleMutations } from "@/hooks/platform/use-platform-console"
+import { consoleCan } from "@/lib/platform/console-roles"
+import { accountMrr, accountsSummary, seatLimit } from "@/lib/platform/customer-lifecycle"
+import { NEXORA_PLANS, formatMad, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import { cn } from "@/lib/utils"
-import { consoleInvoices } from "@/lib/platform/console-data"
-import { NEXORA_CUSTOMERS, NEXORA_PLANS, customerMrr, formatMad, planById, platformSummary, type CustomerStatus, type NexoraCustomer } from "@/lib/platform/nexora-catalog"
+import { ConsoleCapability } from "@/types/platform-console"
+import { LIFECYCLE, LifecycleBadge } from "./lifecycle-badge"
 
-const STATUS_CLASS: Record<CustomerStatus, string> = {
-  active: "bg-success-soft text-success-foreground border-transparent",
-  trial: "bg-info-soft text-info-foreground border-transparent",
-  past_due: "bg-danger-soft text-destructive border-transparent",
-  cancelled: "bg-muted text-muted-foreground border-transparent",
-}
 const ALL = "all"
+const EMPTY_TRIAL = { name: "", city: "", country: "MA", ice: "", plan: "business" as NexoraPlanId, adminName: "", adminEmail: "" }
 
-/** The companies using Nexora, their plan and what they bring in (Phase 6h.4). */
+/** The companies using Nexora (CUS-01 to CUS-03, CUS-05). Opening one shows its account page. */
 export default function PlatformCustomersPage() {
   const t = useTranslations()
   const locale = useLocale()
   const router = useRouter()
-  const setWorkspace = useWorkspaceStore((s) => s.setCurrent)
+  const actor = useConsoleActor()
+  const { data: customers = [], isLoading } = useConsoleCustomers()
+  const m = useConsoleMutations()
   const [query, setQuery] = useState("")
   const [status, setStatus] = useState<string>(ALL)
-  const [open, setOpen] = useState<NexoraCustomer | null>(null)
+  const [plan, setPlan] = useState<string>(ALL)
+  const [billing, setBilling] = useState<string>(ALL)
+  const [trialOpen, setTrialOpen] = useState(false)
+  const [trial, setTrial] = useState(EMPTY_TRIAL)
 
-  const sum = platformSummary()
-  const invoices = useMemo(() => consoleInvoices(), [])
+  const sum = accountsSummary(customers)
   const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`))
-  const rows = NEXORA_CUSTOMERS.filter(
-    (c) => (status === ALL || c.status === status) && (!query || `${c.name} ${c.city} ${c.admin.name} ${c.admin.email}`.toLowerCase().includes(query.toLowerCase()))
-  ).sort((a, b) => customerMrr(b) - customerMrr(a))
+  const q = query.trim().toLowerCase()
+  const rows = customers
+    .filter(
+      (c) =>
+        (status === ALL || c.status === status) &&
+        (plan === ALL || c.plan === plan) &&
+        (billing === ALL || c.billing === billing) &&
+        (!q || `${c.name} ${c.city} ${c.ice ?? ""} ${c.admin.name} ${c.admin.email}`.toLowerCase().includes(q))
+    )
+    .sort((a, b) => accountMrr(b) - accountMrr(a) || a.name.localeCompare(b.name))
 
   const cards: MetricCardItem[] = [
     { key: "mrr", title: t("pfMrr"), value: money(sum.mrr), valueClassName: "text-primary", footer: { icon: TrendingUp, text: t("pfArr", { arr: money(sum.arr) }) } },
     { key: "customers", title: t("pfCustomers"), value: sum.customers, footer: { icon: Store, text: t("pfCustomersHint", { paying: sum.paying, trials: sum.trials }) } },
     { key: "seats", title: t("pfSeats"), value: sum.seats, footer: { icon: Users, text: t("pfSeatsHint") } },
-    { key: "pastdue", title: t("pfPastDue"), value: sum.pastDue, valueClassName: sum.pastDue ? "text-destructive" : undefined, footer: { icon: Warning, text: t("pfPastDueHint", { cancelled: sum.cancelled }) } },
+    { key: "risk", title: t("cuAtRisk"), value: money(sum.atRisk), valueClassName: sum.atRisk ? "text-warning-foreground" : undefined, footer: { icon: Warning, text: t("cuAtRiskHint", { overdue: sum.overdue, suspended: sum.suspended }) } },
   ]
 
   const mix = NEXORA_PLANS.map((p) => {
-    const list = NEXORA_CUSTOMERS.filter((c) => c.plan === p.id && c.status !== "cancelled")
-    return { plan: p, count: list.length, mrr: list.reduce((s, c) => s + customerMrr(c), 0) }
+    const list = customers.filter((c) => c.plan === p.id && c.status !== "cancelled")
+    return { plan: p, count: list.length, mrr: list.reduce((s, c) => s + accountMrr(c), 0) }
   })
-
-  const openWorkspace = (c: NexoraCustomer) => {
-    if (!c.workspaceId) return
-    setWorkspace(c.workspaceId)
-    router.push("/dashboard/my-work")
-  }
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <PageHeader />
+      <PageHeader actions={consoleCan(actor?.role, ConsoleCapability.CREATE_TRIAL) ? <Button onClick={() => setTrialOpen(true)}><Plus className="size-4" />{t("cuNewTrial")}</Button> : undefined} />
       <MetricCardGrid cards={cards} />
 
       <section className="grid gap-3 md:grid-cols-3">
-        {mix.map(({ plan, count, mrr }) => (
-          <div key={plan.id} className="rounded-3xl border border-border bg-card p-4 shadow-panel">
+        {mix.map(({ plan: p, count, mrr }) => (
+          <div key={p.id} className="rounded-3xl border border-border bg-card p-4 shadow-panel">
             <div className="flex items-center justify-between gap-2">
-              <p className="font-semibold">{plan.name}</p>
-              <span className="text-xs text-muted-foreground">{t("pfPlanPrice", { price: money(plan.monthly) })}</span>
+              <p className="font-semibold">{p.name}</p>
+              <span className="text-xs text-muted-foreground">{t("pfPlanPrice", { price: money(p.monthly) })}</span>
             </div>
             <p className="mt-2 text-2xl font-semibold tabular-nums">{count}</p>
             <p className="text-xs text-muted-foreground">{t("pfPlanMix", { mrr: money(mrr) })}</p>
@@ -83,114 +88,149 @@ export default function PlatformCustomersPage() {
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-base font-semibold">{t("pfList")}</h2>
-            <p className="text-sm text-muted-foreground">{t("pfListHint")}</p>
+            <p className="text-sm text-muted-foreground">{t("cuListHint")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Input className="w-56" placeholder={t("pfSearch")} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={t("pfSearch")} />
+            <Input className="w-56" placeholder={t("cuSearch")} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={t("cuSearch")} />
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-40 bg-card" aria-label={t("status")}><SelectValue>{status === ALL ? t("pfAllStatuses") : t(`pfStatus_${status}`)}</SelectValue></SelectTrigger>
+              <SelectTrigger className="w-44 bg-card" aria-label={t("status")}><SelectValue>{status === ALL ? t("pfAllStatuses") : t(`lcStatus_${status}`)}</SelectValue></SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL}>{t("pfAllStatuses")}</SelectItem>
-                {(["active", "trial", "past_due", "cancelled"] as CustomerStatus[]).map((s) => <SelectItem key={s} value={s}>{t(`pfStatus_${s}`)}</SelectItem>)}
+                {LIFECYCLE.map((s) => <SelectItem key={s} value={s}>{t(`lcStatus_${s}`)}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={plan} onValueChange={setPlan}>
+              <SelectTrigger className="w-36 bg-card" aria-label={t("pfPlan")}><SelectValue>{plan === ALL ? t("cuAllPlans") : planById(plan as NexoraPlanId).name}</SelectValue></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>{t("cuAllPlans")}</SelectItem>
+                {NEXORA_PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={billing} onValueChange={setBilling}>
+              <SelectTrigger className="w-36 bg-card" aria-label={t("cuBilling")}><SelectValue>{billing === ALL ? t("cuAllBilling") : t(billing === "yearly" ? "pfYearly" : "pfMonthly")}</SelectValue></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>{t("cuAllBilling")}</SelectItem>
+                <SelectItem value="monthly">{t("pfMonthly")}</SelectItem>
+                <SelectItem value="yearly">{t("pfYearly")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-        <div className="overflow-x-auto rounded-2xl border border-border">
-          <table className="w-full min-w-[52rem] text-sm">
-            <thead className="bg-muted/40 text-xs text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2 text-start font-medium">{t("pfCompany")}</th>
-                <th className="px-3 py-2 text-start font-medium">{t("pfPlan")}</th>
-                <th className="px-3 py-2 text-start font-medium">{t("status")}</th>
-                <th className="w-44 px-3 py-2 text-start font-medium">{t("pfSeatsCol")}</th>
-                <th className="px-3 py-2 text-end font-medium">{t("pfMrrCol")}</th>
-                <th className="px-3 py-2 text-start font-medium">{t("pfSince")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {rows.map((c) => {
-                const plan = planById(c.plan)
-                const limit = plan.seats
-                return (
-                  <tr key={c.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setOpen(c)}>
-                    <td className="px-3 py-2.5">
-                      <p className="font-medium">{c.name}</p>
-                      <p className="text-xs text-muted-foreground">{c.city}, {c.country} · {c.admin.name}</p>
-                    </td>
-                    <td className="px-3 py-2.5">{plan.name}<span className="block text-xs text-muted-foreground">{t(c.billing === "yearly" ? "pfYearly" : "pfMonthly")}</span></td>
-                    <td className="px-3 py-2.5">
-                      <Badge variant="outline" className={STATUS_CLASS[c.status]}>{t(`pfStatus_${c.status}`)}</Badge>
-                      {c.trialEndsOn && <span className="block text-xs text-muted-foreground">{t("pfTrialEnds", { date: date(c.trialEndsOn) })}</span>}
-                    </td>
-                    <td className="px-3 py-2.5">
-                      {limit > 0 ? (
-                        <div className="flex items-center gap-2">
-                          <Progress value={Math.min(100, (c.seatsUsed / limit) * 100)} aria-label={t("pfSeatsCol")} className={cn("h-2 flex-1", c.seatsUsed >= limit && "[&>div]:bg-warning")} />
-                          <span className="text-xs tabular-nums">{c.seatsUsed}/{limit}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs tabular-nums">{t("pfUnlimited", { count: c.seatsUsed })}</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2.5 text-end font-medium tabular-nums">{customerMrr(c) ? money(customerMrr(c)) : "—"}</td>
-                    <td className="px-3 py-2.5 text-xs text-muted-foreground">{date(c.since)}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+        {isLoading ? (
+          <ListSkeleton />
+        ) : rows.length === 0 ? (
+          <EmptyState icon={Store} title={t("cuEmpty")} hint={t("audEmptyHint")} />
+        ) : (
+          <TableContainer>
+            <Table className="min-w-[52rem]">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("pfCompany")}</TableHead>
+                  <TableHead>{t("pfPlan")}</TableHead>
+                  <TableHead>{t("status")}</TableHead>
+                  <TableHead className="w-44">{t("pfSeatsCol")}</TableHead>
+                  <TableHead className="text-end">{t("pfMrrCol")}</TableHead>
+                  <TableHead>{t("pfSince")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((c) => {
+                  const limit = seatLimit(c)
+                  const mrr = accountMrr(c)
+                  const open = () => router.push(`/dashboard/platform/${c.id}`)
+                  return (
+                    <TableRow key={c.id} className="cursor-pointer" onClick={open}>
+                      <TableCell>
+                        {/* a real link keeps keyboard and screen-reader access */}
+                        <Link href={`/dashboard/platform/${c.id}`} onClick={(e) => e.stopPropagation()} className="rounded font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{c.name}</Link>
+                        <p className="text-xs text-muted-foreground">{c.city}, {c.country} · {c.admin.name}</p>
+                      </TableCell>
+                      <TableCell>{planById(c.plan).name}<span className="block text-xs text-muted-foreground">{t(c.billing === "yearly" ? "pfYearly" : "pfMonthly")}</span></TableCell>
+                      <TableCell>
+                        <LifecycleBadge status={c.status} />
+                        {c.status === "trial" && c.trialEndsOn && <span className="block text-xs text-muted-foreground">{t("pfTrialEnds", { date: date(c.trialEndsOn) })}</span>}
+                        {c.cancelsOn && <span className="block text-xs text-muted-foreground">{t("cuCancelsOn", { date: date(c.cancelsOn) })}</span>}
+                      </TableCell>
+                      <TableCell>
+                        {limit ? (
+                          <div className="flex items-center gap-2">
+                            <Progress value={Math.min(100, (c.seatsUsed / limit) * 100)} aria-label={t("pfSeatsCol")} className={cn("h-2 flex-1", c.seatsUsed >= limit && "[&>div]:bg-warning")} />
+                            <span className="text-xs tabular-nums">{c.seatsUsed}/{limit}</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs tabular-nums">{t("pfUnlimited", { count: c.seatsUsed })}</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-end font-medium tabular-nums">{mrr ? money(mrr) : "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{date(c.since)}</TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </section>
 
-      <Sheet open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-          {open && (
-            <>
-              <SheetHeader>
-                <SheetTitle>{open.name}</SheetTitle>
-                <SheetDescription>{open.city}, {open.country}{open.ice ? ` · ICE ${open.ice}` : ""}</SheetDescription>
-              </SheetHeader>
-              <div className="flex flex-col gap-5 px-4 pb-6">
-                <dl className="grid grid-cols-2 gap-3 text-sm">
-                  {[
-                    [t("pfPlan"), `${planById(open.plan).name} · ${t(open.billing === "yearly" ? "pfYearly" : "pfMonthly")}`],
-                    [t("status"), t(`pfStatus_${open.status}`)],
-                    [t("pfMrrCol"), customerMrr(open) ? money(customerMrr(open)) : "—"],
-                    [t("pfSeatsCol"), planById(open.plan).seats > 0 ? `${open.seatsUsed}/${planById(open.plan).seats}` : String(open.seatsUsed)],
-                    [t("pfAdmin"), `${open.admin.name}`],
-                    [t("email"), open.admin.email],
-                    [t("pfSince"), date(open.since)],
-                    ...(open.trialEndsOn ? [[t("pfTrialEndsLabel"), date(open.trialEndsOn)]] : []),
-                  ].map(([k, v]) => (
-                    <div key={k} className="rounded-2xl border border-border p-3">
-                      <dt className="text-xs text-muted-foreground">{k}</dt>
-                      <dd className="mt-0.5 truncate font-medium">{v}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <div>
-                  <h3 className="mb-2 text-sm font-semibold">{t("pfInvoices")}</h3>
-                  <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border">
-                    {invoices.filter((i) => i.user.orgId === open.id).map((i) => (
-                      <li key={i.id} className="flex items-center gap-3 px-3 py-2 text-sm">
-                        <span className="font-mono text-xs">{i.invoiceNumber}</span>
-                        <span className="text-xs text-muted-foreground">{date(i.date)}</span>
-                        <span className="ms-auto tabular-nums">{money(i.total)}</span>
-                        <Badge variant="outline" className={i.status === "paid" ? STATUS_CLASS.active : STATUS_CLASS.past_due}>{t(i.status === "paid" ? "pfPaid" : "pfOverdue")}</Badge>
-                      </li>
-                    ))}
-                    {invoices.every((i) => i.user.orgId !== open.id) && <li className="px-3 py-3 text-center text-xs text-muted-foreground">{t("pfNoInvoices")}</li>}
-                  </ul>
-                </div>
-                {open.workspaceId && (
-                  <Button onClick={() => openWorkspace(open)}>{t("pfOpenWorkspace")} <ArrowRight className="size-4" /></Button>
-                )}
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <DataTableEntityFormSheet
+        open={trialOpen}
+        onOpenChange={setTrialOpen}
+        mode="create"
+        createTitle={t("cuNewTrial")}
+        editTitle={t("cuNewTrial")}
+        description={t("cuTrialDesc")}
+        isSubmitting={m.createTrial.isPending}
+        submitLabel={{ create: t("cuCreateTrial") }}
+        onSubmit={() =>
+          m.createTrial.mutate({ ...trial, ice: trial.ice || undefined }, {
+            onSuccess: (c) => {
+              setTrialOpen(false)
+              setTrial(EMPTY_TRIAL)
+              router.push(`/dashboard/platform/${c.id}`)
+            },
+          })
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="tr-name">{t("cuLegalName")}</Label>
+            <Input id="tr-name" value={trial.name} onChange={(e) => setTrial({ ...trial, name: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="tr-city">{t("cuCity")}</Label>
+              <Input id="tr-city" value={trial.city} onChange={(e) => setTrial({ ...trial, city: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="tr-country">{t("cuCountry")}</Label>
+              <Select value={trial.country} onValueChange={(v) => setTrial({ ...trial, country: v })}>
+                <SelectTrigger id="tr-country"><SelectValue>{trial.country}</SelectValue></SelectTrigger>
+                <SelectContent>{["MA", "FR", "BE", "ES", "SN", "TN", "US"].map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="tr-ice">{t("cuIceOptional")}</Label>
+            <Input id="tr-ice" inputMode="numeric" maxLength={15} value={trial.ice} onChange={(e) => setTrial({ ...trial, ice: e.target.value.replace(/\D/g, "") })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="tr-plan">{t("cuPlanToTry")}</Label>
+            <Select value={trial.plan} onValueChange={(v) => setTrial({ ...trial, plan: v as NexoraPlanId })}>
+              <SelectTrigger id="tr-plan"><SelectValue>{planById(trial.plan).name}</SelectValue></SelectTrigger>
+              <SelectContent>{NEXORA_PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="tr-admin">{t("cuAdminName")}</Label>
+            <Input id="tr-admin" value={trial.adminName} onChange={(e) => setTrial({ ...trial, adminName: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="tr-email">{t("cuAdminEmail")}</Label>
+            <Input id="tr-email" type="email" value={trial.adminEmail} onChange={(e) => setTrial({ ...trial, adminEmail: e.target.value })} />
+          </div>
+          <p className="rounded-2xl bg-info-soft p-3 text-xs text-info-foreground">{t("cuTrialNote")}</p>
+        </div>
+      </DataTableEntityFormSheet>
     </div>
   )
 }

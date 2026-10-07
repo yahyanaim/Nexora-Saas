@@ -1,5 +1,5 @@
-import BannedUsersPage from "@/components/shared/banned-users-chunks/banned-users-page"
+import ConsoleSuspensionsPage from "@/components/shared/platform-chunks/suspensions-page"
 
 export default function Page() {
-  return <BannedUsersPage />
+  return <ConsoleSuspensionsPage />
 }

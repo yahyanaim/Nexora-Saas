@@ -99,6 +99,16 @@ export type ConsoleAuditAction =
   | "audit.exported"
   | "customer.trial_created"
   | "customer.status_changed"
+  | "customer.trial_extended"
+  | "customer.suspended"
+  | "customer.suspension_lifted"
+  | "customer.cancelled"
+  | "customer.cancellation_undone"
+  | "customer.reactivated"
+  | "customer.note_added"
+  | "user.password_reset"
+  | "user.suspended"
+  | "user.suspension_lifted"
   | "subscription.changed"
   | "invoice.credit_note"
   | "payment.refund"
@@ -113,7 +123,7 @@ export interface ConsoleAuditEvent {
   actorRole: ConsoleRole
   action: ConsoleAuditAction
   /** Kind and label of what was acted on, e.g. "staff" / "Liam O'Connor" */
-  targetType: "staff" | "session" | "customer" | "subscription" | "invoice" | "payment" | "audit" | "console"
+  targetType: "staff" | "session" | "customer" | "user" | "subscription" | "invoice" | "payment" | "audit" | "console"
   targetLabel: string
   customerId?: string
   before?: string
