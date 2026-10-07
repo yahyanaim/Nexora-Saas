@@ -15,7 +15,8 @@ import { rateOn } from "./rates"
  * four sources ranked from most to least certain:
  *  - invoiced: issued invoices still owed, in the month they fall due (late ones count now)
  *  - recurring: the next drafts of active recurring invoices
- *  - booked: confirmed resource bookings × the person's billable rate
+ *  - booked: confirmed resource bookings × the person's billable rate, except on
+ *    projects billed by an active recurring invoice (counted there already)
  *  - pipeline: open deals × their chance of winning, in their expected close month
  */
 export const FORECAST_SOURCES = ["invoiced", "recurring", "booked", "pipeline"] as const
@@ -99,8 +100,10 @@ export function revenueForecast(input: ForecastInput, today: string, months: str
     }
   }
 
+  // Work on a project billed by an active recurring invoice is already counted there
+  const billedByRecurring = new Set(input.recurring.filter((r) => r.active && r.projectId && !scheduleFinished(r)).map((r) => r.projectId))
   for (const b of input.bookings) {
-    if (b.tentative || !b.employeeId) continue
+    if (b.tentative || !b.employeeId || billedByRecurring.has(b.projectId)) continue
     const person = input.employees.find((e) => e.id === b.employeeId)
     if (!person) continue
     for (const [month, value] of bookingValueByMonth(b, person, today, input.holidays)) add("booked", month, value)

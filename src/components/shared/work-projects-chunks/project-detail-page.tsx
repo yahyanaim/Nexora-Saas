@@ -51,7 +51,7 @@ import { TaskList } from "./task-list"
 import { MilestonesPanel } from "./milestones-panel"
 import { BudgetPanel } from "./budget-panel"
 import { useChangeOrders } from "@/hooks/workforce/use-change-orders"
-import { revisedBudget } from "@/lib/workforce/phase-budgets"
+import { revisedBudget, withChanges } from "@/lib/workforce/phase-budgets"
 import { TeamPanel } from "./team-panel"
 import {
   BUDGET_TYPE_LABEL,
@@ -175,7 +175,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
     },
     project.budgetType === BudgetType.FIXED && project.budgetAmount
       ? (() => {
-          const billed = billedAgainstBudget(project, invoices)
+          const billed = billedAgainstBudget(withChanges(project, changeOrders), invoices)
           return { label: t("billedSoFar"), value: `${formatMoney(billed.billed, workspace.currency, locale)} · ${billed.percent ?? 0}%` }
         })()
       : project.budgetType === BudgetType.RETAINER && project.retainer

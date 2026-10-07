@@ -50,6 +50,9 @@ describe("revenue forecast (Phase 6g.3)", () => {
       ["2026-12", 0, 8000, 0, 50000],
       ["2027-01", 0, 0, 0, 0],
     ])
+    // A booking on a project billed by a recurring invoice is not counted twice
+    const retainer = revenueForecast({ invoices: [], recurring: [{ ...rec, projectId: "p" }], bookings: [bk], employees: [emp], deals: [] }, "2026-10-01", ["2026-10"])
+    expect(retainer[0]).toMatchObject({ recurring: 8000, booked: 0 })
     expect(forecastTotals(rows)).toMatchObject({ total: 114000, pipeline: 50000, secured: 64000, securedShare: 56 })
   })
 })

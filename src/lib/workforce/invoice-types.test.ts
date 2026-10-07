@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
+import { withChanges } from "./phase-budgets"
+import { listChangeOrdersApi } from "@/lib/api/change-orders-api"
 import { createCreditNoteApi, createInvoiceApi, createInvoiceFromHoursApi, issueInvoiceApi, listClientInvoicesApi, listTimeEntriesApi, setTimesheetCellApi, submitTimesheetApi, approveTimeEntriesApi } from "@/lib/api/work-billing-api"
 import { createProjectApi, listProjectsApi } from "@/lib/api/work-projects-api"
 import { billedAgainstBudget, openAdvances } from "./invoice-builders"
@@ -15,10 +17,11 @@ describe("fixed price and milestones (BIL-3, BIL-18)", () => {
     const before = billedAgainstBudget((await listProjectsApi(WS)).find((p) => p.id === "prj_orbit")!, await listClientInvoicesApi(WS)).billed
     expect(before).toBe(144000)
     const inv = await createInvoiceApi(WS, { kind: InvoiceKind.FIXED, clientId: "cli_orbit", projectId: "prj_orbit", percent: 30, taxRate: 20 })
-    expect(invoiceTotals(inv).subtotal).toBe(144000) // 30% of 480,000
+    // The price includes the approved change order of the demo (480,000 + 60,000)
+    expect(invoiceTotals(inv).subtotal).toBe(162000) // 30% of 540,000
     await issueInvoiceApi(WS, inv.id)
     const orbit = (await listProjectsApi(WS)).find((p) => p.id === "prj_orbit")!
-    expect(billedAgainstBudget(orbit, await listClientInvoicesApi(WS))).toMatchObject({ billed: 288000, percent: 60, remaining: 192000 })
+    expect(billedAgainstBudget(withChanges(orbit, await listChangeOrdersApi(WS)), await listClientInvoicesApi(WS))).toMatchObject({ billed: 306000, percent: 56.7, remaining: 234000 })
     await expect(createInvoiceApi(WS, { kind: InvoiceKind.FIXED, clientId: "cli_orbit", projectId: "prj_orbit", percent: 80, taxRate: 20 })).rejects.toThrow(/more than the project price/)
     const ms = await createInvoiceApi(WS, { kind: InvoiceKind.MILESTONE, clientId: "cli_orbit", projectId: "prj_orbit", milestoneId: "ms_orbit_beta", amount: 120000, taxRate: 20 })
     expect(ms.lines[0]!.description).toContain("Beta release")
