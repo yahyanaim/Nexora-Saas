@@ -40,10 +40,11 @@ export function periodEnd(c: Pick<CustomerAccount, "since" | "billing">, today =
 }
 
 /** Monthly recurring revenue before VAT: active and payment-overdue customers only (§6.2). */
-export function accountMrr(c: Pick<CustomerAccount, "plan" | "billing" | "status">) {
+export function accountMrr(c: Pick<CustomerAccount, "plan" | "billing" | "status"> & { mrrDiscount?: number }) {
   if (c.status !== "active" && c.status !== "payment_overdue") return 0
   const monthly = planById(c.plan).monthly
-  return c.billing === "yearly" ? Math.round(((monthly * 10) / 12) * 100) / 100 : monthly
+  const gross = c.billing === "yearly" ? Math.round(((monthly * 10) / 12) * 100) / 100 : monthly
+  return Math.max(0, Math.round((gross - (c.mrrDiscount ?? 0)) * 100) / 100)
 }
 
 export function accountsSummary(list: CustomerAccount[]) {
@@ -65,7 +66,38 @@ export function accountsSummary(list: CustomerAccount[]) {
 }
 
 /** Seat limit of the customer's plan, or null when unlimited. */
-export function seatLimit(c: Pick<CustomerAccount, "plan">) {
+export function seatLimit(c: Pick<CustomerAccount, "plan"> & { extraSeats?: number; extraSeatsUntil?: string }, today = isoDay(new Date())) {
   const seats = planById(c.plan).seats
-  return seats < 0 ? null : seats
+  if (seats < 0) return null
+  // SUB-10: a temporary extension counts until its last day
+  return seats + (c.extraSeats && c.extraSeatsUntil && c.extraSeatsUntil >= today ? c.extraSeats : 0)
+}
+
+export type HealthLevel = "good" | "watch" | "at_risk"
+export type HealthReason = "payment_overdue" | "suspended" | "seats_full" | "seats_high" | "inactive" | "support_open" | "support_urgent"
+
+/**
+ * CUS-11: one indicator from payment status, seat usage, last sign-in and open
+ * support requests. Any red signal makes the customer "at risk"; two amber
+ * ones, or one, make it "watch".
+ */
+export function customerHealth(
+  c: Pick<CustomerAccount, "status" | "plan" | "seatsUsed">,
+  signals: { lastSignInAt?: string; openRequests: number; urgentRequests: number },
+  now = new Date(),
+): { level: HealthLevel; reasons: HealthReason[] } {
+  const red: HealthReason[] = []
+  const amber: HealthReason[] = []
+  if (c.status === "payment_overdue") red.push("payment_overdue")
+  if (c.status === "suspended") red.push("suspended")
+  const limit = seatLimit(c)
+  if (limit) {
+    if (c.seatsUsed >= limit) amber.push("seats_full")
+    else if (c.seatsUsed / limit >= 0.9) amber.push("seats_high")
+  }
+  const days = signals.lastSignInAt ? (now.getTime() - new Date(signals.lastSignInAt).getTime()) / 86_400_000 : Infinity
+  if (c.status !== "cancelled" && c.status !== "deleted" && days > 14) (days > 30 ? red : amber).push("inactive")
+  if (signals.urgentRequests > 0) red.push("support_urgent")
+  else if (signals.openRequests > 0) amber.push("support_open")
+  return { level: red.length ? "at_risk" : amber.length ? "watch" : "good", reasons: [...red, ...amber] }
 }

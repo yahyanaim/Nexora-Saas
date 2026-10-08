@@ -6,15 +6,32 @@ import { TRIAL_DAYS, TRIAL_EXTENSION_DAYS, addDaysIso, canTransition, isoDay, pe
 import { ConsoleCapability as C, ConsoleRole } from "@/types/platform-console"
 import type { CustomerAccount, LifecycleStatus, UserSuspension } from "@/types/platform-customers"
 import { PLATFORM_WS, audit, type ConsoleActor } from "./platform-console-api"
+import { syncPlanContent } from "./platform-plans-api"
+import { listAccountsApi } from "./access-api"
+import { seatsUsed } from "@/lib/workforce/access"
 
 /**
  * Customers and their lifecycle (cahier des charges §5.1, §5.7, Lot A2), on
  * demo data kept under the platform key. The server applies the same rules.
  */
 
+/** Legal details of the demo customers (CUS-04): address, IF and RC for the Moroccan ones. */
+const IDENTITY: Record<string, Pick<CustomerAccount, "address" | "taxId" | "rc" | "phone">> = {
+  cus_atlas: { address: "45 boulevard d'Anfa, 7e étage", taxId: "40218765", rc: "Casablanca 412873", phone: "+212 522 47 18 90" },
+  cus_northwind: { address: "1100 Congress Ave, Suite 300", phone: "+1 512 555 0142" },
+  cus_bina: { address: "12 avenue Mohammed VI, Souissi", taxId: "33417820", rc: "Rabat 98214", phone: "+212 537 65 22 10" },
+  cus_marrakech: { address: "Résidence Al Majd, avenue Mohammed V, Guéliz", taxId: "45982310", rc: "Marrakech 77412", phone: "+212 524 43 81 05" },
+  cus_tanger: { address: "Zone Franche Logistique, lot 18", taxId: "50128934", rc: "Tanger 104523", phone: "+212 539 39 47 70" },
+  cus_agadir: { address: "Avenue Hassan II, immeuble Tafoukt", phone: "+212 528 82 10 44" },
+  cus_fes: { address: "18 rue Ibn Khaldoun, Ville nouvelle", taxId: "38821047", rc: "Fès 55219", phone: "+212 535 62 18 33" },
+  cus_lyon: { address: "24 rue de la République, 69002 Lyon", phone: "+33 4 72 00 18 45" },
+  cus_oujda: { address: "Boulevard Mohammed V", phone: "+212 536 68 20 11" },
+}
+
 const seedCustomers = (ws: string): CustomerAccount[] => {
   const now = new Date().toISOString()
   return NEXORA_CUSTOMERS.map((c) => ({
+    ...IDENTITY[c.id],
     id: c.id, workspaceId: ws, demoWorkspaceId: c.workspaceId, name: c.name, city: c.city, country: c.country, ice: c.ice,
     plan: c.plan, billing: c.billing, seatsUsed: c.seatsUsed, since: c.since, trialEndsOn: c.trialEndsOn, admin: c.admin,
     trialStartedOn: c.trialStartedOn, convertedOn: c.convertedOn, cancelledOn: c.cancelledOn,
@@ -54,8 +71,16 @@ const move = (c: CustomerAccount, to: LifecycleStatus) => {
   if (!canTransition(c.status, to)) throw new Error(ERR_TRANSITION)
 }
 
+/** People with access today: a demo company's Team access accounts, otherwise the stored count. */
+export async function seatsInUse(c: Pick<CustomerAccount, "demoWorkspaceId" | "seatsUsed">) {
+  return c.demoWorkspaceId ? seatsUsed(await listAccountsApi(c.demoWorkspaceId)) : c.seatsUsed
+}
+
 export async function listCustomersApi(): Promise<CustomerAccount[]> {
-  return customerStore.list(PLATFORM_WS).filter((c) => c.status !== "deleted")
+  syncPlanContent()
+  const list = customerStore.list(PLATFORM_WS).filter((c) => c.status !== "deleted")
+  // SUB-01: a demo company's seats are its Team access accounts, the figure its My subscription page shows
+  return Promise.all(list.map(async (c) => ({ ...c, seatsUsed: await seatsInUse(c) })))
 }
 
 export async function getCustomerApi(id: string): Promise<CustomerAccount | null> {
@@ -155,6 +180,36 @@ export async function undoCancellationApi(actor: ConsoleActor, id: string): Prom
   if (!c.cancelsOn) throw new Error("No cancellation is planned")
   const updated = customerStore.update(PLATFORM_WS, id, { cancelsOn: undefined })
   audit(actor, "customer.cancellation_undone", "customer", c.name, { before: `cancelled on ${c.cancelsOn}`, after: c.status, customerId: id })
+  return updated
+}
+
+export type CustomerIdentityInput = Pick<CustomerAccount, "name" | "city" | "country" | "ice" | "taxId" | "rc" | "address" | "phone"> & { adminName: string; adminEmail: string; adminPhone?: string }
+
+/** CUS-04: the company's legal identity and administrator, as printed on its next invoices. */
+export async function updateCustomerApi(actor: ConsoleActor, id: string, input: CustomerIdentityInput): Promise<CustomerAccount> {
+  need(actor, C.CHANGE_SUBSCRIPTION)
+  const c = get(id)
+  const email = input.adminEmail.trim().toLowerCase()
+  if (!input.name.trim() || !input.city.trim() || !input.adminName.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Enter the company, the administrator and a valid e-mail")
+  const ice = input.ice?.trim() || undefined
+  if (ice && !/^\d{15}$/.test(ice)) throw new Error("The ICE has 15 digits")
+  if (input.country === "MA" && !ice && c.status !== "trial") throw new Error("A Moroccan customer needs its ICE on invoices")
+  if (customerStore.list(PLATFORM_WS).some((x) => x.id !== id && x.status !== "deleted" && (x.name.toLowerCase() === input.name.trim().toLowerCase() || x.admin.email.toLowerCase() === email))) {
+    throw new Error("This company or administrator is already a customer")
+  }
+  const next = {
+    name: input.name.trim(), city: input.city.trim(), country: input.country, ice, taxId: input.taxId?.trim() || undefined, rc: input.rc?.trim() || undefined,
+    address: input.address?.trim() || undefined, phone: input.phone?.trim() || undefined,
+    admin: { ...c.admin, name: input.adminName.trim(), email, phone: input.adminPhone?.trim() || undefined },
+  }
+  const fields: [string, unknown, unknown][] = [
+    ["name", c.name, next.name], ["city", c.city, next.city], ["country", c.country, next.country], ["ICE", c.ice, next.ice], ["IF", c.taxId, next.taxId],
+    ["RC", c.rc, next.rc], ["address", c.address, next.address], ["phone", c.phone, next.phone], ["admin", `${c.admin.name} <${c.admin.email}>`, `${next.admin.name} <${next.admin.email}>`],
+  ]
+  const changed = fields.filter(([, a, b]) => (a ?? "") !== (b ?? ""))
+  if (changed.length === 0) return c
+  const updated = customerStore.update(PLATFORM_WS, id, next)
+  audit(actor, "customer.updated", "customer", updated.name, { before: changed.map(([k, a]) => `${k}: ${a ?? "—"}`).join(" · "), after: changed.map(([k, , b]) => `${k}: ${b ?? "—"}`).join(" · "), customerId: id })
   return updated
 }
 

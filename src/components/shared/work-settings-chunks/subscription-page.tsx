@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils"
 import { InvoiceMethod, InvoiceStatus, type Invoice } from "@/types/invoices"
 import type { BillingCycle, ErpPlan, SubscriptionInvoice } from "@/types/workspace-subscription"
 import { translateError } from "@/lib/errors/translate-error"
+import { listCustomersApi } from "@/lib/api/platform-customers-api"
+import { NexoraSubscriptionView } from "./nexora-subscription-view"
 
 /** The company's own Nexora subscription: plan, seats, invoices and plan changes (SUB-1…SUB-4). */
 export default function SubscriptionPage() {
@@ -34,6 +36,9 @@ export default function SubscriptionPage() {
   const { data: sub, isLoading } = useQuery({ queryKey: ["subscription", ws], queryFn: () => getWorkspaceSubscriptionApi(ws) })
   const { data: invoices = [] } = useQuery({ queryKey: ["subscription-invoices", ws], queryFn: () => listSubscriptionInvoicesApi(ws) })
   const { data: accounts = [] } = useQuery({ queryKey: ["accounts", ws], queryFn: () => listAccountsApi(ws) })
+  // A company Nexora bills reads the same subscription as the console (INV-07, SUB-01)
+  const { data: customers, isLoading: loadingCustomers } = useQuery({ queryKey: ["platform", "customers"], queryFn: listCustomersApi })
+  const linked = customers?.find((c) => c.demoWorkspaceId === ws && c.status !== "deleted")
   const [cycle, setCycle] = useState<BillingCycle | null>(null)
   const used = seatsUsed(accounts)
   const shownCycle = cycle ?? sub?.subscription.cycle ?? "monthly"
@@ -73,7 +78,15 @@ export default function SubscriptionPage() {
     return generateInvoicePdf(doc, locale)
   }
 
-  if (isLoading || !sub) {
+  if (linked) {
+    return (
+      <div className="p-4 md:p-6 space-y-6">
+        <PageHeader />
+        <NexoraSubscriptionView customer={linked} used={used} />
+      </div>
+    )
+  }
+  if (isLoading || !sub || loadingCustomers) {
     return (
       <div className="p-4 md:p-6 space-y-6">
         <PageHeader />

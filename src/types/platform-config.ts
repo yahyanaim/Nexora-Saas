@@ -14,6 +14,9 @@ export interface NexoraIdentity {
   /** Identifiant fiscal */
   taxId: string
   rc: string
+  /** Taxe professionnelle and social security numbers (INV-02) */
+  patente: string
+  cnss: string
   email: string
   phone: string
   bankName: string
@@ -26,7 +29,7 @@ export interface NexoraIdentity {
 }
 
 /** What each invoice keeps of the identity at its issue, so later edits only reach new invoices. */
-export type SellerSnapshot = Pick<NexoraIdentity, "legalName" | "address" | "city" | "country" | "ice" | "taxId" | "rc" | "bankName" | "rib" | "swift">
+export type SellerSnapshot = Pick<NexoraIdentity, "legalName" | "address" | "city" | "country" | "ice" | "taxId" | "rc" | "patente" | "cnss" | "bankName" | "rib" | "swift"> & Partial<Pick<NexoraIdentity, "email" | "phone">>
 
 /** CFG-01: a message to every customer or a segment, between two dates. */
 export interface Announcement {

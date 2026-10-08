@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import dynamic from "next/dynamic"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { ListSkeleton } from "@/components/ui/empty-state"
@@ -18,6 +19,12 @@ import { cn } from "@/lib/utils"
 import { Panel, useBillingFormat } from "./billing-shared"
 
 const MOVES = ["new", "expansion", "contraction", "churn", "reactivation"] as const
+const RANGES = [3, 6, 12] as const
+
+// recharts loads in its own bundle after the page shows (PERF-01), like the companies' Analytics
+const ChartPlaceholder = () => <div className="h-96 animate-pulse rounded-xl border border-border bg-card" aria-hidden />
+const MrrTrendChart = dynamic(() => import("./metrics-charts").then((m) => m.MrrTrendChart), { ssr: false, loading: ChartPlaceholder })
+const MrrBridgeChart = dynamic(() => import("./metrics-charts").then((m) => m.MrrBridgeChart), { ssr: false, loading: ChartPlaceholder })
 
 /** One headline figure with its definition and period always visible (MET-06). */
 function Kpi({ label, value, change, definition }: { label: string; value: string; change?: { text: string; good: boolean | null }; definition: string }) {
@@ -41,7 +48,10 @@ export default function ConsoleMetricsPage() {
   const { data: identity } = useNexoraIdentity()
   const auditExport = useMetricsExportAudit()
   const [today] = useState(() => new Date().toISOString().slice(0, 10))
-  const rows = useMemo(() => monthlyTable(invoices, accounts, today, 6), [invoices, accounts, today])
+  const [range, setRange] = useState<(typeof RANGES)[number]>(12)
+  const rows = useMemo(() => monthlyTable(invoices, accounts, today, range), [invoices, accounts, today, range])
+  const compactMoney = (n: number, opts?: { compact?: boolean }) =>
+    opts?.compact ? `${new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(n)} MAD` : money(n)
   const head = useMemo(() => headline(rows, accounts), [rows, accounts])
   const trials = useMemo(() => trialConversion(accounts), [accounts])
   const aging = useMemo(() => overdueAging(invoices, today), [invoices, today])
@@ -51,7 +61,6 @@ export default function ConsoleMetricsPage() {
   const signed = (v: number) => (v > 0 ? `+${money(v)}` : v < 0 ? `−${money(-v)}` : money(0))
   const monthLabel = (m: string) => new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(new Date(`${m}-01T00:00:00`))
   const period = rows.length ? `${monthLabel(rows[0]!.month)} – ${monthLabel(rows[rows.length - 1]!.month)}` : ""
-  const max = Math.max(1, ...rows.map((r) => r.mrr))
   const change = (v: number | null, kind: "pct" | "count") =>
     v === null ? { text: t("metNoPrev"), good: null } : { text: t("metVsLastMonth", { change: kind === "pct" ? (v > 0 ? "+" : "") + pct(v) : (v > 0 ? `+${v}` : String(v)) }), good: v === 0 ? null : v > 0 }
 
@@ -126,21 +135,20 @@ export default function ConsoleMetricsPage() {
             <Kpi label={t("metSeats")} value={pct(head.seatUsage, 0)} definition={t("metDefSeats", { used: head.seatsUsed, included: head.seatsIncluded })} />
           </div>
 
-          <Panel title={t("metMrrOverTime")} hint={t("metMrrOverTimeHint", { period })}>
-            <div className="flex h-52 items-end gap-3 border-b border-border px-1" role="img" aria-label={t("metChartLabel", { values: rows.map((r) => `${monthLabel(r.month)} ${money(r.mrr)}`).join(", ") })}>
-              {rows.map((r) => (
-                <div key={r.month} className="group relative flex h-full flex-1 flex-col items-center justify-end">
-                  <span className="pointer-events-none absolute -top-1 z-10 hidden -translate-y-full whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs shadow-md group-hover:block">
-                    {monthLabel(r.month)} · {money(r.mrr)} · {signed(r.change)}
-                  </span>
-                  <div className="w-full max-w-16 rounded-t-[4px] bg-primary transition-opacity group-hover:opacity-80" style={{ height: `${Math.max(2, (r.mrr / max) * 100)}%` }} />
-                </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">{t("metMrrOverTimeHint", { period })}</p>
+            <div className="flex rounded-full border border-border bg-card p-1 text-sm" role="group" aria-label={t("repPeriod")}>
+              {RANGES.map((r) => (
+                <button key={r} type="button" aria-pressed={range === r} onClick={() => setRange(r)} className={cn("rounded-full px-3 py-1", range === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
+                  {t("metLastMonths", { n: r })}
+                </button>
               ))}
             </div>
-            <div className="mt-2 flex gap-3 px-1">
-              {rows.map((r) => <span key={r.month} className="flex-1 text-center text-xs text-muted-foreground">{monthLabel(r.month)}</span>)}
-            </div>
-          </Panel>
+          </div>
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
+            <div className="xl:col-span-3"><MrrTrendChart rows={rows} money={compactMoney} rangeLabel={t("metLastMonths", { n: range })} /></div>
+            <div className="xl:col-span-2"><MrrBridgeChart rows={rows} money={compactMoney} rangeLabel={t("metLastMonths", { n: range })} /></div>
+          </div>
 
           <Panel title={t("metMovements")} hint={t("metMovementsHint")}>
             <TableContainer>

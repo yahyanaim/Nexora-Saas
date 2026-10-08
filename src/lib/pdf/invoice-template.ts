@@ -262,6 +262,8 @@ export async function renderInvoiceDocument(model: InvoiceDocument, opts: { save
       styles: { fontSize: 8, textColor: INK, cellPadding: 2, lineColor: LINE, lineWidth: { bottom: 0.2 } },
       headStyles: { textColor: MUTED, fontStyle: "bold", fontSize: 7.2, fillColor: SOFT },
       columnStyles: Object.fromEntries((table.alignRight ?? []).map((c) => [c, { halign: "right" as const }])),
+      // the header follows its column, not only the body
+      didParseCell: (cell) => { if (table.alignRight?.includes(cell.column.index)) cell.cell.styles.halign = "right" },
     })
     y = (pdf.lastAutoTable?.finalY ?? y) + 8
   }

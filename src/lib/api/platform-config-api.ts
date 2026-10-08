@@ -21,7 +21,7 @@ const plusDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOStrin
 
 const seedIdentity = (): NexoraIdentity[] => [{
   ...stamp(), id: "identity", legalName: "Nexora Technologies SARL AU", address: "Casablanca Finance City, Tour CFC, 14e étage", city: "Casablanca", country: "Maroc",
-  ice: "002847192000084", taxId: "40182934", rc: "Casablanca 148291", email: "billing@nexora.io", phone: "+212 522 00 00 00",
+  ice: "002847192000084", taxId: "40182934", rc: "Casablanca 148291", patente: "34192084", cnss: "8912345", email: "billing@nexora.io", phone: "+212 522 00 00 00",
   bankName: "Attijariwafa bank", rib: "007780000123456789012345", swift: "BCMAMAMC", updatedBy: "Sophia Vance",
 }]
 
@@ -60,7 +60,7 @@ export const getIdentityApi = async () => identity.list(PLATFORM_WS)[0]!
 /** What a new invoice prints about Nexora; issued invoices keep their own copy. */
 export function sellerSnapshot(): SellerSnapshot {
   const i = identity.list(PLATFORM_WS)[0]!
-  return { legalName: i.legalName, address: i.address, city: i.city, country: i.country, ice: i.ice, taxId: i.taxId, rc: i.rc, bankName: i.bankName, rib: i.rib, swift: i.swift }
+  return { legalName: i.legalName, address: i.address, city: i.city, country: i.country, ice: i.ice, taxId: i.taxId, rc: i.rc, patente: i.patente ?? "", cnss: i.cnss ?? "", email: i.email, phone: i.phone, bankName: i.bankName, rib: i.rib, swift: i.swift }
 }
 
 export type IdentityInput = Omit<NexoraIdentity, "id" | "workspaceId" | "createdAt" | "updatedAt" | "updatedBy">

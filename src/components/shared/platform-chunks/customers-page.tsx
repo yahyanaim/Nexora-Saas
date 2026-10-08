@@ -37,6 +37,7 @@ export default function PlatformCustomersPage() {
   const [status, setStatus] = useState<string>(ALL)
   const [plan, setPlan] = useState<string>(ALL)
   const [billing, setBilling] = useState<string>(ALL)
+  const [country, setCountry] = useState<string>(ALL)
   const [trialOpen, setTrialOpen] = useState(false)
   const [trial, setTrial] = useState(EMPTY_TRIAL)
 
@@ -50,6 +51,7 @@ export default function PlatformCustomersPage() {
         (status === ALL || c.status === status) &&
         (plan === ALL || c.plan === plan) &&
         (billing === ALL || c.billing === billing) &&
+        (country === ALL || c.country === country) &&
         (!q || `${c.name} ${c.city} ${c.ice ?? ""} ${c.admin.name} ${c.admin.email}`.toLowerCase().includes(q))
     )
     .sort((a, b) => accountMrr(b) - accountMrr(a) || a.name.localeCompare(b.name))
@@ -112,6 +114,13 @@ export default function PlatformCustomersPage() {
                 <SelectItem value={ALL}>{t("cuAllBilling")}</SelectItem>
                 <SelectItem value="monthly">{t("pfMonthly")}</SelectItem>
                 <SelectItem value="yearly">{t("pfYearly")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={country} onValueChange={setCountry}>
+              <SelectTrigger className="w-32 bg-card" aria-label={t("cuCountry")}><SelectValue>{country === ALL ? t("cuAllCountries") : country}</SelectValue></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>{t("cuAllCountries")}</SelectItem>
+                {[...new Set(customers.map((c) => c.country))].sort().map((cc) => <SelectItem key={cc} value={cc}>{cc}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

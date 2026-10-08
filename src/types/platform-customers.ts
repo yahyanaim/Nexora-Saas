@@ -34,6 +34,11 @@ export interface CustomerAccount {
   city: string
   country: string
   ice?: string
+  /** Identifiant fiscal and trade register, printed on Nexora's invoices (CUS-04, INV-02) */
+  taxId?: string
+  rc?: string
+  address?: string
+  phone?: string
   plan: NexoraPlanId
   billing: "monthly" | "yearly"
   seatsUsed: number
@@ -51,10 +56,15 @@ export interface CustomerAccount {
   convertedOn?: string
   /** yyyy-mm-dd: when a cancellation took effect */
   cancelledOn?: string
+  /** SUB-10: extra seats granted until a date, with the reason on the subscription */
+  extraSeats?: number
+  extraSeatsUntil?: string
+  /** PLA-08: monthly value of a running discount, taken off the MRR (§6.2) */
+  mrrDiscount?: number
   /** yyyy-mm-dd: cancellation takes effect at the end of the paid period (CUS-09) */
   cancelsOn?: string
   suspension?: CustomerSuspension
-  admin: { name: string; email: string; avatar?: string }
+  admin: { name: string; email: string; avatar?: string; phone?: string }
   notes: CustomerNote[]
   createdAt: string
   updatedAt: string
