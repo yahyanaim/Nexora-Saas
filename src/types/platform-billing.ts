@@ -124,10 +124,15 @@ export interface NxPayment {
   /** Positive for money received, negative for a refund */
   amount: number
   date: string
-  status: "succeeded" | "failed" | "refunded" | "unmatched"
+  status: "succeeded" | "failed" | "refunded" | "unmatched" | "chargeback"
   /** Bank reference or provider reference */
   reference: string
   payer?: string
+  /** PAY-08: on a chargeback, the card payment it takes back, and the bank's reason */
+  chargebackOf?: string
+  reason?: string
+  /** PAY-08: set on a card payment the bank took back */
+  chargedBackOn?: string
   createdAt: string
   updatedAt: string
 }
@@ -167,6 +172,49 @@ export interface TaxRate {
   from: string
   to?: string
   reference: string
+  createdAt: string
+  updatedAt: string
+}
+
+/** PAY-09: what the card provider says it paid out for one day of card movements. */
+export interface NxSettlement {
+  id: string
+  workspaceId: string
+  /** yyyy-mm-dd of the card movements it covers */
+  date: string
+  provider: string
+  reference: string
+  /** Card payments minus chargebacks of the day, VAT included */
+  gross: number
+  fee: number
+  net: number
+  createdAt: string
+  updatedAt: string
+}
+
+export type ReconciliationKind = "invoice_payments" | "payment_no_invoice" | "settlement_amount" | "settlement_missing" | "settlement_unexpected" | "refund_no_payment"
+
+export interface ReconciliationDifference {
+  kind: ReconciliationKind
+  /** Invoice number, payment or settlement reference */
+  ref: string
+  customerName?: string
+  date?: string
+  expected: number
+  actual: number
+}
+
+/** PAY-09: one daily comparison of invoices, payments and provider settlements. */
+export interface ReconciliationRun {
+  id: string
+  workspaceId: string
+  /** The day checked (movements up to the end of this day) */
+  day: string
+  by: string
+  checked: { invoices: number; payments: number; settlements: number }
+  differences: ReconciliationDifference[]
+  /** Transfers waiting to be matched: listed, not a difference */
+  waiting: number
   createdAt: string
   updatedAt: string
 }

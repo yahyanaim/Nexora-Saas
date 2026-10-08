@@ -23,9 +23,11 @@ function storageKey(collection: string, workspaceId: string) {
  * an older version starts again from fresh demo data instead of mixing old
  * records with new rules (the workspace choice and UI preferences are kept).
  */
-export const DEMO_DATA_VERSION = "2026-10-20"
+export const DEMO_DATA_VERSION = "2026-10-27"
 const VERSION_KEY = `${PREFIX}:data-version`
 const KEEP = new Set([VERSION_KEY, `${PREFIX}:workspace`, `${PREFIX}:guide-open`])
+/** Every collection and its seed, so a tenant export can include collections never opened (AUD-04). */
+const registry = new Map<string, (workspaceId: string) => unknown[]>()
 let versionChecked = false
 
 export function ensureDataVersion() {
@@ -73,6 +75,56 @@ export function resetWorkspaceData(workspaceId: string) {
   }
 }
 
+const DELETED_KEY = `${PREFIX}:deleted-workspaces`
+const deletedWorkspaces = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(DELETED_KEY) ?? "[]")
+  } catch {
+    return []
+  }
+}
+
+/** AUD-05: true once a workspace's data was deleted at its company's request; nothing is seeded again. */
+export function isWorkspaceDeleted(workspaceId: string) {
+  if (typeof window === "undefined") return false
+  return deletedWorkspaces().includes(workspaceId)
+}
+
+/**
+ * AUD-04: every record of one workspace, by collection, for the tenant export.
+ * Collections the company never opened are seeded first, so the export is complete.
+ */
+export function exportWorkspaceData(workspaceId: string): Record<string, unknown[]> {
+  const out: Record<string, unknown[]> = {}
+  if (typeof window === "undefined" || isWorkspaceDeleted(workspaceId)) return out
+  // the console's own collections live in its workspace, never in a company's
+  for (const [name, seed] of registry) if (!name.startsWith("platform-")) readCollection(name, workspaceId, () => seed(workspaceId) as Identified[])
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (!key || !key.startsWith(`${PREFIX}:`) || !key.endsWith(`:${workspaceId}`)) continue
+      const name = key.slice(PREFIX.length + 1, -(workspaceId.length + 1))
+      const value: unknown = JSON.parse(localStorage.getItem(key) ?? "null")
+      out[name] = Array.isArray(value) ? value : [value]
+    }
+  } catch {
+    // unreadable storage: what was read so far
+  }
+  return out
+}
+
+/** AUD-05: removes every record of one workspace and keeps it empty. Returns how many collections were deleted. */
+export function deleteWorkspaceData(workspaceId: string) {
+  if (typeof window === "undefined") return 0
+  const n = resetWorkspaceData(workspaceId)
+  try {
+    localStorage.setItem(DELETED_KEY, JSON.stringify([...new Set([...deletedWorkspaces(), workspaceId])]))
+  } catch {
+    throw new Error(STORAGE_FULL)
+  }
+  return n
+}
+
 /** Reads a collection, seeding it when absent or unreadable. */
 export function readCollection<T extends Identified>(
   collection: string,
@@ -80,6 +132,7 @@ export function readCollection<T extends Identified>(
   seed: () => T[]
 ): T[] {
   if (typeof window === "undefined") return seed()
+  if (isWorkspaceDeleted(workspaceId)) return []
   const key = storageKey(collection, workspaceId)
   try {
     const raw = localStorage.getItem(key)
@@ -137,6 +190,7 @@ export function createCollection<T extends Identified & { workspaceId: string; c
   seed: (workspaceId: string) => T[]
 ) {
   const read = (workspaceId: string) => readCollection<T>(collection, workspaceId, () => seed(workspaceId))
+  registry.set(collection, seed)
 
   return {
     list: (workspaceId: string) => read(workspaceId),
@@ -179,6 +233,7 @@ export function createCollection<T extends Identified & { workspaceId: string; c
 /** Reads a single per-workspace document (settings), seeding it when absent. */
 export function readDocument<T extends object>(name: string, workspaceId: string, seed: () => T): T {
   if (typeof window === "undefined") return seed()
+  if (isWorkspaceDeleted(workspaceId)) return seed()
   const key = storageKey(name, workspaceId)
   try {
     const raw = localStorage.getItem(key)

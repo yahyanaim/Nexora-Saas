@@ -31,6 +31,11 @@ import {
   recordTransferApi,
   runBillingJobsApi,
   startSubscriptionApi,
+  listReconciliationsApi,
+  listSettlementsApi,
+  recordChargebackApi,
+  runReconciliationApi,
+  simulateSettlementGapApi,
 } from "@/lib/api/platform-billing-api"
 import type { ConsoleActor } from "@/lib/api/platform-console-api"
 import type { NexoraPlanId } from "@/lib/platform/nexora-catalog"
@@ -48,6 +53,8 @@ export const useNxRefunds = () => useQuery({ queryKey: K("refunds"), queryFn: li
 export const useNxDunning = () => useQuery({ queryKey: K("dunning"), queryFn: listDunningApi })
 export const useTaxRates = () => useQuery({ queryKey: K("taxes"), queryFn: listTaxRatesApi })
 export const usePlanContent = () => useQuery({ queryKey: K("plan-content"), queryFn: listPlanContentApi })
+export const useSettlements = () => useQuery({ queryKey: K("settlements"), queryFn: listSettlementsApi })
+export const useReconciliations = () => useQuery({ queryKey: K("reconciliations"), queryFn: listReconciliationsApi })
 
 export function useBillingMutations() {
   const t = useTranslations()
@@ -76,6 +83,9 @@ export function useBillingMutations() {
     assign: useAction((a, v: { paymentId: string; invoiceId: string }) => assignTransferApi(a, v.paymentId, v.invoiceId), "biTransferMatched"),
     creditNote: useAction((a, v: { invoiceId: string; amount: number; reason: string; refund: boolean }) => issueCreditNoteApi(a, v.invoiceId, v), (r) => (r.refund?.status === "awaiting_approval" ? t("biRefundAwaiting", { number: r.creditNote.number }) : t("biCreditIssued", { number: r.creditNote.number }))),
     approveRefund: useAction((a, id: string) => approveRefundApi(a, id), "biRefundDone"),
+    chargeback: useAction((a, v: { paymentId: string; reason: string; date: string }) => recordChargebackApi(a, v.paymentId, v), "trChargebackRecorded"),
+    reconcile: useAction((a, day: string) => runReconciliationApi(a, day), (r) => (r.differences.length ? t("recDoneDiff", { n: r.differences.length }) : t("recDoneClean"))),
+    simulateGap: useAction((a, _v: void) => simulateSettlementGapApi(a), "recGapSimulated"),
     planContent: useAction((a, v: { plan: NexoraPlanId; description: string; seats: number; features: string[]; retired: boolean }) => updatePlanContentApi(a, v.plan, v), "plContentSaved"),
     changeBilling: useAction((a, v: { customerId: string; billing: "monthly" | "yearly" }) => changeBillingApi({ actor: a }, v.customerId, v.billing), (r) => (r.invoice ? t("subBillingNow", { number: r.invoice.number }) : t("subBillingScheduled"))),
     changeMethod: useAction((a, v: { customerId: string; method: "card" | "transfer" }) => changeMethodApi({ actor: a }, v.customerId, v.method), "subMethodSaved"),

@@ -28,6 +28,7 @@ const PAY_CLASS: Record<NxPayment["status"], string> = {
   failed: "bg-danger-soft text-destructive",
   refunded: "bg-muted text-muted-foreground",
   unmatched: "bg-warning-soft text-warning-foreground",
+  chargeback: "bg-danger-soft text-destructive",
 }
 
 /** Money between customers and Nexora: payments, failures, refunds, the transfer queue and dunning (PAY-01 to PAY-09). */
@@ -45,6 +46,8 @@ export default function ConsoleTransactionsPage() {
   const [form, setForm] = useState({ amount: "", reference: "", payer: "", date: today })
   const [assignTo, setAssignTo] = useState<Record<string, string>>({})
   const [approving, setApproving] = useState<string | null>(null)
+  const [charging, setCharging] = useState<NxPayment | null>(null)
+  const [cb, setCb] = useState({ reason: "", date: today })
   const canRecord = consoleCan(actor?.role, C.CREDIT_NOTES)
   const canApprove = consoleCan(actor?.role, C.REFUND_LARGE)
   const queue = payments.filter((p) => p.status === "unmatched")
@@ -140,6 +143,7 @@ export default function ConsoleTransactionsPage() {
                   <TableHead>{t("trReference")}</TableHead>
                   <TableHead className="text-end">{t("trAmount")}</TableHead>
                   <TableHead>{t("status")}</TableHead>
+                  {canRecord && <TableHead>{t("actions")}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -151,7 +155,18 @@ export default function ConsoleTransactionsPage() {
                     <TableCell>{t(p.method === "card" ? "subCard" : "subTransfer")}</TableCell>
                     <TableCell className="max-w-48 truncate text-xs text-muted-foreground">{p.reference}</TableCell>
                     <TableCell className={cn("text-end tabular-nums", p.amount < 0 && "text-destructive")}>{money(p.amount)}</TableCell>
-                    <TableCell><Badge variant="outline" className={cn("border-transparent", PAY_CLASS[p.status])}>{t(`biPay_${p.status}`)}</Badge></TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={cn("border-transparent", PAY_CLASS[p.status])}>{t(`biPay_${p.status}`)}</Badge>
+                      {p.chargedBackOn && <span className="ms-2 text-xs text-destructive">{t("trChargedBackOn", { date: date(p.chargedBackOn) })}</span>}
+                      {p.reason && <p className="mt-1 text-xs text-muted-foreground">{p.reason}</p>}
+                    </TableCell>
+                    {canRecord && (
+                      <TableCell>
+                        {p.status === "succeeded" && p.method === "card" && p.invoiceId && !p.chargedBackOn && (
+                          <Button size="sm" variant="ghost" aria-label={t("trChargebackOf", { reference: p.reference })} onClick={() => { setCb({ reason: "", date: today }); setCharging(p) }}>{t("trChargeback")}</Button>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -180,6 +195,23 @@ export default function ConsoleTransactionsPage() {
           <div className="space-y-1.5"><Label htmlFor="tr-ref">{t("trReference")}</Label><Input id="tr-ref" placeholder="VIR NX-2026-00012" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="tr-payer">{t("trPayer")}</Label><Input id="tr-payer" value={form.payer} onChange={(e) => setForm({ ...form, payer: e.target.value })} /></div>
           <p className="rounded-2xl bg-info-soft p-3 text-xs text-info-foreground">{t("trMatchRule")}</p>
+        </div>
+      </DataTableEntityFormSheet>
+      <DataTableEntityFormSheet
+        open={!!charging}
+        onOpenChange={(v) => !v && setCharging(null)}
+        mode="create"
+        createTitle={t("trChargebackTitle")}
+        editTitle=""
+        description={charging ? t("trChargebackDesc", { number: charging.invoiceNumber ?? "—", amount: money(charging.amount), company: charging.customerName ?? "—" }) : ""}
+        isSubmitting={m.chargeback.isPending}
+        submitLabel={{ create: t("trChargebackRecord") }}
+        onSubmit={() => charging && m.chargeback.mutate({ paymentId: charging.id, reason: cb.reason, date: cb.date }, { onSuccess: () => setCharging(null) })}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5"><Label htmlFor="cb-reason">{t("trChargebackReason")}</Label><Input id="cb-reason" placeholder={t("trChargebackReasonPh")} value={cb.reason} onChange={(e) => setCb({ ...cb, reason: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label htmlFor="cb-date">{t("biDate")}</Label><Input id="cb-date" type="date" max={today} value={cb.date} onChange={(e) => setCb({ ...cb, date: e.target.value })} /></div>
+          <p className="rounded-2xl bg-warning-soft p-3 text-xs text-warning-foreground">{t("trChargebackRule")}</p>
         </div>
       </DataTableEntityFormSheet>
       <StepUpDialog open={!!approving} onOpenChange={(v) => !v && setApproving(null)} action={t("trApproveStepUp")} onConfirmed={() => approving && m.approveRefund.mutate(approving)} />

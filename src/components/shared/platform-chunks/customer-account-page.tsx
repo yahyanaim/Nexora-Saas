@@ -179,6 +179,8 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
             <div className="mt-4">
               <div className="mb-1 flex justify-between text-sm"><span>{t("pfSeatsCol")}</span><span className="tabular-nums">{limit ? `${c.seatsUsed} / ${limit}` : t("pfUnlimited", { count: c.seatsUsed })}</span></div>
               {limit && <Progress value={Math.min(100, (c.seatsUsed / limit) * 100)} aria-label={t("pfSeatsCol")} className={cn("h-2", c.seatsUsed >= limit && "[&>div]:bg-warning")} />}
+              {/* SUB-09: the notice sent to the company's administrator this period */}
+              {limit && c.seatsUsed >= limit && c.seatsFullNotice && <p className="mt-1 text-xs text-warning-foreground">{t("cuSeatsNoticeSent", { date: date(c.seatsFullNotice.at) })}</p>}
             </div>
             <p className="mt-4 text-xs text-muted-foreground">{t("cuNoBusinessData")}</p>
           </section>

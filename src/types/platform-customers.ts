@@ -42,6 +42,8 @@ export interface CustomerAccount {
   plan: NexoraPlanId
   billing: "monthly" | "yearly"
   seatsUsed: number
+  /** SUB-09: the seats-full notice sent to the administrator, once per billing period */
+  seatsFullNotice?: { period: string; at: string; used: number; limit: number }
   status: LifecycleStatus
   /** The workspace can be read but not changed (trial ended, dunning day 14, suspension) */
   readOnly: boolean

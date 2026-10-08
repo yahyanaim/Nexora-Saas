@@ -179,6 +179,26 @@ export async function listAuditApi(): Promise<ConsoleAuditEvent[]> {
   return [...auditStore.list(PLATFORM_WS)].sort((a, b) => b.at.localeCompare(a.at))
 }
 
+/**
+ * STF-03: a team member without two-factor sees only the set-up page; the
+ * code from their authenticator app turns it on (demo: any six digits).
+ */
+export async function enableTwoFactorApi(staffId: string, code: string): Promise<PlatformStaff> {
+  const me = staffStore.get(PLATFORM_WS, staffId)
+  if (!me || me.status !== "active") throw new Error("This team member no longer exists")
+  if (!/^\d{6}$/.test(code.trim())) throw new Error("Enter the 6-digit code from your authenticator app")
+  if (me.twoFactor) return me
+  const updated = staffStore.update(PLATFORM_WS, staffId, { twoFactor: true })
+  audit({ id: me.id, name: me.name, role: me.role }, "staff.two_factor_enabled", "staff", me.name, { before: "off", after: "on" })
+  return updated
+}
+
+/** USR-08, AUD-07: the directory export is for platform owners and is itself recorded. */
+export async function recordDirectoryExportApi(actor: ConsoleActor, rows: number): Promise<void> {
+  if (!consoleCan(actor.role, ConsoleCapability.EXPORT_AUDIT)) throw new Error(ERR_FORBIDDEN)
+  audit(actor, "directory.exported", "user", `${rows} people`)
+}
+
 /** AUD-03, AUD-07: owners only, and the export itself is recorded. */
 export async function recordAuditExportApi(actor: ConsoleActor, rows: number): Promise<void> {
   if (!consoleCan(actor.role, ConsoleCapability.EXPORT_AUDIT)) throw new Error(ERR_FORBIDDEN)

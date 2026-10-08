@@ -9,6 +9,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "prestart": "node scripts/sync-docs.mjs",
     "lint": "eslint --max-warnings 0",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
@@ -17,7 +18,11 @@
     "i18n:check": "node scripts/check-i18n-sync.mjs",
     "prebuild": "node scripts/prebuild.js && node scripts/sync-docs.mjs",
     "predev": "node scripts/sync-docs.mjs",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "check:js-budget": "node scripts/check-js-budget.mjs",
+    "check:images": "node scripts/check-images.mjs",
+    "check:build-scripts": "node scripts/check-build-scripts.mjs",
+    "a11y:console": "node scripts/a11y-console.mjs"
   },
   "dependencies": {
     "@carbon/icons-react": "^11.88.0",
@@ -74,6 +79,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.4",
     "@vitest/coverage-v8": "^4.1.11",
+    "axe-core": "^4.13.0",
     "dotenv": "^17.4.2",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.3.6",

@@ -245,7 +245,8 @@ export async function listDirectoryApi(): Promise<DirectoryUser[]> {
   const customers = customerStore.list(PLATFORM_WS)
   const suspensions = userSuspensionStore.list(PLATFORM_WS).filter((s) => !s.liftedAt)
   return consoleUsers()
-    .filter((u) => u.orgId && u.orgId !== "nexora")
+    // AUD-05: the people of a deleted company are gone from the directory
+    .filter((u) => u.orgId && u.orgId !== "nexora" && customers.find((c) => c.id === u.orgId)?.status !== "deleted")
     .map((u, i) => {
       const customer = customers.find((c) => c.id === u.orgId)
       const suspension = suspensions.find((s) => s.userId === u.id)

@@ -31,6 +31,9 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run i18n:check
+      # PERF-03, PERF-04
+      - run: npm run check:images
+      - run: npm run check:build-scripts
       - run: npx vitest run --coverage
 
   audit:
@@ -55,6 +58,41 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      # PERF-02: JavaScript per page; fails above the ceiling in scripts/js-budget.json
+      - run: npm run check:js-budget
+
+  a11y:
+    name: Accessibility of the console (axe)
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_API_URL: http://localhost:59999/api
+      NEXT_PUBLIC_DEMO_MODE: "true"
+      NEXT_PUBLIC_ALLOW_DEMO_BUILD: "true"
+      ALLOW_DEMO_BUILD: "true"
+      BASE_URL: http://localhost:3200
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Start the demo build
+        run: |
+          npx next start -p 3200 > start.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://localhost:3200/en/auth && exit 0; sleep 2; done
+          cat start.log; exit 1
+      # A11Y-03 to A11Y-05: every console page, critical and serious findings block
+      - run: npm run a11y:console
+      - name: The check fails on a seeded violation
+        run: |
+          if npm run a11y:console -- --seed-violation > seeded.log 2>&1; then
+            cat seeded.log; echo "::error::The accessibility check passed with a seeded violation"; exit 1
+          fi
+          grep -q "button-name" seeded.log || { cat seeded.log; exit 1; }
+          echo "The accessibility check blocks a seeded violation."
 
   demo-guard:
     name: Demo mode is blocked in production builds

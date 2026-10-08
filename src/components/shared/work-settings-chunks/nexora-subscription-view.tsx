@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils"
 import { AdminPermissionsPlatform as P } from "@/types/roles"
 import type { CustomerAccount } from "@/types/platform-customers"
 import { InvoiceStatusBadge } from "@/components/shared/platform-chunks/billing-shared"
+import { CompanyDataSection } from "./company-data-section"
 
 /**
  * My subscription for a company that Nexora bills (INV-07, PLA-02, SUB-01):
@@ -144,6 +145,8 @@ export function NexoraSubscriptionView({ customer, used }: { customer: CustomerA
           </ul>
         )}
       </section>
+
+      {isAdmin && <CompanyDataSection customer={customer} />}
     </div>
   )
 }

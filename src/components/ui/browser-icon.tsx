@@ -106,6 +106,8 @@ export function BrowserIcon({
             <img
               src={iconPath}
               alt={browserLabel}
+              width={32}
+              height={32}
               className={cn("object-contain", currentSize.browserIcon)}
             />
           ) : (

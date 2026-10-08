@@ -12,6 +12,7 @@ export function useBillingFormat() {
   return {
     money: (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA"),
     date: (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`)),
+    dateTime: (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso)),
   }
 }
 

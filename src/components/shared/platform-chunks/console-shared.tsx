@@ -69,6 +69,18 @@ export const ACTION_LABEL: Record<ConsoleAuditAction, string> = {
   "config.announcement_ended": "auaAnnEnded",
   "config.flag_changed": "auaFlag",
   "config.demo_reset": "auaDemoReset",
+  "config.retention_changed": "auaRetention",
+  "staff.two_factor_enabled": "auaTwoFactor",
+  "directory.exported": "auaDirectoryExported",
+  "payment.chargeback": "auaChargeback",
+  "billing.reconciled": "auaReconciled",
+  "data.export_requested": "auaDataExportRequested",
+  "data.export_fulfilled": "auaDataExportFulfilled",
+  "data.export_downloaded": "auaDataExportDownloaded",
+  "data.deletion_requested": "auaDeletionRequested",
+  "data.deletion_prepared": "auaDeletionPrepared",
+  "data.deletion_approved": "auaDeletionApproved",
+  "data.request_refused": "auaDataRefused",
 }
 
 export const ROLE_LABEL: Record<ConsoleRole, string> = {

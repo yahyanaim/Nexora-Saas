@@ -6,6 +6,7 @@ import type { BackupRun, Incident, IncidentSeverity, IncidentStatus, Maintenance
 import { PLATFORM_WS, audit, type ConsoleActor } from "./platform-console-api"
 import { customersCollection } from "./platform-customers-api"
 import { announcementsForWorkspace } from "./platform-config-api"
+import { checkSeatsFullApi, seatsFullNoticeFor } from "./platform-seats-api"
 
 /**
  * Platform health, incidents, planned maintenance and backups (cahier des
@@ -127,10 +128,14 @@ export async function listTenantErrorsApi(): Promise<TenantErrorStat[]> {
 
 /** INC-04, INC-07, CFG-01: the notices shown inside a company's Nexora (incidents first, then maintenance, then announcements). */
 export async function noticesForWorkspaceApi(workspaceId: string): Promise<PlatformNotice[]> {
+  await checkSeatsFullApi()
   const c = customersCollection.list(PLATFORM_WS).find((x) => x.demoWorkspaceId === workspaceId)
   if (!c) return []
   const news = announcementsForWorkspace(workspaceId).map((a): PlatformNotice => ({ id: a.id, kind: "announcement", number: "", title: a.title, text: a.message, severity: "sev4" }))
-  return [...noticesFor(incidents.list(PLATFORM_WS), c.id), ...news]
+  // SUB-09: seats full, for the administrator; the id carries the period so a new period shows it again
+  const seats = await seatsFullNoticeFor(c)
+  const seatNotice: PlatformNotice[] = seats ? [{ id: `seats_${c.id}_${seats.period}`, kind: "seats", number: "", title: "", text: "", severity: "sev4", used: seats.used, limit: seats.limit }] : []
+  return [...noticesFor(incidents.list(PLATFORM_WS), c.id), ...seatNotice, ...news]
 }
 
 /* ---------- health (INC-01, INC-05) ---------- */

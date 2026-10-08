@@ -46,6 +46,15 @@ export const DEMO_USERS: Record<string, AuthUser> = {
     emailVerified: true,
     avatar: "/avatars/sophia-vance.jpg",
   },
+  // A Nexora team member who has not set up two-factor yet (STF-03): signs in with this e-mail and any password
+  "yassine@nexora.io": {
+    id: "usr-demo-4",
+    name: "Yassine Amrani",
+    email: "yassine@nexora.io",
+    role: "admin",
+    platformOperator: true,
+    emailVerified: true,
+  },
   "sarah.chen@techcorp.com": {
     id: "usr-demo-3",
     name: "Sarah Chen",
