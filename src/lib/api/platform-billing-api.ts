@@ -23,6 +23,7 @@ import type { CustomerAccount } from "@/types/platform-customers"
 import type { DunningRun, NxCreditNote, NxInvoice, NxPayment, NxRefund, NxSubscription, PlanVersion, TaxRate } from "@/types/platform-billing"
 import { PLATFORM_WS, audit, type ConsoleActor } from "./platform-console-api"
 import { customersCollection } from "./platform-customers-api"
+import { sellerSnapshot } from "./platform-config-api"
 
 /**
  * Nexora's billing of its customers (cahier des charges §5.2–5.6, Lot A3), on
@@ -76,25 +77,26 @@ function seedBilling() {
   if (seeded) return seeded
   const today = today0()
   const drafts: Omit<NxInvoice, "number">[] = []
+  const monthBack = (iso: string) => isoOf(new Date(new Date(`${iso}T00:00:00Z`).setUTCMonth(new Date(`${iso}T00:00:00Z`).getUTCMonth() - 1)))
   for (const c of NEXORA_CUSTOMERS) {
-    if (c.status === "trial") continue
+    // trials, and trials that ended without a subscription, were never invoiced
+    if (c.status === "trial" || (c.trialStartedOn && !c.convertedOn)) continue
+    // the last period of a cancelled customer ends at its cancellation; others run up to today
+    const until = c.status === "cancelled" ? addDays(c.cancelledOn ?? addDays(c.since, 60), -1) : today
     const periods: { start: string; end: string }[] = []
-    if (c.status === "cancelled") {
-      let p = periodFrom(c.since, c.billing)
-      for (let i = 0; i < 2; i++) { periods.push(p); p = periodFrom(p.next, c.billing) }
-    } else {
-      let p = currentPeriod(c.since, c.billing, today)
-      const back = c.billing === "yearly" ? 1 : 3
-      for (let i = 0; i < back; i++) {
-        periods.unshift(p)
-        const prevStart = c.billing === "yearly" ? addDays(p.start, -365) : isoOf(new Date(new Date(`${p.start}T00:00:00Z`).setUTCMonth(new Date(`${p.start}T00:00:00Z`).getUTCMonth() - 1)))
-        if (prevStart < c.since) break
-        p = periodFrom(prevStart, c.billing)
-      }
+    let p = currentPeriod(c.since, c.billing, until)
+    // six months of history for monthly plans, two years for yearly ones
+    const back = c.billing === "yearly" ? 2 : 7
+    for (let i = 0; i < back; i++) {
+      periods.unshift(p)
+      const prevStart = c.billing === "yearly" ? addDays(p.start, -365) : monthBack(p.start)
+      if (prevStart < c.since) break
+      p = periodFrom(prevStart, c.billing)
     }
     const method = c.id === "cus_bina" || c.id === "cus_tanger" ? "transfer" : "card"
     periods.forEach((p, i) => {
-      const lines = subscriptionLines(c.plan, c.billing, planById(c.plan).monthly, c.country, p.start, p.end)
+      const plan = c.previousPlan && c.planChangedOn && p.start < c.planChangedOn ? c.previousPlan : c.plan
+      const lines = subscriptionLines(plan, c.billing, planById(plan).monthly, c.country, p.start, p.end)
       const t = invoiceTotals(lines)
       const latest = i === periods.length - 1
       const overdue = c.status === "past_due" && latest
@@ -108,10 +110,11 @@ function seedBilling() {
   }
   drafts.sort((a, b) => a.date.localeCompare(b.date) || a.customerName.localeCompare(b.customerName))
   const numbers: string[] = []
+  const seller = sellerSnapshot()
   const invoices = drafts.map((d) => {
     const number = nextNumber("NX", Number(d.date.slice(0, 4)), numbers)
     numbers.push(number)
-    return { ...d, number }
+    return { ...d, number, seller }
   })
   const payments: NxPayment[] = invoices.flatMap((i): NxPayment[] => {
     const method = i.customerId === "cus_bina" || i.customerId === "cus_tanger" ? "transfer" : "card"
@@ -186,7 +189,7 @@ function issueInvoice(c: CustomerAccount, kind: NxInvoice["kind"], lines: Invoic
   const t = invoiceTotals(lines)
   return invoices.create(PLATFORM_WS, {
     number, customerId: c.id, customerName: c.name, customerIce: c.ice, kind, date, dueDate: dueDate(date, method), periodFrom: from, periodTo: to,
-    lines, ...t, paid: 0, credited: 0, status: "issued", einvoice: "to_send",
+    lines, ...t, paid: 0, credited: 0, status: "issued", einvoice: "to_send", seller: sellerSnapshot(),
   })
 }
 
@@ -230,7 +233,7 @@ export async function startSubscriptionApi(actor: ConsoleActor, customerId: stri
     customerId, plan: input.plan, versionId: version.id, billing: input.billing, method: input.method, periodStart: p.start, periodEnd: p.end,
     history: [{ at: new Date().toISOString(), by: actor.name, kind: "started", to: input.plan }],
   })
-  setCustomer(customerId, { status: "active", plan: input.plan, billing: input.billing, readOnly: false, trialEndsOn: undefined, cancelsOn: undefined, since: c.status === "trial" ? today : c.since })
+  setCustomer(customerId, { status: "active", plan: input.plan, billing: input.billing, readOnly: false, trialEndsOn: undefined, cancelsOn: undefined, since: c.status === "trial" ? today : c.since, ...(c.status === "trial" ? { trialStartedOn: c.trialStartedOn ?? c.since, convertedOn: today } : {}) })
   const inv = issueInvoice(customer(customerId), "subscription", subscriptionLines(input.plan, input.billing, version.monthly, c.country, p.start, p.end), p.start, p.end, input.method, today)
   if (input.method === "card") collectByCard(inv, today, cardOutcome)
   audit(actor, "subscription.started", "subscription", c.name, { after: `${planById(input.plan).name} · ${input.billing} · ${input.method}`, customerId })
@@ -281,7 +284,7 @@ export async function runBillingJobsApi(actor: ConsoleActor, today = today0(), c
       const c = customersCollection.get(PLATFORM_WS, s.customerId)
       if (!c || c.status === "cancelled" || c.status === "deleted") break
       if (c.cancelsOn && c.cancelsOn <= s.periodEnd) {
-        setCustomer(c.id, { status: "cancelled", readOnly: true, cancelsOn: undefined })
+        setCustomer(c.id, { status: "cancelled", readOnly: true, cancelsOn: undefined, cancelledOn: c.cancelsOn })
         break
       }
       const plan = s.scheduledPlan ?? s.plan

@@ -74,6 +74,15 @@ export interface NexoraCustomer {
   since: string
   /** End of the free trial, for trials */
   trialEndsOn?: string
+  /** yyyy-mm-dd: the free trial started (MET-04); absent for direct sales */
+  trialStartedOn?: string
+  /** yyyy-mm-dd: the trial became a paid subscription */
+  convertedOn?: string
+  /** yyyy-mm-dd: a cancellation took effect */
+  cancelledOn?: string
+  /** The plan before the last change, and when the change applied (MRR movements, MET-02) */
+  previousPlan?: NexoraPlanId
+  planChangedOn?: string
   admin: { name: string; email: string; avatar?: string }
   /** Other people of the company with an account */
   members: { name: string; email: string; avatar?: string; banned?: boolean }[]
@@ -82,13 +91,13 @@ export interface NexoraCustomer {
 export const NEXORA_CUSTOMERS: NexoraCustomer[] = [
   {
     id: "cus_atlas", workspaceId: "ws_atlas", name: "Atlas Consulting", city: "Casablanca", country: "MA", ice: "002873641000058",
-    plan: "business", billing: "monthly", seatsUsed: 12, status: "active", since: "2025-03-01",
+    plan: "business", billing: "monthly", seatsUsed: 12, status: "active", since: "2025-03-01", trialStartedOn: "2025-02-15", convertedOn: "2025-03-01", previousPlan: "starter", planChangedOn: "2026-08-01",
     admin: { name: "Alex Morgan", email: "alex.morgan@company.io", avatar: "/avatars/alex-morgan.jpg" },
     members: [{ name: "Karim Haddad", email: "karim@atlas.ma" }, { name: "Lina Moreau", email: "lina@atlas.ma" }, { name: "Yassine Alaoui", email: "yassine@atlas.ma" }],
   },
   {
     id: "cus_northwind", workspaceId: "ws_northwind", name: "Northwind Studio", city: "Austin", country: "US",
-    plan: "starter", billing: "yearly", seatsUsed: 4, status: "active", since: "2025-06-12",
+    plan: "starter", billing: "yearly", seatsUsed: 4, status: "active", since: "2025-06-12", trialStartedOn: "2025-06-01", convertedOn: "2025-06-12",
     admin: { name: "Sarah Chen", email: "sarah.chen@techcorp.com", avatar: "/avatars/sarah-chen.jpg" },
     members: [{ name: "Mateo Ruiz", email: "mateo@northwind.studio" }],
   },
@@ -100,33 +109,40 @@ export const NEXORA_CUSTOMERS: NexoraCustomer[] = [
   },
   {
     id: "cus_marrakech", name: "Marrakech Digital", city: "Marrakech", country: "MA", ice: "002511870000093",
-    plan: "business", billing: "monthly", seatsUsed: 17, status: "past_due", since: "2025-01-20",
+    plan: "business", billing: "monthly", seatsUsed: 17, status: "past_due", since: "2025-01-20", trialStartedOn: "2025-01-06", convertedOn: "2025-01-20",
     admin: { name: "Nadia El Fassi", email: "nadia@marrakechdigital.ma", avatar: "/avatars/maya-patel.jpg" },
     members: [{ name: "Reda Amrani", email: "reda@marrakechdigital.ma" }],
   },
   {
     id: "cus_tanger", name: "Tanger Logistics Conseil", city: "Tangier", country: "MA", ice: "003102947000016",
-    plan: "business", billing: "yearly", seatsUsed: 22, status: "active", since: "2025-09-08",
+    plan: "business", billing: "yearly", seatsUsed: 22, status: "active", since: "2025-09-08", trialStartedOn: "2025-08-28", convertedOn: "2025-09-08",
     admin: { name: "Youssef Berrada", email: "y.berrada@tlc.ma", avatar: "/avatars/james-wilson.jpg" },
     members: [{ name: "Imane Chraibi", email: "i.chraibi@tlc.ma" }],
   },
   {
     id: "cus_agadir", name: "Agadir Creative Studio", city: "Agadir", country: "MA",
-    plan: "starter", billing: "monthly", seatsUsed: 3, status: "trial", since: "2026-09-24", trialEndsOn: "2026-10-24",
+    plan: "starter", billing: "monthly", seatsUsed: 3, status: "trial", since: "2026-09-24", trialEndsOn: "2026-10-24", trialStartedOn: "2026-09-24",
     admin: { name: "Meryem Ouazzani", email: "meryem@agadircreative.ma", avatar: "/avatars/rachel-thorne.jpg" },
     members: [],
   },
   {
     id: "cus_fes", name: "Fès Audit & Associés", city: "Fez", country: "MA", ice: "002064519000082",
-    plan: "starter", billing: "monthly", seatsUsed: 5, status: "cancelled", since: "2025-02-15",
+    plan: "starter", billing: "monthly", seatsUsed: 5, status: "cancelled", since: "2025-02-15", trialStartedOn: "2025-02-03", convertedOn: "2025-02-15", cancelledOn: "2026-08-15",
     admin: { name: "Driss Kettani", email: "d.kettani@fesaudit.ma", avatar: "/avatars/viktor-reznov.jpg" },
     members: [{ name: "Ali Raji", email: "spam.bot@mailinator.com", banned: true }],
   },
   {
     id: "cus_lyon", name: "Lumière Conseil", city: "Lyon", country: "FR",
-    plan: "business", billing: "monthly", seatsUsed: 9, status: "trial", since: "2026-10-01", trialEndsOn: "2026-10-31",
+    plan: "business", billing: "monthly", seatsUsed: 9, status: "trial", since: "2026-10-01", trialEndsOn: "2026-10-31", trialStartedOn: "2026-10-01",
     admin: { name: "Lucas Dubois", email: "lucas@lumiere-conseil.fr", avatar: "/avatars/lucas-dubois.jpg" },
     members: [{ name: "Elena Rostova", email: "elena@lumiere-conseil.fr", avatar: "/avatars/elena-rostova.jpg" }],
+  },
+  {
+    // A trial that ended without a subscription (MET-04)
+    id: "cus_oujda", name: "Oujda Négoce", city: "Oujda", country: "MA",
+    plan: "starter", billing: "monthly", seatsUsed: 2, status: "cancelled", since: "2026-08-03", trialEndsOn: "2026-08-17", trialStartedOn: "2026-08-03", cancelledOn: "2026-08-17",
+    admin: { name: "Rachid Bennani", email: "r.bennani@oujdanegoce.ma" },
+    members: [],
   },
 ]
 

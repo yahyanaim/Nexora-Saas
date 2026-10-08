@@ -46,6 +46,11 @@ export interface CustomerAccount {
   trialEndsOn?: string
   /** A trial can be extended once by 7 days (D-02) */
   trialExtended?: boolean
+  /** yyyy-mm-dd, for trial conversion (MET-04): when the trial started and when it became paid */
+  trialStartedOn?: string
+  convertedOn?: string
+  /** yyyy-mm-dd: when a cancellation took effect */
+  cancelledOn?: string
   /** yyyy-mm-dd: cancellation takes effect at the end of the paid period (CUS-09) */
   cancelsOn?: string
   suspension?: CustomerSuspension

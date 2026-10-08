@@ -61,6 +61,12 @@ export const ACTION_LABEL: Record<ConsoleAuditAction, string> = {
   "maintenance.scheduled": "auaMntScheduled",
   "maintenance.updated": "auaMntUpdated",
   "backup.restore_tested": "auaRestoreTest",
+  "metrics.exported": "auaMetricsExported",
+  "config.identity_changed": "auaIdentity",
+  "config.announcement_created": "auaAnnCreated",
+  "config.announcement_ended": "auaAnnEnded",
+  "config.flag_changed": "auaFlag",
+  "config.demo_reset": "auaDemoReset",
 }
 
 export const ROLE_LABEL: Record<ConsoleRole, string> = {
