@@ -185,6 +185,7 @@ import {
   Store as LStore, ScrollText as LScrollText,
   LifeBuoy as LLifeBuoy, Headset as LHeadset, DoorOpen as LDoorOpen,
   HeartPulse as LHeartPulse, Siren as LSiren, Wrench as LWrench, Database as LDatabase, DatabaseBackup as LDatabaseBackup, Cog as LCog, CalendarClock as LCalendarClock,
+  Scale as LScale, FolderLock as LFolderLock,
 } from "lucide-react"
 
 export type LucideIcon = React.ComponentType<{ className?: string; size?: number | string; [key: string]: unknown }>
@@ -409,6 +410,8 @@ export const HeartPulse = icon(LHeartPulse, "HeartPulse")
 export const Siren = icon(LSiren, "Siren")
 export const Wrench = icon(LWrench, "Wrench")
 export const Database = icon(LDatabase, "Database")
+export const Scale = icon(LScale, "Scale")
+export const FolderLock = icon(LFolderLock, "FolderLock")
 export const DatabaseBackup = icon(LDatabaseBackup, "DatabaseBackup")
 export const Cog = icon(LCog, "Cog")
 export const CalendarClock = icon(LCalendarClock, "CalendarClock")

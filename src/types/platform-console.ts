@@ -145,6 +145,18 @@ export type ConsoleAuditAction =
   | "config.announcement_ended"
   | "config.flag_changed"
   | "config.demo_reset"
+  | "config.retention_changed"
+  | "staff.two_factor_enabled"
+  | "directory.exported"
+  | "payment.chargeback"
+  | "billing.reconciled"
+  | "data.export_requested"
+  | "data.export_fulfilled"
+  | "data.export_downloaded"
+  | "data.deletion_requested"
+  | "data.deletion_prepared"
+  | "data.deletion_approved"
+  | "data.request_refused"
 
 /** Append-only (AUD-01, AUD-02): no role can edit or delete an event. */
 export interface ConsoleAuditEvent {
@@ -156,7 +168,7 @@ export interface ConsoleAuditEvent {
   actorRole: ConsoleRole | "customer"
   action: ConsoleAuditAction
   /** Kind and label of what was acted on, e.g. "staff" / "Liam O'Connor" */
-  targetType: "staff" | "session" | "customer" | "user" | "support" | "subscription" | "invoice" | "payment" | "audit" | "console" | "health" | "incident" | "backup" | "metrics" | "config"
+  targetType: "staff" | "session" | "customer" | "user" | "support" | "subscription" | "invoice" | "payment" | "audit" | "console" | "health" | "incident" | "backup" | "metrics" | "config" | "data"
   targetLabel: string
   customerId?: string
   before?: string

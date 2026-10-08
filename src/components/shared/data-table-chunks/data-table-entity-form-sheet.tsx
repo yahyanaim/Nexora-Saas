@@ -25,6 +25,8 @@ interface EntityFormSheetProps {
     create?: string
     edit?: string
   }
+  /** For a read-only panel: only the close button is shown */
+  hideSubmit?: boolean
   children: React.ReactNode
 }
 
@@ -38,6 +40,7 @@ export function DataTableEntityFormSheet({
   isSubmitting,
   onSubmit,
   submitLabel,
+  hideSubmit,
   children,
 }: EntityFormSheetProps) {
   const t = useTranslations()
@@ -62,9 +65,9 @@ export function DataTableEntityFormSheet({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            {t("cancel")}
+            {hideSubmit ? t("close") : t("cancel")}
           </Button>
-          <Button
+          {!hideSubmit && <Button
             variant={"primary"}
             onClick={onSubmit}
             disabled={isSubmitting}
@@ -74,7 +77,7 @@ export function DataTableEntityFormSheet({
             {mode === "create"
               ? (submitLabel?.create ?? t("create"))
               : (submitLabel?.edit ?? t("saveChanges"))}
-          </Button>
+          </Button>}
         </SheetFooter>
       </SheetContent>
     </Sheet>

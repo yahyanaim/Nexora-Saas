@@ -22,6 +22,7 @@ import { WorkspaceViewBanner } from "./platform-chunks/workspace-view-banner"
 import { WorkspaceStatusBanner } from "./platform-chunks/workspace-status-banner"
 import { SupportSessionBanner } from "./platform-chunks/support-session-banner"
 import { PlatformNoticeBanner } from "./platform-chunks/platform-notice-banner"
+import { TwoFactorGate } from "./platform-chunks/two-factor-gate"
 
 interface Props {
   children: React.ReactNode
@@ -58,7 +59,7 @@ export const DashboardLayout = ({ children }: Props) => {
       <div className="flex min-h-0 flex-1 md:ps-6">
         <DashboardRail className="my-6 hidden md:flex" />
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto focus:outline-none">
-          <ErrorBoundary>{outsidePortal ? <PortalRedirect /> : blocked ? <PlatformOnly /> : denied ? <NoAccess /> : <>{onConsole && <ConsoleStrip />}{viewingWorkspace && <WorkspaceViewBanner />}{!onConsole && <WorkspaceStatusBanner />}{!onConsole && <PlatformNoticeBanner />}{!onConsole && !viewingWorkspace && <SupportSessionBanner />}{children}</>}</ErrorBoundary>
+          <ErrorBoundary>{outsidePortal ? <PortalRedirect /> : blocked ? <PlatformOnly /> : denied ? <NoAccess /> : onConsole ? <TwoFactorGate><ConsoleStrip />{children}</TwoFactorGate> : <>{viewingWorkspace && <WorkspaceViewBanner />}<WorkspaceStatusBanner /><PlatformNoticeBanner />{!viewingWorkspace && <SupportSessionBanner />}{children}</>}</ErrorBoundary>
           <InstallHint />
         </main>
       </div>

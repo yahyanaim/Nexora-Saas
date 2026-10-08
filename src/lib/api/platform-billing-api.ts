@@ -21,7 +21,8 @@ import {
 } from "@/lib/platform/billing"
 import { ConsoleCapability as C, ConsoleRole } from "@/types/platform-console"
 import type { CustomerAccount } from "@/types/platform-customers"
-import type { DunningRun, NxCreditNote, NxInvoice, NxPayment, NxRefund, NxSubscription, PlanVersion, SubscriptionDiscount, TaxRate } from "@/types/platform-billing"
+import type { DunningRun, NxCreditNote, NxInvoice, NxPayment, NxRefund, NxSettlement, NxSubscription, PlanVersion, ReconciliationRun, SubscriptionDiscount, TaxRate } from "@/types/platform-billing"
+import { reconcile, settlementFee } from "@/lib/platform/reconciliation"
 import { PLATFORM_WS, audit, auditCustomer, type ConsoleActor } from "./platform-console-api"
 import { recordAudit } from "@/lib/workforce/audit"
 import { customersCollection, seatsInUse } from "./platform-customers-api"
@@ -156,6 +157,26 @@ const refunds = createCollection<NxRefund>("platform-refunds", "ref", () => [])
 const dunningRuns = createCollection<DunningRun>("platform-dunning", "dun", () => seedBilling().dunning)
 const taxes = createCollection<TaxRate>("platform-taxes", "tax", seedTaxes)
 
+/** PAY-09: the card provider's daily settlements, as it reports them (demo: built from the card payments). */
+const seedSettlements = (): NxSettlement[] => {
+  const byDay = new Map<string, number>()
+  for (const p of seedBilling().payments) if (p.method === "card" && p.status === "succeeded") byDay.set(p.date, round2((byDay.get(p.date) ?? 0) + p.amount))
+  return [...byDay.entries()].map(([date, gross]) => ({ ...stamp(), id: `stl_${date}`, date, provider: "CMI", reference: `CMI-${date.replaceAll("-", "")}`, gross, fee: settlementFee(gross), net: round2(gross - settlementFee(gross)) }))
+}
+const settlements = createCollection<NxSettlement>("platform-settlements", "stl", seedSettlements)
+const reconciliations = createCollection<ReconciliationRun>("platform-reconciliations", "rec", () => [])
+
+/** Demo stand-in for the provider: each card movement lands in that day's settlement. */
+function providerRecord(date: string, amount: number) {
+  const s = settlements.list(PLATFORM_WS).find((x) => x.date === date)
+  if (!s) {
+    settlements.create(PLATFORM_WS, { date, provider: "CMI", reference: `CMI-${date.replaceAll("-", "")}`, gross: round2(amount), fee: settlementFee(amount), net: round2(amount - settlementFee(amount)) })
+    return
+  }
+  const gross = round2(s.gross + amount)
+  settlements.update(PLATFORM_WS, s.id, { gross, fee: settlementFee(gross), net: round2(gross - settlementFee(gross)) })
+}
+
 const ERR_FORBIDDEN = "Your console role does not allow this"
 const need = (actor: ConsoleActor, cap: C) => {
   if (!consoleCan(actor.role, cap)) throw new Error(ERR_FORBIDDEN)
@@ -184,6 +205,8 @@ export const listPaymentsApi = async () => [...payments.list(PLATFORM_WS)].sort(
 export const listRefundsApi = async () => refunds.list(PLATFORM_WS)
 export const listDunningApi = async () => dunningRuns.list(PLATFORM_WS)
 export const listTaxRatesApi = async () => taxes.list(PLATFORM_WS)
+export const listSettlementsApi = async () => [...settlements.list(PLATFORM_WS)].sort((a, b) => b.date.localeCompare(a.date))
+export const listReconciliationsApi = async () => [...reconciliations.list(PLATFORM_WS)].sort((a, b) => b.day.localeCompare(a.day) || b.createdAt.localeCompare(a.createdAt))
 
 /* ---------- plans (§5.2) ---------- */
 
@@ -219,6 +242,7 @@ function applyPayment(i: NxInvoice, amount: number, method: "card" | "transfer",
   const status: NxInvoice["status"] = round2(i.total - paid - i.credited) <= 0 ? "paid" : "partly_paid"
   invoices.update(PLATFORM_WS, i.id, { paid, status, failedOn: status === "paid" ? undefined : i.failedOn })
   const pay = payments.create(PLATFORM_WS, { customerId: i.customerId, customerName: i.customerName, invoiceId: i.id, invoiceNumber: i.number, method, amount, date, status: "succeeded", reference })
+  if (method === "card") providerRecord(date, amount)
   const c = customersCollection.get(PLATFORM_WS, i.customerId)
   const stillOverdue = invoices.list(PLATFORM_WS).some((x) => x.customerId === i.customerId && x.status === "overdue")
   if (c && !stillOverdue && (c.status === "payment_overdue" || (c.status === "suspended" && c.suspension?.reason.startsWith("Unpaid")))) {
@@ -354,8 +378,10 @@ export async function runBillingJobsApi(actor: ConsoleActor, today = today0(), c
       if (invoices.get(PLATFORM_WS, inv.id)!.status !== "overdue") break
     }
   }
-  audit(actor, "billing.jobs_run", "console", `${renewed} renewals · ${steps} dunning steps`, { after: today })
-  return { renewed, steps }
+  // PAY-09: the daily reconciliation of the day before
+  const check = runReconciliation("Billing jobs", addDays(today, -1))
+  audit(actor, "billing.jobs_run", "console", `${renewed} renewals · ${steps} dunning steps · ${check.differences.length} reconciliation differences`, { after: today })
+  return { renewed, steps, differences: check.differences.length }
 }
 
 export { listPlanContentApi, updatePlanContentApi, syncPlanContent } from "./platform-plans-api"
@@ -536,6 +562,54 @@ export async function assignTransferApi(actor: ConsoleActor, paymentId: string, 
   const applied = applyPayment(inv, pay.amount, "transfer", pay.date, pay.reference)
   audit(actor, "payment.matched", "payment", `${inv.number} · ${inv.customerName}`, { after: `${pay.amount} MAD`, customerId: inv.customerId })
   return applied
+}
+
+/**
+ * PAY-08: the bank took back a card payment. The chargeback is recorded with
+ * its reason, the invoice is unpaid again and dunning starts from that day.
+ */
+export async function recordChargebackApi(actor: ConsoleActor, paymentId: string, input: { reason: string; date?: string }, today = today0()) {
+  need(actor, C.CREDIT_NOTES)
+  const p = payments.get(PLATFORM_WS, paymentId)
+  if (!p || p.status !== "succeeded" || p.method !== "card" || !p.invoiceId) throw new Error("Only a card payment received for an invoice can be charged back")
+  if (p.chargedBackOn) throw new Error("This payment was already charged back")
+  if (input.reason.trim().length < 3) throw new Error("Give the bank's reason for the chargeback")
+  const inv = invoices.get(PLATFORM_WS, p.invoiceId)
+  if (!inv) throw new Error("This invoice no longer exists")
+  const date = input.date && input.date <= today ? input.date : today
+  payments.update(PLATFORM_WS, p.id, { chargedBackOn: date })
+  const back = payments.create(PLATFORM_WS, {
+    customerId: p.customerId, customerName: p.customerName, invoiceId: p.invoiceId, invoiceNumber: p.invoiceNumber, method: "card", amount: -p.amount,
+    date, status: "chargeback", reference: `Chargeback ${p.reference}`, chargebackOf: p.id, reason: input.reason.trim(),
+  })
+  providerRecord(date, -p.amount)
+  const paid = round2(inv.paid - p.amount)
+  invoices.update(PLATFORM_WS, inv.id, { paid, status: paid <= 0 ? "overdue" : "partly_paid", failedOn: date })
+  const c = customersCollection.get(PLATFORM_WS, inv.customerId)
+  if (c && c.status === "active") setCustomer(c.id, { status: "payment_overdue" })
+  audit(actor, "payment.chargeback", "payment", `${inv.number} · ${inv.customerName}`, { before: `paid ${inv.paid} MAD`, after: `chargeback ${p.amount} MAD · ${input.reason.trim()}`, customerId: inv.customerId })
+  return back
+}
+
+function runReconciliation(by: string, day: string) {
+  const r = reconcile({ invoices: invoices.list(PLATFORM_WS), payments: payments.list(PLATFORM_WS), settlements: settlements.list(PLATFORM_WS), refunds: refunds.list(PLATFORM_WS), day })
+  return reconciliations.create(PLATFORM_WS, { day, by, ...r })
+}
+
+/** PAY-09: runs the comparison for a day on demand (the billing jobs run it every day for the day before). */
+export async function runReconciliationApi(actor: ConsoleActor, day = addDays(today0(), -1)) {
+  need(actor, C.CREDIT_NOTES)
+  const run = runReconciliation(actor.name, day)
+  audit(actor, "billing.reconciled", "console", `${day} · ${run.differences.length} differences`, { after: `${run.checked.invoices} invoices · ${run.checked.payments} payments · ${run.checked.settlements} settlements` })
+  return run
+}
+
+/** Demo only: makes the provider report a different amount, to show how a difference is listed. */
+export async function simulateSettlementGapApi(actor: ConsoleActor, amount = 100) {
+  need(actor, C.CREDIT_NOTES)
+  const s = [...settlements.list(PLATFORM_WS)].sort((a, b) => b.date.localeCompare(a.date))[0]
+  if (!s) throw new Error("No settlement to change")
+  return settlements.update(PLATFORM_WS, s.id, { gross: round2(s.gross - amount), net: round2(s.net - amount) })
 }
 
 /* ---------- credit notes and refunds (INV-04, PAY-07) ---------- */

@@ -17,6 +17,8 @@ import {
   ChartLine,
   SettingsAdjust,
   Siren,
+  Scale,
+  FolderLock,
   ShieldUser,
   FolderKanban,
   Files,
@@ -401,6 +403,12 @@ export function useDashboardNav() {
             icon: UserX,
             descriptionKey: "pageDescSuspensions",
           },
+          {
+            title: t("dataRequestsNav"),
+            url: "/dashboard/data-requests",
+            icon: FolderLock,
+            descriptionKey: "pageDescDataRequests",
+          },
         ],
       },
       {
@@ -438,6 +446,12 @@ export function useDashboardNav() {
             url: "/dashboard/transactions",
             icon: ArrowLeftRight,
             descriptionKey: "pageDescTransactions",
+          },
+          {
+            title: t("reconciliationNav"),
+            url: "/dashboard/reconciliation",
+            icon: Scale,
+            descriptionKey: "pageDescReconciliation",
           },
           {
             title: t("taxes"),

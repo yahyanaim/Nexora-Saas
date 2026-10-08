@@ -866,13 +866,13 @@ A follow-up release on 8 October 2026 also updated the image library (`sharp`, 0
 |---|---|---|---|
 | A11Y-01 | Table headers have visible text, not only a hidden label | S | Automated check reports no header finding. **Delivered 8 Oct 2026** (action columns titled "Actions") |
 | A11Y-02 | Project tabs and console tabs use proper tab roles with arrow-key navigation | S | Screen reader announces tabs and selection. **Delivered 8 Oct 2026** (shared tabs component: roles, arrow keys, Home/End) |
-| A11Y-03 | The automated check runs on every console page in continuous integration and blocks critical and serious findings | M | Pipeline fails on a seeded violation |
-| A11Y-04 | The "Skip to content" link and heading order rules apply to every console page | M | Keyboard pass on all console screens |
-| A11Y-05 | Icon-only buttons in the console have accessible names | M | No unnamed button in the check |
+| A11Y-03 | The automated check runs on every console page in continuous integration and blocks critical and serious findings | M | Pipeline fails on a seeded violation. **Delivered 8 Oct 2026** (`npm run a11y:console` in the CI `a11y` job, with a seeded-violation step) |
+| A11Y-04 | The "Skip to content" link and heading order rules apply to every console page | M | Keyboard pass on all console screens. **Delivered 8 Oct 2026** (checked on all 22 console pages by the same job) |
+| A11Y-05 | Icon-only buttons in the console have accessible names | M | No unnamed button in the check. **Delivered 8 Oct 2026** (button-name blocks the job) |
 | PERF-01 | The chart library on the Overview page and on console metrics loads only when a chart is shown | S | Overview JavaScript drops below 500 KB compressed. **Partly delivered 8 Oct 2026**: Overview charts load after the page shows (671 → 563 KB); the 500 KB target remains and console metrics must follow the same rule |
-| PERF-02 | A JavaScript budget per page is enforced in the build (500 KB compressed) | S | Build fails above the budget |
-| PERF-03 | New images use WebP or AVIF with explicit sizes | M | Image check in review |
-| PERF-04 | The documentation copy step stays in the build and start scripts | M | Removing it fails the build check |
+| PERF-02 | A JavaScript budget per page is enforced in the build (500 KB compressed) | S | Build fails above the budget. **Partly delivered 8 Oct 2026**: `npm run check:js-budget` fails above a 610 KB ceiling and lists the 62 pages between 500 and 605 KB; the 500 KB target needs the shared shell (≈ 420 KB) split |
+| PERF-03 | New images use WebP or AVIF with explicit sizes | M | Image check in review. **Delivered 8 Oct 2026** (`npm run check:images` in CI) |
+| PERF-04 | The documentation copy step stays in the build and start scripts | M | Removing it fails the build check. **Delivered 8 Oct 2026** (`npm run check:build-scripts`; `prestart` added) |
 
 ## 15. Phasing and Delivery Plan
 

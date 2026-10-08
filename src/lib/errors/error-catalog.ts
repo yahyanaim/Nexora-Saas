@@ -334,6 +334,25 @@ export const ERROR_KEYS: Record<string, string> = {
   "You already have a report with this name": "err_youAlreadyHaveAReportWith",
   "You can't approve your own request": "err_youCanTApproveYourOwn",
   "Storage is full; this change was not saved": "err_storageFull",
+  "Only a card payment received for an invoice can be charged back": "err_chargebackCardOnly",
+  "This payment was already charged back": "err_chargebackDone",
+  "Give the bank's reason for the chargeback": "err_chargebackReason",
+  "No settlement to change": "err_noSettlement",
+  "Enter the 6-digit code from your authenticator app": "err_totpCode",
+  "This request no longer exists": "err_requestGone",
+  "An export is already being prepared": "err_exportOpen",
+  "Say why you want the account deleted": "err_deletionReason",
+  "A deletion request is already open": "err_deletionOpen",
+  "This request is not waiting for an export": "err_notWaitingExport",
+  "This export is not ready": "err_exportNotReady",
+  "This export has expired; ask for a new one": "err_exportExpired",
+  "This request is not waiting to be prepared": "err_notWaitingPrepare",
+  "Cancel the subscription before deleting the account": "err_cancelBeforeDelete",
+  "This request is not waiting for approval": "err_notWaitingApproval",
+  "Another team member must approve this deletion": "err_deletionOtherApprover",
+  "This request is already closed": "err_requestClosed",
+  "Give the reason, the company will read it": "err_refuseReason",
+  "Audit events are kept between 5 and 30 years": "err_auditYears",
 }
 
 /** Messages with values: each captured group becomes the value named at the same position in `names`. */
@@ -347,4 +366,5 @@ export const ERROR_PATTERNS: { pattern: RegExp; key: string; names: string[] }[]
   { pattern: /^Two fields are named "(.+)"$/, key: "err_fieldDuplicate", names: ["name"] },
   { pattern: /^This plan allows (\d+) users and (\d+) have access; remove access first$/, key: "err_seatsUsed", names: ["seats", "used"] },
   { pattern: /^Only ([\d.]+) day\(s\) left in (\d+); this request needs ([\d.]+)$/, key: "err_leaveBalance", names: ["left", "year", "need"] },
+  { pattern: /^The company still owes (\d+) invoice\(s\): settle or credit them first$/, key: "err_stillOwes", names: ["count"] },
 ]

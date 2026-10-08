@@ -12,11 +12,12 @@ import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Ban, Mail, ShieldCheck, UserX, Users } from "@/components/ui/carbon/icons"
+import { Ban, DownloadIcon, Mail, ShieldCheck, UserX, Users } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { Link } from "@/i18n/navigation"
-import { useConsoleActor, useConsoleDirectory, useConsoleMutations } from "@/hooks/platform/use-platform-console"
+import { useConsoleActor, useConsoleDirectory, useConsoleMutations, useRecordDirectoryExport } from "@/hooks/platform/use-platform-console"
+import { exportToCsv } from "@/lib/utils/export-data"
 import { consoleCan, needsStepUp } from "@/lib/platform/console-roles"
 import type { DirectoryUser } from "@/lib/api/platform-customers-api"
 import { cn } from "@/lib/utils"
@@ -43,12 +44,31 @@ export default function ConsoleDirectoryPage() {
   const [target, setTarget] = useState<DirectoryUser | null>(null)
   const [form, setForm] = useState({ reason: "", until: "" })
   const [stepUp, setStepUp] = useState(false)
+  const [exporting, setExporting] = useState(false)
+  const recordExport = useRecordDirectoryExport()
 
   const canSuspend = consoleCan(actor?.role, C.SUSPEND)
+  // USR-08: platform owners only, with the authenticator code; the export is in the audit trail (AUD-07)
+  const canExport = consoleCan(actor?.role, C.EXPORT_AUDIT)
   const canReset = !!actor && [ConsoleRole.OWNER, ConsoleRole.ADMIN, ConsoleRole.SUPPORT].includes(actor.role)
   const when = (iso?: string) => (iso ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(iso)) : "—")
   const q = query.trim().toLowerCase()
   const rows = people.filter((u) => (status === ALL || u.status === status) && (!q || `${u.name} ${u.email} ${u.company}`.toLowerCase().includes(q)))
+
+  const doExport = () => {
+    // SEC-14: every row carries who exported it and when
+    const stamp = new Date().toISOString()
+    const ok = exportToCsv(
+      rows.map((u) => ({ name: u.name, email: u.email, company: u.company, role: t(u.companyRole === "owner" ? "usrRoleAdmin" : "usrRoleMember"), twoFactor: u.twoFactor ? "yes" : "no", status: t(`usrStatus_${u.status}`), lastSignIn: u.lastSignInAt ?? "", exportedBy: actor?.name ?? "", exportedAt: stamp })),
+      `nexora-directory-${stamp.slice(0, 10)}`,
+      [
+        { key: "name", label: t("usrPerson") }, { key: "email", label: t("email") }, { key: "company", label: t("pfCompany") }, { key: "role", label: t("usrCompanyRole") },
+        { key: "twoFactor", label: t("stf2faCol") }, { key: "status", label: t("status") }, { key: "lastSignIn", label: t("stfLastSignIn") },
+        { key: "exportedBy", label: t("usrExportedBy") }, { key: "exportedAt", label: t("usrExportedAt") },
+      ],
+    )
+    if (ok) recordExport.mutate(rows.length)
+  }
 
   const cards: MetricCardItem[] = [
     { key: "people", title: t("usrPeople"), value: people.filter((u) => u.status === "active").length, footer: { icon: Users, text: t("usrPeopleHint", { companies: new Set(people.map((u) => u.customerId)).size }) } },
@@ -58,8 +78,9 @@ export default function ConsoleDirectoryPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <PageHeader />
+      <PageHeader actions={canExport ? <Button variant="outline" onClick={() => setExporting(true)} disabled={rows.length === 0}><DownloadIcon className="size-4" />{t("usrExport")}</Button> : undefined} />
       <MetricCardGrid cards={cards} columnsClassName="grid-cols-1 sm:grid-cols-3" />
+      <StepUpDialog open={exporting} onOpenChange={setExporting} action={t("usrExportConfirm", { count: rows.length })} onConfirmed={doExport} />
       <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
         <div className="mb-4 flex flex-wrap items-end gap-3">
           <Input className="w-full sm:w-72" placeholder={t("usrSearch")} aria-label={t("usrSearch")} value={query} onChange={(e) => setQuery(e.target.value)} />
