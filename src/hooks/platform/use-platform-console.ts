@@ -33,6 +33,8 @@ import {
   suspendCustomerApi,
   suspendUserApi,
   undoCancellationApi,
+  updateCustomerApi,
+  type CustomerIdentityInput,
   type DirectoryUser,
 } from "@/lib/api/platform-customers-api"
 import type { ConsoleRole } from "@/types/platform-console"
@@ -93,6 +95,7 @@ export function useConsoleMutations() {
     cancel: useAction((a, id: string) => cancelCustomerApi(a, id), "cuCancelled"),
     undoCancel: useAction((a, id: string) => undoCancellationApi(a, id), "cuCancelUndone"),
     addNote: useAction((a, v: { id: string; text: string }) => addCustomerNoteApi(a, v.id, v.text), "cuNoteAdded"),
+    updateCustomer: useAction((a, v: { id: string; input: CustomerIdentityInput }) => updateCustomerApi(a, v.id, v.input), "cuUpdated"),
     passwordReset: useAction((a, u: DirectoryUser) => sendPasswordResetApi(a, u), "usrResetSent"),
     suspendUser: useAction((a, v: { user: DirectoryUser; reason: string; until?: string }) => suspendUserApi(a, v.user, v), "usrSuspendedToast"),
     liftUser: useAction((a, id: string) => liftUserSuspensionApi(a, id), "usrLifted"),

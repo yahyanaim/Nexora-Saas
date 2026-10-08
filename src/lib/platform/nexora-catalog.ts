@@ -21,6 +21,8 @@ export interface NexoraPlan {
   description: string
   featured: boolean
   features: string[]
+  /** PLA-07: no longer sold; existing subscriptions continue */
+  retired?: boolean
 }
 
 export const NEXORA_PLANS: NexoraPlan[] = [
@@ -54,6 +56,30 @@ export const NEXORA_PLANS: NexoraPlan[] = [
 ]
 
 export const planById = (id: NexoraPlanId) => NEXORA_PLANS.find((p) => p.id === id)!
+
+/** What the owner can edit in a plan (PLA-02, PLA-07); the price changes through versions (PLA-03). */
+export interface PlanContent {
+  plan: NexoraPlanId
+  description: string
+  seats: number
+  features: string[]
+  retired: boolean
+}
+
+const DEFAULT_PLANS = NEXORA_PLANS.map((p) => ({ ...p, features: [...p.features] }))
+export const defaultPlanContent = (): PlanContent[] => DEFAULT_PLANS.map((p) => ({ plan: p.id, description: p.description, seats: p.seats, features: [...p.features], retired: false }))
+
+/** Applies the owner's edits to the catalogue every page reads, from the defaults each time. */
+export function applyPlanContent(list: PlanContent[]) {
+  for (const p of NEXORA_PLANS) {
+    const d = DEFAULT_PLANS.find((x) => x.id === p.id)!
+    const c = list.find((x) => x.plan === p.id)
+    Object.assign(p, { description: c?.description ?? d.description, seats: c?.seats ?? d.seats, features: [...(c?.features ?? d.features)], retired: c?.retired ?? false })
+  }
+}
+
+/** Plans a company can move to (PLA-07). */
+export const plansForSale = () => NEXORA_PLANS.filter((p) => !p.retired)
 
 export type CustomerStatus = "trial" | "active" | "past_due" | "cancelled"
 

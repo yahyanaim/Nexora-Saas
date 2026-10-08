@@ -134,9 +134,11 @@ describe("billing safeguards", () => {
   it("refuses downgrades below the seats in use and schedules others for renewal (SUB-03, SUB-04)", async () => {
     await expect(changePlanApi(owner, "cus_bina", "business")).rejects.toThrow(/Free 23 seats/)
     const r = await changePlanApi(owner, "cus_atlas", "starter").catch((e: Error) => e)
-    expect(String(r)).toMatch(/Free 7 seats/)
-    customersCollection.update(PLATFORM_WS, "cus_atlas", { seatsUsed: 4 })
-    const d = await changePlanApi(owner, "cus_atlas", "starter")
+    // Atlas has 6 people in Team access (the console counts them, SUB-01); Starter includes 5
+    expect(String(r)).toMatch(/Free 1 seats/)
+    // a company without a demo workspace uses its stored count
+    customersCollection.update(PLATFORM_WS, "cus_marrakech", { seatsUsed: 4 })
+    const d = await changePlanApi(owner, "cus_marrakech", "starter")
     expect(d.subscription.scheduledPlan).toBe("starter")
     expect(d.invoice).toBeNull()
   })

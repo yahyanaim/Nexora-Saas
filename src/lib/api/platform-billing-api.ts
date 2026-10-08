@@ -1,6 +1,7 @@
 import { createCollection } from "@/lib/workforce/demo-store"
 import { consoleCan } from "@/lib/platform/console-roles"
 import { NEXORA_CUSTOMERS, NEXORA_VAT_RATE, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
+import { syncPlanContent } from "./platform-plans-api"
 import {
   REFUND_SECOND_APPROVAL_ABOVE,
   addDays,
@@ -20,9 +21,10 @@ import {
 } from "@/lib/platform/billing"
 import { ConsoleCapability as C, ConsoleRole } from "@/types/platform-console"
 import type { CustomerAccount } from "@/types/platform-customers"
-import type { DunningRun, NxCreditNote, NxInvoice, NxPayment, NxRefund, NxSubscription, PlanVersion, TaxRate } from "@/types/platform-billing"
-import { PLATFORM_WS, audit, type ConsoleActor } from "./platform-console-api"
-import { customersCollection } from "./platform-customers-api"
+import type { DunningRun, NxCreditNote, NxInvoice, NxPayment, NxRefund, NxSubscription, PlanVersion, SubscriptionDiscount, TaxRate } from "@/types/platform-billing"
+import { PLATFORM_WS, audit, auditCustomer, type ConsoleActor } from "./platform-console-api"
+import { recordAudit } from "@/lib/workforce/audit"
+import { customersCollection, seatsInUse } from "./platform-customers-api"
 import { sellerSnapshot } from "./platform-config-api"
 
 /**
@@ -63,13 +65,23 @@ const seedSubscriptions = (): NxSubscription[] => {
   })
 }
 
-/** Lines of a subscription invoice (INV-03). */
-function subscriptionLines(plan: NexoraPlanId, billing: "monthly" | "yearly", monthly: number, country: string, from: string, to: string): InvoiceLine[] {
+/** PLA-08: what a discount takes off one invoice before VAT. */
+export function discountAmount(d: Pick<SubscriptionDiscount, "kind" | "value">, base: number) {
+  return round2(Math.min(base, d.kind === "percent" ? (base * d.value) / 100 : d.value))
+}
+
+/** Lines of a subscription invoice (INV-03), with the discount as its own line and reason (PLA-08). */
+function subscriptionLines(plan: NexoraPlanId, billing: "monthly" | "yearly", monthly: number, country: string, from: string, to: string, discount?: SubscriptionDiscount): InvoiceLine[] {
   const rate = vatRateFor(country)
-  return [{
+  const base = periodPrice(monthly, billing)
+  const lines: InvoiceLine[] = [{
     label: `Nexora ${planById(plan).name} · ${billing === "yearly" ? "12 months (10 charged)" : "1 month"} · ${from} → ${to}${rate === 0 ? " · exported service" : ""}`,
-    quantity: 1, unitPrice: periodPrice(monthly, billing), vatRate: rate,
+    quantity: 1, unitPrice: base, vatRate: rate,
   }]
+  if (discount && discount.invoicesLeft !== 0) {
+    lines.push({ label: `Discount ${discount.kind === "percent" ? `${discount.value}%` : `${discount.value} MAD`} · ${discount.reason}`, quantity: 1, unitPrice: -discountAmount(discount, base), vatRate: rate })
+  }
+  return lines
 }
 
 let seeded: { invoices: NxInvoice[]; payments: NxPayment[]; dunning: DunningRun[] } | null = null
@@ -85,8 +97,8 @@ function seedBilling() {
     const until = c.status === "cancelled" ? addDays(c.cancelledOn ?? addDays(c.since, 60), -1) : today
     const periods: { start: string; end: string }[] = []
     let p = currentPeriod(c.since, c.billing, until)
-    // six months of history for monthly plans, two years for yearly ones
-    const back = c.billing === "yearly" ? 2 : 7
+    // a year of history for monthly plans, two years for yearly ones (the metrics show twelve months)
+    const back = c.billing === "yearly" ? 2 : 13
     for (let i = 0; i < back; i++) {
       periods.unshift(p)
       const prevStart = c.billing === "yearly" ? addDays(p.start, -365) : monthBack(p.start)
@@ -158,8 +170,14 @@ const priceOf = (sub: Pick<NxSubscription, "versionId">) => versions.get(PLATFOR
 
 /* ---------- reads ---------- */
 
-export const listPlanVersionsApi = async () => [...versions.list(PLATFORM_WS)].sort((a, b) => a.plan.localeCompare(b.plan) || b.effectiveFrom.localeCompare(a.effectiveFrom))
-export const listSubscriptionsApi = async () => subscriptions.list(PLATFORM_WS)
+export const listPlanVersionsApi = async () => {
+  syncPlanContent()
+  return [...versions.list(PLATFORM_WS)].sort((a, b) => a.plan.localeCompare(b.plan) || b.effectiveFrom.localeCompare(a.effectiveFrom))
+}
+export const listSubscriptionsApi = async () => {
+  syncPlanContent()
+  return subscriptions.list(PLATFORM_WS)
+}
 export const listInvoicesApi = async () => [...invoices.list(PLATFORM_WS)].sort((a, b) => b.number.localeCompare(a.number))
 export const listCreditNotesApi = async () => [...creditNotes.list(PLATFORM_WS)].sort((a, b) => b.number.localeCompare(a.number))
 export const listPaymentsApi = async () => [...payments.list(PLATFORM_WS)].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
@@ -243,6 +261,10 @@ export async function startSubscriptionApi(actor: ConsoleActor, customerId: stri
 /** SUB-02 to SUB-04: upgrades now with a prorated invoice; downgrades wait for the renewal; never below the seats in use. */
 export async function changePlanApi(actor: ConsoleActor, customerId: string, plan: NexoraPlanId, today = today0(), cardOutcome: "ok" | "declined" = "ok") {
   need(actor, C.CHANGE_SUBSCRIPTION)
+  return changePlanCore({ actor }, customerId, plan, today, cardOutcome)
+}
+
+async function changePlanCore(by: ChangedBy, customerId: string, plan: NexoraPlanId, today: string, cardOutcome: "ok" | "declined") {
   const c = customer(customerId)
   const sub = subscriptions.list(PLATFORM_WS).find((s) => s.customerId === customerId)
   if (!sub) throw new Error("This customer has no subscription yet")
@@ -252,13 +274,15 @@ export async function changePlanApi(actor: ConsoleActor, customerId: string, pla
   const upgrade = version.monthly > oldPrice
   if (!upgrade) {
     const seats = planById(plan).seats
-    if (seats > 0 && c.seatsUsed > seats) throw new Error(`Free ${c.seatsUsed - seats} seats before this downgrade`)
-    const updated = subscriptions.update(PLATFORM_WS, sub.id, { scheduledPlan: plan, history: [...sub.history, { at: new Date().toISOString(), by: actor.name, kind: "downgrade_scheduled", from: sub.plan, to: plan }] })
-    audit(actor, "subscription.changed", "subscription", c.name, { before: sub.plan, after: `${plan} at renewal (${addDays(sub.periodEnd, 1)})`, customerId })
+    const allowed = seats > 0 ? seats + (c.extraSeats && c.extraSeatsUntil && c.extraSeatsUntil >= today ? c.extraSeats : 0) : seats
+    const used = await seatsInUse(c)
+    if (seats > 0 && used > allowed) throw new Error(`Free ${used - allowed} seats before this downgrade`)
+    const updated = subscriptions.update(PLATFORM_WS, sub.id, { scheduledPlan: plan, history: [...sub.history, { at: new Date().toISOString(), by: nameOf(by), kind: "downgrade_scheduled", from: sub.plan, to: plan }] })
+    record(by, c, "plan", sub.plan, `${plan} at renewal (${addDays(sub.periodEnd, 1)})`)
     return { subscription: updated, invoice: null }
   }
   const pr = proration(periodPrice(oldPrice, sub.billing), periodPrice(version.monthly, sub.billing), sub.periodStart, sub.periodEnd, today)
-  const updated = subscriptions.update(PLATFORM_WS, sub.id, { plan, versionId: version.id, scheduledPlan: undefined, history: [...sub.history, { at: new Date().toISOString(), by: actor.name, kind: "upgraded", from: sub.plan, to: plan }] })
+  const updated = subscriptions.update(PLATFORM_WS, sub.id, { plan, versionId: version.id, scheduledPlan: undefined, history: [...sub.history, { at: new Date().toISOString(), by: nameOf(by), kind: "upgraded", from: sub.plan, to: plan }] })
   setCustomer(customerId, { plan })
   let inv: NxInvoice | null = null
   if (pr.amount > 0) {
@@ -266,7 +290,7 @@ export async function changePlanApi(actor: ConsoleActor, customerId: string, pla
     if (sub.method === "card") collectByCard(inv, today, cardOutcome)
     inv = invoices.get(PLATFORM_WS, inv.id)!
   }
-  audit(actor, "subscription.changed", "subscription", c.name, { before: sub.plan, after: `${plan}${inv ? ` · ${inv.number}` : ""}`, customerId })
+  record(by, c, "plan", sub.plan, `${plan}${inv ? ` · ${inv.number}` : ""}`)
   return { subscription: updated, invoice: inv }
 }
 
@@ -292,13 +316,16 @@ export async function runBillingJobsApi(actor: ConsoleActor, today = today0(), c
       const latest = versionOn(versions.list(PLATFORM_WS), plan, addDays(s.periodEnd, 1))!
       // BR-02 / PLA-04: keep the old price unless the change moves existing customers
       const version = plan !== s.plan || latest.existing === "move_at_renewal" || !current ? latest : current
-      const p = periodFrom(addDays(s.periodEnd, 1), s.billing)
+      const billing = s.scheduledBilling ?? s.billing
+      const p = periodFrom(addDays(s.periodEnd, 1), billing)
+      const discount = s.discount && s.discount.invoicesLeft !== 0 ? s.discount : undefined
+      const nextDiscount = discount ? (discount.invoicesLeft === null ? discount : discount.invoicesLeft > 1 ? { ...discount, invoicesLeft: discount.invoicesLeft - 1 } : undefined) : undefined
       s = subscriptions.update(PLATFORM_WS, s.id, {
-        plan, versionId: version.id, scheduledPlan: undefined, periodStart: p.start, periodEnd: p.end,
+        plan, versionId: version.id, scheduledPlan: undefined, billing, scheduledBilling: undefined, discount: nextDiscount, periodStart: p.start, periodEnd: p.end,
         history: [...s.history, { at: new Date().toISOString(), by: "Billing jobs", kind: plan !== s.plan ? "downgraded" : "renewed", from: s.plan, to: plan }],
       })
-      setCustomer(c.id, { plan })
-      const inv = issueInvoice(customer(c.id), "subscription", subscriptionLines(plan, s.billing, version.monthly, c.country, p.start, p.end), p.start, p.end, s.method, p.start)
+      setCustomer(c.id, { plan, billing, mrrDiscount: mrrDiscountOf(nextDiscount, version.monthly, billing) })
+      const inv = issueInvoice(customer(c.id), "subscription", subscriptionLines(plan, billing, version.monthly, c.country, p.start, p.end, discount), p.start, p.end, s.method, p.start)
       if (s.method === "card") collectByCard(inv, p.start, cardOutcome)
       renewed++
     }
@@ -329,6 +356,155 @@ export async function runBillingJobsApi(actor: ConsoleActor, today = today0(), c
   }
   audit(actor, "billing.jobs_run", "console", `${renewed} renewals · ${steps} dunning steps`, { after: today })
   return { renewed, steps }
+}
+
+export { listPlanContentApi, updatePlanContentApi, syncPlanContent } from "./platform-plans-api"
+
+/* ---------- subscription changes (SUB-05, SUB-07, SUB-10, PLA-08) ---------- */
+
+/** A change made by a team member, or by the company administrator from My subscription. */
+export type ChangedBy = { actor: ConsoleActor } | { person: { name: string; email: string } }
+const nameOf = (by: ChangedBy) => ("actor" in by ? by.actor.name : by.person.name)
+function record(by: ChangedBy, c: CustomerAccount, label: string, before?: string, after?: string) {
+  if ("actor" in by) audit(by.actor, "subscription.changed", "subscription", `${c.name} · ${label}`, { before, after, customerId: c.id })
+  else auditCustomer(by.person, c.id, "subscription.changed", `${c.name} · ${label}`, { before, after, targetType: "subscription" })
+  // the company sees the same change in its own audit log
+  if (c.demoWorkspaceId) recordAudit(c.demoWorkspaceId, { action: "Subscription changed", actionKey: "subscription.changed", category: "Billing", target: `Nexora subscription · ${label}`, before, after, actor: { id: "actor" in by ? by.actor.id : by.person.email, name: nameOf(by), email: "actor" in by ? `${by.actor.id}@nexora.io` : by.person.email } })
+}
+const subOf = (customerId: string) => {
+  const s = subscriptions.list(PLATFORM_WS).find((x) => x.customerId === customerId)
+  if (!s) throw new Error("This customer has no subscription yet")
+  return s
+}
+const needStaff = (by: ChangedBy, cap: C) => {
+  if ("actor" in by) need(by.actor, cap)
+}
+function mrrDiscountOf(d: SubscriptionDiscount | undefined, monthly: number, billing: "monthly" | "yearly") {
+  if (!d || d.invoicesLeft === 0) return undefined
+  return round2(discountAmount(d, periodPrice(monthly, billing)) / (billing === "yearly" ? 12 : 1))
+}
+
+/** SUB-02 to SUB-04 for either side: the company administrator changes plan from My subscription with the same rules. */
+export async function customerChangePlanApi(person: { name: string; email: string }, customerId: string, plan: NexoraPlanId, today = today0()) {
+  if (planById(plan).retired) throw new Error("This plan is no longer sold")
+  return changePlanCore({ person }, customerId, plan, today, "ok")
+}
+
+/** SUB-05: monthly to yearly starts a yearly period today with credit for the unused monthly days; yearly to monthly waits for the renewal. */
+export async function changeBillingApi(by: ChangedBy, customerId: string, billing: "monthly" | "yearly", today = today0(), cardOutcome: "ok" | "declined" = "ok") {
+  needStaff(by, C.CHANGE_SUBSCRIPTION)
+  const c = customer(customerId)
+  const s = subOf(customerId)
+  if (billing === s.billing && !s.scheduledBilling) return { subscription: s, invoice: null }
+  if (billing === "monthly") {
+    const updated = subscriptions.update(PLATFORM_WS, s.id, { scheduledBilling: s.billing === "monthly" ? undefined : "monthly", history: [...s.history, { at: new Date().toISOString(), by: nameOf(by), kind: "billing_scheduled", from: s.billing, to: "monthly" }] })
+    record(by, c, "billing", s.billing, `monthly from ${addDays(s.periodEnd, 1)}`)
+    return { subscription: updated, invoice: null }
+  }
+  const monthly = priceOf(s)
+  const total = daysBetween(s.periodStart, s.periodEnd) + 1
+  const left = Math.max(0, daysBetween(today, s.periodEnd) + 1)
+  const credit = round2((monthly * left) / total)
+  const p = periodFrom(today, "yearly")
+  const rate = vatRateFor(c.country)
+  const lines = subscriptionLines(s.plan, "yearly", monthly, c.country, p.start, p.end, s.discount)
+  if (credit > 0) lines.push({ label: `Credit for unused monthly days · ${left}/${total} days · ${today} → ${s.periodEnd}`, quantity: 1, unitPrice: -credit, vatRate: rate })
+  const updated = subscriptions.update(PLATFORM_WS, s.id, { billing: "yearly", scheduledBilling: undefined, periodStart: p.start, periodEnd: p.end, history: [...s.history, { at: new Date().toISOString(), by: nameOf(by), kind: "billing_changed", from: s.billing, to: "yearly" }] })
+  setCustomer(customerId, { billing: "yearly", mrrDiscount: mrrDiscountOf(s.discount, monthly, "yearly") })
+  let inv = issueInvoice(customer(customerId), "subscription", lines, p.start, p.end, s.method, today)
+  if (s.method === "card") collectByCard(inv, today, cardOutcome)
+  inv = invoices.get(PLATFORM_WS, inv.id)!
+  record(by, c, "billing", "monthly", `yearly · ${inv.number}`)
+  return { subscription: updated, invoice: inv }
+}
+
+/** Card or bank transfer for the next invoices (SUB-01). */
+export async function changeMethodApi(by: ChangedBy, customerId: string, method: "card" | "transfer") {
+  needStaff(by, C.CHANGE_SUBSCRIPTION)
+  const c = customer(customerId)
+  const s = subOf(customerId)
+  if (s.method === method) return s
+  const updated = subscriptions.update(PLATFORM_WS, s.id, { method, history: [...s.history, { at: new Date().toISOString(), by: nameOf(by), kind: "method_changed", from: s.method, to: method }] })
+  record(by, c, "payment method", s.method, method)
+  return updated
+}
+
+/** PLA-08: percentage or amount, for a number of invoices or until removed, with a reason printed on each invoice. */
+export async function setDiscountApi(actor: ConsoleActor, customerId: string, input: { kind: "percent" | "amount"; value: number; invoices: number | null; reason: string }) {
+  need(actor, C.CHANGE_SUBSCRIPTION)
+  const c = customer(customerId)
+  const s = subOf(customerId)
+  if (!(input.value > 0) || (input.kind === "percent" && input.value > 100)) throw new Error("A discount is above zero, and at most 100%")
+  if (input.invoices !== null && !(Number.isInteger(input.invoices) && input.invoices > 0)) throw new Error("Give the number of invoices, or leave it until removed")
+  if (input.reason.trim().length < 3) throw new Error("Give the reason for the discount")
+  const discount: SubscriptionDiscount = { kind: input.kind, value: input.value, invoicesLeft: input.invoices, reason: input.reason.trim(), by: actor.name, since: today0() }
+  const updated = subscriptions.update(PLATFORM_WS, s.id, { discount, history: [...s.history, { at: new Date().toISOString(), by: actor.name, kind: "discount_set", to: `${input.kind === "percent" ? `${input.value}%` : `${input.value} MAD`} · ${input.reason.trim()}` }] })
+  setCustomer(customerId, { mrrDiscount: mrrDiscountOf(discount, priceOf(s), s.billing) })
+  record({ actor }, c, "discount", s.discount ? `${s.discount.value}${s.discount.kind === "percent" ? "%" : " MAD"}` : undefined, `${input.value}${input.kind === "percent" ? "%" : " MAD"} · ${input.invoices ?? "∞"} invoices · ${input.reason.trim()}`)
+  return updated
+}
+
+export async function removeDiscountApi(actor: ConsoleActor, customerId: string) {
+  need(actor, C.CHANGE_SUBSCRIPTION)
+  const c = customer(customerId)
+  const s = subOf(customerId)
+  if (!s.discount) return s
+  const updated = subscriptions.update(PLATFORM_WS, s.id, { discount: undefined, history: [...s.history, { at: new Date().toISOString(), by: actor.name, kind: "discount_ended" }] })
+  setCustomer(customerId, { mrrDiscount: undefined })
+  record({ actor }, c, "discount", s.discount.reason, "removed")
+  return updated
+}
+
+/** SUB-10: extra seats until a date, with a reason; they stop counting the day after. */
+export async function setExtensionApi(actor: ConsoleActor, customerId: string, input: { seats: number; until: string; reason: string }, today = today0()) {
+  need(actor, C.CHANGE_SUBSCRIPTION)
+  const c = customer(customerId)
+  const s = subOf(customerId)
+  if (planById(s.plan).seats < 0) throw new Error("This plan already has unlimited people")
+  if (!(Number.isInteger(input.seats) && input.seats > 0)) throw new Error("Give the number of extra people")
+  if (!input.until || input.until < today) throw new Error("The end date must be in the future")
+  if (input.reason.trim().length < 3) throw new Error("Give the reason for the extension")
+  const updated = subscriptions.update(PLATFORM_WS, s.id, { extension: { seats: input.seats, until: input.until, reason: input.reason.trim(), by: actor.name }, history: [...s.history, { at: new Date().toISOString(), by: actor.name, kind: "extension_set", to: `+${input.seats} until ${input.until}` }] })
+  setCustomer(customerId, { extraSeats: input.seats, extraSeatsUntil: input.until })
+  record({ actor }, c, "extra seats", undefined, `+${input.seats} until ${input.until} · ${input.reason.trim()}`)
+  return updated
+}
+
+export async function removeExtensionApi(actor: ConsoleActor, customerId: string) {
+  need(actor, C.CHANGE_SUBSCRIPTION)
+  const c = customer(customerId)
+  const s = subOf(customerId)
+  if (!s.extension) return s
+  const updated = subscriptions.update(PLATFORM_WS, s.id, { extension: undefined, history: [...s.history, { at: new Date().toISOString(), by: actor.name, kind: "extension_ended" }] })
+  setCustomer(customerId, { extraSeats: undefined, extraSeatsUntil: undefined })
+  record({ actor }, c, "extra seats", `+${s.extension.seats}`, "removed")
+  return updated
+}
+
+/** SUB-07: cancel today instead of at period end; the unused days are credited, and refunded with finance approval. */
+export async function cancelNowApi(actor: ConsoleActor, customerId: string, input: { reason: string; refund: boolean }, today = today0()) {
+  if (!consoleCan(actor.role, C.CREDIT_NOTES)) throw new Error(ERR_FORBIDDEN)
+  if (input.reason.trim().length < 5) throw new Error("Give the reason for the cancellation")
+  const c = customer(customerId)
+  const s = subOf(customerId)
+  if (c.status === "cancelled" || c.status === "deleted") throw new Error("This customer is already cancelled")
+  const current = invoices.list(PLATFORM_WS).filter((i) => i.customerId === customerId && i.kind === "subscription" && i.periodFrom <= today && today <= i.periodTo && i.status !== "credited").sort((a, b) => b.date.localeCompare(a.date))[0]
+  let creditNote: NxCreditNote | null = null
+  let refund: NxRefund | null = null
+  if (current) {
+    const total = daysBetween(current.periodFrom, current.periodTo) + 1
+    const left = Math.max(0, daysBetween(today, current.periodTo))
+    const amount = round2((current.subtotal * left) / total)
+    if (amount > 0) {
+      const r = await issueCreditNoteApi(actor, current.id, { amount, reason: `Cancellation on ${today}: ${left}/${total} unused days · ${input.reason.trim()}`, refund: input.refund && current.paid > 0 }, today)
+      creditNote = r.creditNote
+      refund = r.refund
+    }
+  }
+  subscriptions.update(PLATFORM_WS, s.id, { periodEnd: today, history: [...s.history, { at: new Date().toISOString(), by: actor.name, kind: "cancelled_now", from: s.plan }] })
+  setCustomer(customerId, { status: "cancelled", readOnly: true, cancelsOn: undefined, cancelledOn: today, mrrDiscount: undefined })
+  audit(actor, "customer.cancelled", "customer", c.name, { before: c.status, after: `cancelled now · ${input.reason.trim()}${creditNote ? ` · ${creditNote.number}` : ""}`, customerId })
+  return { creditNote, refund }
 }
 
 /* ---------- payments and reconciliation (§5.5) ---------- */

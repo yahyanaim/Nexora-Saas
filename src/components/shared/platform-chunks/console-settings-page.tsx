@@ -28,7 +28,7 @@ import { Panel } from "./billing-shared"
 import { StepUpDialog } from "./console-shared"
 
 const LANGUAGE_NAMES: Record<string, string> = { en: "English", fr: "Français", de: "Deutsch", es: "Español", ar: "العربية", ur: "اردو", hi: "हिन्दी", ru: "Русский", zh: "中文" }
-const IDENTITY_FIELDS = ["legalName", "address", "city", "country", "ice", "taxId", "rc", "email", "phone", "bankName", "rib", "swift"] as const
+const IDENTITY_FIELDS = ["legalName", "address", "city", "country", "ice", "taxId", "rc", "patente", "cnss", "email", "phone", "bankName", "rib", "swift"] as const
 type IdentityField = (typeof IDENTITY_FIELDS)[number]
 
 function Checks<T extends string>({ legend, options, value, onChange, disabled }: { legend: string; options: { id: T; label: string }[]; value: T[]; onChange: (v: T[]) => void; disabled?: boolean }) {
@@ -46,9 +46,9 @@ function Checks<T extends string>({ legend, options, value, onChange, disabled }
 function IdentityTab({ identity, canEdit }: { identity: NexoraIdentity; canEdit: boolean }) {
   const t = useTranslations()
   const m = useConfigMutations()
-  const [form, setForm] = useState<Record<IdentityField, string>>(() => Object.fromEntries(IDENTITY_FIELDS.map((f) => [f, identity[f]])) as Record<IdentityField, string>)
+  const [form, setForm] = useState<Record<IdentityField, string>>(() => Object.fromEntries(IDENTITY_FIELDS.map((f) => [f, identity[f] ?? ""])) as Record<IdentityField, string>)
   const [stepUp, setStepUp] = useState(false)
-  const dirty = IDENTITY_FIELDS.some((f) => form[f] !== identity[f])
+  const dirty = IDENTITY_FIELDS.some((f) => form[f] !== (identity[f] ?? ""))
   return (
     <Panel title={t("cfgIdentity")} hint={t("cfgIdentityHint")}>
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setStepUp(true) }}>

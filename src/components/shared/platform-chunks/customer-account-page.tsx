@@ -9,16 +9,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
-import { ArrowLeft, ArrowRight, Ban, CalendarDays, CheckCircle, LockKeyholeOpen, Store, XCircle } from "@/components/ui/carbon/icons"
+import { ArrowLeft, ArrowRight, Ban, CalendarDays, CheckCircle, FileText, LockKeyholeOpen, Pencil, Store, XCircle } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { Link, useRouter } from "@/i18n/navigation"
 import { useWorkspaceStore } from "@/store/workspace-store"
-import { useConsoleActor, useConsoleAudit, useConsoleCustomers, useConsoleMutations } from "@/hooks/platform/use-platform-console"
+import { useConsoleActor, useConsoleAudit, useConsoleCustomers, useConsoleDirectory, useConsoleMutations } from "@/hooks/platform/use-platform-console"
+import { useNxDocuments } from "@/hooks/platform/use-nx-documents"
+import { useSupportRequests } from "@/hooks/platform/use-platform-support"
+import { Badge } from "@/components/ui/badge"
+import type { CustomerIdentityInput } from "@/lib/api/platform-customers-api"
 import { consoleCan, needsStepUp } from "@/lib/platform/console-roles"
-import { accountMrr, canTransition, seatLimit } from "@/lib/platform/customer-lifecycle"
+import { accountMrr, canTransition, customerHealth, seatLimit } from "@/lib/platform/customer-lifecycle"
 import { NEXORA_PLANS, formatMad, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
-import { useBillingMutations, useNxInvoices } from "@/hooks/platform/use-platform-billing"
+import { useBillingMutations, useNxDunning, useNxInvoices, useNxPayments, useNxSubscriptions } from "@/hooks/platform/use-platform-billing"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { InvoiceStatusBadge } from "./billing-shared"
 import { cn } from "@/lib/utils"
@@ -52,6 +56,14 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
   const billing = useBillingMutations()
   const [startOpen, setStartOpen] = useState(false)
   const [start, setStart] = useState({ plan: "business" as NexoraPlanId, billing: "monthly" as "monthly" | "yearly", method: "card" as "card" | "transfer" })
+  const docs = useNxDocuments()
+  const { data: allPayments = [] } = useNxPayments()
+  const { data: dunning = [] } = useNxDunning()
+  const { data: subs = [] } = useNxSubscriptions()
+  const { data: requests = [] } = useSupportRequests()
+  const { data: directory = [] } = useConsoleDirectory()
+  const [editing, setEditing] = useState<CustomerIdentityInput | null>(null)
+  const [now] = useState(() => new Date())
 
   const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`))
@@ -94,14 +106,28 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
     if (p === "lift" && needsStepUp(role, C.SUSPEND)) setStepUp(true)
   }
 
+  const payments = allPayments.filter((p) => p.customerId === c.id)
+  const reminders = dunning.filter((d) => invoices.some((i) => i.id === d.invoiceId)).sort((a, b) => b.date.localeCompare(a.date))
+  const sub = subs.find((s) => s.customerId === c.id)
+  const theirRequests = requests.filter((r) => r.customerId === c.id)
+  const people = directory.filter((u) => u.customerId === c.id)
+  const lastSignInAt = people.map((u) => u.lastSignInAt).filter(Boolean).sort().pop()
+  const openRequests = theirRequests.filter((r) => r.status === "open" || r.status === "waiting_customer")
+  const health = customerHealth(c, { lastSignInAt, openRequests: openRequests.length, urgentRequests: openRequests.filter((r) => r.priority === "urgent").length }, now)
+  const canEdit = consoleCan(role, C.CHANGE_SUBSCRIPTION)
+  const openEdit = () =>
+    setEditing({ name: c.name, city: c.city, country: c.country, ice: c.ice ?? "", taxId: c.taxId ?? "", rc: c.rc ?? "", address: c.address ?? "", phone: c.phone ?? "", adminName: c.admin.name, adminEmail: c.admin.email, adminPhone: c.admin.phone ?? "" })
+
   const facts: [string, React.ReactNode][] = [
     [t("cuLegalName"), c.name],
     ["ICE", c.ice ?? "—"],
-    [t("cuCity"), `${c.city}, ${c.country}`],
-    [t("pfAdmin"), <span key="a">{c.admin.name}<span className="block text-xs text-muted-foreground">{c.admin.email}</span></span>],
+    [t("cuTaxIds"), [c.taxId && `IF ${c.taxId}`, c.rc && `RC ${c.rc}`].filter(Boolean).join(" · ") || "—"],
+    [t("cuAddress"), <span key="ad">{c.address ? `${c.address}, ` : ""}{c.city}, {c.country}{c.phone && <span className="block text-xs text-muted-foreground">{c.phone}</span>}</span>],
+    [t("pfAdmin"), <span key="a">{c.admin.name}<span className="block text-xs text-muted-foreground">{c.admin.email}{c.admin.phone ? ` · ${c.admin.phone}` : ""}</span></span>],
     [t("pfPlan"), `${plan.name} · ${t(c.billing === "yearly" ? "pfYearly" : "pfMonthly")}`],
     [t("pfMrrCol"), accountMrr(c) ? money(accountMrr(c)) : "—"],
     [t("pfSince"), date(c.since)],
+    ...(sub ? ([[t("cuSubscription"), <span key="s">{date(sub.periodStart)} → {date(sub.periodEnd)}<span className="block text-xs text-muted-foreground">{t(sub.method === "card" ? "subCard" : "subTransfer")}{sub.scheduledPlan ? ` · ${t("subWillBecome", { plan: planById(sub.scheduledPlan).name, date: date(sub.periodEnd) })}` : ""}</span></span>]] as [string, React.ReactNode][]) : []),
     ...(c.status === "trial" && c.trialEndsOn ? [[t("pfTrialEndsLabel"), `${date(c.trialEndsOn)}${c.trialExtended ? ` · ${t("cuExtendedOnce")}` : ""}`] as [string, string]] : []),
   ]
 
@@ -114,6 +140,7 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
         actions={
           <>
             <Button variant="outline" asChild><Link href="/dashboard/platform"><ArrowLeft className="size-4 rtl:rotate-180" />{t("cuBackToList")}</Link></Button>
+            {canEdit && <Button variant="outline" onClick={openEdit}><Pencil className="size-4" />{t("cuEdit")}</Button>}
             {c.demoWorkspaceId && (
               <Button variant="outline" onClick={() => { setWorkspace(c.demoWorkspaceId!); router.push("/dashboard/my-work") }}>
                 {t("pfOpenWorkspace")} <ArrowRight className="size-4 rtl:rotate-180" />
@@ -136,7 +163,11 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start">
         <div className="flex flex-col gap-5">
           <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
-            <h2 className="mb-3 text-base font-semibold">{t("cuAccount")}</h2>
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <h2 className="flex-1 text-base font-semibold">{t("cuAccount")}</h2>
+              <Badge variant="outline" className={cn("border-transparent", health.level === "good" ? "bg-success-soft text-success-foreground" : health.level === "watch" ? "bg-warning-soft text-warning-foreground" : "bg-danger-soft text-destructive")}>{t(`cuHealth_${health.level}`)}</Badge>
+            </div>
+            {health.reasons.length > 0 && <p className="mb-3 text-xs text-muted-foreground">{t("cuHealthWhy", { reasons: health.reasons.map((r) => t(`cuHealthR_${r}`)).join(" · ") })}</p>}
             <dl className="grid gap-3 sm:grid-cols-2">
               {facts.map(([k, v]) => (
                 <div key={k} className="rounded-2xl border border-border p-3">
@@ -164,6 +195,57 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
                     <span className="text-xs text-muted-foreground">{date(i.date)}</span>
                     <span className="ms-auto tabular-nums">{money(i.total)}</span>
                     <InvoiceStatusBadge status={i.status} />
+                    <Button size="icon" variant="ghost" className="size-7" onClick={() => void docs.invoicePdf(i)} aria-label={t("biDownloadPdfOf", { number: i.number })}><FileText className="size-4" /></Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
+            <h2 className="mb-3 text-base font-semibold">{t("cuPayments")}</h2>
+            {payments.length === 0 ? <p className="text-sm text-muted-foreground">{t("biNoPayment")}</p> : (
+              <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border">
+                {payments.map((p) => (
+                  <li key={p.id} className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm">
+                    <span className="text-xs text-muted-foreground">{date(p.date)}</span>
+                    <span>{t(p.method === "card" ? "subCard" : "subTransfer")}{p.invoiceNumber ? ` · ${p.invoiceNumber}` : ""}</span>
+                    <span className="font-mono text-xs text-muted-foreground">{p.reference}</span>
+                    <span className="ms-auto tabular-nums">{money(p.amount)}</span>
+                    <Badge variant="outline" className={cn("border-transparent", p.status === "succeeded" ? "bg-success-soft text-success-foreground" : p.status === "failed" ? "bg-danger-soft text-destructive" : "bg-muted text-muted-foreground")}>{t(`biPay_${p.status}`)}</Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {reminders.length > 0 && (
+              <>
+                <h3 className="mb-2 mt-4 text-sm font-semibold">{t("cuReminders")}</h3>
+                <ul className="flex flex-col gap-1 text-sm">
+                  {reminders.map((r) => (
+                    <li key={r.id} className="flex flex-wrap gap-2 rounded-xl bg-muted/50 px-3 py-2">
+                      <span className="text-xs text-muted-foreground">{date(r.date)}</span>
+                      <span>{t("trDay", { day: r.day })} · {t(`trKind_${r.kind}`)}</span>
+                      <span className="ms-auto text-xs text-muted-foreground">{t(r.kind === "retry" ? "cuChannelCard" : "cuChannelEmail")} · {r.result}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </section>
+
+          <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <h2 className="flex-1 text-base font-semibold">{t("cuSupport")}</h2>
+              <Link href="/dashboard/support-desk" className="text-sm text-primary hover:underline">{t("supportDesk")}</Link>
+            </div>
+            {theirRequests.length === 0 ? <p className="text-sm text-muted-foreground">{t("cuNoSupport")}</p> : (
+              <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border">
+                {theirRequests.map((r) => (
+                  <li key={r.id} className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm">
+                    <span className="font-mono text-xs text-muted-foreground">{r.number}</span>
+                    <span className="min-w-0 flex-1">{r.subject}</span>
+                    <span className="text-xs text-muted-foreground">{t(`supPr_${r.priority}`)}</span>
+                    <span className="text-xs">{t(`supSt_${r.status}`)}</span>
                   </li>
                 ))}
               </ul>
@@ -253,6 +335,55 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
       </div>
 
       <DataTableEntityFormSheet
+        open={!!editing}
+        onOpenChange={(v) => !v && setEditing(null)}
+        mode="edit"
+        createTitle=""
+        editTitle={t("cuEditTitle", { name: c.name })}
+        description={t("cuEditDesc")}
+        isSubmitting={m.updateCustomer.isPending}
+        submitLabel={{ edit: t("save") }}
+        onSubmit={() => editing && m.updateCustomer.mutate({ id: c.id, input: editing }, { onSuccess: () => setEditing(null) })}
+      >
+        {editing && (
+          <div className="space-y-4">
+            {([["name", "cuLegalName"], ["address", "cuAddress"], ["city", "cuCity"]] as const).map(([k, label]) => (
+              <div key={k} className="space-y-1.5">
+                <Label htmlFor={`ed-${k}`}>{t(label)}</Label>
+                <Input id={`ed-${k}`} value={editing[k] ?? ""} onChange={(e) => setEditing({ ...editing, [k]: e.target.value })} />
+              </div>
+            ))}
+            <div className="space-y-1.5">
+              <Label htmlFor="ed-country">{t("cuCountry")}</Label>
+              <Select value={editing.country} onValueChange={(v) => setEditing({ ...editing, country: v })}>
+                <SelectTrigger id="ed-country"><SelectValue>{editing.country}</SelectValue></SelectTrigger>
+                <SelectContent>{["MA", "FR", "ES", "BE", "US", "GB", "DE", "SN", "CI", "TN", "DZ", "AE"].map((cc) => <SelectItem key={cc} value={cc}>{cc}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {([["ice", "ICE"], ["taxId", "IF"], ["rc", "RC"]] as const).map(([k, label]) => (
+                <div key={k} className={cn("space-y-1.5", k === "ice" && "col-span-2")}>
+                  <Label htmlFor={`ed-${k}`}>{label}</Label>
+                  <Input id={`ed-${k}`} value={editing[k] ?? ""} inputMode={k === "ice" ? "numeric" : undefined} onChange={(e) => setEditing({ ...editing, [k]: e.target.value })} />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="ed-phone">{t("cuPhone")}</Label>
+              <Input id="ed-phone" type="tel" value={editing.phone ?? ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} />
+            </div>
+            <fieldset className="space-y-3 rounded-2xl border border-border p-3">
+              <legend className="px-1 text-sm font-medium">{t("pfAdmin")}</legend>
+              <div className="space-y-1.5"><Label htmlFor="ed-an">{t("cuAdminName")}</Label><Input id="ed-an" value={editing.adminName} onChange={(e) => setEditing({ ...editing, adminName: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label htmlFor="ed-ae">{t("cuAdminEmail")}</Label><Input id="ed-ae" type="email" value={editing.adminEmail} onChange={(e) => setEditing({ ...editing, adminEmail: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label htmlFor="ed-ap">{t("cuPhone")}</Label><Input id="ed-ap" type="tel" value={editing.adminPhone ?? ""} onChange={(e) => setEditing({ ...editing, adminPhone: e.target.value })} /></div>
+            </fieldset>
+            <p className="text-xs text-muted-foreground">{t("cuEditNote")}</p>
+          </div>
+        )}
+      </DataTableEntityFormSheet>
+
+      <DataTableEntityFormSheet
         open={suspendOpen}
         onOpenChange={setSuspendOpen}
         mode="create"
@@ -291,7 +422,7 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
             <Label htmlFor="st-plan">{t("pfPlan")}</Label>
             <Select value={start.plan} onValueChange={(v) => setStart({ ...start, plan: v as NexoraPlanId })}>
               <SelectTrigger id="st-plan"><SelectValue>{planById(start.plan).name}</SelectValue></SelectTrigger>
-              <SelectContent>{NEXORA_PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} · {money(p.monthly)}</SelectItem>)}</SelectContent>
+              <SelectContent>{NEXORA_PLANS.filter((p) => !p.retired).map((p) => <SelectItem key={p.id} value={p.id}>{p.name} · {money(p.monthly)}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">

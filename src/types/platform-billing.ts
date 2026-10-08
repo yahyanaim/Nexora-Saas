@@ -22,9 +22,20 @@ export interface PlanVersion {
 export interface SubscriptionChange {
   at: string
   by: string
-  kind: "started" | "upgraded" | "downgrade_scheduled" | "downgraded" | "renewed" | "billing_changed"
+  kind: "started" | "upgraded" | "downgrade_scheduled" | "downgraded" | "renewed" | "billing_changed" | "billing_scheduled" | "method_changed" | "discount_set" | "discount_ended" | "extension_set" | "extension_ended" | "cancelled_now"
   from?: string
   to?: string
+}
+
+export interface SubscriptionDiscount {
+  kind: "percent" | "amount"
+  /** Percent off, or MAD off each invoice before VAT */
+  value: number
+  /** Invoices it still applies to; null = until removed */
+  invoicesLeft: number | null
+  reason: string
+  by: string
+  since: string
 }
 
 export interface NxSubscription {
@@ -41,6 +52,12 @@ export interface NxSubscription {
   periodEnd: string
   /** SUB-03: a downgrade waits for the renewal */
   scheduledPlan?: NexoraPlanId
+  /** SUB-05: yearly to monthly waits for the renewal */
+  scheduledBilling?: "monthly" | "yearly"
+  /** PLA-08: explicit discount on the next invoices, shown as its own line */
+  discount?: SubscriptionDiscount
+  /** SUB-10: temporary extra seats */
+  extension?: { seats: number; until: string; reason: string; by: string }
   history: SubscriptionChange[]
   createdAt: string
   updatedAt: string

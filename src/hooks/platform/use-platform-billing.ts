@@ -6,6 +6,16 @@ import { toast } from "@/lib/utils/toast"
 import { translateError } from "@/lib/errors/translate-error"
 import {
   approveRefundApi,
+  cancelNowApi,
+  changeBillingApi,
+  changeMethodApi,
+  customerChangePlanApi,
+  listPlanContentApi,
+  removeDiscountApi,
+  removeExtensionApi,
+  setDiscountApi,
+  setExtensionApi,
+  updatePlanContentApi,
   assignTransferApi,
   changePlanApi,
   createPlanVersionApi,
@@ -25,6 +35,7 @@ import {
 import type { ConsoleActor } from "@/lib/api/platform-console-api"
 import type { NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import { useConsoleActor } from "./use-platform-console"
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 
 const K = (name: string) => ["platform", "billing", name]
 
@@ -36,6 +47,7 @@ export const useNxPayments = () => useQuery({ queryKey: K("payments"), queryFn: 
 export const useNxRefunds = () => useQuery({ queryKey: K("refunds"), queryFn: listRefundsApi })
 export const useNxDunning = () => useQuery({ queryKey: K("dunning"), queryFn: listDunningApi })
 export const useTaxRates = () => useQuery({ queryKey: K("taxes"), queryFn: listTaxRatesApi })
+export const usePlanContent = () => useQuery({ queryKey: K("plan-content"), queryFn: listPlanContentApi })
 
 export function useBillingMutations() {
   const t = useTranslations()
@@ -64,5 +76,37 @@ export function useBillingMutations() {
     assign: useAction((a, v: { paymentId: string; invoiceId: string }) => assignTransferApi(a, v.paymentId, v.invoiceId), "biTransferMatched"),
     creditNote: useAction((a, v: { invoiceId: string; amount: number; reason: string; refund: boolean }) => issueCreditNoteApi(a, v.invoiceId, v), (r) => (r.refund?.status === "awaiting_approval" ? t("biRefundAwaiting", { number: r.creditNote.number }) : t("biCreditIssued", { number: r.creditNote.number }))),
     approveRefund: useAction((a, id: string) => approveRefundApi(a, id), "biRefundDone"),
+    planContent: useAction((a, v: { plan: NexoraPlanId; description: string; seats: number; features: string[]; retired: boolean }) => updatePlanContentApi(a, v.plan, v), "plContentSaved"),
+    changeBilling: useAction((a, v: { customerId: string; billing: "monthly" | "yearly" }) => changeBillingApi({ actor: a }, v.customerId, v.billing), (r) => (r.invoice ? t("subBillingNow", { number: r.invoice.number }) : t("subBillingScheduled"))),
+    changeMethod: useAction((a, v: { customerId: string; method: "card" | "transfer" }) => changeMethodApi({ actor: a }, v.customerId, v.method), "subMethodSaved"),
+    setDiscount: useAction((a, v: { customerId: string; kind: "percent" | "amount"; value: number; invoices: number | null; reason: string }) => setDiscountApi(a, v.customerId, v), "subDiscountSaved"),
+    removeDiscount: useAction((a, customerId: string) => removeDiscountApi(a, customerId), "subDiscountRemoved"),
+    setExtension: useAction((a, v: { customerId: string; seats: number; until: string; reason: string }) => setExtensionApi(a, v.customerId, v), "subExtensionSaved"),
+    removeExtension: useAction((a, customerId: string) => removeExtensionApi(a, customerId), "subExtensionRemoved"),
+    cancelNow: useAction((a, v: { customerId: string; reason: string; refund: boolean }) => cancelNowApi(a, v.customerId, v), (r) => (r.refund?.status === "awaiting_approval" ? t("subCancelNowAwaiting") : t("subCancelledNow"))),
+  }
+}
+
+/** The company administrator's own changes from My subscription (same rules as the console). */
+export function useCompanySubscriptionMutations() {
+  const t = useTranslations()
+  const queryClient = useQueryClient()
+  const { authedUser } = useAuthGuard()
+  const u = authedUser as { name?: string; email?: string } | undefined
+  const person = { name: u?.name ?? u?.email ?? "—", email: u?.email ?? "" }
+  const make = <V, R>(fn: (v: V) => Promise<R>, success: (r: R) => string) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- each call below is made once, in a fixed order
+    useMutation({
+      mutationFn: fn,
+      onSuccess: (r) => {
+        queryClient.invalidateQueries()
+        toast.success(success(r))
+      },
+      onError: (err) => toast.error(translateError(err, t)),
+    })
+  return {
+    changePlan: make((v: { customerId: string; plan: NexoraPlanId }) => customerChangePlanApi(person, v.customerId, v.plan), (r) => (r.invoice ? t("biUpgraded", { number: r.invoice.number }) : t("biDowngradeScheduled"))),
+    changeBilling: make((v: { customerId: string; billing: "monthly" | "yearly" }) => changeBillingApi({ person }, v.customerId, v.billing), (r) => (r.invoice ? t("subBillingNow", { number: r.invoice.number }) : t("subBillingScheduled"))),
+    changeMethod: make((v: { customerId: string; method: "card" | "transfer" }) => changeMethodApi({ person }, v.customerId, v.method), () => t("subMethodSaved")),
   }
 }

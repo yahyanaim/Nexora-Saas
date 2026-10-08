@@ -6,13 +6,15 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Pencil } from "@/components/ui/carbon/icons"
+import { ListChecks, Pencil } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { useConsoleActor, useConsoleCustomers } from "@/hooks/platform/use-platform-console"
-import { useBillingMutations, usePlanVersions } from "@/hooks/platform/use-platform-billing"
+import { useBillingMutations, usePlanContent, usePlanVersions } from "@/hooks/platform/use-platform-billing"
 import { consoleCan } from "@/lib/platform/console-roles"
 import { accountMrr } from "@/lib/platform/customer-lifecycle"
 import { isoOf, versionOn } from "@/lib/platform/billing"
@@ -32,6 +34,10 @@ export default function ConsolePlansPage() {
   const [editing, setEditing] = useState<NexoraPlanId | null>(null)
   const [form, setForm] = useState({ monthly: "", effectiveFrom: "", existing: "keep" as "keep" | "move_at_renewal" })
   const [stepUp, setStepUp] = useState(false)
+  // reading the content keeps the catalogue in line with the owner's edits (PLA-02)
+  usePlanContent()
+  const [content, setContent] = useState<{ plan: NexoraPlanId; description: string; seats: string; unlimited: boolean; features: string; retired: boolean } | null>(null)
+  const [contentStepUp, setContentStepUp] = useState(false)
   const today = isoOf(new Date())
   const canEdit = consoleCan(actor?.role, C.CHANGE_PLANS)
 
@@ -50,8 +56,15 @@ export default function ConsolePlansPage() {
                   <h2 className="text-lg font-semibold">{p.name}</h2>
                   <p className="text-sm text-muted-foreground">{p.seats > 0 ? t("plSeats", { count: p.seats }) : t("plUnlimited")}</p>
                 </div>
-                {canEdit && <Button size="sm" variant="outline" onClick={() => { setEditing(p.id); setForm({ monthly: String(current?.monthly ?? p.monthly), effectiveFrom: "", existing: "keep" }) }}><Pencil className="size-4" />{t("plChangePrice")}</Button>}
+                {p.retired && <Badge variant="outline" className="border-transparent bg-muted text-muted-foreground">{t("plRetired")}</Badge>}
               </div>
+              <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>
+              {canEdit && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => { setEditing(p.id); setForm({ monthly: String(current?.monthly ?? p.monthly), effectiveFrom: "", existing: "keep" }) }}><Pencil className="size-4" />{t("plChangePrice")}</Button>
+                  <Button size="sm" variant="outline" onClick={() => setContent({ plan: p.id, description: p.description, seats: p.seats > 0 ? String(p.seats) : "", unlimited: p.seats < 0, features: p.features.join("\n"), retired: !!p.retired })}><ListChecks className="size-4" />{t("plEditContent")}</Button>
+                </div>
+              )}
               <p className="mt-4 text-3xl font-semibold tabular-nums">{money(current?.monthly ?? p.monthly)}<span className="text-sm font-normal text-muted-foreground"> {t("plPerMonth")}</span></p>
               <p className="text-xs text-muted-foreground">{t("plYearly", { amount: money((current?.monthly ?? p.monthly) * 10) })}</p>
               {upcoming.map((v) => <Badge key={v.id} variant="outline" className="mt-2 w-fit border-transparent bg-info-soft text-info-foreground">{t("plUpcoming", { amount: money(v.monthly), date: date(v.effectiveFrom) })}</Badge>)}
@@ -127,6 +140,44 @@ export default function ConsolePlansPage() {
           <p className="rounded-2xl bg-info-soft p-3 text-xs text-info-foreground">{t("plNote")}</p>
         </div>
       </DataTableEntityFormSheet>
+      <DataTableEntityFormSheet
+        open={!!content}
+        onOpenChange={(v) => !v && setContent(null)}
+        mode="edit"
+        createTitle=""
+        editTitle={content ? t("plContentTitle", { plan: NEXORA_PLANS.find((p) => p.id === content.plan)!.name }) : ""}
+        description={t("plContentDesc")}
+        isSubmitting={m.planContent.isPending}
+        submitLabel={{ edit: t("save") }}
+        onSubmit={() => setContentStepUp(true)}
+      >
+        {content && (
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="pc-desc">{t("plDescription")}</Label>
+              <Textarea id="pc-desc" rows={2} value={content.description} onChange={(e) => setContent({ ...content, description: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pc-seats">{t("plPeopleIncluded")}</Label>
+              <Input id="pc-seats" type="number" min={1} disabled={content.unlimited} value={content.seats} onChange={(e) => setContent({ ...content, seats: e.target.value })} />
+              <Switch checked={content.unlimited} onCheckedChange={(unlimited) => setContent({ ...content, unlimited })} labelText={t("plUnlimitedPeople")} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="pc-features">{t("plFeatures")}</Label>
+              <Textarea id="pc-features" rows={7} value={content.features} onChange={(e) => setContent({ ...content, features: e.target.value })} aria-describedby="pc-features-hint" />
+              <p id="pc-features-hint" className="text-xs text-muted-foreground">{t("plFeaturesHint")}</p>
+            </div>
+            <Switch checked={content.retired} onCheckedChange={(retired) => setContent({ ...content, retired })} labelText={t("plRetire")} />
+            <p className="rounded-2xl bg-info-soft p-3 text-xs text-info-foreground">{t("plContentNote")}</p>
+          </div>
+        )}
+      </DataTableEntityFormSheet>
+      <StepUpDialog
+        open={contentStepUp}
+        onOpenChange={setContentStepUp}
+        action={content ? t("plContentStepUp", { plan: NEXORA_PLANS.find((p) => p.id === content.plan)!.name }) : ""}
+        onConfirmed={() => content && m.planContent.mutate({ plan: content.plan, description: content.description, seats: content.unlimited ? -1 : Number(content.seats), features: content.features.split("\n"), retired: content.retired }, { onSuccess: () => setContent(null) })}
+      />
       <StepUpDialog
         open={stepUp}
         onOpenChange={setStepUp}

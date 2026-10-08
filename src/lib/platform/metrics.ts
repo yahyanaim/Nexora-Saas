@@ -93,7 +93,7 @@ export function churnRates(prev: MrrByCustomer, cur: MrrByCustomer) {
   const m = movements(prev, cur, new Set())
   return {
     customer: start ? lost / start : null,
-    revenue: startMrr ? -(m.churn + m.contraction) / startMrr : null,
+    revenue: startMrr ? -(m.churn + m.contraction) / startMrr || 0 : null,
   }
 }
 
