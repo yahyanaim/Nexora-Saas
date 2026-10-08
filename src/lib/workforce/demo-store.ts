@@ -23,7 +23,7 @@ function storageKey(collection: string, workspaceId: string) {
  * an older version starts again from fresh demo data instead of mixing old
  * records with new rules (the workspace choice and UI preferences are kept).
  */
-export const DEMO_DATA_VERSION = "2026-10-18"
+export const DEMO_DATA_VERSION = "2026-10-19"
 const VERSION_KEY = `${PREFIX}:data-version`
 const KEEP = new Set([VERSION_KEY, `${PREFIX}:workspace`, `${PREFIX}:guide-open`])
 let versionChecked = false
@@ -55,6 +55,22 @@ export function resetDemoData() {
   }
   versionChecked = false
   ensureDataVersion()
+}
+
+/** CFG-05: clears one workspace's demo records so it starts again from its initial data. Returns how many collections were cleared. */
+export function resetWorkspaceData(workspaceId: string) {
+  if (typeof window === "undefined") return 0
+  try {
+    const keys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && key.startsWith(`${PREFIX}:`) && key.endsWith(`:${workspaceId}`)) keys.push(key)
+    }
+    for (const key of keys) localStorage.removeItem(key)
+    return keys.length
+  } catch {
+    return 0
+  }
 }
 
 /** Reads a collection, seeding it when absent or unreadable. */

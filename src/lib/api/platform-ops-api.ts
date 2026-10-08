@@ -5,6 +5,7 @@ import { ConsoleCapability as C } from "@/types/platform-console"
 import type { BackupRun, Incident, IncidentSeverity, IncidentStatus, MaintenanceStatus, PlatformNotice, ServiceHealth, ServiceId, TenantErrorStat } from "@/types/platform-ops"
 import { PLATFORM_WS, audit, type ConsoleActor } from "./platform-console-api"
 import { customersCollection } from "./platform-customers-api"
+import { announcementsForWorkspace } from "./platform-config-api"
 
 /**
  * Platform health, incidents, planned maintenance and backups (cahier des
@@ -124,11 +125,12 @@ export async function listTenantErrorsApi(): Promise<TenantErrorStat[]> {
     .sort((a, b) => b.errors / b.requests - a.errors / a.requests)
 }
 
-/** INC-04, INC-07: the notices shown inside a company's Nexora. */
+/** INC-04, INC-07, CFG-01: the notices shown inside a company's Nexora (incidents first, then maintenance, then announcements). */
 export async function noticesForWorkspaceApi(workspaceId: string): Promise<PlatformNotice[]> {
   const c = customersCollection.list(PLATFORM_WS).find((x) => x.demoWorkspaceId === workspaceId)
   if (!c) return []
-  return noticesFor(incidents.list(PLATFORM_WS), c.id)
+  const news = announcementsForWorkspace(workspaceId).map((a): PlatformNotice => ({ id: a.id, kind: "announcement", number: "", title: a.title, text: a.message, severity: "sev4" }))
+  return [...noticesFor(incidents.list(PLATFORM_WS), c.id), ...news]
 }
 
 /* ---------- health (INC-01, INC-05) ---------- */

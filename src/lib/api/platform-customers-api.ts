@@ -17,6 +17,7 @@ const seedCustomers = (ws: string): CustomerAccount[] => {
   return NEXORA_CUSTOMERS.map((c) => ({
     id: c.id, workspaceId: ws, demoWorkspaceId: c.workspaceId, name: c.name, city: c.city, country: c.country, ice: c.ice,
     plan: c.plan, billing: c.billing, seatsUsed: c.seatsUsed, since: c.since, trialEndsOn: c.trialEndsOn, admin: c.admin,
+    trialStartedOn: c.trialStartedOn, convertedOn: c.convertedOn, cancelledOn: c.cancelledOn,
     status: (c.status === "past_due" ? "payment_overdue" : c.status) as LifecycleStatus,
     readOnly: c.status === "cancelled",
     notes: c.id === "cus_marrakech"
@@ -74,7 +75,7 @@ export async function createTrialApi(actor: ConsoleActor, input: { name: string;
   const today = isoDay(new Date())
   const created = customerStore.create(PLATFORM_WS, {
     name: input.name.trim(), city: input.city.trim(), country: input.country, ice: input.ice?.trim() || undefined, plan: input.plan, billing: "monthly",
-    seatsUsed: 1, status: "trial", readOnly: false, since: today, trialEndsOn: addDaysIso(today, TRIAL_DAYS),
+    seatsUsed: 1, status: "trial", readOnly: false, since: today, trialEndsOn: addDaysIso(today, TRIAL_DAYS), trialStartedOn: today,
     admin: { name: input.adminName.trim(), email }, notes: [],
   })
   audit(actor, "customer.trial_created", "customer", created.name, { after: `trial · ${TRIAL_DAYS} days`, customerId: created.id })
@@ -98,7 +99,11 @@ export async function activateCustomerApi(actor: ConsoleActor, id: string): Prom
   const c = get(id)
   move(c, "active")
   if (c.status === "suspended") throw new Error("Lift the suspension instead")
-  const updated = customerStore.update(PLATFORM_WS, id, { status: "active", readOnly: false, trialEndsOn: undefined, cancelsOn: undefined, since: c.status === "trial" ? isoDay(new Date()) : c.since })
+  const fromTrial = c.status === "trial"
+  const updated = customerStore.update(PLATFORM_WS, id, {
+    status: "active", readOnly: false, trialEndsOn: undefined, cancelsOn: undefined, since: fromTrial ? isoDay(new Date()) : c.since,
+    ...(fromTrial ? { trialStartedOn: c.trialStartedOn ?? c.since, convertedOn: isoDay(new Date()) } : {}), ...(c.status === "cancelled" ? { cancelledOn: undefined } : {}),
+  })
   audit(actor, c.status === "cancelled" ? "customer.reactivated" : "customer.status_changed", "customer", c.name, { before: c.status, after: "active", customerId: id })
   return updated
 }
@@ -134,7 +139,7 @@ export async function cancelCustomerApi(actor: ConsoleActor, id: string): Promis
   const c = get(id)
   move(c, "cancelled")
   if (c.status === "trial" || c.status === "suspended") {
-    const updated = customerStore.update(PLATFORM_WS, id, { status: "cancelled", readOnly: true, suspension: undefined })
+    const updated = customerStore.update(PLATFORM_WS, id, { status: "cancelled", readOnly: true, suspension: undefined, cancelledOn: isoDay(new Date()) })
     audit(actor, "customer.cancelled", "customer", c.name, { before: c.status, after: "cancelled", customerId: id })
     return updated
   }

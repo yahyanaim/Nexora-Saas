@@ -1,5 +1,6 @@
 import type { NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import type { InvoiceLine } from "@/lib/platform/billing"
+import type { SellerSnapshot } from "@/types/platform-config"
 
 /** Nexora's own billing records (cahier des charges §5.2–5.6, §7.2). */
 
@@ -71,6 +72,8 @@ export interface NxInvoice {
   einvoice: "to_send" | "sent" | "accepted" | "rejected"
   /** yyyy-mm-dd of the payment failure that started dunning */
   failedOn?: string
+  /** CFG-04: Nexora's identity as it was when the invoice was issued */
+  seller?: SellerSnapshot
   createdAt: string
   updatedAt: string
 }

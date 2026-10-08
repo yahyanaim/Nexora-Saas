@@ -93,10 +93,10 @@ export interface BackupRun {
   updatedAt: string
 }
 
-/** What a company sees in its Nexora (INC-04, INC-07). */
+/** What a company sees in its Nexora (INC-04, INC-07, CFG-01). */
 export interface PlatformNotice {
   id: string
-  kind: "incident" | "maintenance"
+  kind: "incident" | "maintenance" | "announcement"
   number: string
   title: string
   text: string

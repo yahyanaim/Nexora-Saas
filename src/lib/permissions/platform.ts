@@ -16,6 +16,8 @@ export const PLATFORM_PATHS = [
   "/dashboard/system-issues",
   "/dashboard/health",
   "/dashboard/incidents",
+  "/dashboard/metrics",
+  "/dashboard/console-settings",
   "/dashboard/roles",
   "/dashboard/sessions",
   "/dashboard/platform-audit",

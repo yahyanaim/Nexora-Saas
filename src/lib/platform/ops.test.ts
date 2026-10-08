@@ -70,15 +70,15 @@ describe("health, incidents and maintenance", () => {
     expect((await listIncidentsApi()).filter((i) => i.kind === "incident" && i.services.includes("api") && i.status !== "resolved")).toHaveLength(1)
 
     await updateIncidentApi(amine, draft.id, { text: "Load balancer restarted", status: "identified", customerIds: ["cus_atlas"] })
-    expect(await noticesForWorkspaceApi("ws_atlas")).toHaveLength(1) // the maintenance only
+    expect((await noticesForWorkspaceApi("ws_atlas")).filter((n) => n.kind !== "announcement")).toHaveLength(1) // the maintenance only
     await notifyIncidentApi(amine, draft.id, "Nexora is unavailable for some customers; we are on it.")
-    expect((await noticesForWorkspaceApi("ws_atlas")).map((n) => n.kind)).toEqual(["incident", "maintenance"])
-    expect((await noticesForWorkspaceApi("ws_northwind")).map((n) => n.kind)).toEqual(["maintenance"])
+    expect((await noticesForWorkspaceApi("ws_atlas")).filter((n) => n.kind !== "announcement").map((n) => n.kind)).toEqual(["incident", "maintenance"])
+    expect((await noticesForWorkspaceApi("ws_northwind")).filter((n) => n.kind !== "announcement").map((n) => n.kind)).toEqual(["maintenance"])
 
     await restoreServiceApi(amine, "api")
     await expect(resolveIncidentApi(amine, draft.id, { resolution: "Load balancer replaced." })).rejects.toThrow(/post-mortem/)
     await resolveIncidentApi(amine, draft.id, { resolution: "Load balancer replaced.", postmortem: "Cause: a full disk on the balancer. Action: disk alerts at 80%." })
-    expect((await noticesForWorkspaceApi("ws_atlas")).map((n) => n.kind)).toEqual(["maintenance"])
+    expect((await noticesForWorkspaceApi("ws_atlas")).filter((n) => n.kind !== "announcement").map((n) => n.kind)).toEqual(["maintenance"])
     const actions = (await listAuditApi()).map((e) => e.action)
     expect(actions).toEqual(expect.arrayContaining(["health.outage_simulated", "incident.updated", "incident.notified", "health.service_restored", "incident.resolved"]))
   })
@@ -90,6 +90,6 @@ describe("health, incidents and maintenance", () => {
     await expect(scheduleMaintenanceApi(amine, { ...input, plannedStart: inHours(72), plannedEnd: inHours(71) })).rejects.toThrow(/after the start/)
     const m = await scheduleMaintenanceApi(amine, { ...input, plannedStart: inHours(72), plannedEnd: inHours(73) })
     expect(m.number).toBe("MNT-0003")
-    expect((await noticesForWorkspaceApi("ws_atlas")).map((n) => n.number)).toEqual(expect.arrayContaining(["MNT-0002", "MNT-0003"]))
+    expect((await noticesForWorkspaceApi("ws_atlas")).filter((n) => n.kind !== "announcement").map((n) => n.number)).toEqual(expect.arrayContaining(["MNT-0002", "MNT-0003"]))
   })
 })

@@ -8,6 +8,7 @@ import { SalesBreakdownCard } from "./sales-breakdown-card"
 import { AiComputeMeteringCard } from "./ai-compute-metering-card"
 import { TopProductsCard } from "./top-products-card"
 import { AskVictorPill } from "./ask-victor-pill"
+import { useFeatureFlag } from "@/hooks/platform/use-platform-config"
 
 // The chart library (recharts) loads in its own bundle after the page shows,
 // so the first load stays light (PERF-01); a same-size placeholder avoids layout jumps.
@@ -18,6 +19,7 @@ const SessionOverTimeCard = dynamic(() => import("./time-series-cards").then((m)
 const AverageOrderValueCard = dynamic(() => import("./time-series-cards").then((m) => m.AverageOrderValueCard), { ssr: false, loading: ChartPlaceholder })
 
 export default function OverviewPage() {
+  const victor = useFeatureFlag("victor_assistant")
   return (
     <AnalyticsFilterProvider>
       <div className="relative w-full">
@@ -52,8 +54,8 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        {/* Floating Bottom AI Assistant Pill */}
-        <AskVictorPill />
+        {/* Floating Bottom AI Assistant Pill, released by plan (feature flag victor_assistant) */}
+        {victor && <AskVictorPill />}
       </div>
     </AnalyticsFilterProvider>
   )

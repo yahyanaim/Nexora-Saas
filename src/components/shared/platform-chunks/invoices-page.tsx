@@ -154,6 +154,7 @@ export default function ConsoleInvoicesPage() {
               </SheetHeader>
               <div className="flex flex-col gap-4 px-4 pb-6 text-sm">
                 <div className="flex flex-wrap items-center gap-2"><InvoiceStatusBadge status={open.status} /><Badge variant="outline">{t(`biEinv_${open.einvoice}`)}</Badge></div>
+                {open.seller && <p className="text-xs text-muted-foreground">{t("biIssuedBy", { name: open.seller.legalName, ice: open.seller.ice, rib: open.seller.rib })}</p>}
                 <dl className="grid grid-cols-2 gap-3">
                   {[[t("biDate"), date(open.date)], [t("biDue"), date(open.dueDate)], [t("subPeriod"), `${date(open.periodFrom)} → ${date(open.periodTo)}`], [t("biLeft"), money(balance(open))]].map(([k, v]) => (
                     <div key={k} className="rounded-2xl border border-border p-3"><dt className="text-xs text-muted-foreground">{k}</dt><dd className="mt-0.5 font-medium">{v}</dd></div>

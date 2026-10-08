@@ -14,6 +14,8 @@ import {
   ScrollText,
   ShieldCheck,
   HeartPulse,
+  ChartLine,
+  SettingsAdjust,
   Siren,
   ShieldUser,
   FolderKanban,
@@ -408,6 +410,12 @@ export function useDashboardNav() {
         icon: Wallet,
         items: [
           {
+            title: t("metricsNav"),
+            url: "/dashboard/metrics",
+            icon: ChartLine,
+            descriptionKey: "pageDescMetrics",
+          },
+          {
             title: t("plans"),
             url: "/dashboard/plans",
             icon: CreditCard,
@@ -476,6 +484,12 @@ export function useDashboardNav() {
             url: "/dashboard/incidents",
             icon: Siren,
             descriptionKey: "pageDescIncidents",
+          },
+          {
+            title: t("configNav"),
+            url: "/dashboard/console-settings",
+            icon: SettingsAdjust,
+            descriptionKey: "pageDescConsoleSettings",
           },
         ],
       },
