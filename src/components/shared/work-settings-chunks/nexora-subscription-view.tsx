@@ -38,16 +38,20 @@ export function NexoraSubscriptionView({ customer, used }: { customer: CustomerA
   const { data: versions = [] } = useQuery({ queryKey: ["platform", "billing", "versions"], queryFn: listPlanVersionsApi })
   const { data: allInvoices = [] } = useQuery({ queryKey: ["platform", "billing", "invoices"], queryFn: listInvoicesApi })
   const [today] = useState(() => new Date().toISOString().slice(0, 10))
+  const [first, setFirst] = useState({ method: "transfer" as "card" | "transfer", billing: "monthly" as "monthly" | "yearly" })
   const sub = subs.find((s) => s.customerId === customer.id)
   const invoices = allInvoices.filter((i) => i.customerId === customer.id)
   const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`))
   const plan = planById(customer.plan)
   const limit = seatLimit(customer, today)
-  const billing = sub?.billing ?? customer.billing
+  // D-01: a trial (or a trial suspended after its read-only week) chooses its plan here; bank transfer by default
+  const canStart = isAdmin && !sub && (customer.status === "trial" || !!customer.suspension?.trialEnded)
+  const billing = sub?.billing ?? (canStart ? first.billing : customer.billing)
   const priceOf = (id: NexoraPlanId) => versionOn(versions, id, today)?.monthly ?? planById(id).monthly
   const current = sub ? versions.find((v) => v.id === sub.versionId)?.monthly ?? priceOf(customer.plan) : priceOf(customer.plan)
-  const busy = m.changePlan.isPending || m.changeBilling.isPending || m.changeMethod.isPending
+  const busy = m.changePlan.isPending || m.changeBilling.isPending || m.changeMethod.isPending || m.start.isPending
+
 
   return (
     <div className="space-y-6">
@@ -103,6 +107,25 @@ export function NexoraSubscriptionView({ customer, used }: { customer: CustomerA
       <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
         <h2 className="mb-1 text-base font-semibold">{t("subPlans")}</h2>
         <p className="mb-4 text-sm text-muted-foreground">{t("subPlansSameAsNexora")}</p>
+        {canStart && (
+          <div className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl bg-info-soft p-3 text-sm text-info-foreground">
+            <p className="basis-full">{t("subChooseIntro")}</p>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium">{t("subMethod")}</span>
+              <select className="h-9 rounded-xl border border-border bg-background px-2 text-foreground" value={first.method} onChange={(e) => setFirst({ ...first, method: e.target.value as "card" | "transfer" })}>
+                <option value="transfer">{t("subTransferDefault")}</option>
+                <option value="card">{t("subCard")}</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium">{t("subBilling")}</span>
+              <select className="h-9 rounded-xl border border-border bg-background px-2 text-foreground" value={first.billing} onChange={(e) => setFirst({ ...first, billing: e.target.value as "monthly" | "yearly" })}>
+                <option value="monthly">{t("pfMonthly")}</option>
+                <option value="yearly">{t("pfYearly")}</option>
+              </select>
+            </label>
+          </div>
+        )}
         <div className="grid gap-4 md:grid-cols-3">
           {NEXORA_PLANS.filter((p) => !p.retired || p.id === customer.plan).map((p) => {
             const isCurrent = p.id === customer.plan
@@ -116,6 +139,11 @@ export function NexoraSubscriptionView({ customer, used }: { customer: CustomerA
                 <ul className="mt-3 flex flex-1 flex-col gap-1.5 text-sm">
                   {p.features.map((f) => <li key={f} className="flex gap-2"><CheckCircle className="mt-0.5 size-4 shrink-0 text-success-foreground" />{f}</li>)}
                 </ul>
+                {canStart && (
+                  <Button className="mt-4" variant="primary" disabled={(p.seats > 0 && used > p.seats) || busy} onClick={() => m.start.mutate({ customerId: customer.id, plan: p.id, ...first })}>
+                    {p.seats > 0 && used > p.seats ? t("subTooSmall") : t("subChoose")}
+                  </Button>
+                )}
                 {isAdmin && sub && (
                   <Button className="mt-4" variant={isCurrent ? "outline" : up ? "primary" : "outline"} disabled={isCurrent || (!up && tooSmall) || busy} onClick={() => m.changePlan.mutate({ customerId: customer.id, plan: p.id })}>
                     {isCurrent ? t("subCurrent") : !up && tooSmall ? t("subTooSmall") : up ? t("subUpgrade") : t("subDowngrade")}

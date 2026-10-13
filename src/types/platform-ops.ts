@@ -112,4 +112,6 @@ export interface PlatformNotice {
   amount?: number
   readOnlyOn?: string
   warning?: boolean
+  /** D-02: the day an ended trial is suspended without a plan */
+  suspendsOn?: string
 }

@@ -245,6 +245,17 @@ export async function endSessionApi(by: { actor?: ConsoleActor; customer?: Perso
   return updated
 }
 
+/** STF-07: a removed member's support sessions and access requests end the same moment. */
+export function endSessionsOfAgent(actor: ConsoleActor, agentId: string) {
+  const open = sessions.list(PLATFORM_WS).filter((s) => s.agentId === agentId && ["waiting_approval", "waiting_owner", "active"].includes(sessionLive(s)))
+  for (const s of open) {
+    sessions.update(PLATFORM_WS, s.id, { status: "ended", endedAt: new Date().toISOString(), endedBy: actor.name })
+    audit(actor, "support.session_ended", "support", `${s.customerName} · ${s.agentName}`, { after: "left the team", customerId: s.customerId })
+    tenantAudit(s, "Support session closed", "support.session_ended", `${s.agentName} · left the Nexora team`, { name: actor.name, email: "support@nexora.io" })
+  }
+  return open.length
+}
+
 /** SUP-07: each page the agent opens is written to both trails. */
 export async function recordSessionPageApi(actor: ConsoleActor, sessionId: string, path: string) {
   const s = getSession(sessionId)

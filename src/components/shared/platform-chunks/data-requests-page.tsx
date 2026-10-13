@@ -17,6 +17,7 @@ import { SortableHead, TablePager, useTableControls } from "@/components/shared/
 import type { Sorters } from "@/lib/ui/table-sort"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { useConsoleActor, useConsoleCustomers } from "@/hooks/platform/use-platform-console"
+import { RETENTION } from "@/lib/platform/customer-lifecycle"
 import { useDataRequestMutations, useDataRequests, useRetention } from "@/hooks/platform/use-platform-data"
 import { isLate } from "@/lib/api/platform-data-api"
 import { consoleCan } from "@/lib/platform/console-roles"
@@ -161,6 +162,22 @@ export default function ConsoleDataRequestsPage() {
               <p className="text-xs text-muted-foreground">{t("drExportKept")}</p>
               <p className="mt-1 text-lg font-semibold">{t("drDays", { n: retention.exportDays })}</p>
               <p className="text-xs text-muted-foreground">{t("drExportKeptHint")}</p>
+            </div>
+            {/* D-07: the other periods of the policy, fixed by the cahier des charges */}
+            <div className="rounded-2xl border border-border p-3">
+              <p className="text-xs text-muted-foreground">{t("drSessionsKept")}</p>
+              <p className="mt-1 text-lg font-semibold">{t("drYears", { n: RETENTION.sessionsYears })}</p>
+              <p className="text-xs text-muted-foreground">{t("drSessionsKeptHint")}</p>
+            </div>
+            <div className="rounded-2xl border border-border p-3">
+              <p className="text-xs text-muted-foreground">{t("drSupportKept")}</p>
+              <p className="mt-1 text-lg font-semibold">{t("drYears", { n: RETENTION.supportYears })}</p>
+              <p className="text-xs text-muted-foreground">{t("drSupportKeptHint")}</p>
+            </div>
+            <div className="rounded-2xl border border-border p-3">
+              <p className="text-xs text-muted-foreground">{t("drDeletedKept")}</p>
+              <p className="mt-1 text-lg font-semibold">{t("drDays", { n: RETENTION.deletedDataDays })}</p>
+              <p className="text-xs text-muted-foreground">{t("drDeletedKeptHint")}</p>
             </div>
           </div>
         </Panel>

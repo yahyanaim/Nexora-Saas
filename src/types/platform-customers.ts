@@ -23,6 +23,8 @@ export interface CustomerSuspension {
   by: string
   /** ISO timestamp */
   at: string
+  /** D-02: the trial ended without a plan and its 7 read-only days passed; choosing a plan opens it again */
+  trialEnded?: boolean
 }
 
 export interface CustomerAccount {
@@ -66,6 +68,8 @@ export interface CustomerAccount {
   /** yyyy-mm-dd: cancellation takes effect at the end of the paid period (CUS-09) */
   cancelsOn?: string
   suspension?: CustomerSuspension
+  /** D-04: transfer invoices due after 30 days instead of 15 (Enterprise contract) */
+  paymentTermsDays?: 15 | 30
   admin: { name: string; email: string; avatar?: string; phone?: string }
   notes: CustomerNote[]
   createdAt: string

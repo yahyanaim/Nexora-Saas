@@ -102,11 +102,11 @@ export function dunningStage(days: number): DunningStage {
   return "reminders"
 }
 
-/** Every dunning action due on days 0..`days`, for an idempotent run (NFR-04). */
-export function dunningActionsUpTo(days: number) {
+/** Every dunning action due on days 0..`days`, for an idempotent run (NFR-04). A bank transfer has no card to retry. */
+export function dunningActionsUpTo(days: number, method: "card" | "transfer" = "card") {
   const out: { day: number; kind: "reminder" | "retry" | "warning" | "read_only" | "suspend" | "propose_cancel" }[] = []
   for (const d of DUNNING.reminders) if (d <= days) out.push({ day: d, kind: "reminder" })
-  for (const d of DUNNING.retries) if (d <= days) out.push({ day: d, kind: "retry" })
+  if (method === "card") for (const d of DUNNING.retries) if (d <= days) out.push({ day: d, kind: "retry" })
   if (DUNNING.warning <= days) out.push({ day: DUNNING.warning, kind: "warning" })
   if (DUNNING.readOnly <= days) out.push({ day: DUNNING.readOnly, kind: "read_only" })
   if (DUNNING.suspend <= days) out.push({ day: DUNNING.suspend, kind: "suspend" })
@@ -123,8 +123,32 @@ export function matchTransfer<T extends { id: string; number: string; balance: n
   return open.find((i) => ref.includes(i.number.toUpperCase()) && round2(i.balance) === round2(transfer.amount)) ?? null
 }
 
-/** INV-08 (D-04): card invoices are due on issue, bank transfers after 15 days. */
-export const dueDate = (issued: string, method: "card" | "transfer") => (method === "card" ? issued : addDays(issued, 15))
+/** INV-08 (D-04): card invoices are due on issue, bank transfers after 15 days, or 30 under an Enterprise contract. */
+export const dueDate = (issued: string, method: "card" | "transfer", termsDays = 15) => (method === "card" ? issued : addDays(issued, termsDays))
+
+/** D-04: transfer terms a customer can have; 30 days only for Enterprise. */
+export const PAYMENT_TERMS = [15, 30] as const
+export const termsFor = (c: { plan: string; paymentTermsDays?: number }) => (c.plan === "enterprise" && c.paymentTermsDays === 30 ? 30 : 15)
+
+/** D-03: an operator can pause dunning once per invoice, for up to 15 days. */
+export const DUNNING_PAUSE_MAX_DAYS = 15
+
+/**
+ * Dunning days of an invoice on `today`: days since the failure (or, for a
+ * transfer, the due date), less the days of a pause. Steps due during the
+ * pause move later by its length.
+ */
+export function dunningClock(failedOn: string, today: string, pause?: { from: string; until: string }) {
+  const raw = daysBetween(failedOn, today)
+  if (!pause) return raw
+  return raw - Math.min(daysBetween(pause.from, pause.until), Math.max(0, daysBetween(pause.from, today)))
+}
+
+/** The date a dunning step of day `day` falls on, after a pause. */
+export function dunningDate(failedOn: string, day: number, pause?: { from: string; until: string }) {
+  const d = addDays(failedOn, day)
+  return pause && d > pause.from ? addDays(d, daysBetween(pause.from, pause.until)) : d
+}
 
 /** PAY-07, BR-10 (D-06): refunds above this amount, VAT included, need a second person. */
 export const REFUND_SECOND_APPROVAL_ABOVE = 1000

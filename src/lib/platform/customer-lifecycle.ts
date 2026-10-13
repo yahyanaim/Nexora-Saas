@@ -21,12 +21,26 @@ export function canTransition(from: LifecycleStatus, to: LifecycleStatus) {
 /** Trials last 14 days and can be extended once by 7 days (D-02). */
 export const TRIAL_DAYS = 14
 export const TRIAL_EXTENSION_DAYS = 7
+/** D-02: without a plan, an ended trial is read-only for 7 days, then suspended; its data is kept 30 days more. */
+export const TRIAL_READ_ONLY_DAYS = 7
+export const ENDED_TRIAL_KEEP_DAYS = 30
+
+/** D-07: how long records are kept (BR-13 for audit and invoices, set in Data requests). */
+export const RETENTION = { sessionsYears: 1, supportYears: 3, deletedDataDays: 30 } as const
 
 export const isoDay = (d: Date) => d.toISOString().slice(0, 10)
 export function addDaysIso(iso: string, days: number) {
   const d = new Date(`${iso}T00:00:00Z`)
   d.setUTCDate(d.getUTCDate() + days)
   return isoDay(d)
+}
+
+/** D-02: the day an ended trial without a plan is suspended, and the day its data is deleted. */
+export function trialSuspendsOn(trialEndsOn: string) {
+  return addDaysIso(trialEndsOn, TRIAL_READ_ONLY_DAYS + 1)
+}
+export function trialDataDeletedOn(trialEndsOn: string) {
+  return addDaysIso(trialSuspendsOn(trialEndsOn), ENDED_TRIAL_KEEP_DAYS)
 }
 
 /** The day the current paid period ends: the next monthly or yearly anniversary of `since` after today. */

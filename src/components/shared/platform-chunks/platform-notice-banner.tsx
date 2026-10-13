@@ -74,6 +74,7 @@ export function PlatformNoticeBanner() {
                   : n.kind === "trial_ending" ? t("pnTrialEnding", { days: n.days ?? 0, date: day(n.date) }) : t("pnTrialEnded", { date: day(n.date) })}
               </span>{" "}
               {n.kind === "payment_failed" ? t("pnPaymentFailedText") : t("pnTrialText")}{" "}
+              {n.kind === "trial_ended" && n.suspendsOn ? `${t("pnTrialSuspends", { date: day(n.suspendsOn) })} ` : null}
               <Link href="/dashboard/subscription" className="font-medium underline underline-offset-2">{t(n.kind === "payment_failed" ? "pnPayNow" : "pnChoosePlan")}</Link>
             </p>
           ) : n.kind === "seats" ? (
