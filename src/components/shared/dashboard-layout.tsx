@@ -1,6 +1,7 @@
 "use client"
 import { InstallHint } from "./pwa/pwa-setup"
 import React, { useState } from "react"
+import dynamic from "next/dynamic"
 import { DashboardTopbar } from "./navigation/dashboard-topbar"
 import { DashboardRail } from "./navigation/dashboard-rail"
 import { MobileNavDrawer } from "./navigation/mobile-nav-drawer"
@@ -17,12 +18,16 @@ import { isRouteDenied } from "@/lib/permissions/routes"
 import { isPortalPath } from "@/lib/workforce/portal"
 import { PortalRedirect } from "./portal-redirect"
 import { SkipLink } from "./skip-link"
-import { ConsoleStrip } from "./platform-chunks/console-shared"
-import { WorkspaceViewBanner } from "./platform-chunks/workspace-view-banner"
-import { WorkspaceStatusBanner } from "./platform-chunks/workspace-status-banner"
-import { SupportSessionBanner } from "./platform-chunks/support-session-banner"
-import { PlatformNoticeBanner } from "./platform-chunks/platform-notice-banner"
-import { TwoFactorGate } from "./platform-chunks/two-factor-gate"
+
+// PERF-01: the banners and the console gate read the platform's billing, support and
+// customer modules; they load after the shell so every page starts lighter
+const ConsoleStrip = dynamic(() => import("./platform-chunks/console-shared").then((m) => m.ConsoleStrip), { ssr: false })
+const WorkspaceViewBanner = dynamic(() => import("./platform-chunks/workspace-view-banner").then((m) => m.WorkspaceViewBanner), { ssr: false })
+const WorkspaceStatusBanner = dynamic(() => import("./platform-chunks/workspace-status-banner").then((m) => m.WorkspaceStatusBanner), { ssr: false })
+const SupportSessionBanner = dynamic(() => import("./platform-chunks/support-session-banner").then((m) => m.SupportSessionBanner), { ssr: false })
+const PlatformNoticeBanner = dynamic(() => import("./platform-chunks/platform-notice-banner").then((m) => m.PlatformNoticeBanner), { ssr: false })
+// nothing of the console shows until the gate has checked two-factor set-up
+const TwoFactorGate = dynamic(() => import("./platform-chunks/two-factor-gate").then((m) => m.TwoFactorGate), { ssr: false })
 
 interface Props {
   children: React.ReactNode

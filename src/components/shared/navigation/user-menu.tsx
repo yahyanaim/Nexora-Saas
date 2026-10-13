@@ -24,10 +24,13 @@ import { ChevronDown, LogOut, User, Moon, Sun } from "@/components/ui/carbon/ico
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLogout } from "@/hooks/auth/use-logout"
 import { useTheme } from "@/hooks/use-theme"
-import { ProfilePage } from "../profile-chunks/profile-page"
+import dynamic from "next/dynamic"
 import { isDemoMode } from "@/lib/auth/demo-mode"
 import { resetDemoData } from "@/lib/workforce/demo-store"
 import { RotateCcw } from "@/components/ui/carbon/icons"
+
+// PERF-01: the profile (forms, date picker, animations) loads when its panel opens
+const ProfilePage = dynamic(() => import("../profile-chunks/profile-page").then((m) => m.ProfilePage), { ssr: false })
 
 /** Confirmation dialog shared by every logout entry point. */
 export function LogoutDialog({
@@ -150,7 +153,7 @@ export function UserMenu() {
 
       <Sheet open={profileOpen} onOpenChange={setProfileOpen}>
         <SheetContent>
-          <ProfilePage />
+          {profileOpen && <ProfilePage />}
         </SheetContent>
       </Sheet>
       <LogoutDialog open={logoutOpen} onOpenChange={setLogoutOpen} />

@@ -68,7 +68,9 @@ export function CommandPalette({ open: controlledOpen, onOpenChange: setControll
   const { data: invoices = [] } = useClientInvoices()
   const { data: quotes = [] } = useQuotes()
 
+  // when the top bar controls it, the top bar owns Ctrl+K / Cmd+K (it loads the palette on first use)
   React.useEffect(() => {
+    if (isControlled) return
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
@@ -77,7 +79,7 @@ export function CommandPalette({ open: controlledOpen, onOpenChange: setControll
     }
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
-  }, [open, setOpen])
+  }, [isControlled, open, setOpen])
 
   const run = React.useCallback(
     (command: () => void) => {

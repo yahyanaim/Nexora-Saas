@@ -57,4 +57,4 @@ The front end calls the API modules in `src/lib/api/*`. Each module keeps its fu
 
 - ~~A9~~ done (Lot A9): sorting and pagination (UX-05), time zones (UX-09), property test of invoice totals (NFR-05), reference scenario rows 1–13.
 - ~~A9b~~ done (Lot A9b): transfer by default (D-01), ended trials suspended after 7 read-only days (D-02), transfer dunning from the due date with one pause (D-03, PAY-04), 30-day Enterprise terms (D-04, INV-08), retention periods shown (D-07), off-boarding ends support sessions and pending approvals (STF-07). Status of every requirement: `documentation/cahier-status.md`.
-- A10: bring every page under 500 KB of JavaScript (NFR-02, PERF-01, PERF-02).
+- ~~A10~~ done (Lot A10): every page under 500 KB of JavaScript, heaviest 419 KB; the build fails above 500 KB (NFR-02, PERF-01, PERF-02). The front end of the cahier des charges is complete; what remains is Lot B and the outside penetration test.
