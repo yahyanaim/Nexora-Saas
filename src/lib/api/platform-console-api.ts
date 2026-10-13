@@ -44,6 +44,13 @@ const seedSessions = (ws: string): StaffSession[] => {
     s("ses_3", "stf_amine", "Firefox · Ubuntu", "Casablanca, MA", "105.66.12.41", 60 * 3, 60 * 2),
     s("ses_4", "stf_nadia", "Safari · iPhone", "Marrakech, MA", "196.200.4.9", 60 * 14, 60 * 13),
     s("ses_5", "stf_yassine", "Chrome · Android", "Lyon, FR", "92.184.10.2", 60 * 30, 60 * 29, { at: 60 * 28, by: "Sophia Vance" }),
+    // SEC-13: Liam from a browser and country never seen before
+    s("ses_6", "stf_liam", "Chrome · Windows", "Istanbul, TR", "78.180.44.6", 40, 3),
+    // earlier sessions: the devices each member usually signs in from
+    s("ses_h1", "stf_sophia", "Chrome · macOS", "Casablanca, MA", "105.66.12.40", 60 * 24 * 6, 60 * 24 * 6 - 90),
+    s("ses_h2", "stf_liam", "Edge · Windows", "Rabat, MA", "41.248.3.17", 60 * 24 * 5, 60 * 24 * 5 - 200),
+    s("ses_h3", "stf_amine", "Firefox · Ubuntu", "Casablanca, MA", "105.66.12.41", 60 * 24 * 4, 60 * 24 * 4 - 300),
+    s("ses_h4", "stf_nadia", "Safari · iPhone", "Marrakech, MA", "196.200.4.9", 60 * 24 * 3, 60 * 24 * 3 - 60),
   ]
 }
 

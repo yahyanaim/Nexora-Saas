@@ -14,6 +14,7 @@ import {
   resetDemoWorkspaceApi,
   updateFlagApi,
   updateIdentityApi,
+  updateIdentityLogoApi,
   type IdentityInput,
 } from "@/lib/api/platform-config-api"
 import { audit, type ConsoleActor } from "@/lib/api/platform-console-api"
@@ -57,6 +58,7 @@ export function useConfigMutations() {
   const t = useTranslations()
   return {
     identity: useConfigAction((a, v: IdentityInput) => updateIdentityApi(a, v), "cfgIdentitySaved"),
+    logo: useConfigAction((a, v: string | null) => updateIdentityLogoApi(a, v), "cfgLogoSaved"),
     announce: useConfigAction((a, v: { title: string; message: string; plans: NexoraPlanId[]; countries: string[]; from: string; to: string }) => createAnnouncementApi(a, v), "annCreated"),
     endAnnouncement: useConfigAction((a, id: string) => endAnnouncementApi(a, id), "annEnded"),
     flag: useConfigAction((a, v: { key: FeatureFlagKey; enabled: boolean; plans: NexoraPlanId[]; customerIds: string[] }) => updateFlagApi(a, v.key, v), "ffSaved"),

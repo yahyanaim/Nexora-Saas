@@ -216,6 +216,7 @@ export function NotificationCenter({
         align="end"
         sideOffset={8}
         className="w-80 sm:w-96 p-0 shadow-xl border-border/80 z-50"
+        aria-label={labels.title}
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border/60 px-4 py-3 bg-muted/30">

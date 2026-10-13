@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
@@ -5,8 +7,22 @@ export function Table({
   className,
   ...props
 }: React.HTMLAttributes<HTMLTableElement>) {
+  // a table wider than its box can be scrolled with the keyboard too (WCAG 2.1.1)
+  const box = React.useRef<HTMLDivElement>(null)
+  const [scrolls, setScrolls] = React.useState(false)
+  React.useEffect(() => {
+    const el = box.current
+    if (!el || typeof ResizeObserver === "undefined") return
+    const check = () => setScrolls(el.scrollWidth > el.clientWidth + 1)
+    check()
+    const ro = new ResizeObserver(check)
+    ro.observe(el)
+    // rows arriving later widen the table, not the box
+    if (el.firstElementChild) ro.observe(el.firstElementChild)
+    return () => ro.disconnect()
+  }, [])
   return (
-    <div className="relative w-full overflow-auto">
+    <div ref={box} tabIndex={scrolls ? 0 : undefined} className="relative w-full overflow-auto rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <table
         className={cn("w-full caption-bottom border-separate border-spacing-x-0 border-spacing-y-1.5 text-sm", className)}
         {...props}

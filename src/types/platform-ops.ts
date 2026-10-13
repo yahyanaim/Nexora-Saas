@@ -96,7 +96,7 @@ export interface BackupRun {
 /** What a company sees in its Nexora (INC-04, INC-07, CFG-01). */
 export interface PlatformNotice {
   id: string
-  kind: "incident" | "maintenance" | "announcement" | "seats"
+  kind: "incident" | "maintenance" | "announcement" | "seats" | "trial_ending" | "trial_ended" | "payment_failed"
   number: string
   title: string
   text: string
@@ -106,4 +106,10 @@ export interface PlatformNotice {
   /** SUB-09 */
   used?: number
   limit?: number
+  /** Table 28: trial days left; failed invoice, amount owed and the day it becomes read-only */
+  days?: number
+  date?: string
+  amount?: number
+  readOnlyOn?: string
+  warning?: boolean
 }

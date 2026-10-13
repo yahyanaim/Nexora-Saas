@@ -6,7 +6,7 @@ import { listCreditNotesApi, listInvoicesApi, listPaymentsApi } from "@/lib/api/
 import { listCustomersApi } from "@/lib/api/platform-customers-api"
 import { sellerSnapshot } from "@/lib/api/platform-config-api"
 import { downloadText, nxUblXml } from "@/lib/platform/nx-ubl"
-import type { NxCreditNote, NxInvoice } from "@/types/platform-billing"
+import type { NxCreditNote, NxInvoice, NxProForma } from "@/types/platform-billing"
 
 /**
  * Downloads of Nexora's invoices and credit notes (INV-05, INV-07): PDF, print
@@ -52,6 +52,12 @@ export function useNxDocuments() {
         const { customer, fallback } = await context(note.customerId)
         const invoice = (await listInvoicesApi()).find((i) => i.id === note.invoiceId)
         downloadText(nxUblXml({ kind: "credit", note, invoice }, invoice?.seller ?? fallback, customer), `${note.number}.xml`)
+      }),
+    proFormaPdf: (pf: NxProForma) =>
+      guard(async () => {
+        const { customer, fallback } = await context(pf.customerId)
+        const pdf = await import("@/lib/pdf/nexora-invoice-pdf")
+        await pdf.downloadNxProFormaPdf(pf, { customer, seller: pf.seller ?? fallback, locale })
       }),
     /** Every credit note of an invoice, for the panels. */
     creditNotesOf: async (invoiceId: string) => (await listCreditNotesApi()).filter((n) => n.invoiceId === invoiceId),

@@ -1,5 +1,6 @@
 "use client"
 
+import { isNewDevice } from "@/lib/platform/console-inbox"
 import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
@@ -73,7 +74,11 @@ export default function ConsoleSessionsPage() {
                   return (
                     <TableRow key={s.id}>
                       <TableCell className="font-medium">{name(s.staffId)}{mine && <span className="ms-2 text-xs text-muted-foreground">({t("stfYou")})</span>}</TableCell>
-                      <TableCell>{s.device}</TableCell>
+                      <TableCell>
+                        {s.device}
+                        {/* SEC-13 */}
+                        {isNewDevice(s, sessions) && <Badge variant="outline" className="ms-2 border-transparent bg-warning-soft text-warning-foreground">{t("sesNewDevice")}</Badge>}
+                      </TableCell>
                       <TableCell>
                         {s.location}
                         <span className="block text-xs text-muted-foreground tabular-nums">{s.ip}</span>

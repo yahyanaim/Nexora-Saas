@@ -43,6 +43,46 @@ function Checks<T extends string>({ legend, options, value, onChange, disabled }
 }
 
 /* ---------- CFG-04 ---------- */
+/** The logo printed on every Nexora invoice, credit note, pro-forma and report. */
+function LogoField({ identity, canEdit }: { identity: NexoraIdentity; canEdit: boolean }) {
+  const t = useTranslations()
+  const m = useConfigMutations()
+  const [pending, setPending] = useState<string | null | undefined>(undefined)
+  const src = identity.logoDataUrl || "/app-logo.png"
+  return (
+    <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-border p-4">
+      <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-white">
+        {/* eslint-disable-next-line @next/next/no-img-element -- a stored data URL or the bundled logo */}
+        <img src={src} alt={t("cfgLogoAlt")} width={56} height={56} className="size-14 object-contain" />
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <Label htmlFor="nx-logo">{t("cfgLogo")}</Label>
+        <p className="text-xs text-muted-foreground">{t("cfgLogoHint")}</p>
+      </div>
+      {canEdit && (
+        <div className="flex gap-2">
+          <Input
+            id="nx-logo"
+            type="file"
+            accept="image/png,image/jpeg"
+            className="max-w-56"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              e.target.value = ""
+              if (!file) return
+              const reader = new FileReader()
+              reader.onload = () => setPending(String(reader.result))
+              reader.readAsDataURL(file)
+            }}
+          />
+          {identity.logoDataUrl && <Button type="button" variant="outline" onClick={() => setPending(null)}>{t("cfgLogoDefault")}</Button>}
+        </div>
+      )}
+      <StepUpDialog open={pending !== undefined} onOpenChange={(v) => !v && setPending(undefined)} action={t(pending ? "cfgLogoStepUp" : "cfgLogoDefaultStepUp")} onConfirmed={() => { m.logo.mutate(pending ?? null); setPending(undefined) }} />
+    </div>
+  )
+}
+
 function IdentityTab({ identity, canEdit }: { identity: NexoraIdentity; canEdit: boolean }) {
   const t = useTranslations()
   const m = useConfigMutations()
@@ -60,6 +100,7 @@ function IdentityTab({ identity, canEdit }: { identity: NexoraIdentity; canEdit:
             </div>
           ))}
         </div>
+        <LogoField identity={identity} canEdit={canEdit} />
         <p className="text-xs text-muted-foreground">{t("cfgIdentityNote", { name: identity.updatedBy })}</p>
         {canEdit ? <Button type="submit" disabled={!dirty || m.identity.isPending}>{t("cfgSaveIdentity")}</Button> : <p className="text-sm text-muted-foreground">{t("cfgOwnerOnly")}</p>}
       </form>

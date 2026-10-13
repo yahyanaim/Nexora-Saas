@@ -21,11 +21,11 @@ import {
 } from "@/lib/platform/billing"
 import { ConsoleCapability as C, ConsoleRole } from "@/types/platform-console"
 import type { CustomerAccount } from "@/types/platform-customers"
-import type { DunningRun, NxCreditNote, NxInvoice, NxPayment, NxRefund, NxSettlement, NxSubscription, PlanVersion, ReconciliationRun, SubscriptionDiscount, TaxRate } from "@/types/platform-billing"
+import type { DunningRun, NxCreditNote, NxInvoice, NxPayment, NxProForma, NxRefund, NxSettlement, NxSubscription, PlanVersion, ReconciliationRun, SubscriptionDiscount, TaxRate } from "@/types/platform-billing"
 import { reconcile, settlementFee } from "@/lib/platform/reconciliation"
 import { PLATFORM_WS, audit, auditCustomer, type ConsoleActor } from "./platform-console-api"
 import { recordAudit } from "@/lib/workforce/audit"
-import { customersCollection, seatsInUse } from "./platform-customers-api"
+import { customersCollection, expireTrials, seatsInUse } from "./platform-customers-api"
 import { sellerSnapshot } from "./platform-config-api"
 
 /**
@@ -165,6 +165,7 @@ const seedSettlements = (): NxSettlement[] => {
 }
 const settlements = createCollection<NxSettlement>("platform-settlements", "stl", seedSettlements)
 const reconciliations = createCollection<ReconciliationRun>("platform-reconciliations", "rec", () => [])
+const proFormas = createCollection<NxProForma>("platform-proformas", "pf", () => [])
 
 /** Demo stand-in for the provider: each card movement lands in that day's settlement. */
 function providerRecord(date: string, amount: number) {
@@ -205,6 +206,7 @@ export const listPaymentsApi = async () => [...payments.list(PLATFORM_WS)].sort(
 export const listRefundsApi = async () => refunds.list(PLATFORM_WS)
 export const listDunningApi = async () => dunningRuns.list(PLATFORM_WS)
 export const listTaxRatesApi = async () => taxes.list(PLATFORM_WS)
+export const listProFormasApi = async () => [...proFormas.list(PLATFORM_WS)].sort((a, b) => b.number.localeCompare(a.number))
 export const listSettlementsApi = async () => [...settlements.list(PLATFORM_WS)].sort((a, b) => b.date.localeCompare(a.date))
 export const listReconciliationsApi = async () => [...reconciliations.list(PLATFORM_WS)].sort((a, b) => b.day.localeCompare(a.day) || b.createdAt.localeCompare(a.createdAt))
 
@@ -378,6 +380,8 @@ export async function runBillingJobsApi(actor: ConsoleActor, today = today0(), c
       if (invoices.get(PLATFORM_WS, inv.id)!.status !== "overdue") break
     }
   }
+  // CUS-06: trials past their end date become read-only
+  expireTrials(today)
   // PAY-09: the daily reconciliation of the day before
   const check = runReconciliation("Billing jobs", addDays(today, -1))
   audit(actor, "billing.jobs_run", "console", `${renewed} renewals · ${steps} dunning steps · ${check.differences.length} reconciliation differences`, { after: today })
@@ -610,6 +614,27 @@ export async function simulateSettlementGapApi(actor: ConsoleActor, amount = 100
   const s = [...settlements.list(PLATFORM_WS)].sort((a, b) => b.date.localeCompare(a.date))[0]
   if (!s) throw new Error("No settlement to change")
   return settlements.update(PLATFORM_WS, s.id, { gross: round2(s.gross - amount), net: round2(s.net - amount) })
+}
+
+/* ---------- pro-forma (INV-10) ---------- */
+
+/** Valid for 30 days; sales and the people who change subscriptions prepare it. */
+export async function createProFormaApi(actor: ConsoleActor, customerId: string, input: { plan: NexoraPlanId; billing: "monthly" | "yearly" }, today = today0()) {
+  if (!consoleCan(actor.role, C.CREATE_TRIAL) && !consoleCan(actor.role, C.CHANGE_SUBSCRIPTION)) throw new Error(ERR_FORBIDDEN)
+  const c = customer(customerId)
+  if (planById(input.plan).retired) throw new Error("This plan is no longer sold")
+  const version = versionOn(versions.list(PLATFORM_WS), input.plan, today)!
+  const p = periodFrom(today, input.billing)
+  const lines = subscriptionLines(input.plan, input.billing, version.monthly, c.country, p.start, p.end)
+  const t = invoiceTotals(lines)
+  const year = Number(today.slice(0, 4))
+  const last = proFormas.list(PLATFORM_WS).map((x) => x.number).filter((n) => n.startsWith(`PF-${year}-`)).map((n) => Number(n.slice(-4))).sort((a, b) => b - a)[0] ?? 0
+  const pf = proFormas.create(PLATFORM_WS, {
+    number: `PF-${year}-${String(last + 1).padStart(4, "0")}`, customerId, customerName: c.name, plan: input.plan, billing: input.billing,
+    date: today, validUntil: addDays(today, 30), periodFrom: p.start, periodTo: p.end, lines, ...t, createdBy: actor.name, seller: sellerSnapshot(),
+  })
+  audit(actor, "invoice.proforma", "invoice", `${pf.number} · ${c.name}`, { after: `${planById(input.plan).name} · ${input.billing} · ${t.total} MAD`, customerId })
+  return pf
 }
 
 /* ---------- credit notes and refunds (INV-04, PAY-07) ---------- */

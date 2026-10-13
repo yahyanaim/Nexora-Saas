@@ -81,6 +81,7 @@ export const ACTION_LABEL: Record<ConsoleAuditAction, string> = {
   "data.deletion_prepared": "auaDeletionPrepared",
   "data.deletion_approved": "auaDeletionApproved",
   "data.request_refused": "auaDataRefused",
+  "invoice.proforma": "auaProForma",
 }
 
 export const ROLE_LABEL: Record<ConsoleRole, string> = {

@@ -19,15 +19,19 @@ import { todayIso } from "@/lib/workforce/project-metrics"
 import { AdminPermissionsPlatform as P } from "@/types/roles"
 import { useReviews } from "../work-reviews-chunks/use-reviews"
 import { NotificationCenter, type NotificationItem, type NotificationLabels } from "./notification-center"
+import dynamic from "next/dynamic"
+
+// the team's inbox reads the whole console: loaded only for the Nexora team, never in a company's shell
+const ConsoleNotificationCenter = dynamic(() => import("./console-notification-center").then((m) => m.ConsoleNotificationCenter), { ssr: false })
 
 /**
  * The bell for workspace users: what is waiting for them across the ERP
  * (reviews, approvals, overdue invoices, expiring documents, late tasks).
- * Platform operators keep the platform feed.
+ * The Nexora team gets its own inbox, built the same way from the console.
  */
 export function WorkNotificationCenter() {
   const { authedUser } = useAuthGuard()
-  if (isPlatformOperator(authedUser)) return <NotificationCenter />
+  if (isPlatformOperator(authedUser)) return <ConsoleNotificationCenter />
   return <WorkInbox />
 }
 

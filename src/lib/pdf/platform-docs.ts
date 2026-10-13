@@ -1,5 +1,6 @@
 import { getMoroccanFiscalConfig } from "@/lib/demo-data/taxes"
 import { clean, DEFAULT_BRAND, loadLogo } from "./pdf-kit"
+import { nexoraLogoSrc } from "@/lib/api/platform-config-api"
 import type { InvoiceDocument } from "./invoice-template"
 
 /**
@@ -10,7 +11,7 @@ export async function platformSeller() {
   const fiscal = getMoroccanFiscalConfig()
   return {
     brand: DEFAULT_BRAND,
-    logo: await loadLogo("/app-logo.png"),
+    logo: await loadLogo(nexoraLogoSrc()),
     seller: {
       name: fiscal.companyName,
       lines: [

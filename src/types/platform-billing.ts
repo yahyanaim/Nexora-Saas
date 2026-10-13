@@ -218,3 +218,31 @@ export interface ReconciliationRun {
   createdAt: string
   updatedAt: string
 }
+
+/**
+ * INV-10: a pro-forma (quote) for a company that will pay by transfer before
+ * its subscription starts. It has its own PF number, never an invoice number,
+ * and is not in the accounts.
+ */
+export interface NxProForma {
+  id: string
+  workspaceId: string
+  /** PF-YYYY-NNNN */
+  number: string
+  customerId: string
+  customerName: string
+  plan: NexoraPlanId
+  billing: "monthly" | "yearly"
+  date: string
+  validUntil: string
+  periodFrom: string
+  periodTo: string
+  lines: InvoiceLine[]
+  subtotal: number
+  vat: number
+  total: number
+  createdBy: string
+  seller?: SellerSnapshot
+  createdAt: string
+  updatedAt: string
+}

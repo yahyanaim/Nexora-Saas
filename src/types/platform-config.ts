@@ -23,6 +23,8 @@ export interface NexoraIdentity {
   /** 24-digit Moroccan RIB */
   rib: string
   swift: string
+  /** PNG or JPEG data URL printed on every Nexora document; the Nexora logo when empty */
+  logoDataUrl?: string
   updatedBy: string
   createdAt: string
   updatedAt: string

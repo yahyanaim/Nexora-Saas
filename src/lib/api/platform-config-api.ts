@@ -63,7 +63,26 @@ export function sellerSnapshot(): SellerSnapshot {
   return { legalName: i.legalName, address: i.address, city: i.city, country: i.country, ice: i.ice, taxId: i.taxId, rc: i.rc, patente: i.patente ?? "", cnss: i.cnss ?? "", email: i.email, phone: i.phone, bankName: i.bankName, rib: i.rib, swift: i.swift }
 }
 
-export type IdentityInput = Omit<NexoraIdentity, "id" | "workspaceId" | "createdAt" | "updatedAt" | "updatedBy">
+export type IdentityInput = Omit<NexoraIdentity, "id" | "workspaceId" | "createdAt" | "updatedAt" | "updatedBy" | "logoDataUrl">
+
+/** The logo on Nexora's invoices, credit notes, pro-formas and reports. */
+export const NEXORA_LOGO = "/app-logo.png"
+export function nexoraLogoSrc() {
+  return identity.list(PLATFORM_WS)[0]?.logoDataUrl || NEXORA_LOGO
+}
+
+/** CFG-04: the owner changes Nexora's logo (PNG or JPEG up to 300 KB), or goes back to the default one. */
+export async function updateIdentityLogoApi(actor: ConsoleActor, dataUrl: string | null) {
+  needOwner(actor)
+  if (dataUrl !== null) {
+    if (!/^data:image\/(png|jpeg);base64,/.test(dataUrl)) throw new Error("The logo must be a PNG or JPEG image")
+    if (dataUrl.length > 400_000) throw new Error("The logo must be 300 KB or less")
+  }
+  const before = identity.list(PLATFORM_WS)[0]!
+  const updated = identity.update(PLATFORM_WS, before.id, { logoDataUrl: dataUrl ?? undefined, updatedBy: actor.name })
+  audit(actor, "config.identity_changed", "config", "Nexora logo", { before: before.logoDataUrl ? "custom logo" : "Nexora logo", after: dataUrl ? "custom logo" : "Nexora logo" })
+  return updated
+}
 
 export async function updateIdentityApi(actor: ConsoleActor, input: IdentityInput) {
   needOwner(actor)
