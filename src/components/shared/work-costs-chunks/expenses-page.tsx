@@ -256,7 +256,7 @@ export default function ExpensesPage() {
                   {x.receiptName ?? t("noReceipt")}
                 </p>
                 {x.receiptImage && (
-                  // eslint-disable-next-line @next/next/no-img-element -- local data URL preview
+                   
                   <img src={x.receiptImage} alt={t("receiptPhotoAlt")} className="max-h-32 w-fit rounded-xl border border-border object-contain" />
                 )}
                 {x.firstApprovedBy && <span className="w-fit rounded-full bg-info-soft px-2.5 py-0.5 text-xs font-medium text-info-foreground">{t("approvalOneOfTwo")}</span>}
@@ -387,7 +387,7 @@ export default function ExpensesPage() {
               </label>
             </div>
             {form.receiptImage && (
-              // eslint-disable-next-line @next/next/no-img-element -- local data URL preview
+               
               <img src={form.receiptImage} alt={t("receiptPhotoAlt")} className="max-h-40 w-fit rounded-xl border border-border object-contain" />
             )}
             <p className="text-xs text-muted-foreground">{form.receiptName || t("receiptHint")}</p>

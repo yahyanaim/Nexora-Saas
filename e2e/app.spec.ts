@@ -64,9 +64,10 @@ test("phone layout: drawer navigation and no horizontal overflow", async ({ brow
 
   // The desktop rail is hidden on phones; navigation lives in the drawer
   await page.getByRole("button", { name: "Open menu" }).click()
-  await page.getByRole("link", { name: "Invoices", exact: true }).click()
-  await expect(page).toHaveURL(/\/en\/dashboard\/invoices$/)
-  await expect(page.getByRole("heading", { level: 1, name: "Invoices" })).toBeVisible()
+  // Nexora's own invoices moved to the platform console; companies bill their clients here
+  await page.getByRole("link", { name: "Client invoices", exact: true }).click()
+  await expect(page).toHaveURL(/\/en\/dashboard\/client-invoices$/)
+  await expect(page.getByRole("heading", { level: 1, name: "Client invoices" })).toBeVisible()
 
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth

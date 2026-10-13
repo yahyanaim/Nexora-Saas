@@ -157,7 +157,11 @@ export function NotificationCenter({
   // An item's read flag flips when its id is in the set, so items that start read can be marked unread
   const markAllAsRead = () => {
     const next = new Set(readSet)
-    for (const n of notifications) if (!n.isRead) next.has(n.id) ? next.delete(n.id) : next.add(n.id)
+    for (const n of notifications) {
+      if (n.isRead) continue
+      if (next.has(n.id)) next.delete(n.id)
+      else next.add(n.id)
+    }
     updateRead(next)
   }
 

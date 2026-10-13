@@ -70,7 +70,7 @@ function TwoFactorSetup({ staff }: { staff: PlatformStaff }) {
             <h2 className="text-sm font-semibold">2. {t("tfStep2")}</h2>
             <div className="mt-3 flex flex-wrap items-center gap-5">
               <div className="grid size-[200px] place-items-center rounded-2xl border border-border bg-white p-2">
-                {/* eslint-disable-next-line @next/next/no-img-element -- a generated data URL, nothing to optimise */}
+                { }
                 {qr ? <img src={qr} alt={t("tfQrAlt")} width={184} height={184} /> : <QrCode className="size-16 text-muted-foreground" aria-hidden />}
               </div>
               <div className="min-w-0 flex-1 space-y-1">
