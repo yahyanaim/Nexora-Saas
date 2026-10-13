@@ -1,7 +1,9 @@
 "use client"
 
+import { ZonedTime } from "@/components/shared/zoned-time"
+import type { ConsoleAuditEvent } from "@/types/platform-console"
 import { useMemo, useState } from "react"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
@@ -9,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DownloadIcon, History, Lock } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { useConsoleActor, useConsoleAudit, useConsoleMutations } from "@/hooks/platform/use-platform-console"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
+import { useConsoleActor, useConsoleCustomers, useConsoleAudit, useConsoleMutations } from "@/hooks/platform/use-platform-console"
 import { consoleCan } from "@/lib/platform/console-roles"
 import { exportToCsv } from "@/lib/utils/export-data"
 import { ConsoleCapability, type ConsoleAuditAction, type ConsoleRole } from "@/types/platform-console"
@@ -19,9 +23,10 @@ const ALL = "all"
 const PERIODS = { "7": 7, "30": 30, "90": 90 } as const
 
 /** Every console action that changed money, access, status or configuration (AUD-01 to AUD-03, AUD-07). */
+const SORTERS: Sorters<ConsoleAuditEvent> = { at: (e) => e.at, who: (e) => e.actorName, action: (e) => e.action, target: (e) => e.targetLabel }
+
 export default function ConsoleAuditPage() {
   const t = useTranslations()
-  const locale = useLocale()
   const actor = useConsoleActor()
   const { data: events = [], isLoading } = useConsoleAudit()
   const m = useConsoleMutations()
@@ -37,7 +42,8 @@ export default function ConsoleAuditPage() {
   // a role key or a stored value ("removed", "active") reads as words
   const STATE_LABEL: Record<string, string> = { active: "sesActive", revoked: "sesRevokedState", removed: "auaRemoved" }
   const value = (v?: string) => (!v ? "" : v in ROLE_LABEL ? t(ROLE_LABEL[v as ConsoleRole]) : STATE_LABEL[v] ? t(STATE_LABEL[v]) : v)
-  const when = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso))
+  const { data: zoneCustomers = [] } = useConsoleCustomers()
+  const countryOf = (id?: string) => (id ? zoneCustomers.find((c) => c.id === id)?.country : undefined)
   const actors = useMemo(() => [...new Map(events.map((e) => [e.actorId, e.actorName])).entries()], [events])
   const rows = useMemo(() => {
     const since = period === ALL ? 0 : openedAt - PERIODS[period as keyof typeof PERIODS] * 86_400_000
@@ -50,6 +56,7 @@ export default function ConsoleAuditPage() {
         (!q || `${e.actorName} ${e.targetLabel} ${e.before ?? ""} ${e.after ?? ""}`.toLowerCase().includes(q))
     )
   }, [events, who, action, period, query, openedAt])
+  const ctl = useTableControls(rows, SORTERS, { key: "at", dir: "desc" }, 25)
 
   const doExport = () => {
     const ok = exportToCsv(
@@ -106,18 +113,18 @@ export default function ConsoleAuditPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("audWhen")}</TableHead>
-                  <TableHead>{t("audWho")}</TableHead>
-                  <TableHead>{t("audAction")}</TableHead>
-                  <TableHead>{t("audTarget")}</TableHead>
+                  <SortableHead label={t("audWhen")} k="at" ctl={ctl} />
+                  <SortableHead label={t("audWho")} k="who" ctl={ctl} />
+                  <SortableHead label={t("audAction")} k="action" ctl={ctl} />
+                  <SortableHead label={t("audTarget")} k="target" ctl={ctl} />
                   <TableHead>{t("audChange")}</TableHead>
                   <TableHead>{t("audFrom")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((e) => (
+                {ctl.rows.map((e) => (
                   <TableRow key={e.id}>
-                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground">{when(e.at)}</TableCell>
+                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground"><ZonedTime iso={e.at} country={countryOf(e.customerId)} /></TableCell>
                     <TableCell>
                       <p className="font-medium">{e.actorName}</p>
                       <RoleBadge role={e.actorRole} />
@@ -134,6 +141,7 @@ export default function ConsoleAuditPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
         <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground"><Lock className="size-3.5" aria-hidden />{t("audAppendOnly")}</p>

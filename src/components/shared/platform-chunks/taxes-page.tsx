@@ -3,11 +3,15 @@
 import { useTranslations } from "next-intl"
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { useNxInvoices, useNxPayments, useTaxRates } from "@/hooks/platform/use-platform-billing"
 import { vatByMonth } from "@/lib/api/platform-billing-api"
 import { Panel, useBillingFormat } from "./billing-shared"
 
 /** VAT rates with their dates and legal reference, and VAT collected on payments received (TAX-01 to TAX-04). */
+const SORTERS: Sorters<{ month: string; received: number; vat: number }> = { month: (r) => r.month, received: (r) => r.received, vat: (r) => r.vat }
+
 export default function ConsoleTaxesPage() {
   const t = useTranslations()
   const { money, date } = useBillingFormat()
@@ -15,6 +19,7 @@ export default function ConsoleTaxesPage() {
   const { data: payments = [] } = useNxPayments()
   const { data: invoices = [] } = useNxInvoices()
   const months = vatByMonth(payments, invoices)
+  const ctl = useTableControls(months, SORTERS, { key: "month", dir: "desc" }, 12)
   const monthLabel = (m: string) => new Intl.DateTimeFormat(undefined, { month: "long", year: "numeric" }).format(new Date(`${m}-01T00:00:00`))
 
   return (
@@ -40,9 +45,9 @@ export default function ConsoleTaxesPage() {
       <Panel title={t("txSummary")} hint={t("txSummaryHint")}>
         <TableContainer>
           <Table>
-            <TableHeader><TableRow><TableHead>{t("txMonth")}</TableHead><TableHead className="text-end">{t("txReceived")}</TableHead><TableHead className="text-end">{t("txVatCollected")}</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><SortableHead label={t("txMonth")} k="month" ctl={ctl} /><SortableHead label={t("txReceived")} k="received" ctl={ctl} align="end" /><SortableHead label={t("txVatCollected")} k="vat" ctl={ctl} align="end" /></TableRow></TableHeader>
             <TableBody>
-              {months.map((r) => (
+              {ctl.rows.map((r) => (
                 <TableRow key={r.month}>
                   <TableCell className="capitalize">{monthLabel(r.month)}</TableCell>
                   <TableCell className="text-end tabular-nums">{money(r.received)}</TableCell>
@@ -51,6 +56,7 @@ export default function ConsoleTaxesPage() {
               ))}
             </TableBody>
           </Table>
+          <TablePager ctl={ctl} className="px-4 pb-3" />
         </TableContainer>
         <p className="mt-3 text-xs text-muted-foreground">{t("txConfirm")}</p>
       </Panel>

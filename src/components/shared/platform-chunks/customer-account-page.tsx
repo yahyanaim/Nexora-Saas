@@ -1,5 +1,6 @@
 "use client"
 
+import { ZonedTime } from "@/components/shared/zoned-time"
 import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
@@ -71,7 +72,6 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
 
   const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`))
-  const when = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso))
 
   if (isLoading) return <div className="p-4 md:p-6"><ListSkeleton /></div>
   if (!c) {
@@ -290,7 +290,7 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
                     <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" aria-hidden />
                     <div>
                       <p><span className="font-medium">{e.actorName}</span> · {t(ACTION_LABEL[e.action])}{e.after ? ` · ${e.after}` : ""}</p>
-                      <p className="text-xs text-muted-foreground">{when(e.at)}</p>
+                      <p className="text-xs text-muted-foreground"><ZonedTime iso={e.at} country={c.country} /></p>
                     </div>
                   </li>
                 ))}
@@ -352,7 +352,7 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
                 {c.notes.map((n) => (
                   <li key={n.id} className="rounded-2xl bg-muted/50 p-3 text-sm">
                     <p className="whitespace-pre-wrap">{n.text}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{n.author} · {when(n.at)}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{n.author} · <ZonedTime iso={n.at} country={c.country} /></p>
                   </li>
                 ))}
               </ul>

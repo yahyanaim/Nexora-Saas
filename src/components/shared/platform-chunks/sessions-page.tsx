@@ -1,7 +1,7 @@
 "use client"
 
 import { isNewDevice } from "@/lib/platform/console-inbox"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,8 @@ import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Clock, MonitorSmartphone, PowerOff, ShieldAlert } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { useConsoleActor, useConsoleMutations, useConsoleSessions, useConsoleStaff } from "@/hooks/platform/use-platform-console"
 import { canRevokeSessions } from "@/lib/platform/console-roles"
 import { sessionState } from "@/lib/platform/session-policy"
@@ -36,6 +38,8 @@ export default function ConsoleSessionsPage() {
   const name = (id: string) => staff.find((s) => s.id === id)?.name ?? t("sesFormerMember")
   const when = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso))
   const rows = sessions.map((s) => ({ ...s, state: sessionState(s) }))
+  const sorters = useMemo<Sorters<(typeof rows)[number]>>(() => ({ name: (s) => name(s.staffId), device: (s) => s.device, location: (s) => s.location, started: (s) => s.startedAt, last: (s) => s.lastActivityAt, state: (s) => s.state }), [staff]) // eslint-disable-line react-hooks/exhaustive-deps -- name() reads staff
+  const ctl = useTableControls(rows, sorters, { key: "last", dir: "desc" })
   const live = rows.filter((s) => s.state === "active")
   const foreign = live.filter((s) => !s.location.endsWith(", MA"))
 
@@ -58,17 +62,17 @@ export default function ConsoleSessionsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("stfMember")}</TableHead>
-                  <TableHead>{t("sesDevice")}</TableHead>
-                  <TableHead>{t("sesLocation")}</TableHead>
-                  <TableHead>{t("sesStarted")}</TableHead>
-                  <TableHead>{t("sesLastActivity")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
+                  <SortableHead label={t("stfMember")} k="name" ctl={ctl} />
+                  <SortableHead label={t("sesDevice")} k="device" ctl={ctl} />
+                  <SortableHead label={t("sesLocation")} k="location" ctl={ctl} />
+                  <SortableHead label={t("sesStarted")} k="started" ctl={ctl} />
+                  <SortableHead label={t("sesLastActivity")} k="last" ctl={ctl} />
+                  <SortableHead label={t("status")} k="state" ctl={ctl} />
                   <TableHead>{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((s) => {
+                {ctl.rows.map((s) => {
                   const mine = s.staffId === actor?.id
                   const canRevoke = s.state === "active" && !!actor && (mine || canRevokeSessions(actor.role))
                   return (
@@ -99,6 +103,7 @@ export default function ConsoleSessionsPage() {
                 })}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
       </section>

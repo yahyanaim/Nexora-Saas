@@ -15,6 +15,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DownloadIcon, FileSpreadsheet, FileText, Printer, Receipt, ReceiptText, TrendingUp, Warning } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { Link } from "@/i18n/navigation"
 import { useConsoleActor } from "@/hooks/platform/use-platform-console"
@@ -26,7 +28,7 @@ import { downloadXlsx } from "@/lib/utils/xlsx"
 import { useNxDocuments } from "@/hooks/platform/use-nx-documents"
 import { useNexoraIdentity } from "@/hooks/platform/use-platform-config"
 import { ConsoleCapability as C } from "@/types/platform-console"
-import type { NxInvoice, NxInvoiceStatus } from "@/types/platform-billing"
+import type { NxCreditNote, NxInvoice, NxInvoiceStatus } from "@/types/platform-billing"
 import { StepUpDialog } from "./console-shared"
 import { InvoiceStatusBadge, Panel, useBillingFormat } from "./billing-shared"
 
@@ -34,6 +36,10 @@ const ALL = "all"
 const STATUSES: NxInvoiceStatus[] = ["issued", "paid", "partly_paid", "overdue", "credited"]
 
 /** Nexora's invoices to its customers, never edited after issue (INV-01 to INV-09). */
+const INVOICE_SORT: Sorters<NxInvoice> = { number: (i) => i.number, company: (i) => i.customerName, date: (i) => i.date, due: (i) => i.dueDate, total: (i) => i.total, left: (i) => Math.round((i.total - i.paid - i.credited) * 100) / 100, status: (i) => i.status }
+
+const NOTE_SORT: Sorters<NxCreditNote> = { number: (n) => n.number, invoice: (n) => n.invoiceNumber, company: (n) => n.customerName, total: (n) => n.total }
+
 export default function ConsoleInvoicesPage() {
   const t = useTranslations()
   const locale = useLocale()
@@ -55,6 +61,8 @@ export default function ConsoleInvoicesPage() {
   const canCredit = consoleCan(actor?.role, C.CREDIT_NOTES)
   const q = query.trim().toLowerCase()
   const rows = invoices.filter((i) => (status === ALL || i.status === status) && (period === ALL || i.date.startsWith(period)) && (!q || `${i.number} ${i.customerName} ${i.customerIce ?? ""}`.toLowerCase().includes(q)))
+  const ctl = useTableControls(rows, INVOICE_SORT, { key: "number", dir: "desc" })
+  const ctl2 = useTableControls(notes, NOTE_SORT, { key: "number", dir: "desc" })
   const periodNotes = notes.filter((n) => period === ALL || n.date.startsWith(period))
   const months = [...new Set(invoices.map((i) => i.date.slice(0, 7)))].sort().reverse()
   const monthLabel = (m: string) => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(`${m}-01T00:00:00`))
@@ -144,18 +152,18 @@ export default function ConsoleInvoicesPage() {
             <Table className="min-w-[56rem]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("biNumber")}</TableHead>
-                  <TableHead>{t("pfCompany")}</TableHead>
-                  <TableHead>{t("biDate")}</TableHead>
-                  <TableHead>{t("biDue")}</TableHead>
-                  <TableHead className="text-end">{t("biTotal")}</TableHead>
-                  <TableHead className="text-end">{t("biLeft")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
+                  <SortableHead label={t("biNumber")} k="number" ctl={ctl} />
+                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
+                  <SortableHead label={t("biDate")} k="date" ctl={ctl} />
+                  <SortableHead label={t("biDue")} k="due" ctl={ctl} />
+                  <SortableHead label={t("biTotal")} k="total" ctl={ctl} align="end" />
+                  <SortableHead label={t("biLeft")} k="left" ctl={ctl} align="end" />
+                  <SortableHead label={t("status")} k="status" ctl={ctl} />
                   <TableHead><span className="sr-only">PDF</span></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((i) => (
+                {ctl.rows.map((i) => (
                   <TableRow key={i.id} className="cursor-pointer" onClick={() => setOpen(i)}>
                     <TableCell><button type="button" className="rounded font-mono text-xs font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(e) => { e.stopPropagation(); setOpen(i) }}>{i.number}</button>{i.kind === "proration" && <span className="block text-xs text-muted-foreground">{t("biProration")}</span>}</TableCell>
                     <TableCell>{i.customerName}</TableCell>
@@ -169,6 +177,7 @@ export default function ConsoleInvoicesPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
       </Panel>
@@ -177,9 +186,9 @@ export default function ConsoleInvoicesPage() {
         {notes.length === 0 ? <p className="rounded-2xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">{t("biNoCredit")}</p> : (
           <TableContainer>
             <Table>
-              <TableHeader><TableRow><TableHead>{t("biNumber")}</TableHead><TableHead>{t("biForInvoice")}</TableHead><TableHead>{t("pfCompany")}</TableHead><TableHead>{t("cuReason")}</TableHead><TableHead className="text-end">{t("biTotal")}</TableHead><TableHead>{t("biDocuments")}</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><SortableHead label={t("biNumber")} k="number" ctl={ctl2} /><SortableHead label={t("biForInvoice")} k="invoice" ctl={ctl2} /><SortableHead label={t("pfCompany")} k="company" ctl={ctl2} /><TableHead>{t("cuReason")}</TableHead><SortableHead label={t("biTotal")} k="total" ctl={ctl2} align="end" /><TableHead>{t("biDocuments")}</TableHead></TableRow></TableHeader>
               <TableBody>
-                {notes.map((n) => (
+                {ctl2.rows.map((n) => (
                   <TableRow key={n.id}>
                     <TableCell className="font-mono text-xs">{n.number}<span className="block text-muted-foreground">{date(n.date)}</span></TableCell>
                     <TableCell className="font-mono text-xs">{n.invoiceNumber}</TableCell>
@@ -196,6 +205,7 @@ export default function ConsoleInvoicesPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl2} className="px-4 pb-3" />
           </TableContainer>
         )}
       </Panel>

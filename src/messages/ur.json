@@ -4690,5 +4690,8 @@
   "cinCategory_team": "گاہک",
   "cinCategory_billing": "بلنگ",
   "cinCategory_security": "سیکیورٹی",
-  "cinCategory_system": "پلیٹ فارم"
+  "cinCategory_system": "پلیٹ فارم",
+  "tcSortBy": "{column} کے مطابق ترتیب",
+  "tcRange": "{total} میں سے {from}–{to}",
+  "tzCustomerTime": "گاہک کا وقت: {time} ({zone})"
 }

@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowLeftRight, CheckCircle, Landmark, Plus, Warning } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { useConsoleActor } from "@/hooks/platform/use-platform-console"
 import { useBillingMutations, useNxDunning, useNxInvoices, useNxPayments, useNxRefunds } from "@/hooks/platform/use-platform-billing"
@@ -32,6 +34,8 @@ const PAY_CLASS: Record<NxPayment["status"], string> = {
 }
 
 /** Money between customers and Nexora: payments, failures, refunds, the transfer queue and dunning (PAY-01 to PAY-09). */
+const SORTERS: Sorters<NxPayment> = { date: (p) => p.date, company: (p) => p.customerName ?? p.payer, invoice: (p) => p.invoiceNumber, method: (p) => p.method, amount: (p) => p.amount, status: (p) => p.status }
+
 export default function ConsoleTransactionsPage() {
   const t = useTranslations()
   const { money, date } = useBillingFormat()
@@ -55,6 +59,7 @@ export default function ConsoleTransactionsPage() {
   const waiting = refunds.filter((r) => r.status === "awaiting_approval")
   const overdue = invoices.filter((i) => i.status === "overdue" && i.failedOn)
   const ledger = payments.filter((p) => p.status !== "unmatched")
+  const ctl = useTableControls(ledger, SORTERS, { key: "date", dir: "desc" })
   const month = today.slice(0, 7)
 
   const cards: MetricCardItem[] = [
@@ -136,18 +141,18 @@ export default function ConsoleTransactionsPage() {
             <Table className="min-w-[52rem]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("biDate")}</TableHead>
-                  <TableHead>{t("pfCompany")}</TableHead>
-                  <TableHead>{t("biForInvoice")}</TableHead>
-                  <TableHead>{t("subMethod")}</TableHead>
+                  <SortableHead label={t("biDate")} k="date" ctl={ctl} />
+                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
+                  <SortableHead label={t("biForInvoice")} k="invoice" ctl={ctl} />
+                  <SortableHead label={t("subMethod")} k="method" ctl={ctl} />
                   <TableHead>{t("trReference")}</TableHead>
-                  <TableHead className="text-end">{t("trAmount")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
+                  <SortableHead label={t("trAmount")} k="amount" ctl={ctl} align="end" />
+                  <SortableHead label={t("status")} k="status" ctl={ctl} />
                   {canRecord && <TableHead>{t("actions")}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {ledger.map((p) => (
+                {ctl.rows.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="text-sm">{date(p.date)}</TableCell>
                     <TableCell>{p.customerName ?? p.payer ?? "—"}</TableCell>
@@ -171,6 +176,7 @@ export default function ConsoleTransactionsPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
         <p className="mt-3 text-xs text-muted-foreground">{t("trCardNote")}</p>

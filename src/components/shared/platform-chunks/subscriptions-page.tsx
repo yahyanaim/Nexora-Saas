@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CalendarDays, Play, RefreshCw, Settings, Wallet } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { Link } from "@/i18n/navigation"
 import { useConsoleActor, useConsoleCustomers } from "@/hooks/platform/use-platform-console"
 import { useBillingMutations, useNxSubscriptions, usePlanVersions } from "@/hooks/platform/use-platform-billing"
@@ -60,7 +62,9 @@ export default function ConsoleSubscriptionsPage() {
   const canCancelNow = consoleCan(actor?.role, C.CREDIT_NOTES)
   const canRun = !!actor && [ConsoleRole.OWNER, ConsoleRole.ADMIN, ConsoleRole.FINANCE, ConsoleRole.ENGINEERING].includes(actor.role)
   const price = (s: NxSubscription) => versions.find((v) => v.id === s.versionId)?.monthly ?? 0
-  const rows = subs.map((s) => ({ s, c: customers.find((c) => c.id === s.customerId) })).filter((r) => r.c).sort((a, b) => a.s.periodEnd.localeCompare(b.s.periodEnd))
+  const rows = subs.map((s) => ({ s, c: customers.find((c) => c.id === s.customerId) })).filter((r) => r.c)
+  const sorters = useMemo<Sorters<(typeof rows)[number]>>(() => ({ company: (r) => r.c!.name, plan: (r) => planById(r.s.plan).monthly, price: (r) => periodPrice(versions.find((v) => v.id === r.s.versionId)?.monthly ?? 0, r.s.billing), period: (r) => r.s.periodEnd, method: (r) => r.s.method, status: (r) => r.c!.status }), [versions])
+  const ctl = useTableControls(rows, sorters, { key: "period", dir: "asc" })
   const open = rows.find((r) => r.s.id === openId) ?? null
 
   const renewSoon = rows.filter((r) => r.s.periodEnd <= addDays(today, 7))
@@ -111,17 +115,17 @@ export default function ConsoleSubscriptionsPage() {
             <Table className="min-w-[62rem]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("pfCompany")}</TableHead>
-                  <TableHead>{t("pfPlan")}</TableHead>
-                  <TableHead className="text-end">{t("subPrice")}</TableHead>
-                  <TableHead>{t("subPeriod")}</TableHead>
-                  <TableHead>{t("subMethod")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
+                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
+                  <SortableHead label={t("pfPlan")} k="plan" ctl={ctl} />
+                  <SortableHead label={t("subPrice")} k="price" ctl={ctl} align="end" />
+                  <SortableHead label={t("subPeriod")} k="period" ctl={ctl} />
+                  <SortableHead label={t("subMethod")} k="method" ctl={ctl} />
+                  <SortableHead label={t("status")} k="status" ctl={ctl} />
                   <TableHead>{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map(({ s, c }) => {
+                {ctl.rows.map(({ s, c }) => {
                   const limit = seatLimit(c!, today)
                   return (
                     <TableRow key={s.id}>
@@ -141,6 +145,7 @@ export default function ConsoleSubscriptionsPage() {
                 })}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
         <p className="mt-3 text-xs text-muted-foreground">{t("subJobsNote")}</p>

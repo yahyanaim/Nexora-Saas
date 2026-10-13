@@ -1,5 +1,7 @@
 "use client"
 
+import { ZonedTime } from "@/components/shared/zoned-time"
+import type { SupportRequest } from "@/types/platform-support"
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
@@ -10,11 +12,13 @@ import { ListSkeleton } from "@/components/ui/empty-state"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableContainer, TableHeader, TableRow } from "@/components/ui/table"
 import { AlertTriangle, Clock, DoorOpen, Headset, Search, UserX } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { Link } from "@/i18n/navigation"
-import { useConsoleActor, useConsoleStaff } from "@/hooks/platform/use-platform-console"
+import { useConsoleActor, useConsoleCustomers, useConsoleStaff } from "@/hooks/platform/use-platform-console"
 import { useSupportDeskMutations, useSupportRequests } from "@/hooks/platform/use-platform-support"
 import { canHandleSupport } from "@/lib/api/platform-support-api"
 import { consoleCan } from "@/lib/platform/console-roles"
@@ -23,17 +27,22 @@ import { ConsoleCapability as C } from "@/types/platform-console"
 import type { SupportStatus } from "@/types/platform-support"
 import { Panel } from "./billing-shared"
 import { SessionRequestSheet, type SessionDraft } from "./session-request-sheet"
-import { Conversation, PriorityBadge, ResponseTarget, SupportStatusBadge, useSupportFormat } from "./support-shared"
+import { Conversation, PriorityBadge, ResponseTarget, SupportStatusBadge } from "./support-shared"
 
 const STATUSES: SupportStatus[] = ["open", "waiting_customer", "resolved", "closed"]
 type Filter = "active" | "all" | SupportStatus
 
 /** Requests raised by customer companies, answered by the Nexora team (SUP-01, SUP-02, SUP-10). */
+const PRIORITY_RANK = { urgent: 4, high: 3, normal: 2, low: 1 } as const
+const SORTERS: Sorters<SupportRequest> = { number: (r) => r.number, company: (r) => r.customerName, priority: (r) => PRIORITY_RANK[r.priority], assignee: (r) => r.assigneeName, status: (r) => r.status, updated: (r) => r.updatedAt }
+
 export default function ConsoleSupportDeskPage() {
   const t = useTranslations()
-  const { dateTime } = useSupportFormat()
+
   const actor = useConsoleActor()
   const { data: requests = [], isLoading } = useSupportRequests()
+  const { data: zoneCustomers = [] } = useConsoleCustomers()
+  const countryOf = (id?: string) => (id ? zoneCustomers.find((c) => c.id === id)?.country : undefined)
   const { data: staff = [] } = useConsoleStaff()
   const m = useSupportDeskMutations()
   const [now] = useState(() => new Date())
@@ -59,6 +68,7 @@ export default function ConsoleSupportDeskPage() {
   const rows = requests
     .filter((r) => (filter === "all" ? true : filter === "active" ? r.status === "open" || r.status === "waiting_customer" : r.status === filter))
     .filter((r) => !q || `${r.number} ${r.customerName} ${r.subject} ${r.requesterName}`.toLowerCase().includes(q))
+  const ctl = useTableControls(rows, SORTERS, { key: "updated", dir: "desc" })
   const filterLabel = (f: Filter) => (f === "active" ? t("sdActive") : f === "all" ? t("sdAll") : t(`supSt_${f}`))
 
   return (
@@ -88,16 +98,16 @@ export default function ConsoleSupportDeskPage() {
             <Table className="min-w-[60rem]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("sdRequest")}</TableHead>
-                  <TableHead>{t("pfCompany")}</TableHead>
-                  <TableHead>{t("sdPriority")}</TableHead>
-                  <TableHead>{t("sdAssignee")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
-                  <TableHead>{t("sdUpdated")}</TableHead>
+                  <SortableHead label={t("sdRequest")} k="number" ctl={ctl} />
+                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
+                  <SortableHead label={t("sdPriority")} k="priority" ctl={ctl} />
+                  <SortableHead label={t("sdAssignee")} k="assignee" ctl={ctl} />
+                  <SortableHead label={t("status")} k="status" ctl={ctl} />
+                  <SortableHead label={t("sdUpdated")} k="updated" ctl={ctl} />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((r) => (
+                {ctl.rows.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell className="max-w-80">
                       <button type="button" onClick={() => setOpenId(r.id)} className="text-start font-medium hover:underline focus-visible:underline">
@@ -109,11 +119,12 @@ export default function ConsoleSupportDeskPage() {
                     <TableCell><PriorityBadge priority={r.priority} /><span className="mt-1 block"><ResponseTarget request={r} now={now} /></span></TableCell>
                     <TableCell className="text-sm">{r.assigneeName ?? <span className="text-muted-foreground">{t("sdNobody")}</span>}</TableCell>
                     <TableCell><SupportStatusBadge status={r.status} /></TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{dateTime(r.updatedAt)}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground"><ZonedTime iso={r.updatedAt} country={countryOf(r.customerId)} /></TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
         <p className="mt-3 text-xs text-muted-foreground">{t("sdTargets")}</p>

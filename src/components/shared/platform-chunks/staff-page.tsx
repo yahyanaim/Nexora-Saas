@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Clock, Mail, ShieldCheck, ShieldUser, Trash, UserPlus, Users } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { useConsoleActor, useConsoleMutations, useConsoleStaff } from "@/hooks/platform/use-platform-console"
 import { canManageStaff, needsStepUp } from "@/lib/platform/console-roles"
@@ -24,6 +26,8 @@ import { ROLE_LABEL, RoleBadge, StepUpDialog } from "./console-shared"
 type Pending = { kind: "role"; staff: PlatformStaff; role: ConsoleRole } | { kind: "remove"; staff: PlatformStaff } | { kind: "invite" }
 
 /** The Nexora team only, with console role and two-factor status (STF-01 to STF-07). */
+const SORTERS: Sorters<PlatformStaff> = { name: (s) => s.name, role: (s) => s.role, twoFactor: (s) => (s.twoFactor ? 1 : 0), status: (s) => s.status, last: (s) => s.lastSignInAt }
+
 export default function ConsoleStaffPage() {
   const t = useTranslations()
   const locale = useLocale()
@@ -34,6 +38,7 @@ export default function ConsoleStaffPage() {
   const [form, setForm] = useState({ name: "", email: "", role: ConsoleRole.SUPPORT })
   const [pending, setPending] = useState<Pending | null>(null)
   const [stepUp, setStepUp] = useState(false)
+  const ctl = useTableControls(staff, SORTERS, { key: "name", dir: "asc" })
 
   const canInvite = !!actor && canManageStaff(actor.role, ConsoleRole.READ_ONLY)
   const stepUpNeeded = needsStepUp(actor?.role, ConsoleCapability.MANAGE_STAFF)
@@ -81,16 +86,16 @@ export default function ConsoleStaffPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("stfMember")}</TableHead>
-                  <TableHead>{t("stfRole")}</TableHead>
-                  <TableHead>{t("stf2faCol")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
-                  <TableHead>{t("stfLastSignIn")}</TableHead>
+                  <SortableHead label={t("stfMember")} k="name" ctl={ctl} />
+                  <SortableHead label={t("stfRole")} k="role" ctl={ctl} />
+                  <SortableHead label={t("stf2faCol")} k="twoFactor" ctl={ctl} />
+                  <SortableHead label={t("status")} k="status" ctl={ctl} />
+                  <SortableHead label={t("stfLastSignIn")} k="last" ctl={ctl} />
                   <TableHead>{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {staff.map((s) => {
+                {ctl.rows.map((s) => {
                   const manageable = !!actor && s.id !== actor.id && canManageStaff(actor.role, s.role)
                   const expired = inviteExpired(s)
                   return (
@@ -148,6 +153,7 @@ export default function ConsoleStaffPage() {
                 })}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
         <p className="mt-3 text-xs text-muted-foreground">{t("stfRule")}</p>

@@ -4690,5 +4690,8 @@
   "cinCategory_team": "Клиенты",
   "cinCategory_billing": "Биллинг",
   "cinCategory_security": "Безопасность",
-  "cinCategory_system": "Платформа"
+  "cinCategory_system": "Платформа",
+  "tcSortBy": "Сортировать по: {column}",
+  "tcRange": "{from}–{to} из {total}",
+  "tzCustomerTime": "Время клиента: {time} ({zone})"
 }

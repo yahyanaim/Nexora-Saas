@@ -16,6 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, RotateCcw, X } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { routing } from "@/i18n/routing"
 import { useConsoleActor, useConsoleCustomers } from "@/hooks/platform/use-platform-console"
@@ -23,7 +25,7 @@ import { useAnnouncements, useConfigMutations, useFeatureFlags, useNexoraIdentit
 import { EMAIL_TEMPLATES, FEATURE_FLAGS, announcementFor, flagOn, type EmailTemplateId, type FeatureFlagKey } from "@/lib/platform/config-rules"
 import { NEXORA_PLANS, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import { ConsoleRole } from "@/types/platform-console"
-import type { FeatureFlag, NexoraIdentity } from "@/types/platform-config"
+import type { Announcement, FeatureFlag, NexoraIdentity } from "@/types/platform-config"
 import { Panel } from "./billing-shared"
 import { StepUpDialog } from "./console-shared"
 
@@ -110,9 +112,12 @@ function IdentityTab({ identity, canEdit }: { identity: NexoraIdentity; canEdit:
 }
 
 /* ---------- CFG-01 ---------- */
+const ANN_SORT: Sorters<Announcement> = { title: (a) => a.title, from: (a) => a.from, status: (a) => (a.endedAt ? 0 : 1) }
+
 function AnnouncementsTab({ canEdit }: { canEdit: boolean }) {
   const t = useTranslations()
   const { data: list = [] } = useAnnouncements()
+  const ctl = useTableControls(list, ANN_SORT, { key: "from", dir: "desc" })
   const { data: customers = [] } = useConsoleCustomers()
   const m = useConfigMutations()
   const [today] = useState(() => new Date().toISOString().slice(0, 10))
@@ -126,9 +131,9 @@ function AnnouncementsTab({ canEdit }: { canEdit: boolean }) {
     <Panel title={t("annTitle")} hint={t("annHint")} actions={canEdit ? <Button size="sm" onClick={() => setForm({ title: "", message: "", plans: [], countries: [], from: today, to: today })}><Plus className="size-4" />{t("annNew")}</Button> : undefined}>
       <TableContainer>
         <Table className="min-w-[52rem]">
-          <TableHeader><TableRow><TableHead>{t("annMessage")}</TableHead><TableHead>{t("annSegment")}</TableHead><TableHead>{t("annDates")}</TableHead><TableHead>{t("status")}</TableHead><TableHead>{t("actions")}</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><SortableHead label={t("annMessage")} k="title" ctl={ctl} /><TableHead>{t("annSegment")}</TableHead><SortableHead label={t("annDates")} k="from" ctl={ctl} /><SortableHead label={t("status")} k="status" ctl={ctl} /><TableHead>{t("actions")}</TableHead></TableRow></TableHeader>
           <TableBody>
-            {list.map((a) => (
+            {ctl.rows.map((a) => (
               <TableRow key={a.id}>
                 <TableCell className="max-w-80"><span className="font-medium">{a.title}</span><span className="block text-xs text-muted-foreground">{a.message}</span></TableCell>
                 <TableCell className="text-sm">{segment(a.plans, a.countries)}<span className="block text-xs text-muted-foreground">{t("annReach", { n: reach(a) })}</span></TableCell>
@@ -139,6 +144,7 @@ function AnnouncementsTab({ canEdit }: { canEdit: boolean }) {
             ))}
           </TableBody>
         </Table>
+        <TablePager ctl={ctl} className="px-4 pb-3" />
       </TableContainer>
       <DataTableEntityFormSheet
         open={!!form}

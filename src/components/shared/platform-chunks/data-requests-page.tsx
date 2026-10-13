@@ -1,5 +1,6 @@
 "use client"
 
+import { ZonedTime } from "@/components/shared/zoned-time"
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +13,8 @@ import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Archive, CheckCircle, DownloadIcon, FolderLock, Trash2, Warning } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { useConsoleActor, useConsoleCustomers } from "@/hooks/platform/use-platform-console"
 import { useDataRequestMutations, useDataRequests, useRetention } from "@/hooks/platform/use-platform-data"
@@ -36,6 +39,8 @@ const STATUS_CLASS: Record<DataRequest["status"], string> = {
  * (AUD-06). Exports are delivered within 7 days; a deletion is prepared by one
  * team member and approved by a platform owner with the authenticator code.
  */
+const SORTERS: Sorters<DataRequest> = { number: (r) => r.number, company: (r) => r.customerName, kind: (r) => r.kind, received: (r) => r.receivedAt, due: (r) => r.dueOn, status: (r) => r.status }
+
 export default function ConsoleDataRequestsPage() {
   const t = useTranslations()
   const { date, dateTime } = useBillingFormat()
@@ -48,6 +53,7 @@ export default function ConsoleDataRequestsPage() {
   const [approving, setApproving] = useState<string | null>(null)
   const [refusing, setRefusing] = useState("")
   const [years, setYears] = useState<string | null>(null)
+  const ctl = useTableControls(requests, SORTERS, { key: "received", dir: "desc" })
   const [savingYears, setSavingYears] = useState(false)
   const open = requests.find((r) => r.id === openId)
   const canHandle = consoleCan(actor?.role, C.CHANGE_STATUS)
@@ -96,24 +102,24 @@ export default function ConsoleDataRequestsPage() {
             <Table className="min-w-[56rem]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("drNumber")}</TableHead>
-                  <TableHead>{t("pfCompany")}</TableHead>
-                  <TableHead>{t("drKind")}</TableHead>
-                  <TableHead>{t("drReceived")}</TableHead>
-                  <TableHead>{t("drDue")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
+                  <SortableHead label={t("drNumber")} k="number" ctl={ctl} />
+                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
+                  <SortableHead label={t("drKind")} k="kind" ctl={ctl} />
+                  <SortableHead label={t("drReceived")} k="received" ctl={ctl} />
+                  <SortableHead label={t("drDue")} k="due" ctl={ctl} />
+                  <SortableHead label={t("status")} k="status" ctl={ctl} />
                   <TableHead>{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {requests.map((r) => (
+                {ctl.rows.map((r) => (
                   <TableRow key={r.id} className="cursor-pointer" onClick={() => setOpenId(r.id)}>
                     <TableCell className="font-mono text-xs">
                       <button type="button" className="rounded hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(e) => { e.stopPropagation(); setOpenId(r.id) }}>{r.number}</button>
                     </TableCell>
                     <TableCell><p className="font-medium">{r.customerName}</p><p className="text-xs text-muted-foreground">{r.requestedBy.name}</p></TableCell>
                     <TableCell>{t(r.kind === "export" ? "drKind_export" : "drKind_deletion")}</TableCell>
-                    <TableCell className="text-sm">{date(r.receivedAt)}</TableCell>
+                    <TableCell className="text-sm"><ZonedTime iso={r.receivedAt} country={customers.find((c) => c.id === r.customerId)?.country} /></TableCell>
                     <TableCell className={cn("text-sm", isLate(r) && "font-medium text-destructive")}>{date(r.dueOn)}{isLate(r) && ` · ${t("drLateBadge")}`}</TableCell>
                     <TableCell><Badge variant="outline" className={cn("border-transparent", expired(r) ? "bg-muted text-muted-foreground" : STATUS_CLASS[r.status])}>{statusLabel(r)}</Badge></TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>{nextStep(r)}</TableCell>
@@ -121,6 +127,7 @@ export default function ConsoleDataRequestsPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
         <p className="mt-3 text-xs text-muted-foreground">{t("drRules")}</p>
@@ -189,7 +196,7 @@ export default function ConsoleDataRequestsPage() {
               <h3 className="mb-2 text-sm font-semibold">{t("drHistory")}</h3>
               <ol className="space-y-2 border-s border-border ps-4">
                 {open.history.map((h, i) => (
-                  <li key={i}><p>{h.text}</p><p className="text-xs text-muted-foreground">{h.by} · {dateTime(h.at)}</p></li>
+                  <li key={i}><p>{h.text}</p><p className="text-xs text-muted-foreground">{h.by} · <ZonedTime iso={h.at} country={customers.find((c) => c.id === open.customerId)?.country} /></p></li>
                 ))}
               </ol>
             </div>

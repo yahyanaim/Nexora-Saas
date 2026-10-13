@@ -9,9 +9,12 @@ import { Progress } from "@/components/ui/progress"
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableContainer, TableHeader, TableRow } from "@/components/ui/table"
 import { Plus, Store, TrendingUp, Users, Warning } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
+import type { CustomerAccount } from "@/types/platform-customers"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { Link, useRouter } from "@/i18n/navigation"
 import { useConsoleActor, useConsoleCustomers, useConsoleMutations } from "@/hooks/platform/use-platform-console"
@@ -23,6 +26,14 @@ import { ConsoleCapability } from "@/types/platform-console"
 import { LIFECYCLE, LifecycleBadge } from "./lifecycle-badge"
 
 const ALL = "all"
+const SORTERS: Sorters<CustomerAccount> = {
+  name: (c) => c.name,
+  plan: (c) => planById(c.plan).monthly,
+  status: (c) => c.status,
+  seats: (c) => c.seatsUsed,
+  mrr: (c) => accountMrr(c),
+  since: (c) => c.since,
+}
 const EMPTY_TRIAL = { name: "", city: "", country: "MA", ice: "", plan: "business" as NexoraPlanId, adminName: "", adminEmail: "" }
 
 /** The companies using Nexora (CUS-01 to CUS-03, CUS-05). Opening one shows its account page. */
@@ -54,7 +65,8 @@ export default function PlatformCustomersPage() {
         (country === ALL || c.country === country) &&
         (!q || `${c.name} ${c.city} ${c.ice ?? ""} ${c.admin.name} ${c.admin.email}`.toLowerCase().includes(q))
     )
-    .sort((a, b) => accountMrr(b) - accountMrr(a) || a.name.localeCompare(b.name))
+  // UX-05: biggest revenue first, any column sorts, 10 per page
+  const ctl = useTableControls(rows, SORTERS, { key: "mrr", dir: "desc" })
 
   const cards: MetricCardItem[] = [
     { key: "mrr", title: t("pfMrr"), value: money(sum.mrr), valueClassName: "text-primary", footer: { icon: TrendingUp, text: t("pfArr", { arr: money(sum.arr) }) } },
@@ -130,20 +142,21 @@ export default function PlatformCustomersPage() {
         ) : rows.length === 0 ? (
           <EmptyState icon={Store} title={t("cuEmpty")} hint={t("audEmptyHint")} />
         ) : (
+          <>
           <TableContainer>
             <Table className="min-w-[52rem]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("pfCompany")}</TableHead>
-                  <TableHead>{t("pfPlan")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
-                  <TableHead className="w-44">{t("pfSeatsCol")}</TableHead>
-                  <TableHead className="text-end">{t("pfMrrCol")}</TableHead>
-                  <TableHead>{t("pfSince")}</TableHead>
+                  <SortableHead label={t("pfCompany")} k="name" ctl={ctl} />
+                  <SortableHead label={t("pfPlan")} k="plan" ctl={ctl} />
+                  <SortableHead label={t("status")} k="status" ctl={ctl} />
+                  <SortableHead label={t("pfSeatsCol")} k="seats" ctl={ctl} className="w-44" />
+                  <SortableHead label={t("pfMrrCol")} k="mrr" ctl={ctl} align="end" />
+                  <SortableHead label={t("pfSince")} k="since" ctl={ctl} />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((c) => {
+                {ctl.rows.map((c) => {
                   const limit = seatLimit(c)
                   const mrr = accountMrr(c)
                   const open = () => router.push(`/dashboard/platform/${c.id}`)
@@ -178,6 +191,8 @@ export default function PlatformCustomersPage() {
               </TableBody>
             </Table>
           </TableContainer>
+          <TablePager ctl={ctl} />
+          </>
         )}
       </section>
 

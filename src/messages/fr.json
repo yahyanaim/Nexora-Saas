@@ -4690,5 +4690,8 @@
   "cinCategory_team": "Clients",
   "cinCategory_billing": "Facturation",
   "cinCategory_security": "Sécurité",
-  "cinCategory_system": "Plateforme"
+  "cinCategory_system": "Plateforme",
+  "tcSortBy": "Trier par {column}",
+  "tcRange": "{from}–{to} sur {total}",
+  "tzCustomerTime": "Heure du client : {time} ({zone})"
 }
