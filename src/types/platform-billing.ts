@@ -87,8 +87,12 @@ export interface NxInvoice {
   status: NxInvoiceStatus
   /** INV-06: Nexora's own e-invoice status */
   einvoice: "to_send" | "sent" | "accepted" | "rejected"
-  /** yyyy-mm-dd of the payment failure that started dunning */
+  /** yyyy-mm-dd of the payment failure that started dunning (for a transfer, the due date) */
   failedOn?: string
+  /** How the invoice is collected (D-01) */
+  method?: "card" | "transfer"
+  /** D-03: dunning paused once, up to 15 days, with a reason */
+  dunningPause?: { from: string; until: string; reason: string; by: string; at: string }
   /** CFG-04: Nexora's identity as it was when the invoice was issued */
   seller?: SellerSnapshot
   createdAt: string
@@ -145,9 +149,11 @@ export interface NxRefund {
   customerId: string
   customerName: string
   amount: number
-  status: "awaiting_approval" | "done"
+  status: "awaiting_approval" | "done" | "cancelled"
   requestedBy: string
   approvedBy?: string
+  /** STF-07: cancelled when the person who asked left the team */
+  cancelledReason?: string
   createdAt: string
   updatedAt: string
 }

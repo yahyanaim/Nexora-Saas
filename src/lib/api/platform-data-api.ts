@@ -224,6 +224,16 @@ export async function refuseDataRequestApi(actor: ConsoleActor, id: string, reas
   return updated
 }
 
+/** STF-07: deletions a removed member prepared go back to be prepared again by someone else. */
+export function releaseDeletionsPreparedBy(actor: ConsoleActor, name: string) {
+  const released = requests.list(PLATFORM_WS).filter((r) => r.kind === "deletion" && r.status === "prepared" && r.preparedBy === name)
+  for (const r of released) {
+    requests.update(PLATFORM_WS, r.id, { status: "received", preparedBy: undefined, history: step(r, actor.name, `Back to prepare: ${name} left the team`) })
+    audit(actor, "data.deletion_released", "data", `${r.number} · ${r.customerName}`, { before: `prepared by ${name}`, after: "received", customerId: r.customerId })
+  }
+  return released.length
+}
+
 /* ---------- retention (AUD-06) ---------- */
 
 /** AUD-06: only the platform owner changes it, never below 5 years for audit events or 10 for invoices. */

@@ -1,13 +1,13 @@
 # Cahier des charges — status of every requirement
 
-*Checked on 13 Oct 2026 against `Nexora_Platform_Console_Cahier_des_Charges.pdf` (version 1.0, 7 Oct 2026): same 184 identifiers as `documentation/cahier-des-charges-platform-console.md`. Status of the code after Lot A9.*
+*Checked on 13 Oct 2026 against `Nexora_Platform_Console_Cahier_des_Charges.pdf` (version 1.0, 7 Oct 2026): same 184 identifiers as `documentation/cahier-des-charges-platform-console.md`. Status of the code after Lot A9b.*
 
 | Mark | Meaning |
 |---|---|
 | ✅ Done | Works in the console today (demo data), with tests where it holds a rule |
 | ✅ Done · server part in B1/B2/B3 | The rule works; the real server must also enforce it, store it or send the e-mail (Lot B, `plan-lot-b-server.md`) |
 | ✅ Done · accountant to confirm | Built as decided; the accountant confirms in writing |
-| 🟡 Planned A9b / A10 | Small front-end work still to do |
+| 🟡 Planned A10 | Small front-end work still to do |
 | 🔵 Planned B2/B3 | Needs the real server, payment provider or infrastructure |
 | 🟣 External | Done by an outside party |
 | ⚪ Later | The cahier puts it after the first release |
@@ -16,16 +16,13 @@
 
 | Status | Count |
 |---|---|
-| ✅ Done | 147 |
+| ✅ Done | 155 |
 | 🔵 Planned B3 | 9 |
 | ✅ Tracked | 7 |
-| 🟡 Planned A9b | 5 |
 | 🟡 Planned A10 | 3 |
 | 🔵 Planned B2 | 3 |
 | 🔵 Planned B2/B3 | 2 |
-| 🟡 Planned A9b + B2 | 2 |
-| 🟣 External | 1 |
-| 🟡 Planned A9b + B1 | 1 |
+| 🟣 External (B3) | 1 |
 | ⚪ Later | 1 |
 
 ## Every requirement, decision and objective
@@ -76,13 +73,13 @@
 | INV-05 | Invoices are generated as PDF and as the electronic invoice file (UBL 2.1) and sent to the customer… | ✅ Done · server part in B2 | PDF and UBL 2.1 for every invoice; B2 e-mails them to the administrator |
 | INV-06 | E-invoice status per invoice: to send, sent, accepted with reference, rejected with reason | ✅ Done · server part in B2 | Status per invoice shown; B2 sends to the DGI |
 | INV-07 | Invoices appear in the customer's My subscription page with download | ✅ Done |  |
-| INV-08 | Due date follows the payment terms (immediate for card, 15 days for transfer, decision D-04) | 🟡 Planned A9b | Card on issue and 15 days for transfer done; 30 days for Enterprise by contract (D-04) to add |
+| INV-08 | Due date follows the payment terms (immediate for card, 15 days for transfer, decision D-04) | ✅ Done | Card on issue, transfer 15 days, 30 days for Enterprise by contract (Lot A9b) |
 | INV-09 | Finance can export invoices and credit notes for a period to the accountant (CSV, Excel, PDF) | ✅ Done |  |
 | INV-10 | A pro-forma can be produced for customers who pay by transfer before activation | ✅ Done | Pro-forma PF-YYYY-NNNN (Lot A8) |
 | PAY-01 | Each transaction shows date, customer, invoice, method (card, transfer), amount, status and provider reference | ✅ Done · server part in B2 | Ledger and daily reconciliation work; B2 connects the real payment provider and its settlements |
 | PAY-02 | Card payments are collected through the payment provider; card data never reaches Nexora's servers | 🔵 Planned B2/B3 | Card payments through the provider, tokens only (B2), webhooks and data scan (B3) |
 | PAY-03 | Bank transfers are matched to invoices by reference and amount; unmatched receipts wait in a queue | ✅ Done |  |
-| PAY-04 | A failed payment starts the dunning schedule of BR-08 and sets the customer to "payment overdue" | 🟡 Planned A9b | Failed card payments start dunning; unpaid transfers must start it at their due date (D-03), with a pause once per invoice |
+| PAY-04 | A failed payment starts the dunning schedule of BR-08 and sets the customer to "payment overdue" | ✅ Done | Failed card payments and unpaid transfers (from their due date) start dunning; one pause per invoice, up to 15 days (Lot A9b) |
 | PAY-05 | Each reminder is recorded on the customer page with its date and channel | ✅ Done · server part in B2 | In-app notices and templates work; B2 sends the e-mails |
 | PAY-06 | A successful payment during dunning stops the schedule and restores "active" | ✅ Done |  |
 | PAY-07 | Refunds create a credit note and a refund transaction; above 1,000 MAD VAT included they need a second… | ✅ Done |  |
@@ -106,7 +103,7 @@
 | STF-04 | Console roles follow Table 23; custom roles are not allowed in the first release | ✅ Done |  |
 | STF-05 | The Sessions page shows each team session (device, location, start, last activity) with revocation | ✅ Done |  |
 | STF-06 | Console sessions expire after 30 minutes of inactivity and 12 hours in total | ✅ Done · server part in B1 | Works in the console; B1 enforces it on every server endpoint |
-| STF-07 | Removing a team member revokes sessions, pending approvals and support sessions the same day | 🟡 Planned A9b | Sessions are revoked; support sessions and pending approvals of the removed member must end too |
+| STF-07 | Removing a team member revokes sessions, pending approvals and support sessions the same day | ✅ Done | Console sessions, support sessions, pending refunds and prepared deletions end or go back the same moment (Lot A9b) |
 | STF-08 | An optional IP allow-list restricts console access | 🔵 Planned B3 | Optional IP allow-list (D-08) |
 | SUP-01 | Customers raise support requests from inside Nexora; each has a category, priority, status and conversation | ✅ Done |  |
 | SUP-02 | The queue shows open requests by priority and age, with assignment to an agent | ✅ Done |  |
@@ -202,13 +199,13 @@
 | PERF-02 | A JavaScript budget per page is enforced in the build (500 KB compressed) | 🟡 Planned A10 | 62 pages at 500–607 KB; the CI fails above 610 KB until the shared shell is split |
 | PERF-03 | New images use WebP or AVIF with explicit sizes | ✅ Done |  |
 | PERF-04 | The documentation copy step stays in the build and start scripts | ✅ Done |  |
-| D-01 | How are payments collected? | 🟡 Planned A9b + B2 | Transfer must be the default method in the forms (A9b); a payment link for card customers until the provider is signed (B2) |
-| D-02 | How long is the trial? | 🟡 Planned A9b + B2 | 14 days and one 7-day extension done; read-only at the end done; suspension after 7 days read-only (A9b); purge after 30 days (B2 job) |
-| D-03 | Which dunning schedule? | 🟡 Planned A9b | Schedule done; transfer invoices start dunning at the due date; pause once per invoice, 15 days, with reason |
-| D-04 | Payment terms for bank transfer? | 🟡 Planned A9b | 15 days for transfers done; 30 days for Enterprise by contract |
+| D-01 | How are payments collected? | ✅ Done · server part in B2 | Transfer is the default in the console and in My subscription (Lot A9b); a payment link for card customers until the provider is signed (B2) |
+| D-02 | How long is the trial? | ✅ Done · server part in B1 | 14 days, one 7-day extension, read-only at the end, suspended after 7 days read-only (Lot A9b); purge after 30 days is a B1 job |
+| D-03 | Which dunning schedule? | ✅ Done | Schedule done; transfers start dunning at the due date; pause once per invoice, up to 15 days, with a reason (Lot A9b) |
+| D-04 | Payment terms for bank transfer? | ✅ Done | 15 days for transfers, 30 days for Enterprise by contract (Lot A9b) |
 | D-05 | VAT for customers outside Morocco? | ✅ Done · accountant to confirm | Exported service without Moroccan VAT, legal reference printed |
 | D-06 | Refund limit without a second approval? | ✅ Done | 1,000 MAD VAT included, second approval above |
-| D-07 | How long are records kept? | 🟡 Planned A9b + B1 | Audit 5 y and invoices 10 y done; show sessions 1 y, support 3 y, deleted data 30 days (A9b); purge jobs (B1) |
+| D-07 | How long are records kept? | ✅ Done · server part in B1 | Every period shown on Data requests (Lot A9b); purge jobs in B1 |
 | D-08 | IP allow-list for the console? | 🔵 Planned B3 | IP allow-list, off at launch |
 | D-09 | Emergency support sessions? | 🔵 Planned B3 | Emergency sessions (SUP-09) |
 | D-10 | Dedicated database for Enterprise customers? | ⚪ Later | Dedicated database for Enterprise, on request after the first release |

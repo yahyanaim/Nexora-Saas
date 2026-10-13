@@ -21,7 +21,8 @@ import { useSupportRequests } from "@/hooks/platform/use-platform-support"
 import { Badge } from "@/components/ui/badge"
 import type { CustomerIdentityInput } from "@/lib/api/platform-customers-api"
 import { consoleCan, needsStepUp } from "@/lib/platform/console-roles"
-import { accountMrr, canTransition, customerHealth, seatLimit } from "@/lib/platform/customer-lifecycle"
+import { accountMrr, canTransition, customerHealth, isoDay, seatLimit, trialDataDeletedOn, trialSuspendsOn } from "@/lib/platform/customer-lifecycle"
+import { termsFor } from "@/lib/platform/billing"
 import { NEXORA_PLANS, formatMad, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import { useBillingMutations, useNxDunning, useNxInvoices, useNxPayments, useNxSubscriptions, useProFormas } from "@/hooks/platform/use-platform-billing"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -56,7 +57,7 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
   const invoices = allInvoices.filter((i) => i.customerId === customerId)
   const billing = useBillingMutations()
   const [startOpen, setStartOpen] = useState(false)
-  const [start, setStart] = useState({ plan: "business" as NexoraPlanId, billing: "monthly" as "monthly" | "yearly", method: "card" as "card" | "transfer" })
+  const [start, setStart] = useState({ plan: "business" as NexoraPlanId, billing: "monthly" as "monthly" | "yearly", method: "transfer" as "card" | "transfer" })
   const docs = useNxDocuments()
   const { data: allPayments = [] } = useNxPayments()
   const { data: dunning = [] } = useNxDunning()
@@ -133,7 +134,16 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
     [t("pfMrrCol"), accountMrr(c) ? money(accountMrr(c)) : "—"],
     [t("pfSince"), date(c.since)],
     ...(sub ? ([[t("cuSubscription"), <span key="s">{date(sub.periodStart)} → {date(sub.periodEnd)}<span className="block text-xs text-muted-foreground">{t(sub.method === "card" ? "subCard" : "subTransfer")}{sub.scheduledPlan ? ` · ${t("subWillBecome", { plan: planById(sub.scheduledPlan).name, date: date(sub.periodEnd) })}` : ""}</span></span>]] as [string, React.ReactNode][]) : []),
-    ...(c.status === "trial" && c.trialEndsOn ? [[t("pfTrialEndsLabel"), `${date(c.trialEndsOn)}${c.trialExtended ? ` · ${t("cuExtendedOnce")}` : ""}`] as [string, string]] : []),
+    ...(c.status === "trial" && c.trialEndsOn ? [[t("pfTrialEndsLabel"), `${date(c.trialEndsOn)}${c.trialExtended ? ` · ${t("cuExtendedOnce")}` : ""}${c.trialEndsOn < isoDay(now) ? ` · ${t("cuTrialSuspendsOn", { date: date(trialSuspendsOn(c.trialEndsOn)) })}` : ""}`] as [string, string]] : []),
+    ...(c.suspension?.trialEnded && c.trialEndsOn ? [[t("cuTrialEndedLabel"), t("cuTrialDataUntil", { date: date(trialDataDeletedOn(c.trialEndsOn)) })] as [string, string]] : []),
+    [t("cuTerms"), c.plan === "enterprise" && consoleCan(role, C.CHANGE_SUBSCRIPTION)
+      ? (
+        <Select key="terms" value={String(termsFor(c))} onValueChange={(v) => billing.paymentTerms.mutate({ customerId: c.id, days: Number(v) as 15 | 30 })}>
+          <SelectTrigger aria-label={t("cuTerms")} className="h-8 w-44"><SelectValue>{t("cuTermsDays", { n: termsFor(c) })}</SelectValue></SelectTrigger>
+          <SelectContent><SelectItem value="15">{t("cuTermsDays", { n: 15 })}</SelectItem><SelectItem value="30">{t("cuTermsDays", { n: 30 })}</SelectItem></SelectContent>
+        </Select>
+      )
+      : t("cuTermsDays", { n: termsFor(c) })],
   ]
 
   return (
@@ -307,13 +317,13 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
               {canTrial && c.status === "trial" && !c.trialExtended && (
                 <Button variant="outline" className="justify-start" onClick={() => ask("extend")}><CalendarDays className="size-4" />{t("cuExtendTrial")}</Button>
               )}
-              {consoleCan(role, C.CHANGE_SUBSCRIPTION) && c.status === "trial" && (
-                <Button variant="outline" className="justify-start" onClick={() => { setStart({ plan: c.plan, billing: "monthly", method: "card" }); setStartOpen(true) }}><CheckCircle className="size-4" />{t("cuConvert")}</Button>
+              {consoleCan(role, C.CHANGE_SUBSCRIPTION) && (c.status === "trial" || (c.status === "suspended" && c.suspension?.trialEnded)) && (
+                <Button variant="outline" className="justify-start" onClick={() => { setStart({ plan: c.plan, billing: "monthly", method: "transfer" }); setStartOpen(true) }}><CheckCircle className="size-4" />{t("cuConvert")}</Button>
               )}
               {canStatus && canTransition(c.status, "active") && c.status !== "suspended" && c.status !== "trial" && (
                 <Button variant="outline" className="justify-start" onClick={() => ask("activate")}><CheckCircle className="size-4" />{c.status === "cancelled" ? t("cuReactivate") : t("cuMarkPaid")}</Button>
               )}
-              {canSuspend && c.status === "suspended" && (
+              {canSuspend && c.status === "suspended" && !c.suspension?.trialEnded && (
                 <Button variant="outline" className="justify-start" onClick={() => ask("lift")}><LockKeyholeOpen className="size-4" />{t("cuLift")}</Button>
               )}
               {canSuspend && canTransition(c.status, "suspended") && (

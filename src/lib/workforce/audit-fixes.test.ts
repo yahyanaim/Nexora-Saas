@@ -73,7 +73,8 @@ describe("company time zone (M2)", () => {
   it("dates 'today' in the company's zone, not the browser's", async () => {
     const { todayIso } = await import("./project-metrics")
     const lateNightUtc = new Date("2026-10-06T23:30:00Z")
-    expect(todayIso(lateNightUtc, "Africa/Casablanca")).toBe("2026-10-07")
+    // a zone with a fixed offset (UTC+4): Morocco's offset depends on the tz database version
+    expect(todayIso(lateNightUtc, "Asia/Dubai")).toBe("2026-10-07")
     expect(todayIso(lateNightUtc, "America/New_York")).toBe("2026-10-06")
   })
 })

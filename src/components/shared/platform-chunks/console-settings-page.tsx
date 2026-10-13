@@ -54,7 +54,7 @@ function LogoField({ identity, canEdit }: { identity: NexoraIdentity; canEdit: b
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-border p-4">
       <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-white">
-        {/* eslint-disable-next-line @next/next/no-img-element -- a stored data URL or the bundled logo */}
+        { }
         <img src={src} alt={t("cfgLogoAlt")} width={56} height={56} className="size-14 object-contain" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1">

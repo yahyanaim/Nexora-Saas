@@ -2,7 +2,7 @@ import { createCollection } from "@/lib/workforce/demo-store"
 import { consoleCan } from "@/lib/platform/console-roles"
 import { NEXORA_CUSTOMERS, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import { consoleUsers } from "@/lib/platform/console-data"
-import { TRIAL_DAYS, TRIAL_EXTENSION_DAYS, addDaysIso, canTransition, isoDay, periodEnd } from "@/lib/platform/customer-lifecycle"
+import { TRIAL_DAYS, TRIAL_EXTENSION_DAYS, addDaysIso, canTransition, isoDay, periodEnd, trialSuspendsOn } from "@/lib/platform/customer-lifecycle"
 import { ConsoleCapability as C, ConsoleRole } from "@/types/platform-console"
 import type { CustomerAccount, LifecycleStatus, UserSuspension } from "@/types/platform-customers"
 import { PLATFORM_WS, audit, type ConsoleActor } from "./platform-console-api"
@@ -37,6 +37,8 @@ const seedCustomers = (ws: string): CustomerAccount[] => {
     trialStartedOn: c.trialStartedOn, convertedOn: c.convertedOn, cancelledOn: c.cancelledOn,
     status: (c.status === "past_due" ? "payment_overdue" : c.status) as LifecycleStatus,
     readOnly: c.status === "cancelled",
+    // D-04: the Enterprise customer pays its transfers at 30 days by contract
+    ...(c.id === "cus_bina" ? { paymentTermsDays: 30 as const } : {}),
     notes: c.id === "cus_marrakech"
       ? [{ id: "note_1", text: "Card declined twice; the finance manager asked to switch to bank transfer next month.", author: "Nadia Berrada", at: new Date(Date.now() - 2 * 86_400_000).toISOString() }]
       : [],
@@ -77,14 +79,22 @@ export async function seatsInUse(c: Pick<CustomerAccount, "demoWorkspaceId" | "s
 }
 
 /**
- * CUS-06, BR-09: a trial that reaches its end date without a plan choice
- * becomes read-only; choosing a plan opens it again. Idempotent, run by the
- * billing jobs and whenever customers are read.
+ * CUS-06, BR-09, D-02: a trial that reaches its end date without a plan
+ * choice becomes read-only; 7 days later it is suspended (data kept 30 days).
+ * Choosing a plan opens it again. Idempotent, run by the billing jobs and
+ * whenever customers are read.
  */
 export function expireTrials(today = isoDay(new Date())) {
   const expired: CustomerAccount[] = []
   for (const c of customerStore.list(PLATFORM_WS)) {
-    if (c.status === "trial" && c.trialEndsOn && c.trialEndsOn < today && !c.readOnly) expired.push(customerStore.update(PLATFORM_WS, c.id, { readOnly: true }))
+    if (c.status !== "trial" || !c.trialEndsOn || c.trialEndsOn >= today) continue
+    if (trialSuspendsOn(c.trialEndsOn) <= today) {
+      expired.push(customerStore.update(PLATFORM_WS, c.id, {
+        status: "suspended", readOnly: true,
+        suspension: { reason: "Trial ended without a plan", previous: "trial", by: "Billing jobs", at: new Date().toISOString(), trialEnded: true },
+      }))
+      audit({ id: "system", name: "Billing jobs", role: ConsoleRole.OWNER }, "customer.trial_suspended", "customer", c.name, { before: "trial · read-only", after: "suspended", customerId: c.id })
+    } else if (!c.readOnly) expired.push(customerStore.update(PLATFORM_WS, c.id, { readOnly: true }))
   }
   return expired
 }
@@ -166,6 +176,7 @@ export async function liftCustomerSuspensionApi(actor: ConsoleActor, id: string)
   need(actor, C.SUSPEND)
   const c = get(id)
   if (c.status !== "suspended" || !c.suspension) throw new Error("This customer is not suspended")
+  if (c.suspension.trialEnded) throw new Error("Choose a plan to open this workspace again")
   const back = c.suspension.previous
   const updated = customerStore.update(PLATFORM_WS, id, { status: back, readOnly: false, suspension: undefined })
   audit(actor, "customer.suspension_lifted", "customer", c.name, { before: "suspended", after: back, customerId: id })

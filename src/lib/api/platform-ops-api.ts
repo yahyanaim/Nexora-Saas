@@ -8,7 +8,8 @@ import { customersCollection } from "./platform-customers-api"
 import { announcementsForWorkspace } from "./platform-config-api"
 import { checkSeatsFullApi, seatsFullNoticeFor } from "./platform-seats-api"
 import { listInvoicesApi } from "./platform-billing-api"
-import { DUNNING, addDays, daysBetween } from "@/lib/platform/billing"
+import { DUNNING, daysBetween, dunningClock, dunningDate } from "@/lib/platform/billing"
+import { trialSuspendsOn } from "@/lib/platform/customer-lifecycle"
 import { expireTrials } from "./platform-customers-api"
 
 /**
@@ -140,15 +141,15 @@ export async function noticesForWorkspaceApi(workspaceId: string): Promise<Platf
   const account: PlatformNotice[] = []
   if (c.status === "trial" && c.trialEndsOn) {
     const left = daysBetween(today, c.trialEndsOn)
-    if (left < 0) account.push({ id: `trial_ended_${c.id}`, kind: "trial_ended", number: "", title: "", text: "", severity: "sev4", date: c.trialEndsOn })
+    if (left < 0) account.push({ id: `trial_ended_${c.id}`, kind: "trial_ended", number: "", title: "", text: "", severity: "sev4", date: c.trialEndsOn, suspendsOn: trialSuspendsOn(c.trialEndsOn) })
     else if (left <= 3) account.push({ id: `trial_${c.id}_${left <= 1 ? 1 : 3}`, kind: "trial_ending", number: "", title: "", text: "", severity: "sev4", days: left, date: c.trialEndsOn })
   }
   for (const inv of (await listInvoicesApi()).filter((i) => i.customerId === c.id && i.status === "overdue" && i.failedOn)) {
-    const day = daysBetween(inv.failedOn!, today)
+    const day = dunningClock(inv.failedOn!, today, inv.dunningPause)
     if (day >= DUNNING.readOnly) continue // the read-only banner takes over
     account.push({
       id: `payment_${inv.id}_${day >= DUNNING.warning ? "warning" : "failed"}`, kind: "payment_failed", number: inv.number, title: "", text: "", severity: "sev4",
-      amount: Math.round((inv.total - inv.paid - inv.credited) * 100) / 100, date: inv.failedOn, readOnlyOn: addDays(inv.failedOn!, DUNNING.readOnly), warning: day >= DUNNING.warning,
+      amount: Math.round((inv.total - inv.paid - inv.credited) * 100) / 100, date: inv.failedOn, readOnlyOn: dunningDate(inv.failedOn!, DUNNING.readOnly, inv.dunningPause), warning: day >= DUNNING.warning,
     })
   }
   const news = announcementsForWorkspace(workspaceId).map((a): PlatformNotice => ({ id: a.id, kind: "announcement", number: "", title: a.title, text: a.message, severity: "sev4" }))

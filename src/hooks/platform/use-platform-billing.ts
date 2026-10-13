@@ -10,6 +10,7 @@ import {
   changeBillingApi,
   changeMethodApi,
   customerChangePlanApi,
+  customerStartSubscriptionApi,
   listPlanContentApi,
   removeDiscountApi,
   removeExtensionApi,
@@ -31,6 +32,8 @@ import {
   recordTransferApi,
   runBillingJobsApi,
   startSubscriptionApi,
+  pauseDunningApi,
+  setPaymentTermsApi,
   listReconciliationsApi,
   listSettlementsApi,
   recordChargebackApi,
@@ -86,6 +89,8 @@ export function useBillingMutations() {
     assign: useAction((a, v: { paymentId: string; invoiceId: string }) => assignTransferApi(a, v.paymentId, v.invoiceId), "biTransferMatched"),
     creditNote: useAction((a, v: { invoiceId: string; amount: number; reason: string; refund: boolean }) => issueCreditNoteApi(a, v.invoiceId, v), (r) => (r.refund?.status === "awaiting_approval" ? t("biRefundAwaiting", { number: r.creditNote.number }) : t("biCreditIssued", { number: r.creditNote.number }))),
     approveRefund: useAction((a, id: string) => approveRefundApi(a, id), "biRefundDone"),
+    pauseDunning: useAction((a, v: { invoiceId: string; days: number; reason: string }) => pauseDunningApi(a, v.invoiceId, v), "trPaused"),
+    paymentTerms: useAction((a, v: { customerId: string; days: 15 | 30 }) => setPaymentTermsApi(a, v.customerId, v.days), "cuTermsSaved"),
     proForma: useAction((a, v: { customerId: string; plan: NexoraPlanId; billing: "monthly" | "yearly" }) => createProFormaApi(a, v.customerId, v), (r) => t("pfmCreated", { number: r.number })),
     chargeback: useAction((a, v: { paymentId: string; reason: string; date: string }) => recordChargebackApi(a, v.paymentId, v), "trChargebackRecorded"),
     reconcile: useAction((a, day: string) => runReconciliationApi(a, day), (r) => (r.differences.length ? t("recDoneDiff", { n: r.differences.length }) : t("recDoneClean"))),
@@ -122,5 +127,6 @@ export function useCompanySubscriptionMutations() {
     changePlan: make((v: { customerId: string; plan: NexoraPlanId }) => customerChangePlanApi(person, v.customerId, v.plan), (r) => (r.invoice ? t("biUpgraded", { number: r.invoice.number }) : t("biDowngradeScheduled"))),
     changeBilling: make((v: { customerId: string; billing: "monthly" | "yearly" }) => changeBillingApi({ person }, v.customerId, v.billing), (r) => (r.invoice ? t("subBillingNow", { number: r.invoice.number }) : t("subBillingScheduled"))),
     changeMethod: make((v: { customerId: string; method: "card" | "transfer" }) => changeMethodApi({ person }, v.customerId, v.method), () => t("subMethodSaved")),
+    start: make((v: { customerId: string; plan: NexoraPlanId; billing: "monthly" | "yearly"; method: "card" | "transfer" }) => customerStartSubscriptionApi(person, v.customerId, v), (r) => t("subStarted", { number: r.invoice.number })),
   }
 }

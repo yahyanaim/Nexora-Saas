@@ -13,7 +13,7 @@ The front end calls the API modules in `src/lib/api/*`. Each module keeps its fu
 | 3 | Real sign-in, sessions (30 min idle, 12 h), TOTP two-factor checked on the server, step-up codes | STF-03, STF-04, SEC-03, SEC-04 |
 | 4 | The permission matrix (`console-roles.ts`) enforced on every endpoint; the same table drives the screens | SEC-01 |
 | 5 | Gap-free numbering (NX, AV, PF, DR) with database sequences per year | INV-01, BR-03 |
-| 6 | Scheduled jobs: billing (renewals, dunning, trial end, seats check), daily reconciliation, retention purge | SUB-06, PAY-04, PAY-09, CUS-06, SUB-09, AUD-06 |
+| 6 | Scheduled jobs: billing (renewals, dunning, trial end, seats check), daily reconciliation, retention purge (ended trials after 30 days, sessions, support, audit) | SUB-06, PAY-04, PAY-09, CUS-06, SUB-09, AUD-06, D-02, D-07 |
 | 7 | Files: generated PDFs and UBL files kept with each invoice; tenant exports stored 7 days | INV-05, AUD-04 |
 | 8 | Contract tests: every API module runs its current unit tests against the server | — |
 
@@ -56,11 +56,5 @@ The front end calls the API modules in `src/lib/api/*`. Each module keeps its fu
 ## Still in the front end before Lot B
 
 - ~~A9~~ done (Lot A9): sorting and pagination (UX-05), time zones (UX-09), property test of invoice totals (NFR-05), reference scenario rows 1–13.
-- A9b: the last front-end gaps found when checking the cahier des charges again (13 Oct 2026; full list in `documentation/cahier-status.md`):
-  - D-01: bank transfer as the default payment method in the start form and in My subscription.
-  - D-02: an ended trial stays read-only 7 days, then the workspace is suspended (the purge after 30 days is a B1 job).
-  - D-03 / PAY-04: unpaid transfer invoices become overdue on their due date and start dunning; one dunning pause per invoice, up to 15 days, with a reason.
-  - D-04 / INV-08: 30-day payment terms for Enterprise invoices.
-  - D-07: show the retention periods (sessions 1 year, support 3 years, deleted data 30 days).
-  - STF-07: removing a team member also ends their support sessions and cancels their pending approvals.
+- ~~A9b~~ done (Lot A9b): transfer by default (D-01), ended trials suspended after 7 read-only days (D-02), transfer dunning from the due date with one pause (D-03, PAY-04), 30-day Enterprise terms (D-04, INV-08), retention periods shown (D-07), off-boarding ends support sessions and pending approvals (STF-07). Status of every requirement: `documentation/cahier-status.md`.
 - A10: bring every page under 500 KB of JavaScript (NFR-02, PERF-01, PERF-02).

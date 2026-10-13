@@ -18,10 +18,11 @@ import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/
 import { useConsoleActor } from "@/hooks/platform/use-platform-console"
 import { useBillingMutations, useNxDunning, useNxInvoices, useNxPayments, useNxRefunds } from "@/hooks/platform/use-platform-billing"
 import { consoleCan, needsStepUp } from "@/lib/platform/console-roles"
-import { daysBetween, dunningStage, isoOf, round2 } from "@/lib/platform/billing"
+import { DUNNING_PAUSE_MAX_DAYS, dunningClock, dunningStage, isoOf, round2 } from "@/lib/platform/billing"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { ConsoleCapability as C } from "@/types/platform-console"
-import type { NxPayment } from "@/types/platform-billing"
+import type { NxInvoice, NxPayment } from "@/types/platform-billing"
 import { StepUpDialog } from "./console-shared"
 import { Panel, useBillingFormat } from "./billing-shared"
 
@@ -52,6 +53,9 @@ export default function ConsoleTransactionsPage() {
   const [approving, setApproving] = useState<string | null>(null)
   const [charging, setCharging] = useState<NxPayment | null>(null)
   const [cb, setCb] = useState({ reason: "", date: today })
+  const [pausing, setPausing] = useState<NxInvoice | null>(null)
+  const [pause, setPause] = useState({ days: "7", reason: "" })
+  const canPause = consoleCan(actor?.role, C.CHANGE_SUBSCRIPTION)
   const canRecord = consoleCan(actor?.role, C.CREDIT_NOTES)
   const canApprove = consoleCan(actor?.role, C.REFUND_LARGE)
   const queue = payments.filter((p) => p.status === "unmatched")
@@ -78,7 +82,8 @@ export default function ConsoleTransactionsPage() {
         <Panel title={t("trDunning")} hint={t("trDunningHint")}>
           <ul className="flex flex-col gap-3">
             {overdue.map((i) => {
-              const days = daysBetween(i.failedOn!, today)
+              const days = dunningClock(i.failedOn!, today, i.dunningPause)
+              const paused = i.dunningPause && today < i.dunningPause.until
               const runs = dunning.filter((d) => d.invoiceId === i.id).sort((a, b) => a.day - b.day)
               return (
                 <li key={i.id} className="rounded-2xl border border-border p-3">
@@ -87,7 +92,11 @@ export default function ConsoleTransactionsPage() {
                     <span className="font-mono text-xs text-muted-foreground">{i.number}</span>
                     <span className="ms-auto tabular-nums">{money(round2(i.total - i.paid - i.credited))}</span>
                     <Badge variant="outline" className="border-transparent bg-danger-soft text-destructive">{t("trDay", { day: days })} · {t(`trStage_${dunningStage(days)}`)}</Badge>
+                    {i.method === "transfer" && <Badge variant="outline">{t("subTransfer")}</Badge>}
+                    {paused && <Badge variant="outline" className="border-transparent bg-warning-soft text-warning-foreground">{t("trPausedUntil", { date: date(i.dunningPause!.until) })}</Badge>}
+                    {canPause && !i.dunningPause && <Button size="sm" variant="outline" onClick={() => { setPause({ days: "7", reason: "" }); setPausing(i) }}>{t("trPause")}</Button>}
                   </div>
+                  {i.dunningPause && <p className="mt-1 text-xs text-muted-foreground">{t("trPauseLine", { by: i.dunningPause.by, from: date(i.dunningPause.from), until: date(i.dunningPause.until), reason: i.dunningPause.reason })}</p>}
                   <p className="mt-2 text-xs text-muted-foreground">{runs.map((r) => `${t("trDay", { day: r.day })}: ${t(`trKind_${r.kind}`)}${r.kind === "retry" ? ` (${r.result})` : ""}`).join(" · ") || t("trNoStepYet")}</p>
                 </li>
               )
@@ -218,6 +227,23 @@ export default function ConsoleTransactionsPage() {
           <div className="space-y-1.5"><Label htmlFor="cb-reason">{t("trChargebackReason")}</Label><Input id="cb-reason" placeholder={t("trChargebackReasonPh")} value={cb.reason} onChange={(e) => setCb({ ...cb, reason: e.target.value })} /></div>
           <div className="space-y-1.5"><Label htmlFor="cb-date">{t("biDate")}</Label><Input id="cb-date" type="date" max={today} value={cb.date} onChange={(e) => setCb({ ...cb, date: e.target.value })} /></div>
           <p className="rounded-2xl bg-warning-soft p-3 text-xs text-warning-foreground">{t("trChargebackRule")}</p>
+        </div>
+      </DataTableEntityFormSheet>
+      <DataTableEntityFormSheet
+        open={!!pausing}
+        onOpenChange={(v) => !v && setPausing(null)}
+        mode="create"
+        createTitle={t("trPauseTitle")}
+        editTitle=""
+        description={pausing ? t("trPauseDesc", { number: pausing.number, company: pausing.customerName }) : ""}
+        isSubmitting={m.pauseDunning.isPending}
+        submitLabel={{ create: t("trPause") }}
+        onSubmit={() => pausing && m.pauseDunning.mutate({ invoiceId: pausing.id, days: Number(pause.days), reason: pause.reason }, { onSuccess: () => setPausing(null) })}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5"><Label htmlFor="pa-days">{t("trPauseDays")}</Label><Input id="pa-days" type="number" min={1} max={DUNNING_PAUSE_MAX_DAYS} step={1} value={pause.days} onChange={(e) => setPause({ ...pause, days: e.target.value })} /></div>
+          <div className="space-y-1.5"><Label htmlFor="pa-reason">{t("trPauseReason")}</Label><Textarea id="pa-reason" rows={3} placeholder={t("trPauseReasonPh")} value={pause.reason} onChange={(e) => setPause({ ...pause, reason: e.target.value })} /></div>
+          <p className="rounded-2xl bg-info-soft p-3 text-xs text-info-foreground">{t("trPauseRule")}</p>
         </div>
       </DataTableEntityFormSheet>
       <StepUpDialog open={!!approving} onOpenChange={(v) => !v && setApproving(null)} action={t("trApproveStepUp")} onConfirmed={() => approving && m.approveRefund.mutate(approving)} />

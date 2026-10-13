@@ -158,6 +158,10 @@ export type ConsoleAuditAction =
   | "data.deletion_approved"
   | "data.request_refused"
   | "invoice.proforma"
+  | "invoice.dunning_paused"
+  | "refund.cancelled"
+  | "customer.trial_suspended"
+  | "data.deletion_released"
 
 /** Append-only (AUD-01, AUD-02): no role can edit or delete an event. */
 export interface ConsoleAuditEvent {

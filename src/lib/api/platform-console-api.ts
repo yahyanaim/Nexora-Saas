@@ -152,8 +152,12 @@ export async function changeStaffRoleApi(actor: ConsoleActor, id: string, role: 
   return updated
 }
 
-/** STF-07: removing a member ends their sessions the same moment. */
-export async function removeStaffApi(actor: ConsoleActor, id: string): Promise<void> {
+/**
+ * STF-07: removing a member ends, the same moment, their console sessions,
+ * their support sessions and the approvals waiting on what they asked for
+ * (refunds cancelled, prepared deletions back to be prepared).
+ */
+export async function removeStaffApi(actor: ConsoleActor, id: string): Promise<{ supportSessions: number; refunds: number; deletions: number }> {
   const target = staffStore.get(PLATFORM_WS, id)
   if (!target || target.status === "removed") throw new Error("This team member no longer exists")
   if (target.id === actor.id) throw new Error("You cannot remove yourself")
@@ -165,6 +169,15 @@ export async function removeStaffApi(actor: ConsoleActor, id: string): Promise<v
     if (s.staffId === id && !s.revokedAt) sessionStore.update(PLATFORM_WS, s.id, { revokedAt: now, revokedBy: actor.name })
   }
   audit(actor, "staff.removed", "staff", target.name, { before: target.role, after: "removed" })
+  // loaded on demand: the Team page does not ship the billing, support and data modules
+  const [{ endSessionsOfAgent }, { cancelRefundsRequestedBy }, { releaseDeletionsPreparedBy }] = await Promise.all([
+    import("./platform-support-api"), import("./platform-billing-api"), import("./platform-data-api"),
+  ])
+  return {
+    supportSessions: endSessionsOfAgent(actor, id),
+    refunds: cancelRefundsRequestedBy(actor, target.name),
+    deletions: releaseDeletionsPreparedBy(actor, target.name),
+  }
 }
 
 export async function listSessionsApi(): Promise<StaffSession[]> {

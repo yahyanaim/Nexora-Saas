@@ -6,8 +6,12 @@ import {
   REFUND_SECOND_APPROVAL_ABOVE,
   addDays,
   daysBetween,
+  DUNNING_PAUSE_MAX_DAYS,
   dueDate,
   dunningActionsUpTo,
+  dunningClock,
+  dunningDate,
+  termsFor,
   invoiceTotals,
   isoOf,
   matchTransfer,
@@ -115,7 +119,7 @@ function seedBilling() {
       const overdue = c.status === "past_due" && latest
       drafts.push({
         ...stamp(), id: `nxi_${c.id}_${i}`, customerId: c.id, customerName: c.name, customerIce: c.ice, kind: "subscription",
-        date: p.start, dueDate: dueDate(p.start, method), periodFrom: p.start, periodTo: p.end, lines, ...t,
+        date: p.start, dueDate: dueDate(p.start, method, c.id === "cus_bina" ? 30 : 15), method, periodFrom: p.start, periodTo: p.end, lines, ...t,
         paid: overdue ? 0 : t.total, credited: 0, status: overdue ? "overdue" : "paid", einvoice: c.country === "MA" ? "accepted" : "sent",
         ...(overdue ? { failedOn: addDays(today, -5) } : {}),
       })
@@ -231,12 +235,14 @@ function issueInvoice(c: CustomerAccount, kind: NxInvoice["kind"], lines: Invoic
   const number = nextNumber("NX", year, invoices.list(PLATFORM_WS).map((i) => i.number))
   const t = invoiceTotals(lines)
   return invoices.create(PLATFORM_WS, {
-    number, customerId: c.id, customerName: c.name, customerIce: c.ice, kind, date, dueDate: dueDate(date, method), periodFrom: from, periodTo: to,
+    number, customerId: c.id, customerName: c.name, customerIce: c.ice, kind, date, dueDate: dueDate(date, method, termsFor(c)), method, periodFrom: from, periodTo: to,
     lines, ...t, paid: 0, credited: 0, status: "issued", einvoice: "to_send", seller: sellerSnapshot(),
   })
 }
 
 const balanceOf = (i: NxInvoice) => round2(i.total - i.paid - i.credited)
+/** Invoices issued before the method was stored: a later due date means a transfer. */
+export const methodOf = (i: Pick<NxInvoice, "method" | "date" | "dueDate">) => i.method ?? (i.dueDate > i.date ? "transfer" : "card")
 
 /** Records money received against an invoice and restores the customer when nothing is overdue any more (PAY-06). */
 function applyPayment(i: NxInvoice, amount: number, method: "card" | "transfer", date: string, reference: string) {
@@ -268,19 +274,34 @@ function collectByCard(i: NxInvoice, date: string, outcome: "ok" | "declined") {
 /** A trial chooses a plan (scenario step 2): first invoice, collected now by card, or due in 15 days by transfer. */
 export async function startSubscriptionApi(actor: ConsoleActor, customerId: string, input: { plan: NexoraPlanId; billing: "monthly" | "yearly"; method: "card" | "transfer" }, today = today0(), cardOutcome: "ok" | "declined" = "ok") {
   need(actor, C.CHANGE_SUBSCRIPTION)
+  return startCore({ actor }, customerId, input, today, cardOutcome)
+}
+
+/** D-01: the company administrator chooses a plan from My subscription at the end of the trial; bank transfer unless they pick card. */
+export async function customerStartSubscriptionApi(person: { name: string; email: string }, customerId: string, input: { plan: NexoraPlanId; billing: "monthly" | "yearly"; method: "card" | "transfer" }, today = today0()) {
+  if (planById(input.plan).retired) throw new Error("This plan is no longer sold")
+  return startCore({ person }, customerId, input, today, "ok")
+}
+
+async function startCore(by: ChangedBy, customerId: string, input: { plan: NexoraPlanId; billing: "monthly" | "yearly"; method: "card" | "transfer" }, today: string, cardOutcome: "ok" | "declined") {
   const c = customer(customerId)
   if (subscriptions.list(PLATFORM_WS).some((s) => s.customerId === customerId)) throw new Error("This customer already has a subscription")
-  if (c.status !== "trial" && c.status !== "cancelled") throw new Error("This status change is not allowed")
+  // D-02: a trial suspended after its read-only week opens again when a plan is chosen
+  const endedTrial = c.status === "suspended" && c.suspension?.trialEnded
+  if (c.status !== "trial" && c.status !== "cancelled" && !endedTrial) throw new Error("This status change is not allowed")
   const version = versionOn(versions.list(PLATFORM_WS), input.plan, today)!
   const p = periodFrom(today, input.billing)
   const sub = subscriptions.create(PLATFORM_WS, {
     customerId, plan: input.plan, versionId: version.id, billing: input.billing, method: input.method, periodStart: p.start, periodEnd: p.end,
-    history: [{ at: new Date().toISOString(), by: actor.name, kind: "started", to: input.plan }],
+    history: [{ at: new Date().toISOString(), by: nameOf(by), kind: "started", to: input.plan }],
   })
-  setCustomer(customerId, { status: "active", plan: input.plan, billing: input.billing, readOnly: false, trialEndsOn: undefined, cancelsOn: undefined, since: c.status === "trial" ? today : c.since, ...(c.status === "trial" ? { trialStartedOn: c.trialStartedOn ?? c.since, convertedOn: today } : {}) })
+  const wasTrial = c.status === "trial" || endedTrial
+  setCustomer(customerId, { status: "active", plan: input.plan, billing: input.billing, readOnly: false, suspension: undefined, trialEndsOn: undefined, cancelsOn: undefined, since: wasTrial ? today : c.since, ...(wasTrial ? { trialStartedOn: c.trialStartedOn ?? c.since, convertedOn: today } : {}) })
   const inv = issueInvoice(customer(customerId), "subscription", subscriptionLines(input.plan, input.billing, version.monthly, c.country, p.start, p.end), p.start, p.end, input.method, today)
   if (input.method === "card") collectByCard(inv, today, cardOutcome)
-  audit(actor, "subscription.started", "subscription", c.name, { after: `${planById(input.plan).name} · ${input.billing} · ${input.method}`, customerId })
+  const after = `${planById(input.plan).name} · ${input.billing} · ${input.method}`
+  if ("actor" in by) audit(by.actor, "subscription.started", "subscription", c.name, { after, customerId })
+  else auditCustomer(by.person, customerId, "subscription.started", c.name, { after, targetType: "subscription" })
   return { subscription: sub, invoice: invoices.get(PLATFORM_WS, inv.id)! }
 }
 
@@ -356,12 +377,19 @@ export async function runBillingJobsApi(actor: ConsoleActor, today = today0(), c
       renewed++
     }
   }
+  // D-03, PAY-04: a transfer not received by its due date is overdue; day 0 of dunning is the due date
+  for (const inv of invoices.list(PLATFORM_WS)) {
+    if ((inv.status !== "issued" && inv.status !== "partly_paid") || methodOf(inv) !== "transfer" || inv.dueDate >= today || balanceOf(inv) <= 0) continue
+    invoices.update(PLATFORM_WS, inv.id, { status: "overdue", failedOn: inv.dueDate })
+    const c = customersCollection.get(PLATFORM_WS, inv.customerId)
+    if (c && c.status === "active") setCustomer(c.id, { status: "payment_overdue" })
+  }
   for (const inv of invoices.list(PLATFORM_WS).filter((i) => i.status === "overdue" && i.failedOn)) {
-    const days = daysBetween(inv.failedOn!, today)
+    const days = dunningClock(inv.failedOn!, today, inv.dunningPause)
     const done = new Set(dunningRuns.list(PLATFORM_WS).filter((d) => d.invoiceId === inv.id).map((d) => `${d.day}_${d.kind}`))
-    for (const a of dunningActionsUpTo(days)) {
+    for (const a of dunningActionsUpTo(days, methodOf(inv))) {
       if (done.has(`${a.day}_${a.kind}`)) continue
-      const date = addDays(inv.failedOn!, a.day)
+      const date = dunningDate(inv.failedOn!, a.day, inv.dunningPause)
       let result = "sent"
       const c = customersCollection.get(PLATFORM_WS, inv.customerId)
       if (a.kind === "retry") {
@@ -446,6 +474,44 @@ export async function changeBillingApi(by: ChangedBy, customerId: string, billin
   inv = invoices.get(PLATFORM_WS, inv.id)!
   record(by, c, "billing", "monthly", `yearly · ${inv.number}`)
   return { subscription: updated, invoice: inv }
+}
+
+/** D-03: an operator pauses dunning once per invoice, for 1 to 15 days, with a reason; the steps move later by the pause. */
+export async function pauseDunningApi(actor: ConsoleActor, invoiceId: string, input: { days: number; reason: string }, today = today0()) {
+  need(actor, C.CHANGE_SUBSCRIPTION)
+  const inv = invoices.get(PLATFORM_WS, invoiceId)
+  if (!inv) throw new Error("This invoice no longer exists")
+  if (inv.status !== "overdue" || !inv.failedOn) throw new Error("Only an overdue invoice has reminders to pause")
+  if (inv.dunningPause) throw new Error("Reminders were already paused once for this invoice")
+  if (!Number.isInteger(input.days) || input.days < 1 || input.days > DUNNING_PAUSE_MAX_DAYS) throw new Error("A pause lasts 1 to 15 days")
+  if (input.reason.trim().length < 5) throw new Error("Give the reason for the pause")
+  const dunningPause = { from: today, until: addDays(today, input.days), reason: input.reason.trim(), by: actor.name, at: new Date().toISOString() }
+  const updated = invoices.update(PLATFORM_WS, inv.id, { dunningPause })
+  audit(actor, "invoice.dunning_paused", "invoice", `${inv.number} · ${inv.customerName}`, { after: `${input.days} days · until ${dunningPause.until} · ${dunningPause.reason}`, customerId: inv.customerId })
+  return updated
+}
+
+/** D-04, INV-08: 15 days for a transfer, or 30 under an Enterprise contract; applies to the next invoices. */
+export async function setPaymentTermsApi(actor: ConsoleActor, customerId: string, days: 15 | 30) {
+  need(actor, C.CHANGE_SUBSCRIPTION)
+  const c = customer(customerId)
+  if (days !== 15 && days !== 30) throw new Error("Payment terms are 15 or 30 days")
+  if (days === 30 && c.plan !== "enterprise") throw new Error("Only an Enterprise contract can have 30-day terms")
+  const before = termsFor(c)
+  if (before === days) return c
+  const updated = setCustomer(customerId, { paymentTermsDays: days })
+  audit(actor, "subscription.changed", "subscription", `${c.name} · payment terms`, { before: `${before} days`, after: `${days} days`, customerId })
+  return updated
+}
+
+/** STF-07: refunds a removed member asked for no longer wait for approval; they can be asked again. */
+export function cancelRefundsRequestedBy(actor: ConsoleActor, name: string) {
+  const cancelled = refunds.list(PLATFORM_WS).filter((r) => r.status === "awaiting_approval" && r.requestedBy === name)
+  for (const r of cancelled) {
+    refunds.update(PLATFORM_WS, r.id, { status: "cancelled", cancelledReason: `${name} left the team` })
+    audit(actor, "refund.cancelled", "payment", `${r.creditNoteNumber} · ${r.customerName}`, { before: "awaiting approval", after: `cancelled · ${name} left the team`, customerId: r.customerId })
+  }
+  return cancelled.length
 }
 
 /** Card or bank transfer for the next invoices (SUB-01). */
