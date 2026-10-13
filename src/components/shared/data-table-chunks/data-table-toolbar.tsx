@@ -23,6 +23,15 @@ export interface FacetedFilterConfig {
   options: { label: string; value: string }[]
 }
 
+/** A custom entry of the Export menu (e.g. Excel or PDF with its own audit step) */
+export interface ExportOption {
+  label: string
+  icon?: LucideIcon
+  /** Receives the rows left after search and filters */
+  onClick: (rows: unknown[]) => void
+  disabled?: boolean
+}
+
 export interface ToolbarAction {
   label: string
   icon?: LucideIcon
@@ -53,6 +62,8 @@ interface DataTableToolbarProps<TData> {
   getExportData?: () => Record<string, unknown>[]
   /** Whether export dropdown is enabled (defaults to true) */
   enableExport?: boolean
+  /** Replace the CSV/JSON entries of the Export menu */
+  exportOptions?: ExportOption[]
 }
 
 export function DataTableToolbar<TData>({
@@ -69,6 +80,7 @@ export function DataTableToolbar<TData>({
   exportFilename,
   getExportData,
   enableExport = true,
+  exportOptions,
 }: DataTableToolbarProps<TData>) {
   const t = useTranslations()
   const { dir } = useGetDirection()
@@ -144,6 +156,7 @@ export function DataTableToolbar<TData>({
           <div className="relative min-w-0 flex-1 sm:w-64 sm:flex-none md:w-72">
             <Search className="absolute top-1/2 start-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              aria-label={searchPlaceholder}
               placeholder={searchPlaceholder}
               value={currentSearchValue}
               onChange={(e) => handleSearchChange(e.target.value)}
@@ -153,7 +166,7 @@ export function DataTableToolbar<TData>({
               <button
                 type="button"
                 onClick={() => handleSearchChange("")}
-                aria-label="Clear search"
+                aria-label={t("clear")}
                 className="absolute top-1/2 end-3 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
                 <X className="size-3.5" />
@@ -169,44 +182,58 @@ export function DataTableToolbar<TData>({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                aria-label="Export"
+                aria-label={t("export")}
                 className="px-4 max-sm:size-10 max-sm:px-0"
               >
                 <Download />
-                <span className="hidden sm:inline">Export</span>
+                <span className="hidden sm:inline">{t("export")}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align={dir === "rtl" ? "start" : "end"} className="w-44">
-              <DropdownMenuItem
-                className="text-xs cursor-pointer gap-2"
-                onClick={() => {
-                  const data = getExportData
-                    ? getExportData()
-                    : table.getFilteredRowModel().rows.map((r) => r.original as Record<string, unknown>)
-                  exportToCsv(
-                    data,
-                    exportFilename || `${title.toLowerCase().replace(/\s+/g, "-")}-export`
+              {exportOptions ? (
+                exportOptions.map((o) => {
+                  const Icon = o.icon
+                  return (
+                    <DropdownMenuItem key={o.label} className="text-xs cursor-pointer gap-2" aria-disabled={o.disabled} onClick={() => !o.disabled && o.onClick(table.getFilteredRowModel().rows.map((r) => r.original))}>
+                      {Icon && <Icon className="size-3.5 text-muted-foreground" />}
+                      <span>{o.label}</span>
+                    </DropdownMenuItem>
                   )
-                }}
-              >
-                <FileSpreadsheet className="size-3.5 text-success-foreground" />
-                <span>Export CSV (.csv)</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-xs cursor-pointer gap-2"
-                onClick={() => {
-                  const data = getExportData
-                    ? getExportData()
-                    : table.getFilteredRowModel().rows.map((r) => r.original as Record<string, unknown>)
-                  exportToJson(
-                    data,
-                    exportFilename || `${title.toLowerCase().replace(/\s+/g, "-")}-export`
-                  )
-                }}
-              >
-                <FileCode className="size-3.5 text-info-foreground" />
-                <span>Export JSON (.json)</span>
-              </DropdownMenuItem>
+                })
+              ) : (
+                <>
+                  <DropdownMenuItem
+                    className="text-xs cursor-pointer gap-2"
+                    onClick={() => {
+                      const data = getExportData
+                        ? getExportData()
+                        : table.getFilteredRowModel().rows.map((r) => r.original as Record<string, unknown>)
+                      exportToCsv(
+                        data,
+                        exportFilename || `${title.toLowerCase().replace(/\s+/g, "-")}-export`
+                      )
+                    }}
+                  >
+                    <FileSpreadsheet className="size-3.5 text-success-foreground" />
+                    <span>{t("exportCsv")}</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-xs cursor-pointer gap-2"
+                    onClick={() => {
+                      const data = getExportData
+                        ? getExportData()
+                        : table.getFilteredRowModel().rows.map((r) => r.original as Record<string, unknown>)
+                      exportToJson(
+                        data,
+                        exportFilename || `${title.toLowerCase().replace(/\s+/g, "-")}-export`
+                      )
+                    }}
+                  >
+                    <FileCode className="size-3.5 text-info-foreground" />
+                    <span>{t("exportJson")}</span>
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )}

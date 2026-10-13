@@ -3,38 +3,32 @@
 import { ZonedTime } from "@/components/shared/zoned-time"
 import type { ConsoleAuditEvent } from "@/types/platform-console"
 import { useMemo, useState } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
 import { useTranslations } from "next-intl"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DownloadIcon, History, Lock } from "@/components/ui/carbon/icons"
+import { DownloadIcon, Lock } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
-import type { Sorters } from "@/lib/ui/table-sort"
+import { DataTable } from "@/components/shared/data-table-chunks/data-table"
+import { FilterPill } from "@/components/shared/overview-chunks/filter-pill"
 import { useConsoleActor, useConsoleCustomers, useConsoleAudit, useConsoleMutations } from "@/hooks/platform/use-platform-console"
 import { consoleCan } from "@/lib/platform/console-roles"
 import { exportToCsv } from "@/lib/utils/export-data"
-import { ConsoleCapability, type ConsoleAuditAction, type ConsoleRole } from "@/types/platform-console"
+import { ConsoleCapability, type ConsoleRole } from "@/types/platform-console"
 import { ACTION_LABEL, ROLE_LABEL, RoleBadge, StepUpDialog } from "./console-shared"
+import { NameCell, inSelection, searchIn, sortHeader } from "./console-table"
 
 const ALL = "all"
 const PERIODS = { "7": 7, "30": 30, "90": 90 } as const
 
 /** Every console action that changed money, access, status or configuration (AUD-01 to AUD-03, AUD-07). */
-const SORTERS: Sorters<ConsoleAuditEvent> = { at: (e) => e.at, who: (e) => e.actorName, action: (e) => e.action, target: (e) => e.targetLabel }
 
 export default function ConsoleAuditPage() {
   const t = useTranslations()
   const actor = useConsoleActor()
   const { data: events = [], isLoading } = useConsoleAudit()
   const m = useConsoleMutations()
-  const [query, setQuery] = useState("")
-  const [who, setWho] = useState(ALL)
-  const [action, setAction] = useState(ALL)
   const [period, setPeriod] = useState<string>("30")
-  const [stepUp, setStepUp] = useState(false)
+  // the rows shown when the export was asked for: the export equals the filtered list (AUD-03)
+  const [exporting, setExporting] = useState<ConsoleAuditEvent[] | null>(null)
   // the period is counted from when the page opened
   const [openedAt] = useState(() => Date.now())
   const canExport = consoleCan(actor?.role, ConsoleCapability.EXPORT_AUDIT)
@@ -47,18 +41,32 @@ export default function ConsoleAuditPage() {
   const actors = useMemo(() => [...new Map(events.map((e) => [e.actorId, e.actorName])).entries()], [events])
   const rows = useMemo(() => {
     const since = period === ALL ? 0 : openedAt - PERIODS[period as keyof typeof PERIODS] * 86_400_000
-    const q = query.trim().toLowerCase()
-    return events.filter(
-      (e) =>
-        (who === ALL || e.actorId === who) &&
-        (action === ALL || e.action === action) &&
-        new Date(e.at).getTime() >= since &&
-        (!q || `${e.actorName} ${e.targetLabel} ${e.before ?? ""} ${e.after ?? ""}`.toLowerCase().includes(q))
-    )
-  }, [events, who, action, period, query, openedAt])
-  const ctl = useTableControls(rows, SORTERS, { key: "at", dir: "desc" }, 25)
+    return events.filter((e) => new Date(e.at).getTime() >= since)
+  }, [events, period, openedAt])
 
-  const doExport = () => {
+  const columns = useMemo<ColumnDef<ConsoleAuditEvent>[]>(() => [
+    {
+      id: "at",
+      accessorFn: (e) => e.at,
+      header: sortHeader(t("audWhen")),
+      filterFn: searchIn<ConsoleAuditEvent>((e) => [e.actorName, e.targetLabel, e.before, e.after]),
+      cell: ({ row: { original: e } }) => <span className="whitespace-nowrap text-sm text-muted-foreground"><ZonedTime iso={e.at} country={countryOf(e.customerId)} /></span>,
+    },
+    { id: "who", accessorFn: (e) => e.actorId, sortingFn: (a, b) => a.original.actorName.localeCompare(b.original.actorName), header: sortHeader(t("audWho")), filterFn: inSelection, cell: ({ row: { original: e } }) => <NameCell name={e.actorName} sub={<RoleBadge role={e.actorRole} />} /> },
+    { id: "action", accessorFn: (e) => e.action, header: sortHeader(t("audAction")), filterFn: inSelection, cell: ({ row: { original: e } }) => t(ACTION_LABEL[e.action]) },
+    { id: "target", accessorFn: (e) => e.targetLabel, header: sortHeader(t("audTarget")) },
+    {
+      id: "change",
+      enableSorting: false,
+      header: t("audChange"),
+      cell: ({ row: { original: e } }) => <span className="text-sm">{e.before || e.after ? <span>{e.before && <span className="text-muted-foreground line-through">{value(e.before)}</span>}{e.before && e.after && " → "}{value(e.after)}</span> : "—"}</span>,
+    },
+    { id: "from", enableSorting: false, header: t("audFrom"), cell: ({ row: { original: e } }) => <span className="text-xs text-muted-foreground tabular-nums">{e.ip}<span className="block">{e.sessionId}</span></span> },
+  // the formatters only change with the language and the customers' zones
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, zoneCustomers])
+
+  const doExport = (rows: ConsoleAuditEvent[]) => {
     const ok = exportToCsv(
       rows.map((e) => ({ at: e.at, actor: e.actorName, role: e.actorRole === "customer" ? t("crCustomer") : t(ROLE_LABEL[e.actorRole]), action: t(ACTION_LABEL[e.action]), target: e.targetLabel, before: value(e.before), after: value(e.after), ip: e.ip, session: e.sessionId })),
       `nexora-console-audit-${new Date().toISOString().slice(0, 10)}`,
@@ -72,81 +80,36 @@ export default function ConsoleAuditPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <PageHeader
-        actions={
-          canExport ? (
-            <Button variant="outline" onClick={() => setStepUp(true)} disabled={rows.length === 0}><DownloadIcon className="size-4" />{t("audExport")}</Button>
-          ) : undefined
-        }
+      <PageHeader>
+        <FilterPill
+          label={period === ALL ? t("audAllTime") : t("audLastDays", { days: period })}
+          value={period}
+          width="w-44"
+          onChange={setPeriod}
+          options={[...Object.keys(PERIODS).map((p) => ({ value: p, label: t("audLastDays", { days: p }) })), { value: ALL, label: t("audAllTime") }]}
+        />
+      </PageHeader>
+      <DataTable
+        title={t("consoleAudit")}
+        isLoading={isLoading}
+        columns={columns}
+        data={rows}
+        searchColumnId="at"
+        searchPlaceholder={t("audSearch")}
+        emptyMessage={t("audEmpty")}
+        defaultSorting={[{ id: "at", desc: true }]}
+        defaultPageSize={25}
+        showRange
+        // AUD-03, AUD-07: platform owners only, with the authenticator code; the export is itself audited
+        enableExport={canExport}
+        exportOptions={[{ label: t("audExport"), icon: DownloadIcon, onClick: (list) => list.length && setExporting(list as ConsoleAuditEvent[]) }]}
+        filters={[
+          { columnId: "who", title: t("audWho"), options: actors.map(([id, name]) => ({ value: id, label: name })) },
+          { columnId: "action", title: t("audAction"), options: [...new Set(events.map((e) => e.action))].map((a) => ({ value: a, label: t(ACTION_LABEL[a]) })) },
+        ]}
       />
-      <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
-        <div className="mb-4 flex flex-wrap items-end gap-3">
-          <Input className="w-full sm:w-64" placeholder={t("audSearch")} aria-label={t("audSearch")} value={query} onChange={(e) => setQuery(e.target.value)} />
-          <Select value={who} onValueChange={setWho}>
-            <SelectTrigger className="w-48" aria-label={t("audWho")}><SelectValue>{who === ALL ? t("audAllPeople") : actors.find(([id]) => id === who)?.[1]}</SelectValue></SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>{t("audAllPeople")}</SelectItem>
-              {actors.map(([id, name]) => <SelectItem key={id} value={id}>{name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={action} onValueChange={setAction}>
-            <SelectTrigger className="w-56" aria-label={t("audAction")}><SelectValue>{action === ALL ? t("audAllActions") : t(ACTION_LABEL[action as ConsoleAuditAction])}</SelectValue></SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>{t("audAllActions")}</SelectItem>
-              {(Object.keys(ACTION_LABEL) as ConsoleAuditAction[]).map((a) => <SelectItem key={a} value={a}>{t(ACTION_LABEL[a])}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-40" aria-label={t("audPeriod")}><SelectValue>{period === ALL ? t("audAllTime") : t("audLastDays", { days: period })}</SelectValue></SelectTrigger>
-            <SelectContent>
-              {Object.keys(PERIODS).map((p) => <SelectItem key={p} value={p}>{t("audLastDays", { days: p })}</SelectItem>)}
-              <SelectItem value={ALL}>{t("audAllTime")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {isLoading ? (
-          <ListSkeleton />
-        ) : rows.length === 0 ? (
-          <EmptyState icon={History} title={t("audEmpty")} hint={t("audEmptyHint")} />
-        ) : (
-          <TableContainer>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <SortableHead label={t("audWhen")} k="at" ctl={ctl} />
-                  <SortableHead label={t("audWho")} k="who" ctl={ctl} />
-                  <SortableHead label={t("audAction")} k="action" ctl={ctl} />
-                  <SortableHead label={t("audTarget")} k="target" ctl={ctl} />
-                  <TableHead>{t("audChange")}</TableHead>
-                  <TableHead>{t("audFrom")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ctl.rows.map((e) => (
-                  <TableRow key={e.id}>
-                    <TableCell className="whitespace-nowrap text-sm text-muted-foreground"><ZonedTime iso={e.at} country={countryOf(e.customerId)} /></TableCell>
-                    <TableCell>
-                      <p className="font-medium">{e.actorName}</p>
-                      <RoleBadge role={e.actorRole} />
-                    </TableCell>
-                    <TableCell>{t(ACTION_LABEL[e.action])}</TableCell>
-                    <TableCell>{e.targetLabel}</TableCell>
-                    <TableCell className="text-sm">
-                      {e.before || e.after ? (
-                        <span>{e.before && <span className="text-muted-foreground line-through">{value(e.before)}</span>}{e.before && e.after && " → "}{value(e.after)}</span>
-                      ) : "—"}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground tabular-nums">{e.ip}<span className="block">{e.sessionId}</span></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePager ctl={ctl} className="px-4 pb-3" />
-          </TableContainer>
-        )}
-        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground"><Lock className="size-3.5" aria-hidden />{t("audAppendOnly")}</p>
-      </section>
-      <StepUpDialog open={stepUp} onOpenChange={setStepUp} action={t("audExportConfirm", { count: rows.length })} onConfirmed={doExport} />
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground"><Lock className="size-3.5" aria-hidden />{t("audAppendOnly")}</p>
+      <StepUpDialog open={!!exporting} onOpenChange={(v) => !v && setExporting(null)} action={t("audExportConfirm", { count: exporting?.length ?? 0 })} onConfirmed={() => exporting && doExport(exporting)} />
     </div>
   )
 }

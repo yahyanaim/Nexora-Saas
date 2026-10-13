@@ -5,6 +5,7 @@ import { Column } from "@tanstack/react-table"
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 /** When true (phone card layout), headers render as plain labels without sort buttons. */
 export const CompactHeaderContext = React.createContext(false)
@@ -22,6 +23,7 @@ export function DataTableColumnHeader<TData, TValue>({
   title,
   className,
 }: DataTableColumnHeaderProps<TData, TValue>) {
+  const t = useTranslations()
   const compact = React.useContext(CompactHeaderContext)
   if (compact) return <>{title}</>
 
@@ -37,6 +39,7 @@ export function DataTableColumnHeader<TData, TValue>({
       size="sm"
       className={cn("-ms-3 h-8 gap-1.5 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground hover:bg-muted data-[state=open]:bg-accent", className)}
       onClick={() => column.toggleSorting(sorted === "asc")}
+      aria-label={t("tcSortBy", { column: title })}
     >
       <span>{title}</span>
       {sorted === "desc" ? (

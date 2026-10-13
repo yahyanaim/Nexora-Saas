@@ -39,7 +39,7 @@ describe("useDashboardNav", () => {
 
   it("gives the Nexora team its own console menus, without the ERP ones", () => {
     renderIntl(<NavProbe />)
-    expect(screen.getByTestId("groups").textContent).toBe("console-customers,console-billing,console-support,console-operations,console-team")
+    expect(screen.getByTestId("groups").textContent).toBe("console-home,console-customers,console-billing,console-support,console-operations,console-team")
     expect(screen.getByTestId("active-group").textContent).toBe("console-billing")
     expect(screen.getByTestId("active-item").textContent).toBe("/dashboard/invoices")
   })

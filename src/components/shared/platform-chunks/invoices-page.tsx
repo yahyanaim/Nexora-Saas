@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,15 +9,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { DownloadIcon, FileSpreadsheet, FileText, Printer, Receipt, ReceiptText, TrendingUp, Warning } from "@/components/ui/carbon/icons"
+import { DownloadIcon, Eye, FileCode, FileSpreadsheet, FileText, Printer, Receipt, ReceiptText, TrendingUp, Warning } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
-import type { Sorters } from "@/lib/ui/table-sort"
+import { DataTable } from "@/components/shared/data-table-chunks/data-table"
+import { DataTableRowActions } from "@/components/shared/data-table-chunks/data-table-row-actions"
+import { FilterPill } from "@/components/shared/overview-chunks/filter-pill"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { Link } from "@/i18n/navigation"
 import { useConsoleActor } from "@/hooks/platform/use-platform-console"
@@ -30,16 +29,13 @@ import { useNexoraIdentity } from "@/hooks/platform/use-platform-config"
 import { ConsoleCapability as C } from "@/types/platform-console"
 import type { NxCreditNote, NxInvoice, NxInvoiceStatus } from "@/types/platform-billing"
 import { StepUpDialog } from "./console-shared"
-import { InvoiceStatusBadge, Panel, useBillingFormat } from "./billing-shared"
+import { InvoiceStatusBadge, useBillingFormat } from "./billing-shared"
+import { inSelection, searchIn, sortHeader } from "./console-table"
 
 const ALL = "all"
 const STATUSES: NxInvoiceStatus[] = ["issued", "paid", "partly_paid", "overdue", "credited"]
 
 /** Nexora's invoices to its customers, never edited after issue (INV-01 to INV-09). */
-const INVOICE_SORT: Sorters<NxInvoice> = { number: (i) => i.number, company: (i) => i.customerName, date: (i) => i.date, due: (i) => i.dueDate, total: (i) => i.total, left: (i) => Math.round((i.total - i.paid - i.credited) * 100) / 100, status: (i) => i.status }
-
-const NOTE_SORT: Sorters<NxCreditNote> = { number: (n) => n.number, invoice: (n) => n.invoiceNumber, company: (n) => n.customerName, total: (n) => n.total }
-
 export default function ConsoleInvoicesPage() {
   const t = useTranslations()
   const locale = useLocale()
@@ -52,17 +48,13 @@ export default function ConsoleInvoicesPage() {
   const { data: notes = [] } = useNxCreditNotes()
   const { data: payments = [] } = useNxPayments()
   const m = useBillingMutations()
-  const [query, setQuery] = useState("")
-  const [status, setStatus] = useState(ALL)
   const [open, setOpen] = useState<NxInvoice | null>(null)
   const [crediting, setCrediting] = useState<NxInvoice | null>(null)
   const [form, setForm] = useState({ amount: "", reason: "", refund: false })
   const [stepUp, setStepUp] = useState(false)
   const canCredit = consoleCan(actor?.role, C.CREDIT_NOTES)
-  const q = query.trim().toLowerCase()
-  const rows = invoices.filter((i) => (status === ALL || i.status === status) && (period === ALL || i.date.startsWith(period)) && (!q || `${i.number} ${i.customerName} ${i.customerIce ?? ""}`.toLowerCase().includes(q)))
-  const ctl = useTableControls(rows, INVOICE_SORT, { key: "number", dir: "desc" })
-  const ctl2 = useTableControls(notes, NOTE_SORT, { key: "number", dir: "desc" })
+  // INV-09: the period chooses which invoices and credit notes the page and its exports cover
+  const inPeriod = useMemo(() => invoices.filter((i) => period === ALL || i.date.startsWith(period)), [invoices, period])
   const periodNotes = notes.filter((n) => period === ALL || n.date.startsWith(period))
   const months = [...new Set(invoices.map((i) => i.date.slice(0, 7)))].sort().reverse()
   const monthLabel = (m: string) => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(`${m}-01T00:00:00`))
@@ -76,8 +68,8 @@ export default function ConsoleInvoicesPage() {
     { key: "credits", title: t("biCreditNotes"), value: notes.length, footer: { icon: ReceiptText, text: t("biCreditNotesHint") } },
   ]
 
-  // INV-09: invoices and credit notes of the period, for the accountant
-  const exportRows = [
+  // INV-09: invoices and credit notes of the period, for the accountant (rows: after search and status)
+  const exportRowsOf = (rows: NxInvoice[]) => [
     ...rows.map((i) => ({ type: t("invoice"), number: i.number, date: i.date, due: i.dueDate, customer: i.customerName, ice: i.customerIce ?? "", subtotal: i.subtotal, vat: i.vat, total: i.total, paid: i.paid, credited: i.credited, status: t(`biInv_${i.status}`) })),
     ...periodNotes.map((n) => ({ type: t("creditNote"), number: n.number, date: n.date, due: "", customer: n.customerName, ice: "", subtotal: -n.subtotal, vat: -n.vat, total: -n.total, paid: 0, credited: 0, status: n.invoiceNumber })),
   ]
@@ -86,11 +78,16 @@ export default function ConsoleInvoicesPage() {
     { key: "subtotal", label: t("biSubtotal") }, { key: "vat", label: t("biVat") }, { key: "total", label: t("biTotal") }, { key: "paid", label: t("biPaid") }, { key: "credited", label: t("biCredited") }, { key: "status", label: t("status") },
   ] as const
   const fileBase = `nexora-invoices-${period === ALL ? new Date().toISOString().slice(0, 10) : period}`
-  const sum = (k: "subtotal" | "vat" | "total") => round2(exportRows.reduce((s, r) => s + r[k], 0))
-  const doExport = () => exportToCsv(exportRows, fileBase, exportCols.map((c) => ({ key: c.key, label: c.label })))
-  const doXlsx = () =>
+  type ExportRow = ReturnType<typeof exportRowsOf>[number]
+  const sumOf = (exportRows: ExportRow[], k: "subtotal" | "vat" | "total") => round2(exportRows.reduce((s, r) => s + r[k], 0))
+  const doExport = (exportRows: ExportRow[]) => exportToCsv(exportRows, fileBase, exportCols.map((c) => ({ key: c.key, label: c.label })))
+  const doXlsx = (exportRows: ExportRow[]) => {
+    const sum = (k: "subtotal" | "vat" | "total") => sumOf(exportRows, k)
+    return
     downloadXlsx({ name: t("biInvoices"), columns: exportCols.map((c) => ({ label: c.label, width: c.key === "customer" ? 28 : 14 })), rows: [...exportRows.map((r) => exportCols.map((c) => r[c.key])), [t("total"), "", "", "", "", "", sum("subtotal"), sum("vat"), sum("total"), "", "", ""]] }, fileBase)
-  const doPdf = async () => {
+  }
+  const doPdf = async (exportRows: ExportRow[]) => {
+    const sum = (k: "subtotal" | "vat" | "total") => sumOf(exportRows, k)
     const [{ getPdfTranslator }, { renderTableReport }, { documentBrand, loadLogo }, { nexoraLogoSrc }] = await Promise.all([import("@/lib/pdf/pdf-i18n"), import("@/lib/pdf/report-template"), import("@/lib/pdf/pdf-kit"), import("@/lib/api/platform-config-api")])
     const { t: pt, locale: pl } = await getPdfTranslator(locale)
     const pm = (n: number) => new Intl.NumberFormat(pl, { style: "currency", currency: "MAD" }).format(n)
@@ -109,106 +106,109 @@ export default function ConsoleInvoicesPage() {
     })
   }
 
+  const invoiceColumns = useMemo<ColumnDef<NxInvoice>[]>(() => [
+    {
+      id: "number",
+      accessorFn: (i) => i.number,
+      header: sortHeader(t("biNumber")),
+      filterFn: searchIn<NxInvoice>((i) => [i.number, i.customerName, i.customerIce]),
+      cell: ({ row: { original: i } }) => (
+        <span>
+          <button type="button" className="rounded font-mono text-xs font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setOpen(i)}>{i.number}</button>
+          {i.kind === "proration" && <span className="block text-xs text-muted-foreground">{t("biProration")}</span>}
+        </span>
+      ),
+    },
+    { id: "company", accessorFn: (i) => i.customerName, header: sortHeader(t("pfCompany")) },
+    { id: "date", accessorFn: (i) => i.date, header: sortHeader(t("biDate")), cell: ({ row: { original: i } }) => <span className="text-sm">{date(i.date)}</span> },
+    { id: "due", accessorFn: (i) => i.dueDate, header: sortHeader(t("biDue")), cell: ({ row: { original: i } }) => <span className="text-sm">{date(i.dueDate)}</span> },
+    { id: "total", accessorFn: (i) => i.total, header: sortHeader(t("biTotal")), cell: ({ row: { original: i } }) => <span className="tabular-nums">{money(i.total)}</span> },
+    { id: "left", accessorFn: (i) => balance(i), header: sortHeader(t("biLeft")), cell: ({ row: { original: i } }) => <span className="tabular-nums">{balance(i) > 0 ? money(balance(i)) : "—"}</span> },
+    { id: "status", accessorFn: (i) => i.status, header: sortHeader(t("status")), filterFn: inSelection, cell: ({ row: { original: i } }) => <InvoiceStatusBadge status={i.status} /> },
+    {
+      id: "actions",
+      enableSorting: false,
+      cell: ({ row: { original: i } }) => (
+        <DataTableRowActions row={i} actions={[
+          { label: t("biViewInvoice"), icon: Eye, onClick: setOpen },
+          { label: t("biDownloadPdfOf", { number: i.number }), icon: FileText, onClick: (x) => void docs.invoicePdf(x) },
+        ]} />
+      ),
+    },
+  // the formatters only change with the language
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, locale])
+
+  const noteColumns = useMemo<ColumnDef<NxCreditNote>[]>(() => [
+    {
+      id: "number",
+      accessorFn: (n) => n.number,
+      header: sortHeader(t("biNumber")),
+      filterFn: searchIn<NxCreditNote>((n) => [n.number, n.invoiceNumber, n.customerName, n.reason]),
+      cell: ({ row: { original: n } }) => <span className="font-mono text-xs">{n.number}<span className="block text-muted-foreground">{date(n.date)}</span></span>,
+    },
+    { id: "invoice", accessorFn: (n) => n.invoiceNumber, header: sortHeader(t("biForInvoice")), cell: ({ row: { original: n } }) => <span className="font-mono text-xs">{n.invoiceNumber}</span> },
+    { id: "company", accessorFn: (n) => n.customerName, header: sortHeader(t("pfCompany")) },
+    { id: "reason", accessorFn: (n) => n.reason, enableSorting: false, header: t("cuReason"), cell: ({ row: { original: n } }) => <span className="block max-w-72 text-sm">{n.reason}<span className="block text-xs text-muted-foreground">{n.createdBy}</span></span> },
+    { id: "total", accessorFn: (n) => n.total, header: sortHeader(t("biTotal")), cell: ({ row: { original: n } }) => <span className="tabular-nums">−{money(n.total)}</span> },
+    {
+      id: "actions",
+      enableSorting: false,
+      cell: ({ row: { original: n } }) => (
+        <DataTableRowActions row={n} actions={[
+          { label: t("biDownloadPdfOf", { number: n.number }), icon: FileText, onClick: (x) => void docs.creditNotePdf(x) },
+          { label: t("biDownloadXmlOf", { number: n.number }), icon: FileCode, onClick: (x) => void docs.creditNoteXml(x) },
+        ]} />
+      ),
+    },
+  // the formatters only change with the language
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, locale])
+
   const creditTotal = round2(Number(form.amount || 0) * (1 + (crediting?.lines[0]?.vatRate ?? 20) / 100))
   const submitCredit = () => crediting && m.creditNote.mutate({ invoiceId: crediting.id, amount: Number(form.amount), reason: form.reason, refund: form.refund }, { onSuccess: () => { setCrediting(null); setOpen(null) } })
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <PageHeader
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={doXlsx} disabled={exportRows.length === 0}><FileSpreadsheet className="size-4" />Excel</Button>
-            <Button variant="outline" onClick={doExport} disabled={exportRows.length === 0}><DownloadIcon className="size-4" />CSV</Button>
-            <Button variant="outline" onClick={() => void doPdf()} disabled={exportRows.length === 0}><FileText className="size-4" />PDF</Button>
-          </div>
-        }
-      />
-      <MetricCardGrid cards={cards} />
-      <Panel
+      <PageHeader>
+        <FilterPill
+          label={period === ALL ? t("biAllPeriods") : monthLabel(period)}
+          value={period}
+          onChange={setPeriod}
+          options={[{ value: ALL, label: t("biAllPeriods") }, ...months.map((mo) => ({ value: mo, label: monthLabel(mo) }))]}
+        />
+      </PageHeader>
+      <MetricCardGrid cards={cards} columnsClassName="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" />
+      <DataTable
         title={t("biInvoices")}
-        hint={t("biInvoicesHint")}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Input className="w-60" placeholder={t("biSearch")} aria-label={t("biSearch")} value={query} onChange={(e) => setQuery(e.target.value)} />
-            <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-44 capitalize" aria-label={t("repPeriod")}><SelectValue>{period === ALL ? t("biAllPeriods") : monthLabel(period)}</SelectValue></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>{t("biAllPeriods")}</SelectItem>
-                {months.map((mo) => <SelectItem key={mo} value={mo} className="capitalize">{monthLabel(mo)}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-40" aria-label={t("status")}><SelectValue>{status === ALL ? t("pfAllStatuses") : t(`biInv_${status}`)}</SelectValue></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>{t("pfAllStatuses")}</SelectItem>
-                {STATUSES.map((s) => <SelectItem key={s} value={s}>{t(`biInv_${s}`)}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        }
-      >
-        {isLoading ? <ListSkeleton /> : rows.length === 0 ? <EmptyState icon={Receipt} title={t("biNoInvoice")} /> : (
-          <TableContainer>
-            <Table className="min-w-[56rem]">
-              <TableHeader>
-                <TableRow>
-                  <SortableHead label={t("biNumber")} k="number" ctl={ctl} />
-                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
-                  <SortableHead label={t("biDate")} k="date" ctl={ctl} />
-                  <SortableHead label={t("biDue")} k="due" ctl={ctl} />
-                  <SortableHead label={t("biTotal")} k="total" ctl={ctl} align="end" />
-                  <SortableHead label={t("biLeft")} k="left" ctl={ctl} align="end" />
-                  <SortableHead label={t("status")} k="status" ctl={ctl} />
-                  <TableHead><span className="sr-only">PDF</span></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ctl.rows.map((i) => (
-                  <TableRow key={i.id} className="cursor-pointer" onClick={() => setOpen(i)}>
-                    <TableCell><button type="button" className="rounded font-mono text-xs font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(e) => { e.stopPropagation(); setOpen(i) }}>{i.number}</button>{i.kind === "proration" && <span className="block text-xs text-muted-foreground">{t("biProration")}</span>}</TableCell>
-                    <TableCell>{i.customerName}</TableCell>
-                    <TableCell className="text-sm">{date(i.date)}</TableCell>
-                    <TableCell className="text-sm">{date(i.dueDate)}</TableCell>
-                    <TableCell className="text-end tabular-nums">{money(i.total)}</TableCell>
-                    <TableCell className="text-end tabular-nums">{balance(i) > 0 ? money(balance(i)) : "—"}</TableCell>
-                    <TableCell><InvoiceStatusBadge status={i.status} /></TableCell>
-                    <TableCell><Button size="icon" variant="ghost" className="size-8" aria-label={t("biDownloadPdfOf", { number: i.number })} onClick={(e) => { e.stopPropagation(); void docs.invoicePdf(i) }}><FileText className="size-4" /></Button></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePager ctl={ctl} className="px-4 pb-3" />
-          </TableContainer>
-        )}
-      </Panel>
+        isLoading={isLoading}
+        columns={invoiceColumns}
+        data={inPeriod}
+        searchColumnId="number"
+        searchPlaceholder={t("biSearch")}
+        emptyMessage={t("biNoInvoice")}
+        defaultSorting={[{ id: "number", desc: true }]}
+        showRange
+        exportOptions={[
+          { label: "Excel", icon: FileSpreadsheet, onClick: (rows) => doXlsx(exportRowsOf(rows as NxInvoice[])) },
+          { label: "CSV", icon: DownloadIcon, onClick: (rows) => doExport(exportRowsOf(rows as NxInvoice[])) },
+          { label: "PDF", icon: FileText, onClick: (rows) => void doPdf(exportRowsOf(rows as NxInvoice[])) },
+        ]}
+        filters={[{ columnId: "status", title: t("status"), options: STATUSES.map((st) => ({ value: st, label: t(`biInv_${st}`) })) }]}
+      />
+      <p className="text-xs text-muted-foreground">{t("biInvoicesHint")}</p>
 
-      <Panel title={t("biCreditNotes")} hint={t("biCreditNotesList")}>
-        {notes.length === 0 ? <p className="rounded-2xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">{t("biNoCredit")}</p> : (
-          <TableContainer>
-            <Table>
-              <TableHeader><TableRow><SortableHead label={t("biNumber")} k="number" ctl={ctl2} /><SortableHead label={t("biForInvoice")} k="invoice" ctl={ctl2} /><SortableHead label={t("pfCompany")} k="company" ctl={ctl2} /><TableHead>{t("cuReason")}</TableHead><SortableHead label={t("biTotal")} k="total" ctl={ctl2} align="end" /><TableHead>{t("biDocuments")}</TableHead></TableRow></TableHeader>
-              <TableBody>
-                {ctl2.rows.map((n) => (
-                  <TableRow key={n.id}>
-                    <TableCell className="font-mono text-xs">{n.number}<span className="block text-muted-foreground">{date(n.date)}</span></TableCell>
-                    <TableCell className="font-mono text-xs">{n.invoiceNumber}</TableCell>
-                    <TableCell>{n.customerName}</TableCell>
-                    <TableCell className="max-w-72 text-sm">{n.reason}<span className="block text-xs text-muted-foreground">{n.createdBy}</span></TableCell>
-                    <TableCell className="text-end tabular-nums">−{money(n.total)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button size="sm" variant="ghost" onClick={() => void docs.creditNotePdf(n)} aria-label={t("biDownloadPdfOf", { number: n.number })}><FileText className="size-4" />PDF</Button>
-                        <Button size="sm" variant="ghost" onClick={() => void docs.creditNoteXml(n)} aria-label={t("biDownloadXmlOf", { number: n.number })}>XML</Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePager ctl={ctl2} className="px-4 pb-3" />
-          </TableContainer>
-        )}
-      </Panel>
+      <DataTable
+        title={t("biCreditNotes")}
+        columns={noteColumns}
+        data={periodNotes}
+        searchColumnId="number"
+        searchPlaceholder={t("biSearchNotes")}
+        emptyMessage={t("biNoCredit")}
+        defaultSorting={[{ id: "number", desc: true }]}
+        showRange
+        enableExport={false}
+      />
 
       <Sheet open={!!open} onOpenChange={(v) => !v && setOpen(null)}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">

@@ -1,30 +1,10 @@
 "use client"
 
 import { useMemo } from "react"
-import { Information } from "@/components/ui/carbon/icons"
-import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
+import { KpiTile } from "@/components/shared/kpi-tile"
 import { change, sparkline, UTILIZATION_TARGET } from "@/lib/workforce/analytics"
 import { RANGE_SHORT, formatChange, useAnalyticsFilter } from "./analytics-filter-context"
-
-interface SparklineBarProps {
-  heights: number[] // heights between 0 and 100
-  className?: string
-}
-
-function MiniBarSparkline({ heights, className }: SparklineBarProps) {
-  return (
-    <div className={cn("flex items-end gap-1 h-8 shrink-0", className)}>
-      {heights.map((h, i) => (
-        <div
-          key={i}
-          style={{ height: `${Math.max(15, h)}%` }}
-          className="w-1.5 rounded-full bg-muted-foreground/25 dark:bg-muted-foreground/35 transition-all hover:bg-primary"
-        />
-      ))}
-    </div>
-  )
-}
 
 interface KpiCardData {
   title: string
@@ -109,57 +89,19 @@ export function AnalyticsKpiCards() {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {kpiMetrics.map((kpi) => (
-        <div
+        <KpiTile
           key={kpi.title}
-          aria-busy={isLoading}
-          className="flex flex-col justify-between rounded-xl border border-border/70 bg-card p-4 shadow-2xs transition-all hover:shadow-xs"
-        >
-          <div>
-            {/* Card Top: Title with info icon */}
-            <div className="flex items-center justify-between gap-1 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1 truncate">
-                <Information className="size-3.5 shrink-0 text-muted-foreground/70" />
-                <span className="truncate font-medium">{kpi.title}</span>
-              </div>
-              <span className="text-xs tabular-nums text-muted-foreground/70 shrink-0">
-                {periodTag}
-              </span>
-            </div>
-
-            {/* Card Middle: Big value, percentage pill, and mini bar sparkline */}
-            <div className="mt-3 flex items-end justify-between gap-2">
-              <div className="space-y-1">
-                <div className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
-                  {kpi.value}
-                </div>
-                <div
-                  className={cn(
-                    "inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-semibold",
-                    kpi.change === "—"
-                      ? "bg-muted text-muted-foreground"
-                      : kpi.isPositive
-                      ? "bg-success-soft text-success-foreground"
-                      : "bg-danger-soft text-danger-foreground"
-                  )}
-                >
-                  {kpi.change}
-                </div>
-              </div>
-              <MiniBarSparkline heights={kpi.sparkline} />
-            </div>
-
-            {/* Card Description */}
-            <p className="mt-3 text-xs text-muted-foreground line-clamp-2">
-              {kpi.description}
-            </p>
-          </div>
-
-          {/* Operational Explanation Paragraph */}
-          <div className="mt-3 border-t border-border/40 pt-2 text-xs leading-relaxed text-muted-foreground">
-            <span className="font-semibold text-foreground">{t("anOperationalNote")} </span>
-            {kpi.explanation}
-          </div>
-        </div>
+          isLoading={isLoading}
+          title={kpi.title}
+          value={kpi.value}
+          period={periodTag}
+          change={kpi.change}
+          isPositive={kpi.isPositive}
+          sparkline={kpi.sparkline}
+          description={kpi.description}
+          noteLabel={t("anOperationalNote")}
+          note={kpi.explanation}
+        />
       ))}
     </div>
   )

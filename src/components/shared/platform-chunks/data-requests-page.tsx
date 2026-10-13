@@ -1,20 +1,19 @@
 "use client"
 
 import { ZonedTime } from "@/components/shared/zoned-time"
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ListSkeleton } from "@/components/ui/empty-state"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Archive, CheckCircle, DownloadIcon, FolderLock, Trash2, Warning } from "@/components/ui/carbon/icons"
+import { Archive, CheckCircle, DownloadIcon, Eye, FolderLock, Trash2, Warning } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
-import type { Sorters } from "@/lib/ui/table-sort"
+import { DataTable } from "@/components/shared/data-table-chunks/data-table"
+import { DataTableRowActions, type RowAction } from "@/components/shared/data-table-chunks/data-table-row-actions"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { useConsoleActor, useConsoleCustomers } from "@/hooks/platform/use-platform-console"
 import { RETENTION } from "@/lib/platform/customer-lifecycle"
@@ -26,6 +25,7 @@ import { ConsoleCapability as C, ConsoleRole } from "@/types/platform-console"
 import type { DataRequest } from "@/types/platform-data"
 import { StepUpDialog } from "./console-shared"
 import { Panel, useBillingFormat } from "./billing-shared"
+import { NameCell, inSelection, searchIn, sortHeader } from "./console-table"
 
 const STATUS_CLASS: Record<DataRequest["status"], string> = {
   received: "bg-warning-soft text-warning-foreground",
@@ -40,7 +40,6 @@ const STATUS_CLASS: Record<DataRequest["status"], string> = {
  * (AUD-06). Exports are delivered within 7 days; a deletion is prepared by one
  * team member and approved by a platform owner with the authenticator code.
  */
-const SORTERS: Sorters<DataRequest> = { number: (r) => r.number, company: (r) => r.customerName, kind: (r) => r.kind, received: (r) => r.receivedAt, due: (r) => r.dueOn, status: (r) => r.status }
 
 export default function ConsoleDataRequestsPage() {
   const t = useTranslations()
@@ -54,7 +53,6 @@ export default function ConsoleDataRequestsPage() {
   const [approving, setApproving] = useState<string | null>(null)
   const [refusing, setRefusing] = useState("")
   const [years, setYears] = useState<string | null>(null)
-  const ctl = useTableControls(requests, SORTERS, { key: "received", dir: "desc" })
   const [savingYears, setSavingYears] = useState(false)
   const open = requests.find((r) => r.id === openId)
   const canHandle = consoleCan(actor?.role, C.CHANGE_STATUS)
@@ -76,63 +74,71 @@ export default function ConsoleDataRequestsPage() {
     { key: "deleted", title: t("drDeletedCount"), value: requests.filter((r) => r.kind === "deletion" && r.status === "deleted").length, footer: { icon: Trash2, text: t("drDeletedHint") } },
   ]
 
-  const nextStep = (r: DataRequest) => {
-    if (r.kind === "export" && r.status === "received") return canHandle ? <Button size="sm" onClick={() => m.fulfil.mutate(r.id)} disabled={m.fulfil.isPending}><Archive className="size-4" />{t("drPrepareExport")}</Button> : null
-    if (r.kind === "export" && r.status === "fulfilled" && !expired(r)) return canHandle ? <Button size="sm" variant="outline" onClick={() => m.download.mutate(r.id)}><DownloadIcon className="size-4" />{t("drCheckFile")}</Button> : null
-    if (r.kind === "deletion" && r.status === "received") {
-      if (!canPrepare) return null
-      return statusOf(r.customerId) === "cancelled"
-        ? <Button size="sm" onClick={() => m.prepare.mutate(r.id)}>{t("drPrepareDeletion")}</Button>
-        : <span className="text-xs text-warning-foreground">{t("drCancelFirst")}</span>
-    }
-    if (r.kind === "deletion" && r.status === "prepared") {
-      if (r.preparedBy === actor?.name) return <span className="text-xs text-muted-foreground">{t("drNeedsOther")}</span>
-      return canApprove ? <Button size="sm" variant="danger" onClick={() => setApproving(r.id)}><Trash2 className="size-4" />{t("drApproveDeletion")}</Button> : null
-    }
+  // the next step of a request, in its ⋯ menu; what blocks it is written under the status
+  const nextSteps = (r: DataRequest): RowAction<DataRequest>[] => {
+    if (r.kind === "export" && r.status === "received" && canHandle) return [{ label: t("drPrepareExport"), icon: Archive, onClick: (x) => m.fulfil.mutate(x.id) }]
+    if (r.kind === "export" && r.status === "fulfilled" && !expired(r) && canHandle) return [{ label: t("drCheckFile"), icon: DownloadIcon, onClick: (x) => m.download.mutate(x.id) }]
+    if (r.kind === "deletion" && r.status === "received" && canPrepare && statusOf(r.customerId) === "cancelled") return [{ label: t("drPrepareDeletion"), icon: CheckCircle, onClick: (x) => m.prepare.mutate(x.id) }]
+    if (r.kind === "deletion" && r.status === "prepared" && r.preparedBy !== actor?.name && canApprove) return [{ label: t("drApproveDeletion"), icon: Trash2, variant: "destructive", separatorBefore: true, onClick: (x) => setApproving(x.id) }]
+    return []
+  }
+  const blocker = (r: DataRequest) => {
+    if (r.kind === "deletion" && r.status === "received" && canPrepare && statusOf(r.customerId) !== "cancelled") return <span className="block text-xs text-warning-foreground">{t("drCancelFirst")}</span>
+    if (r.kind === "deletion" && r.status === "prepared" && r.preparedBy === actor?.name) return <span className="block text-xs text-muted-foreground">{t("drNeedsOther")}</span>
     return null
   }
+
+  const columns = useMemo<ColumnDef<DataRequest>[]>(() => [
+    {
+      id: "number",
+      accessorFn: (r) => r.number,
+      header: sortHeader(t("drNumber")),
+      filterFn: searchIn<DataRequest>((r) => [r.number, r.customerName, r.requestedBy.name]),
+      cell: ({ row: { original: r } }) => <button type="button" className="rounded font-mono text-xs hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setOpenId(r.id)}>{r.number}</button>,
+    },
+    { id: "company", accessorFn: (r) => r.customerName, header: sortHeader(t("pfCompany")), cell: ({ row: { original: r } }) => <NameCell name={r.customerName} sub={r.requestedBy.name} /> },
+    { id: "kind", accessorFn: (r) => r.kind, header: sortHeader(t("drKind")), filterFn: inSelection, cell: ({ row: { original: r } }) => t(r.kind === "export" ? "drKind_export" : "drKind_deletion") },
+    { id: "received", accessorFn: (r) => r.receivedAt, header: sortHeader(t("drReceived")), cell: ({ row: { original: r } }) => <span className="text-sm"><ZonedTime iso={r.receivedAt} country={customers.find((c) => c.id === r.customerId)?.country} /></span> },
+    { id: "due", accessorFn: (r) => r.dueOn, header: sortHeader(t("drDue")), cell: ({ row: { original: r } }) => <span className={cn("text-sm", isLate(r) && "font-medium text-destructive")}>{date(r.dueOn)}{isLate(r) && ` · ${t("drLateBadge")}`}</span> },
+    {
+      id: "status",
+      accessorFn: (r) => (expired(r) ? "expired" : r.status),
+      header: sortHeader(t("status")),
+      filterFn: inSelection,
+      cell: ({ row: { original: r } }) => <span><Badge variant="outline" className={cn("border-transparent", expired(r) ? "bg-muted text-muted-foreground" : STATUS_CLASS[r.status])}>{statusLabel(r)}</Badge>{blocker(r)}</span>,
+    },
+    {
+      id: "actions",
+      enableSorting: false,
+      cell: ({ row: { original: r } }) => <DataTableRowActions row={r} actions={[{ label: t("drOpenRequest"), icon: Eye, onClick: (x) => setOpenId(x.id) }, ...nextSteps(r)]} />,
+    },
+  // the formatters only change with the language, the role and the customers
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, customers, actor, canHandle, canPrepare, canApprove])
 
   return (
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader />
       <MetricCardGrid cards={cards} />
 
-      <Panel title={t("drList")} hint={t("drListHint")}>
-        {isLoading ? <ListSkeleton /> : (
-          <TableContainer>
-            <Table className="min-w-[56rem]">
-              <TableHeader>
-                <TableRow>
-                  <SortableHead label={t("drNumber")} k="number" ctl={ctl} />
-                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
-                  <SortableHead label={t("drKind")} k="kind" ctl={ctl} />
-                  <SortableHead label={t("drReceived")} k="received" ctl={ctl} />
-                  <SortableHead label={t("drDue")} k="due" ctl={ctl} />
-                  <SortableHead label={t("status")} k="status" ctl={ctl} />
-                  <TableHead>{t("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ctl.rows.map((r) => (
-                  <TableRow key={r.id} className="cursor-pointer" onClick={() => setOpenId(r.id)}>
-                    <TableCell className="font-mono text-xs">
-                      <button type="button" className="rounded hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" onClick={(e) => { e.stopPropagation(); setOpenId(r.id) }}>{r.number}</button>
-                    </TableCell>
-                    <TableCell><p className="font-medium">{r.customerName}</p><p className="text-xs text-muted-foreground">{r.requestedBy.name}</p></TableCell>
-                    <TableCell>{t(r.kind === "export" ? "drKind_export" : "drKind_deletion")}</TableCell>
-                    <TableCell className="text-sm"><ZonedTime iso={r.receivedAt} country={customers.find((c) => c.id === r.customerId)?.country} /></TableCell>
-                    <TableCell className={cn("text-sm", isLate(r) && "font-medium text-destructive")}>{date(r.dueOn)}{isLate(r) && ` · ${t("drLateBadge")}`}</TableCell>
-                    <TableCell><Badge variant="outline" className={cn("border-transparent", expired(r) ? "bg-muted text-muted-foreground" : STATUS_CLASS[r.status])}>{statusLabel(r)}</Badge></TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>{nextStep(r)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePager ctl={ctl} className="px-4 pb-3" />
-          </TableContainer>
-        )}
-        <p className="mt-3 text-xs text-muted-foreground">{t("drRules")}</p>
-      </Panel>
+      <DataTable
+        title={t("drList")}
+        isLoading={isLoading}
+        columns={columns}
+        data={requests}
+        searchColumnId="number"
+        searchPlaceholder={t("drSearch")}
+        emptyMessage={t("drEmpty")}
+        defaultSorting={[{ id: "received", desc: true }]}
+        showRange
+        exportFilename="nexora-data-requests"
+        getExportData={() => requests.map((r) => ({ number: r.number, company: r.customerName, requestedBy: r.requestedBy.name, kind: r.kind, received: r.receivedAt, due: r.dueOn, status: expired(r) ? "expired" : r.status }))}
+        filters={[
+          { columnId: "kind", title: t("drKind"), options: [{ value: "export", label: t("drKind_export") }, { value: "deletion", label: t("drKind_deletion") }] },
+          { columnId: "status", title: t("status"), options: [...(Object.keys(STATUS_CLASS) as DataRequest["status"][]), "expired" as const].map((st) => ({ value: st, label: t(`drStatus_${st}`) })) },
+        ]}
+      />
+      <p className="text-xs text-muted-foreground">{t("drListHint")} {t("drRules")}</p>
 
       {retention && (
         <Panel title={t("drRetention")} hint={t("drRetentionHint")}>

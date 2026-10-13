@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,16 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { ListSkeleton } from "@/components/ui/empty-state"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { CalendarDays, Play, RefreshCw, Settings, Wallet } from "@/components/ui/carbon/icons"
+import { CalendarDays, Eye, Play, RefreshCw, Settings, Wallet } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
-import type { Sorters } from "@/lib/ui/table-sort"
-import { Link } from "@/i18n/navigation"
+import { DataTable } from "@/components/shared/data-table-chunks/data-table"
+import { DataTableRowActions } from "@/components/shared/data-table-chunks/data-table-row-actions"
+import { useRouter } from "@/i18n/navigation"
 import { useConsoleActor, useConsoleCustomers } from "@/hooks/platform/use-platform-console"
 import { useBillingMutations, useNxSubscriptions, usePlanVersions } from "@/hooks/platform/use-platform-billing"
 import { consoleCan, needsStepUp } from "@/lib/platform/console-roles"
@@ -26,9 +25,13 @@ import { seatLimit } from "@/lib/platform/customer-lifecycle"
 import { NEXORA_PLANS, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import { ConsoleCapability as C, ConsoleRole } from "@/types/platform-console"
 import type { NxSubscription } from "@/types/platform-billing"
-import { LifecycleBadge } from "./lifecycle-badge"
+import { LIFECYCLE, LifecycleBadge } from "./lifecycle-badge"
+import { NameCell, inSelection, searchIn, sortHeader } from "./console-table"
+import type { CustomerAccount } from "@/types/platform-customers"
+
+type Row = { s: NxSubscription; c: CustomerAccount }
 import { StepUpDialog } from "./console-shared"
-import { Panel, useBillingFormat } from "./billing-shared"
+import { useBillingFormat } from "./billing-shared"
 
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
@@ -62,9 +65,8 @@ export default function ConsoleSubscriptionsPage() {
   const canCancelNow = consoleCan(actor?.role, C.CREDIT_NOTES)
   const canRun = !!actor && [ConsoleRole.OWNER, ConsoleRole.ADMIN, ConsoleRole.FINANCE, ConsoleRole.ENGINEERING].includes(actor.role)
   const price = (s: NxSubscription) => versions.find((v) => v.id === s.versionId)?.monthly ?? 0
-  const rows = subs.map((s) => ({ s, c: customers.find((c) => c.id === s.customerId) })).filter((r) => r.c)
-  const sorters = useMemo<Sorters<(typeof rows)[number]>>(() => ({ company: (r) => r.c!.name, plan: (r) => planById(r.s.plan).monthly, price: (r) => periodPrice(versions.find((v) => v.id === r.s.versionId)?.monthly ?? 0, r.s.billing), period: (r) => r.s.periodEnd, method: (r) => r.s.method, status: (r) => r.c!.status }), [versions])
-  const ctl = useTableControls(rows, sorters, { key: "period", dir: "asc" })
+  const router = useRouter()
+  const rows = useMemo(() => subs.flatMap((s): Row[] => { const c = customers.find((x) => x.id === s.customerId); return c ? [{ s, c }] : [] }), [subs, customers])
   const open = rows.find((r) => r.s.id === openId) ?? null
 
   const renewSoon = rows.filter((r) => r.s.periodEnd <= addDays(today, 7))
@@ -82,6 +84,56 @@ export default function ConsoleSubscriptionsPage() {
     setExtension({ seats: "", until: addDays(today, 30), reason: "" })
     setCancel({ reason: "", refund: true })
   }
+
+  const columns = useMemo<ColumnDef<Row>[]>(() => [
+    {
+      id: "company",
+      accessorFn: (r) => r.c.name,
+      header: sortHeader(t("pfCompany")),
+      filterFn: searchIn<Row>((r) => [r.c.name, r.c.city, planById(r.s.plan).name]),
+      cell: ({ row: { original: { s, c } } }) => (
+        <NameCell name={c.name} href={`/dashboard/platform/${c.id}`} sub={`${t("subSeats", { used: c.seatsUsed, limit: seatLimit(c, today) ?? "∞" })}${s.extension ? ` · ${t("subExtra", { n: s.extension.seats })}` : ""}`} />
+      ),
+    },
+    {
+      id: "plan",
+      accessorFn: (r) => r.s.plan,
+      sortingFn: (a, b) => planById(a.original.s.plan).monthly - planById(b.original.s.plan).monthly,
+      header: sortHeader(t("pfPlan")),
+      filterFn: inSelection,
+      cell: ({ row: { original: { s } } }) => (
+        <span>
+          {planById(s.plan).name} · {t(s.billing === "yearly" ? "pfYearly" : "pfMonthly")}
+          {s.scheduledPlan && <span className="block text-xs text-warning-foreground">{t("subWillBecome", { plan: planById(s.scheduledPlan).name, date: date(s.periodEnd) })}</span>}
+          {s.scheduledBilling && <span className="block text-xs text-warning-foreground">{t("subWillBillMonthly", { date: date(addDays(s.periodEnd, 1)) })}</span>}
+        </span>
+      ),
+    },
+    {
+      id: "price",
+      accessorFn: (r) => periodPrice(price(r.s), r.s.billing),
+      header: sortHeader(t("subPrice")),
+      cell: ({ row: { original: { s } } }) => <span className="tabular-nums">{money(periodPrice(price(s), s.billing))}<span className="block text-xs text-muted-foreground">{s.discount ? t("subWithDiscount", { value: s.discount.kind === "percent" ? `${s.discount.value}%` : money(s.discount.value) }) : t("subExclVat")}</span></span>,
+    },
+    { id: "period", accessorFn: (r) => r.s.periodEnd, header: sortHeader(t("subPeriod")), cell: ({ row: { original: { s } } }) => <span className="text-sm">{date(s.periodStart)} → {date(s.periodEnd)}<span className="block text-xs text-muted-foreground">{t("subRenews", { date: date(s.periodEnd) })}</span></span> },
+    { id: "method", accessorFn: (r) => r.s.method, header: sortHeader(t("subMethod")), filterFn: inSelection, cell: ({ row: { original: { s } } }) => <Badge variant="outline">{t(s.method === "card" ? "subCard" : "subTransfer")}</Badge> },
+    { id: "status", accessorFn: (r) => r.c.status, header: sortHeader(t("status")), filterFn: inSelection, cell: ({ row: { original: { c } } }) => <LifecycleBadge status={c.status} /> },
+    {
+      id: "actions",
+      enableSorting: false,
+      cell: ({ row: { original: r } }) => (
+        <DataTableRowActions
+          row={r}
+          actions={[
+            { label: t("cuOpenAccount"), icon: Eye, onClick: () => router.push(`/dashboard/platform/${r.c.id}`) },
+            ...(r.c.status !== "cancelled" ? [{ label: t("subManage"), icon: Settings, onClick: () => openManage(r.s) }] : []),
+          ]}
+        />
+      ),
+    },
+  // the formatters only change with the language and the price list
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, versions, today])
 
   // preview of what a plan change costs today (UX-02)
   const preview = (() => {
@@ -109,47 +161,25 @@ export default function ConsoleSubscriptionsPage() {
         actions={canRun ? <Button variant="outline" onClick={() => m.runJobs.mutate({ cardOutcome: "ok" })} disabled={m.runJobs.isPending}><Play className="size-4" />{t("subRunJobs")}</Button> : undefined}
       />
       <MetricCardGrid cards={cards} columnsClassName="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" />
-      <Panel title={t("subList")} hint={t("subListHint")}>
-        {isLoading ? <ListSkeleton /> : (
-          <TableContainer>
-            <Table className="min-w-[62rem]">
-              <TableHeader>
-                <TableRow>
-                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
-                  <SortableHead label={t("pfPlan")} k="plan" ctl={ctl} />
-                  <SortableHead label={t("subPrice")} k="price" ctl={ctl} align="end" />
-                  <SortableHead label={t("subPeriod")} k="period" ctl={ctl} />
-                  <SortableHead label={t("subMethod")} k="method" ctl={ctl} />
-                  <SortableHead label={t("status")} k="status" ctl={ctl} />
-                  <TableHead>{t("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ctl.rows.map(({ s, c }) => {
-                  const limit = seatLimit(c!, today)
-                  return (
-                    <TableRow key={s.id}>
-                      <TableCell><Link href={`/dashboard/platform/${c!.id}`} className="font-medium hover:underline">{c!.name}</Link><span className="block text-xs text-muted-foreground">{t("subSeats", { used: c!.seatsUsed, limit: limit ?? "∞" })}{s.extension ? ` · ${t("subExtra", { n: s.extension.seats })}` : ""}</span></TableCell>
-                      <TableCell>
-                        {planById(s.plan).name} · {t(s.billing === "yearly" ? "pfYearly" : "pfMonthly")}
-                        {s.scheduledPlan && <span className="block text-xs text-warning-foreground">{t("subWillBecome", { plan: planById(s.scheduledPlan).name, date: date(s.periodEnd) })}</span>}
-                        {s.scheduledBilling && <span className="block text-xs text-warning-foreground">{t("subWillBillMonthly", { date: date(addDays(s.periodEnd, 1)) })}</span>}
-                      </TableCell>
-                      <TableCell className="text-end tabular-nums">{money(periodPrice(price(s), s.billing))}<span className="block text-xs text-muted-foreground">{s.discount ? t("subWithDiscount", { value: s.discount.kind === "percent" ? `${s.discount.value}%` : money(s.discount.value) }) : t("subExclVat")}</span></TableCell>
-                      <TableCell className="text-sm">{date(s.periodStart)} → {date(s.periodEnd)}<span className="block text-xs text-muted-foreground">{t("subRenews", { date: date(s.periodEnd) })}</span></TableCell>
-                      <TableCell><Badge variant="outline">{t(s.method === "card" ? "subCard" : "subTransfer")}</Badge></TableCell>
-                      <TableCell><LifecycleBadge status={c!.status} /></TableCell>
-                      <TableCell>{c!.status !== "cancelled" && <Button size="sm" variant="outline" onClick={() => openManage(s)}><Settings className="size-4" />{t("subManage")}</Button>}</TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-            <TablePager ctl={ctl} className="px-4 pb-3" />
-          </TableContainer>
-        )}
-        <p className="mt-3 text-xs text-muted-foreground">{t("subJobsNote")}</p>
-      </Panel>
+      <DataTable
+        title={t("subList")}
+        isLoading={isLoading}
+        columns={columns}
+        data={rows}
+        searchColumnId="company"
+        searchPlaceholder={t("subSearch")}
+        emptyMessage={t("subEmpty")}
+        defaultSorting={[{ id: "period", desc: false }]}
+        showRange
+        exportFilename="nexora-subscriptions"
+        getExportData={() => rows.map(({ s, c }) => ({ company: c.name, plan: planById(s.plan).name, billing: s.billing, price: periodPrice(price(s), s.billing), periodStart: s.periodStart, periodEnd: s.periodEnd, method: s.method, status: c.status }))}
+        filters={[
+          { columnId: "plan", title: t("pfPlan"), options: NEXORA_PLANS.map((p) => ({ value: p.id, label: p.name })) },
+          { columnId: "method", title: t("subMethod"), options: [{ value: "card", label: t("subCard") }, { value: "transfer", label: t("subTransfer") }] },
+          { columnId: "status", title: t("status"), options: LIFECYCLE.map((st) => ({ value: st, label: t(`lcStatus_${st}`) })) },
+        ]}
+      />
+      <p className="text-xs text-muted-foreground">{t("subListHint")} {t("subJobsNote")}</p>
 
       <Sheet open={!!open} onOpenChange={(v) => !v && setOpenId(null)}>
         <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-lg">

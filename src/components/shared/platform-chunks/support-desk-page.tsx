@@ -2,21 +2,20 @@
 
 import { ZonedTime } from "@/components/shared/zoned-time"
 import type { SupportRequest } from "@/types/platform-support"
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ListSkeleton } from "@/components/ui/empty-state"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { Table, TableBody, TableCell, TableContainer, TableHeader, TableRow } from "@/components/ui/table"
-import { AlertTriangle, Clock, DoorOpen, Headset, Search, UserX } from "@/components/ui/carbon/icons"
+import { AlertTriangle, Clock, DoorOpen, Eye, Headset, UserX } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
-import type { Sorters } from "@/lib/ui/table-sort"
+import { DataTable } from "@/components/shared/data-table-chunks/data-table"
+import { DataTableRowActions } from "@/components/shared/data-table-chunks/data-table-row-actions"
 import { Link } from "@/i18n/navigation"
 import { useConsoleActor, useConsoleCustomers, useConsoleStaff } from "@/hooks/platform/use-platform-console"
 import { useSupportDeskMutations, useSupportRequests } from "@/hooks/platform/use-platform-support"
@@ -25,16 +24,15 @@ import { consoleCan } from "@/lib/platform/console-roles"
 import { responseBreached } from "@/lib/platform/support-rules"
 import { ConsoleCapability as C } from "@/types/platform-console"
 import type { SupportStatus } from "@/types/platform-support"
-import { Panel } from "./billing-shared"
+import { inSelection, searchIn, sortHeader } from "./console-table"
 import { SessionRequestSheet, type SessionDraft } from "./session-request-sheet"
 import { Conversation, PriorityBadge, ResponseTarget, SupportStatusBadge } from "./support-shared"
 
 const STATUSES: SupportStatus[] = ["open", "waiting_customer", "resolved", "closed"]
-type Filter = "active" | "all" | SupportStatus
 
 /** Requests raised by customer companies, answered by the Nexora team (SUP-01, SUP-02, SUP-10). */
 const PRIORITY_RANK = { urgent: 4, high: 3, normal: 2, low: 1 } as const
-const SORTERS: Sorters<SupportRequest> = { number: (r) => r.number, company: (r) => r.customerName, priority: (r) => PRIORITY_RANK[r.priority], assignee: (r) => r.assigneeName, status: (r) => r.status, updated: (r) => r.updatedAt }
+const PRIORITIES = ["urgent", "high", "normal", "low"] as const
 
 export default function ConsoleSupportDeskPage() {
   const t = useTranslations()
@@ -46,9 +44,9 @@ export default function ConsoleSupportDeskPage() {
   const { data: staff = [] } = useConsoleStaff()
   const m = useSupportDeskMutations()
   const [now] = useState(() => new Date())
-  const [filter, setFilter] = useState<Filter>("active")
-  const [query, setQuery] = useState("")
-  const [openId, setOpenId] = useState<string | null>(null)
+  // ?request=<id> (from the console home or the bell) opens that request once
+  const linked = useSearchParams().get("request")
+  const [openId, setOpenId] = useState<string | null>(linked)
   const [wait, setWait] = useState(true)
   const [draft, setDraft] = useState<SessionDraft | null>(null)
   const canAnswer = canHandleSupport(actor?.role)
@@ -64,71 +62,71 @@ export default function ConsoleSupportDeskPage() {
     { key: "waiting", title: t("sdWaiting"), value: requests.filter((r) => r.status === "waiting_customer").length, footer: { icon: Clock, text: t("sdWaitingHint") } },
   ]
 
-  const q = query.trim().toLowerCase()
-  const rows = requests
-    .filter((r) => (filter === "all" ? true : filter === "active" ? r.status === "open" || r.status === "waiting_customer" : r.status === filter))
-    .filter((r) => !q || `${r.number} ${r.customerName} ${r.subject} ${r.requesterName}`.toLowerCase().includes(q))
-  const ctl = useTableControls(rows, SORTERS, { key: "updated", dir: "desc" })
-  const filterLabel = (f: Filter) => (f === "active" ? t("sdActive") : f === "all" ? t("sdAll") : t(`supSt_${f}`))
+  const columns = useMemo<ColumnDef<SupportRequest>[]>(() => [
+    {
+      id: "number",
+      accessorFn: (r) => r.number,
+      header: sortHeader(t("sdRequest")),
+      filterFn: searchIn<SupportRequest>((r) => [r.number, r.customerName, r.subject, r.requesterName]),
+      cell: ({ row: { original: r } }) => (
+        <span className="block max-w-80">
+          <button type="button" onClick={() => setOpenId(r.id)} className="text-start font-medium hover:underline focus-visible:underline">
+            <span className="text-muted-foreground tabular-nums">{r.number}</span> · {r.subject}
+          </button>
+          <span className="block text-xs text-muted-foreground">{t(`supCat_${r.category}`)} · {r.requesterName}</span>
+        </span>
+      ),
+    },
+    { id: "company", accessorFn: (r) => r.customerName, header: sortHeader(t("pfCompany")), cell: ({ row: { original: r } }) => <Link href={`/dashboard/platform/${r.customerId}`} className="hover:underline">{r.customerName}</Link> },
+    {
+      id: "priority",
+      accessorFn: (r) => r.priority,
+      sortingFn: (a, b) => PRIORITY_RANK[a.original.priority] - PRIORITY_RANK[b.original.priority],
+      header: sortHeader(t("sdPriority")),
+      filterFn: inSelection,
+      cell: ({ row: { original: r } }) => <span><PriorityBadge priority={r.priority} /><span className="mt-1 block"><ResponseTarget request={r} now={now} /></span></span>,
+    },
+    { id: "assignee", accessorFn: (r) => r.assigneeName ?? "", header: sortHeader(t("sdAssignee")), cell: ({ row: { original: r } }) => <span className="text-sm">{r.assigneeName ?? <span className="text-muted-foreground">{t("sdNobody")}</span>}</span> },
+    { id: "status", accessorFn: (r) => r.status, header: sortHeader(t("status")), filterFn: inSelection, cell: ({ row: { original: r } }) => <SupportStatusBadge status={r.status} /> },
+    { id: "updated", accessorFn: (r) => r.updatedAt, header: sortHeader(t("sdUpdated")), cell: ({ row: { original: r } }) => <span className="text-sm text-muted-foreground"><ZonedTime iso={r.updatedAt} country={countryOf(r.customerId)} /></span> },
+    {
+      id: "actions",
+      enableSorting: false,
+      cell: ({ row: { original: r } }) => (
+        <DataTableRowActions row={r} actions={[
+          { label: t("sdOpenRequest"), icon: Eye, onClick: (x) => setOpenId(x.id) },
+          ...(canAsk && r.status !== "closed" ? [{ label: t("sdAskAccess"), icon: DoorOpen, onClick: (x: SupportRequest) => setDraft({ customerId: x.customerId, requestId: x.id, requestNumber: x.number, reason: `${x.subject} (${x.number})` }) }] : []),
+        ]} />
+      ),
+    },
+  // the formatters only change with the language, the role and the customers' zones
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, canAsk, zoneCustomers])
 
   return (
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader />
       <MetricCardGrid cards={cards} columnsClassName="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" />
-      <Panel
+      {/* the active requests (open or waiting for the customer) first; the filter shows the others */}
+      <DataTable
         title={t("sdList")}
-        hint={t("sdListHint")}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
-              <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-              <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("sdSearch")} aria-label={t("sdSearch")} className="w-64 ps-9" />
-            </div>
-            <Select value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-              <SelectTrigger className="w-48" aria-label={t("status")}><SelectValue>{filterLabel(filter)}</SelectValue></SelectTrigger>
-              <SelectContent>{(["active", "all", ...STATUSES] as Filter[]).map((f) => <SelectItem key={f} value={f}>{filterLabel(f)}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-        }
-      >
-        {isLoading ? <ListSkeleton /> : rows.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">{t("sdEmpty")}</p>
-        ) : (
-          <TableContainer>
-            <Table className="min-w-[60rem]">
-              <TableHeader>
-                <TableRow>
-                  <SortableHead label={t("sdRequest")} k="number" ctl={ctl} />
-                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
-                  <SortableHead label={t("sdPriority")} k="priority" ctl={ctl} />
-                  <SortableHead label={t("sdAssignee")} k="assignee" ctl={ctl} />
-                  <SortableHead label={t("status")} k="status" ctl={ctl} />
-                  <SortableHead label={t("sdUpdated")} k="updated" ctl={ctl} />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ctl.rows.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="max-w-80">
-                      <button type="button" onClick={() => setOpenId(r.id)} className="text-start font-medium hover:underline focus-visible:underline">
-                        <span className="text-muted-foreground tabular-nums">{r.number}</span> · {r.subject}
-                      </button>
-                      <span className="block text-xs text-muted-foreground">{t(`supCat_${r.category}`)} · {r.requesterName}</span>
-                    </TableCell>
-                    <TableCell><Link href={`/dashboard/platform/${r.customerId}`} className="hover:underline">{r.customerName}</Link></TableCell>
-                    <TableCell><PriorityBadge priority={r.priority} /><span className="mt-1 block"><ResponseTarget request={r} now={now} /></span></TableCell>
-                    <TableCell className="text-sm">{r.assigneeName ?? <span className="text-muted-foreground">{t("sdNobody")}</span>}</TableCell>
-                    <TableCell><SupportStatusBadge status={r.status} /></TableCell>
-                    <TableCell className="text-sm text-muted-foreground"><ZonedTime iso={r.updatedAt} country={countryOf(r.customerId)} /></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePager ctl={ctl} className="px-4 pb-3" />
-          </TableContainer>
-        )}
-        <p className="mt-3 text-xs text-muted-foreground">{t("sdTargets")}</p>
-      </Panel>
+        isLoading={isLoading}
+        columns={columns}
+        data={requests}
+        searchColumnId="number"
+        searchPlaceholder={t("sdSearch")}
+        emptyMessage={t("sdEmpty")}
+        defaultSorting={[{ id: "updated", desc: true }]}
+        defaultColumnFilters={[{ id: "status", value: ["open", "waiting_customer"] }]}
+        showRange
+        exportFilename="nexora-support-requests"
+        getExportData={() => requests.map((r) => ({ number: r.number, company: r.customerName, subject: r.subject, category: r.category, priority: r.priority, assignee: r.assigneeName ?? "", status: r.status, updated: r.updatedAt }))}
+        filters={[
+          { columnId: "status", title: t("status"), options: STATUSES.map((st) => ({ value: st, label: t(`supSt_${st}`) })) },
+          { columnId: "priority", title: t("sdPriority"), options: PRIORITIES.map((p) => ({ value: p, label: t(`supPr_${p}`) })) },
+        ]}
+      />
+      <p className="text-xs text-muted-foreground">{t("sdListHint")} {t("sdTargets")}</p>
 
       <Sheet open={!!open} onOpenChange={(v) => !v && setOpenId(null)}>
         <SheetContent className="flex flex-col gap-0 p-0 sm:max-w-lg">
