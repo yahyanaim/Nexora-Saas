@@ -7,9 +7,55 @@
 export const NAV_LINKS = [
   { label: "Product", href: "#product" },
   { label: "Modules", href: "#modules" },
-  { label: "Morocco", href: "#compliance" },
+  { label: "Compliance", href: "#compliance" },
   { label: "Pricing", href: "#pricing" },
   { label: "Docs", href: "/documentation/doc.html" },
+]
+
+/** Real screens of the app (demo workspace), in public/landing */
+export const SCREENS = [
+  {
+    id: "analytics",
+    label: "Analytics",
+    title: "Profit you can explain",
+    body: "Revenue earned, gross margin, utilization and cash collected against the previous period, with the reason behind each number.",
+    src: "/landing/overview.webp",
+  },
+  {
+    id: "projects",
+    label: "Projects",
+    title: "Projects that know their budget",
+    body: "Board, list, milestones, Gantt and team views. Health, budget used and progress on every project, live.",
+    src: "/landing/project-detail.webp",
+  },
+  {
+    id: "invoicing",
+    label: "Invoicing",
+    title: "Invoices from approved hours",
+    body: "What is ready to bill, outstanding and overdue, with DGI e-invoice status on every invoice.",
+    src: "/landing/client-invoices.webp",
+  },
+  {
+    id: "receivables",
+    label: "Receivables",
+    title: "Know who owes you",
+    body: "Open balances by age, three-level reminders and the rules that send them.",
+    src: "/landing/receivables.webp",
+  },
+  {
+    id: "forecast",
+    label: "Forecast",
+    title: "Next month’s cash, today",
+    body: "Income expected each month from invoices, recurring billing, booked work and weighted deals.",
+    src: "/landing/forecast.webp",
+  },
+  {
+    id: "planning",
+    label: "Planning",
+    title: "Capacity before it is a problem",
+    body: "Who is booked on what for the next 12 weeks, against capacity, leave and public holidays.",
+    src: "/landing/resourcing.webp",
+  },
 ]
 
 export const CHAIN = [
