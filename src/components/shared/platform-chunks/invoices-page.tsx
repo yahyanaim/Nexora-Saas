@@ -83,11 +83,11 @@ export default function ConsoleInvoicesPage() {
   const doXlsx = () =>
     downloadXlsx({ name: t("biInvoices"), columns: exportCols.map((c) => ({ label: c.label, width: c.key === "customer" ? 28 : 14 })), rows: [...exportRows.map((r) => exportCols.map((c) => r[c.key])), [t("total"), "", "", "", "", "", sum("subtotal"), sum("vat"), sum("total"), "", "", ""]] }, fileBase)
   const doPdf = async () => {
-    const [{ getPdfTranslator }, { renderTableReport }, { documentBrand }] = await Promise.all([import("@/lib/pdf/pdf-i18n"), import("@/lib/pdf/report-template"), import("@/lib/pdf/pdf-kit")])
+    const [{ getPdfTranslator }, { renderTableReport }, { documentBrand, loadLogo }, { nexoraLogoSrc }] = await Promise.all([import("@/lib/pdf/pdf-i18n"), import("@/lib/pdf/report-template"), import("@/lib/pdf/pdf-kit"), import("@/lib/api/platform-config-api")])
     const { t: pt, locale: pl } = await getPdfTranslator(locale)
     const pm = (n: number) => new Intl.NumberFormat(pl, { style: "currency", currency: "MAD" }).format(n)
     await renderTableReport({
-      brand: documentBrand(undefined), logo: null, title: pt("biInvoices"), description: pt("biExportDesc"),
+      brand: documentBrand(undefined), logo: await loadLogo(nexoraLogoSrc()), title: pt("biInvoices"), description: pt("biExportDesc"),
       company: identity?.legalName ?? "Nexora", companyLine: identity ? `ICE ${identity.ice} · IF ${identity.taxId}` : undefined,
       generatedOn: `${pt("pdfGeneratedOn")} ${new Intl.DateTimeFormat(pl, { dateStyle: "long", timeStyle: "short" }).format(new Date())}`,
       chips: [[pt("repPeriod"), period === ALL ? pt("biAllPeriods") : monthLabel(period)]],

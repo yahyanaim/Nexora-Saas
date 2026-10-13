@@ -3,7 +3,9 @@
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
-import { AlertTriangle, CalendarClock, KeyRound, Megaphone, X } from "@/components/ui/carbon/icons"
+import { AlertTriangle, CalendarClock, CreditCard, KeyRound, Megaphone, X } from "@/components/ui/carbon/icons"
+import { formatMad } from "@/lib/platform/nexora-catalog"
+import { useLocale } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { can } from "@/lib/permissions/can"
@@ -30,13 +32,18 @@ const readDismissed = (): string[] => {
  */
 export function PlatformNoticeBanner() {
   const t = useTranslations()
-  const { dateTime, time } = useSupportFormat()
+  const { dateTime, time, date } = useSupportFormat()
   const workspace = useCurrentWorkspace()
+  const locale = useLocale()
+  const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
   const { authedUser } = useAuthGuard()
   const isAdmin = can(authedUser, P.ROLES_READ)
   const { data: notices = [] } = usePlatformNotices(workspace.id)
   const [dismissed, setDismissed] = useState<string[]>(() => (typeof window === "undefined" ? [] : readDismissed()))
-  const visible = notices.filter((n) => (n.kind !== "seats" || isAdmin) && (n.kind === "incident" || !dismissed.includes(n.id)))
+  // account notices (seats, trial, payment) are for the administrator; a failed payment cannot be hidden
+  const ACCOUNT = ["seats", "trial_ending", "trial_ended", "payment_failed"]
+  const visible = notices.filter((n) => (!ACCOUNT.includes(n.kind) || isAdmin) && (n.kind === "incident" || n.kind === "payment_failed" || n.kind === "trial_ended" || !dismissed.includes(n.id)))
+  const day = (iso?: string) => (iso ? date(iso) : "")
   if (visible.length === 0) return null
   const hide = (id: string) => {
     const next = [...dismissed, id]
@@ -55,11 +62,21 @@ export function PlatformNoticeBanner() {
           role="status"
           className={cn(
             "flex flex-wrap items-start gap-3 rounded-2xl border px-4 py-2 text-sm",
-            n.kind === "incident" ? "border-destructive/30 bg-danger-soft text-destructive" : n.kind === "maintenance" ? "border-info-foreground/30 bg-info-soft text-info-foreground" : n.kind === "seats" ? "border-warning/40 bg-warning-soft text-warning-foreground" : "border-border bg-card text-foreground",
+            n.kind === "incident" || n.kind === "payment_failed" || n.kind === "trial_ended" ? "border-destructive/30 bg-danger-soft text-destructive" : n.kind === "trial_ending" ? "border-warning/40 bg-warning-soft text-warning-foreground" : n.kind === "maintenance" ? "border-info-foreground/30 bg-info-soft text-info-foreground" : n.kind === "seats" ? "border-warning/40 bg-warning-soft text-warning-foreground" : "border-border bg-card text-foreground",
           )}
         >
-          {n.kind === "seats" ? <KeyRound className="mt-0.5 size-4 shrink-0" aria-hidden /> : n.kind === "incident" ? <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden /> : n.kind === "maintenance" ? <CalendarClock className="mt-0.5 size-4 shrink-0" aria-hidden /> : <Megaphone className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />}
-          {n.kind === "seats" ? (
+          {n.kind === "payment_failed" ? <CreditCard className="mt-0.5 size-4 shrink-0" aria-hidden /> : n.kind === "trial_ending" || n.kind === "trial_ended" ? <CalendarClock className="mt-0.5 size-4 shrink-0" aria-hidden /> : n.kind === "seats" ? <KeyRound className="mt-0.5 size-4 shrink-0" aria-hidden /> : n.kind === "incident" ? <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden /> : n.kind === "maintenance" ? <CalendarClock className="mt-0.5 size-4 shrink-0" aria-hidden /> : <Megaphone className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />}
+          {n.kind === "payment_failed" || n.kind === "trial_ending" || n.kind === "trial_ended" ? (
+            <p className="min-w-0 flex-1">
+              <span className="font-medium">
+                {n.kind === "payment_failed"
+                  ? t(n.warning ? "pnReadOnlySoon" : "pnPaymentFailed", { number: n.number, amount: money(n.amount ?? 0), date: day(n.date), readOnly: day(n.readOnlyOn) })
+                  : n.kind === "trial_ending" ? t("pnTrialEnding", { days: n.days ?? 0, date: day(n.date) }) : t("pnTrialEnded", { date: day(n.date) })}
+              </span>{" "}
+              {n.kind === "payment_failed" ? t("pnPaymentFailedText") : t("pnTrialText")}{" "}
+              <Link href="/dashboard/subscription" className="font-medium underline underline-offset-2">{t(n.kind === "payment_failed" ? "pnPayNow" : "pnChoosePlan")}</Link>
+            </p>
+          ) : n.kind === "seats" ? (
             <p className="min-w-0 flex-1">
               <span className="font-medium">{t("pnSeatsFull", { used: n.used ?? 0, limit: n.limit ?? 0 })}</span>{" "}
               {t("pnSeatsFullText")}{" "}
@@ -71,7 +88,7 @@ export function PlatformNoticeBanner() {
             {n.text}
           </p>
           )}
-          {n.kind !== "incident" && (
+          {n.kind !== "incident" && n.kind !== "payment_failed" && n.kind !== "trial_ended" && (
             <Button size="icon" variant="ghost" className="size-7" onClick={() => hide(n.id)} aria-label={t("pnHide")}><X className="size-4" /></Button>
           )}
         </div>

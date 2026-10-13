@@ -19,7 +19,7 @@ export function WorkspaceStatusBanner() {
   return (
     <div role="status" className="mx-4 mt-4 flex items-start gap-3 rounded-2xl border border-destructive/30 bg-danger-soft px-4 py-3 text-sm text-destructive md:mx-6 md:mt-6">
       <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
-      <p>{account.status === "suspended" ? t("wsbSuspended", { reason: account.suspension?.reason ?? "" }) : t("wsbReadOnly")}</p>
+      <p>{account.status === "suspended" ? t("wsbSuspended", { reason: account.suspension?.reason ?? "" }) : account.status === "trial" ? t("wsbTrialEnded") : t("wsbReadOnly")}</p>
     </div>
   )
 }

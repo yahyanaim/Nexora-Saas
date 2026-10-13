@@ -353,6 +353,8 @@ export const ERROR_KEYS: Record<string, string> = {
   "This request is already closed": "err_requestClosed",
   "Give the reason, the company will read it": "err_refuseReason",
   "Audit events are kept between 5 and 30 years": "err_auditYears",
+  "The logo must be a PNG or JPEG image": "err_logoFormat",
+  "The logo must be 300 KB or less": "err_logoSize",
 }
 
 /** Messages with values: each captured group becomes the value named at the same position in `names`. */

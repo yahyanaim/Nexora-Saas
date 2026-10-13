@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
-import { ArrowLeft, ArrowRight, Ban, CalendarDays, CheckCircle, FileText, LockKeyholeOpen, Pencil, Store, XCircle } from "@/components/ui/carbon/icons"
+import { ArrowLeft, ArrowRight, Ban, CalendarDays, CheckCircle, FileText, LockKeyholeOpen, Pencil, Plus, Store, XCircle } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { Link, useRouter } from "@/i18n/navigation"
@@ -22,7 +22,7 @@ import type { CustomerIdentityInput } from "@/lib/api/platform-customers-api"
 import { consoleCan, needsStepUp } from "@/lib/platform/console-roles"
 import { accountMrr, canTransition, customerHealth, seatLimit } from "@/lib/platform/customer-lifecycle"
 import { NEXORA_PLANS, formatMad, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
-import { useBillingMutations, useNxDunning, useNxInvoices, useNxPayments, useNxSubscriptions } from "@/hooks/platform/use-platform-billing"
+import { useBillingMutations, useNxDunning, useNxInvoices, useNxPayments, useNxSubscriptions, useProFormas } from "@/hooks/platform/use-platform-billing"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { InvoiceStatusBadge } from "./billing-shared"
 import { cn } from "@/lib/utils"
@@ -64,6 +64,10 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
   const { data: directory = [] } = useConsoleDirectory()
   const [editing, setEditing] = useState<CustomerIdentityInput | null>(null)
   const [now] = useState(() => new Date())
+  const { data: allProFormas = [] } = useProFormas()
+  const proFormas = allProFormas.filter((p) => p.customerId === customerId)
+  const [pfOpen, setPfOpen] = useState(false)
+  const [pf, setPf] = useState({ plan: "business" as NexoraPlanId, billing: "yearly" as "monthly" | "yearly" })
 
   const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`))
@@ -83,6 +87,7 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
   const canStatus = consoleCan(role, C.CHANGE_STATUS)
   const canSuspend = consoleCan(role, C.SUSPEND)
   const canTrial = consoleCan(role, C.CREATE_TRIAL)
+  const canProForma = canTrial || consoleCan(role, C.CHANGE_SUBSCRIPTION)
   const limit = seatLimit(c)
   const history = events.filter((e) => e.customerId === c.id)
   const plan = planById(c.plan)
@@ -198,6 +203,26 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
                     <span className="ms-auto tabular-nums">{money(i.total)}</span>
                     <InvoiceStatusBadge status={i.status} />
                     <Button size="icon" variant="ghost" className="size-7" onClick={() => void docs.invoicePdf(i)} aria-label={t("biDownloadPdfOf", { number: i.number })}><FileText className="size-4" /></Button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          {/* INV-10: pro-formas (quotes) before a transfer payment */}
+          <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <h2 className="flex-1 text-base font-semibold">{t("pfmTitle")}</h2>
+              {canProForma && c.status !== "cancelled" && <Button size="sm" variant="outline" onClick={() => { setPf({ plan: c.plan, billing: c.billing }); setPfOpen(true) }}><Plus className="size-4" />{t("pfmNew")}</Button>}
+            </div>
+            {proFormas.length === 0 ? <p className="text-sm text-muted-foreground">{t("pfmNone")}</p> : (
+              <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border">
+                {proFormas.map((p) => (
+                  <li key={p.id} className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm">
+                    <span className="font-mono text-xs">{p.number}</span>
+                    <span className="text-xs text-muted-foreground">{planById(p.plan).name} · {t(p.billing === "yearly" ? "pfYearly" : "pfMonthly")} · {t("pfmValid", { date: date(p.validUntil) })}</span>
+                    <span className="ms-auto tabular-nums">{money(p.total)}</span>
+                    <Button size="icon" variant="ghost" className="size-7" onClick={() => void docs.proFormaPdf(p)} aria-label={t("biDownloadPdfOf", { number: p.number })}><FileText className="size-4" /></Button>
                   </li>
                 ))}
               </ul>
@@ -383,6 +408,36 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
             <p className="text-xs text-muted-foreground">{t("cuEditNote")}</p>
           </div>
         )}
+      </DataTableEntityFormSheet>
+
+      <DataTableEntityFormSheet
+        open={pfOpen}
+        onOpenChange={setPfOpen}
+        mode="create"
+        createTitle={t("pfmNewTitle", { name: c.name })}
+        editTitle=""
+        description={t("pfmDesc")}
+        isSubmitting={billing.proForma.isPending}
+        submitLabel={{ create: t("pfmCreate") }}
+        onSubmit={() => billing.proForma.mutate({ customerId: c.id, ...pf }, { onSuccess: (r) => { setPfOpen(false); void docs.proFormaPdf(r) } })}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="pf-plan">{t("pfPlan")}</Label>
+            <Select value={pf.plan} onValueChange={(v) => setPf({ ...pf, plan: v as NexoraPlanId })}>
+              <SelectTrigger id="pf-plan"><SelectValue>{planById(pf.plan).name}</SelectValue></SelectTrigger>
+              <SelectContent>{NEXORA_PLANS.filter((p) => !p.retired).map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="pf-billing">{t("subBilling")}</Label>
+            <Select value={pf.billing} onValueChange={(v) => setPf({ ...pf, billing: v as "monthly" | "yearly" })}>
+              <SelectTrigger id="pf-billing"><SelectValue>{t(pf.billing === "yearly" ? "pfYearly" : "pfMonthly")}</SelectValue></SelectTrigger>
+              <SelectContent><SelectItem value="monthly">{t("pfMonthly")}</SelectItem><SelectItem value="yearly">{t("pfYearly")}</SelectItem></SelectContent>
+            </Select>
+          </div>
+          <p className="rounded-2xl bg-info-soft p-3 text-xs text-info-foreground">{t("pfmRule")}</p>
+        </div>
       </DataTableEntityFormSheet>
 
       <DataTableEntityFormSheet

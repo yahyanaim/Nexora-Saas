@@ -17,6 +17,7 @@ export function useSupportFormat() {
   return {
     dateTime: (iso?: string) => (iso ? new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso)) : "—"),
     time: (iso?: string) => (iso ? new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(new Date(iso)) : "—"),
+    date: (iso?: string) => (iso ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`)) : "—"),
   }
 }
 

@@ -76,7 +76,21 @@ export async function seatsInUse(c: Pick<CustomerAccount, "demoWorkspaceId" | "s
   return c.demoWorkspaceId ? seatsUsed(await listAccountsApi(c.demoWorkspaceId)) : c.seatsUsed
 }
 
+/**
+ * CUS-06, BR-09: a trial that reaches its end date without a plan choice
+ * becomes read-only; choosing a plan opens it again. Idempotent, run by the
+ * billing jobs and whenever customers are read.
+ */
+export function expireTrials(today = isoDay(new Date())) {
+  const expired: CustomerAccount[] = []
+  for (const c of customerStore.list(PLATFORM_WS)) {
+    if (c.status === "trial" && c.trialEndsOn && c.trialEndsOn < today && !c.readOnly) expired.push(customerStore.update(PLATFORM_WS, c.id, { readOnly: true }))
+  }
+  return expired
+}
+
 export async function listCustomersApi(): Promise<CustomerAccount[]> {
+  expireTrials()
   syncPlanContent()
   const list = customerStore.list(PLATFORM_WS).filter((c) => c.status !== "deleted")
   // SUB-01: a demo company's seats are its Team access accounts, the figure its My subscription page shows

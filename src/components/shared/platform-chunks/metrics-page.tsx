@@ -85,14 +85,14 @@ export default function ConsoleMetricsPage() {
     auditExport("Excel", period)
   }
   const exportPdf = async () => {
-    const [{ getPdfTranslator }, { renderTableReport }, { documentBrand }] = await Promise.all([import("@/lib/pdf/pdf-i18n"), import("@/lib/pdf/report-template"), import("@/lib/pdf/pdf-kit")])
+    const [{ getPdfTranslator }, { renderTableReport }, { documentBrand, loadLogo }, { nexoraLogoSrc }] = await Promise.all([import("@/lib/pdf/pdf-i18n"), import("@/lib/pdf/report-template"), import("@/lib/pdf/pdf-kit"), import("@/lib/api/platform-config-api")])
     const { t: pt, locale: pl } = await getPdfTranslator(locale)
     const pMoney = (n: number) => new Intl.NumberFormat(pl, { style: "currency", currency: "MAD", maximumFractionDigits: 2 }).format(n)
     const pPct = (v: number | null) => (v === null ? "—" : new Intl.NumberFormat(pl, { style: "percent", maximumFractionDigits: 1 }).format(v))
     const pMonth = (m: string) => new Intl.DateTimeFormat(pl, { month: "short", year: "numeric" }).format(new Date(`${m}-01T00:00:00`))
     await renderTableReport({
       brand: documentBrand(undefined),
-      logo: null,
+      logo: await loadLogo(nexoraLogoSrc()),
       title: pt("metTitle"),
       description: pt("pageDescMetrics"),
       company: identity?.legalName ?? "Nexora",

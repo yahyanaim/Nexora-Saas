@@ -1,7 +1,8 @@
 import type { CustomerAccount } from "@/types/platform-customers"
-import type { NxCreditNote, NxInvoice, NxPayment } from "@/types/platform-billing"
+import type { NxCreditNote, NxInvoice, NxPayment, NxProForma } from "@/types/platform-billing"
 import type { SellerSnapshot } from "@/types/platform-config"
 import { clean, DEFAULT_BRAND, loadLogo } from "./pdf-kit"
+import { nexoraLogoSrc } from "@/lib/api/platform-config-api"
 import { renderInvoiceDocument, type InvoiceDocument } from "./invoice-template"
 import { getPdfTranslator } from "./pdf-i18n"
 import { printPdf } from "./platform-docs"
@@ -38,7 +39,7 @@ async function base(ctx: Ctx) {
       ].filter(Boolean)
     : []
   const legal = clean(`${s.legalName}  ·  ${s.address}, ${s.city}  ·  ICE ${s.ice}  ·  IF ${s.taxId}  ·  RC ${s.rc}`)
-  return { t, money, date, seller, buyerLines, legal, logo: await loadLogo("/app-logo.png") }
+  return { t, money, date, seller, buyerLines, legal, logo: await loadLogo(nexoraLogoSrc()) }
 }
 
 /** VAT per rate, then the total, from the lines (INV-03). */
@@ -122,6 +123,46 @@ export async function buildNxCreditNoteDocument(note: NxCreditNote, ctx: Ctx & {
     footer: { legal, pageLabel: (page, total) => t("pdfPageOf", { page, total }) },
     filename: `${note.number}.pdf`,
   }
+}
+
+/**
+ * INV-10: the pro-forma (quote) a company receives before paying by transfer.
+ * Same layout and logo as the invoices, its own PF number, no invoice number,
+ * a validity date and the bank details to pay.
+ */
+export async function buildNxProFormaDocument(pf: NxProForma, ctx: Ctx): Promise<InvoiceDocument> {
+  const { t, money, date, seller, buyerLines, legal, logo } = await base(ctx)
+  const exported = pf.lines.every((l) => l.vatRate === 0)
+  return {
+    brand: DEFAULT_BRAND,
+    logo,
+    title: t("nxProForma"),
+    number: pf.number,
+    status: { label: t("nxProFormaNotInvoice"), tone: "neutral" },
+    seller,
+    buyer: { label: t("billTo"), name: ctx.customer?.name ?? pf.customerName, lines: buyerLines },
+    meta: [
+      [t("issueDate"), date(pf.date)],
+      [t("nxValidUntil"), date(pf.validUntil)],
+      [t("nxPeriod"), `${date(pf.periodFrom)} - ${date(pf.periodTo)}`],
+      [t("currency"), "MAD"],
+    ],
+    highlight: { label: t("pdfAmountDue"), value: money(pf.total), note: `${t("nxValidUntil")} ${date(pf.validUntil)}` },
+    columns: { item: t("description"), quantity: t("quantity"), unitPrice: t("pdfUnitPrice"), tax: t("pdfVat"), amount: t("amount") },
+    items: pf.lines.map((l) => ({ title: l.label, quantity: String(l.quantity), unitPrice: money(l.unitPrice), tax: `${l.vatRate}%`, amount: money(l.quantity * l.unitPrice) })),
+    totals: [
+      { label: t("subtotal"), value: money(pf.subtotal) },
+      ...vatRows(pf.lines, money, t("pdfVat")),
+      { label: t("total"), value: money(pf.total), strong: true },
+    ],
+    payment: { title: t("pdfPaymentDetails"), rows: [[t("pdfBank"), ctx.seller.bankName], ["RIB", ctx.seller.rib], ["SWIFT", ctx.seller.swift], [t("pdfReference"), pf.number]] },
+    smallPrint: [t("nxProFormaNote"), ...(exported ? [t("nxExportedVat")] : [])],
+    footer: { note: t("pdfThankYou"), legal, pageLabel: (page, total) => t("pdfPageOf", { page, total }) },
+    filename: `${pf.number}.pdf`,
+  }
+}
+export async function downloadNxProFormaPdf(pf: NxProForma, ctx: Ctx) {
+  await renderInvoiceDocument(await buildNxProFormaDocument(pf, ctx))
 }
 
 export async function downloadNxInvoicePdf(inv: NxInvoice, ctx: Ctx & { payments: NxPayment[] }) {

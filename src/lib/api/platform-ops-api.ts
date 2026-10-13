@@ -7,6 +7,9 @@ import { PLATFORM_WS, audit, type ConsoleActor } from "./platform-console-api"
 import { customersCollection } from "./platform-customers-api"
 import { announcementsForWorkspace } from "./platform-config-api"
 import { checkSeatsFullApi, seatsFullNoticeFor } from "./platform-seats-api"
+import { listInvoicesApi } from "./platform-billing-api"
+import { DUNNING, addDays, daysBetween } from "@/lib/platform/billing"
+import { expireTrials } from "./platform-customers-api"
 
 /**
  * Platform health, incidents, planned maintenance and backups (cahier des
@@ -129,13 +132,30 @@ export async function listTenantErrorsApi(): Promise<TenantErrorStat[]> {
 /** INC-04, INC-07, CFG-01: the notices shown inside a company's Nexora (incidents first, then maintenance, then announcements). */
 export async function noticesForWorkspaceApi(workspaceId: string): Promise<PlatformNotice[]> {
   await checkSeatsFullApi()
+  const today = new Date().toISOString().slice(0, 10)
+  expireTrials(today)
   const c = customersCollection.list(PLATFORM_WS).find((x) => x.demoWorkspaceId === workspaceId)
   if (!c) return []
+  // Table 28: trial ending (3 days and 1 day before), trial ended, payment failed and the read-only warning
+  const account: PlatformNotice[] = []
+  if (c.status === "trial" && c.trialEndsOn) {
+    const left = daysBetween(today, c.trialEndsOn)
+    if (left < 0) account.push({ id: `trial_ended_${c.id}`, kind: "trial_ended", number: "", title: "", text: "", severity: "sev4", date: c.trialEndsOn })
+    else if (left <= 3) account.push({ id: `trial_${c.id}_${left <= 1 ? 1 : 3}`, kind: "trial_ending", number: "", title: "", text: "", severity: "sev4", days: left, date: c.trialEndsOn })
+  }
+  for (const inv of (await listInvoicesApi()).filter((i) => i.customerId === c.id && i.status === "overdue" && i.failedOn)) {
+    const day = daysBetween(inv.failedOn!, today)
+    if (day >= DUNNING.readOnly) continue // the read-only banner takes over
+    account.push({
+      id: `payment_${inv.id}_${day >= DUNNING.warning ? "warning" : "failed"}`, kind: "payment_failed", number: inv.number, title: "", text: "", severity: "sev4",
+      amount: Math.round((inv.total - inv.paid - inv.credited) * 100) / 100, date: inv.failedOn, readOnlyOn: addDays(inv.failedOn!, DUNNING.readOnly), warning: day >= DUNNING.warning,
+    })
+  }
   const news = announcementsForWorkspace(workspaceId).map((a): PlatformNotice => ({ id: a.id, kind: "announcement", number: "", title: a.title, text: a.message, severity: "sev4" }))
   // SUB-09: seats full, for the administrator; the id carries the period so a new period shows it again
   const seats = await seatsFullNoticeFor(c)
   const seatNotice: PlatformNotice[] = seats ? [{ id: `seats_${c.id}_${seats.period}`, kind: "seats", number: "", title: "", text: "", severity: "sev4", used: seats.used, limit: seats.limit }] : []
-  return [...noticesFor(incidents.list(PLATFORM_WS), c.id), ...seatNotice, ...news]
+  return [...noticesFor(incidents.list(PLATFORM_WS), c.id), ...account, ...seatNotice, ...news]
 }
 
 /* ---------- health (INC-01, INC-05) ---------- */
