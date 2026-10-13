@@ -23,6 +23,7 @@ import type { CustomerIdentityInput } from "@/lib/api/platform-customers-api"
 import { consoleCan, needsStepUp } from "@/lib/platform/console-roles"
 import { accountMrr, canTransition, customerHealth, isoDay, seatLimit, trialDataDeletedOn, trialSuspendsOn } from "@/lib/platform/customer-lifecycle"
 import { termsFor } from "@/lib/platform/billing"
+import { KpiTile } from "@/components/shared/kpi-tile"
 import { NEXORA_PLANS, formatMad, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import { useBillingMutations, useNxDunning, useNxInvoices, useNxPayments, useNxSubscriptions, useProFormas } from "@/hooks/platform/use-platform-billing"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -113,6 +114,8 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
   }
 
   const payments = allPayments.filter((p) => p.customerId === c.id)
+  const owed = Math.round(invoices.reduce((sum, i) => sum + Math.max(0, i.total - i.paid - i.credited), 0) * 100) / 100
+  const paidToDate = Math.round(invoices.reduce((sum, i) => sum + i.paid, 0) * 100) / 100
   const reminders = dunning.filter((d) => invoices.some((i) => i.id === d.invoiceId)).sort((a, b) => b.date.localeCompare(a.date))
   const sub = subs.find((s) => s.customerId === c.id)
   const theirRequests = requests.filter((r) => r.customerId === c.id)
@@ -174,6 +177,14 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
       )}
       {c.cancelsOn && <p role="status" className="rounded-2xl bg-warning-soft p-3 text-sm text-warning-foreground">{t("cuCancelBanner", { date: date(c.cancelsOn) })}</p>}
       {c.readOnly && c.status !== "suspended" && <p role="status" className="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">{t("cuReadOnlyBanner")}</p>}
+
+      {/* the account's headline figures, drawn like the companies' Analytics tiles */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiTile title={t("pfMrrCol")} value={accountMrr(c) ? money(accountMrr(c)) : "—"} period={t("chToday")} description={`${plan.name} · ${t(c.billing === "yearly" ? "pfYearly" : "pfMonthly")}`} noteLabel={t("anOperationalNote")} note={t("cuTileArr", { arr: money(accountMrr(c) * 12) })} />
+        <KpiTile title={t("pfSeatsCol")} value={limit ? `${c.seatsUsed} / ${limit}` : String(c.seatsUsed)} period={t("chToday")} description={limit ? t("cuTilePeopleDesc", { left: Math.max(0, limit - c.seatsUsed) }) : t("pfUnlimited", { count: c.seatsUsed })} />
+        <KpiTile title={t("cuTileOwed")} value={money(owed)} period={t("chToday")} description={t("cuTileOwedDesc")} noteLabel={t("anOperationalNote")} note={t("cuTileOwedNote", { n: invoices.filter((i) => i.status === "overdue").length })} />
+        <KpiTile title={t("cuTilePaid")} value={money(paidToDate)} period={t("chAllTime")} description={t("cuTilePaidDesc", { date: date(c.since) })} noteLabel={t("anOperationalNote")} note={t("cuTilePaidNote", { n: invoices.length })} />
+      </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start">
         <div className="flex flex-col gap-5">

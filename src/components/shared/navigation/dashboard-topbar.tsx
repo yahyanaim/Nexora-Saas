@@ -59,7 +59,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         </button>
 
         <Link
-          href={mode === "console" ? "/dashboard/platform" : "/dashboard/overview"}
+          href={mode === "console" ? "/dashboard/console" : "/dashboard/overview"}
           className={cn(
             navSurface,
             "flex h-12 shrink-0 items-center gap-2.5 py-1.5 pl-1.5 pr-4 lg:h-14 lg:pr-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

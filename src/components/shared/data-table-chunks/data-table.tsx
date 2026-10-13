@@ -30,6 +30,7 @@ import {
   DataTableToolbar,
   FacetedFilterConfig,
   ToolbarAction,
+  type ExportOption,
 } from "./data-table-toolbar"
 import { Plus } from "@/components/ui/carbon/icons"
 import { DataTablePagination } from "./data-table-pagination"
@@ -81,6 +82,16 @@ interface DataTableProps<TData, TValue> {
   getExportData?: () => Record<string, unknown>[]
   /** Whether export is enabled (defaults to true) */
   enableExport?: boolean
+  /** Replace the CSV/JSON entries of the Export menu */
+  exportOptions?: ExportOption[]
+  /** Initial sort, e.g. biggest revenue first */
+  defaultSorting?: SortingState
+  /** Filters applied when the table opens, e.g. only active requests */
+  defaultColumnFilters?: ColumnFiltersState
+  /** Initial page size (10 when omitted) */
+  defaultPageSize?: number
+  /** Show "11–20 of 37" next to the pager (UX-05, console lists) */
+  showRange?: boolean
 }
 
 export function DataTable<TData, TValue>({
@@ -114,6 +125,11 @@ export function DataTable<TData, TValue>({
   exportFilename,
   getExportData,
   enableExport = true,
+  exportOptions,
+  defaultSorting,
+  defaultColumnFilters,
+  defaultPageSize = 10,
+  showRange = false,
 }: DataTableProps<TData, TValue>) {
   const t = useTranslations()
   const [rowSelection, setRowSelection] = React.useState({})
@@ -121,10 +137,10 @@ export function DataTable<TData, TValue>({
     React.useState<VisibilityState>(defaultColumnVisibility ?? {})
 
   const [internalColumnFilters, setInternalColumnFilters] =
-    React.useState<ColumnFiltersState>([])
-  const [internalSorting, setInternalSorting] = React.useState<SortingState>([])
+    React.useState<ColumnFiltersState>(defaultColumnFilters ?? [])
+  const [internalSorting, setInternalSorting] = React.useState<SortingState>(defaultSorting ?? [])
   const [internalPagination, setInternalPagination] =
-    React.useState<PaginationState>({ pageIndex: 0, pageSize: 10 })
+    React.useState<PaginationState>({ pageIndex: 0, pageSize: defaultPageSize })
 
   const columnFilters = manual
     ? (controlledColumnFilters ?? [])
@@ -210,6 +226,7 @@ export function DataTable<TData, TValue>({
           exportFilename={exportFilename}
           getExportData={getExportData}
           enableExport={enableExport}
+          exportOptions={exportOptions}
         />
         {renderAfterJsxToolbar && renderAfterJsxToolbar()}
         {/* Phones and tablets: each row becomes a card with labelled fields */}
@@ -283,6 +300,15 @@ export function DataTable<TData, TValue>({
                     <TableHead
                       key={header.id}
                       className={cn(header.column.columnDef.meta?.className)}
+                      aria-sort={
+                        header.column.getCanSort()
+                          ? header.column.getIsSorted() === "asc"
+                            ? "ascending"
+                            : header.column.getIsSorted() === "desc"
+                              ? "descending"
+                              : "none"
+                          : undefined
+                      }
                     >
                       {header.isPlaceholder
                         ? null
@@ -345,6 +371,7 @@ export function DataTable<TData, TValue>({
         <DataTablePagination
           table={table}
           total={manual ? rowCount : undefined}
+          showRange={showRange}
         />
       </div>
     </div>

@@ -19,6 +19,8 @@ import { exportToCsv } from "@/lib/utils/export-data"
 import { downloadXlsx } from "@/lib/utils/xlsx"
 import { cn } from "@/lib/utils"
 import { Panel, useBillingFormat } from "./billing-shared"
+import { KpiTile } from "@/components/shared/kpi-tile"
+import { sparkline } from "@/lib/ui/sparkline"
 
 const MOVES = ["new", "expansion", "contraction", "churn", "reactivation"] as const
 const RANGES = [3, 6, 12] as const
@@ -27,18 +29,6 @@ const RANGES = [3, 6, 12] as const
 const ChartPlaceholder = () => <div className="h-96 animate-pulse rounded-xl border border-border bg-card" aria-hidden />
 const MrrTrendChart = dynamic(() => import("./metrics-charts").then((m) => m.MrrTrendChart), { ssr: false, loading: ChartPlaceholder })
 const MrrBridgeChart = dynamic(() => import("./metrics-charts").then((m) => m.MrrBridgeChart), { ssr: false, loading: ChartPlaceholder })
-
-/** One headline figure with its definition and period always visible (MET-06). */
-function Kpi({ label, value, change, definition }: { label: string; value: string; change?: { text: string; good: boolean | null }; definition: string }) {
-  return (
-    <div className="flex flex-col rounded-2xl border border-border bg-card p-4 shadow-panel">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
-      {change && <p className={cn("text-xs font-medium", change.good === null ? "text-muted-foreground" : change.good ? "text-success-foreground" : "text-destructive")}>{change.text}</p>}
-      <p className="mt-auto pt-3 text-xs text-muted-foreground">{definition}</p>
-    </div>
-  )
-}
 
 /** Recurring revenue, its movements, churn, trial conversion and money owed (MET-01 to MET-07). */
 const SORTERS: Sorters<MonthRow> = { month: (r) => r.month, mrr: (r) => r.mrr, change: (r) => r.change, customerChurn: (r) => r.customerChurn, revenueChurn: (r) => r.revenueChurn }
@@ -66,8 +56,8 @@ export default function ConsoleMetricsPage() {
   const signed = (v: number) => (v > 0 ? `+${money(v)}` : v < 0 ? `−${money(-v)}` : money(0))
   const monthLabel = (m: string) => new Intl.DateTimeFormat(locale, { month: "short", year: "numeric" }).format(new Date(`${m}-01T00:00:00`))
   const period = rows.length ? `${monthLabel(rows[0]!.month)} – ${monthLabel(rows[rows.length - 1]!.month)}` : ""
-  const change = (v: number | null, kind: "pct" | "count") =>
-    v === null ? { text: t("metNoPrev"), good: null } : { text: t("metVsLastMonth", { change: kind === "pct" ? (v > 0 ? "+" : "") + pct(v) : (v > 0 ? `+${v}` : String(v)) }), good: v === 0 ? null : v > 0 }
+  const pctChange = (v: number | null) => (v === null ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(Math.round(v * 1000) / 10).toLocaleString(locale)}%`)
+  const tilePeriod = t("chPeriodShort", { n: range })
 
   // exports share the monthly table (MET-07)
   const columns = [
@@ -132,12 +122,13 @@ export default function ConsoleMetricsPage() {
       />
       {isLoading ? <ListSkeleton /> : (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
-            <Kpi label={t("metMrr")} value={money(head.mrr)} change={change(head.mrrChange, "pct")} definition={t("metDefMrr")} />
-            <Kpi label={t("metArr")} value={money(head.arr)} definition={t("metDefArr")} />
-            <Kpi label={t("metPaying")} value={String(head.paying)} change={change(head.payingChange, "count")} definition={t("metDefPaying")} />
-            <Kpi label={t("metArpa")} value={money(head.arpa)} change={change(head.arpaChange, "pct")} definition={t("metDefArpa")} />
-            <Kpi label={t("metSeats")} value={pct(head.seatUsage, 0)} definition={t("metDefSeats", { used: head.seatsUsed, included: head.seatsIncluded })} />
+          {/* MET-06: each figure with its definition and period; the change is against last month */}
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+            <KpiTile title={t("metMrr")} value={money(head.mrr)} period={tilePeriod} change={pctChange(head.mrrChange)} isPositive={(head.mrrChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => r.mrr))} description={t("metDefMrr")} noteLabel={t("anOperationalNote")} note={t("metVsLastMonthNote")} />
+            <KpiTile title={t("metArr")} value={money(head.arr)} period={tilePeriod} change={pctChange(head.mrrChange)} isPositive={(head.mrrChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => r.mrr * 12))} description={t("metDefArr")} />
+            <KpiTile title={t("metPaying")} value={String(head.paying)} period={tilePeriod} change={head.payingChange === null ? "—" : `${head.payingChange > 0 ? "+" : head.payingChange < 0 ? "−" : ""}${Math.abs(head.payingChange)}`} isPositive={(head.payingChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => r.paying))} description={t("metDefPaying")} />
+            <KpiTile title={t("metArpa")} value={money(head.arpa)} period={tilePeriod} change={pctChange(head.arpaChange)} isPositive={(head.arpaChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => (r.paying ? r.mrr / r.paying : 0)))} description={t("metDefArpa")} />
+            <KpiTile title={t("metSeats")} value={pct(head.seatUsage, 0)} period={t("chToday")} description={t("metDefSeats", { used: head.seatsUsed, included: head.seatsIncluded })} />
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">

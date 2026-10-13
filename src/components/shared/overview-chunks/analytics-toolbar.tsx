@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
-import { ChevronSort, Renew, Checkmark } from "@/components/ui/carbon/icons"
+import { ChevronSort, Renew } from "@/components/ui/carbon/icons"
 import { Download, Eye, Printer, FileText, Receipt } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -21,10 +21,8 @@ import {
 } from "@/lib/pdf/analytics-report"
 import { PageHeader } from "@/components/shared/page-header"
 import { Badge } from "@/components/ui/badge"
+import { FilterPill } from "./filter-pill"
 import { COMPARE_LABEL, COMPARE_MODES, DATE_RANGES, RANGE_LABEL, useAnalyticsFilter } from "./analytics-filter-context"
-
-const PILL =
-  "inline-flex h-9 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 text-[13px] font-medium text-foreground shadow-xs transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer select-none"
 
 export function AnalyticsToolbar() {
   const t = useTranslations()
@@ -189,77 +187,10 @@ export function AnalyticsToolbar() {
         }
       >
         <div className="flex flex-wrap items-center gap-2">
-          {/* Date range */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button type="button" className={PILL}>
-                <span>{t(RANGE_LABEL[dateRange])}</span>
-                <ChevronSort className="size-3.5 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-44">
-              {DATE_RANGES.map((option) => (
-                <DropdownMenuItem key={option} onClick={() => setDateRange(option)} className="flex items-center justify-between">
-                  <span>{t(RANGE_LABEL[option])}</span>
-                  {dateRange === option && <Checkmark className="size-3.5 text-primary" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Comparison */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button type="button" className={PILL}>
-                <span>{t(COMPARE_LABEL[compareMode])}</span>
-                <ChevronSort className="size-3.5 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52">
-              {COMPARE_MODES.map((option) => (
-                <DropdownMenuItem key={option} onClick={() => setCompareMode(option)} className="flex items-center justify-between">
-                  <span>{t(COMPARE_LABEL[option])}</span>
-                  {compareMode === option && <Checkmark className="size-3.5 text-primary" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Client */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button type="button" className={PILL}>
-                <span>{clientName ?? t("allClients")}</span>
-                <ChevronSort className="size-3.5 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52">
-              {[{ id: null as string | null, name: t("allClients") }, ...clients].map((c) => (
-                <DropdownMenuItem key={c.id ?? "all"} onClick={() => setClientId(c.id)} className="flex items-center justify-between">
-                  <span>{c.name}</span>
-                  {clientId === c.id && <Checkmark className="size-3.5 text-primary" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Team */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button type="button" className={PILL}>
-                <span>{teamName ?? t("allTeams")}</span>
-                <ChevronSort className="size-3.5 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-52">
-              {[{ id: null as string | null, name: t("allTeams") }, ...departments].map((d) => (
-                <DropdownMenuItem key={d.id ?? "all"} onClick={() => setDepartmentId(d.id)} className="flex items-center justify-between">
-                  <span>{d.name}</span>
-                  {departmentId === d.id && <Checkmark className="size-3.5 text-primary" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <FilterPill label={t(RANGE_LABEL[dateRange])} value={dateRange} width="w-44" onChange={setDateRange} options={DATE_RANGES.map((o) => ({ value: o, label: t(RANGE_LABEL[o]) }))} />
+          <FilterPill label={t(COMPARE_LABEL[compareMode])} value={compareMode} onChange={setCompareMode} options={COMPARE_MODES.map((o) => ({ value: o, label: t(COMPARE_LABEL[o]) }))} />
+          <FilterPill label={clientName ?? t("allClients")} value={clientId} onChange={setClientId} options={[{ value: null as string | null, label: t("allClients") }, ...clients.map((c) => ({ value: c.id as string | null, label: c.name }))]} />
+          <FilterPill label={teamName ?? t("allTeams")} value={departmentId} onChange={setDepartmentId} options={[{ value: null as string | null, label: t("allTeams") }, ...departments.map((d) => ({ value: d.id as string | null, label: d.name }))]} />
         </div>
       </PageHeader>
 
