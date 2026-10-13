@@ -1,5 +1,7 @@
 "use client"
 
+import type { BackupRun } from "@/types/platform-ops"
+import type { TenantErrorStat } from "@/types/platform-ops"
 import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
@@ -8,6 +10,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowRight, DatabaseBackup, MoreHorizontal } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { Link } from "@/i18n/navigation"
 import { useConsoleActor } from "@/hooks/platform/use-platform-console"
 import { useBackups, useIncidents, useOpsMutations, useServiceHealth, useTenantErrors } from "@/hooks/platform/use-platform-ops"
@@ -20,6 +24,10 @@ import { IncidentStatusBadge, ResultBadge, SERVICE_ICON, ServiceStateBadge, Seve
 import { useSupportFormat } from "./support-shared"
 
 /** Health of every service, errors per company and backups (INC-01, INC-02, INC-05, INC-06). */
+const TENANT_SORT: Sorters<TenantErrorStat> = { company: (r) => r.customerName, requests: (r) => r.requests, errors: (r) => r.errors, rate: (r) => (r.requests ? r.errors / r.requests : 0), p95: (r) => r.p95Ms }
+
+const BACKUP_SORT: Sorters<BackupRun> = { at: (r) => r.at, kind: (r) => r.kind, result: (r) => r.result, size: (r) => r.sizeGb, duration: (r) => r.minutes }
+
 export default function ConsoleHealthPage() {
   const t = useTranslations()
   const locale = useLocale()
@@ -30,6 +38,8 @@ export default function ConsoleHealthPage() {
   const { data: tenants = [] } = useTenantErrors()
   const { data: incidents = [] } = useIncidents()
   const { data: runs = [] } = useBackups()
+  const ctl = useTableControls(tenants, TENANT_SORT, { key: "rate", dir: "desc" })
+  const ctl2 = useTableControls(runs, BACKUP_SORT, { key: "at", dir: "desc" })
   const m = useOpsMutations()
   const [now] = useState(() => Date.now())
   const canManage = consoleCan(actor?.role, C.INCIDENTS)
@@ -110,15 +120,15 @@ export default function ConsoleHealthPage() {
           <Table className="min-w-[44rem]">
             <TableHeader>
               <TableRow>
-                <TableHead>{t("pfCompany")}</TableHead>
-                <TableHead className="text-end">{t("opsRequests")}</TableHead>
-                <TableHead className="text-end">{t("opsErrorCount")}</TableHead>
-                <TableHead className="text-end">{t("opsErrors")}</TableHead>
-                <TableHead className="text-end">{t("opsP95")}</TableHead>
+                <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
+                <SortableHead label={t("opsRequests")} k="requests" ctl={ctl} align="end" />
+                <SortableHead label={t("opsErrorCount")} k="errors" ctl={ctl} align="end" />
+                <SortableHead label={t("opsErrors")} k="rate" ctl={ctl} align="end" />
+                <SortableHead label={t("opsP95")} k="p95" ctl={ctl} align="end" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tenants.map((r) => {
+              {ctl.rows.map((r) => {
                 const rate = r.requests ? (r.errors / r.requests) * 100 : 0
                 return (
                   <TableRow key={r.customerId}>
@@ -132,6 +142,7 @@ export default function ConsoleHealthPage() {
               })}
             </TableBody>
           </Table>
+          <TablePager ctl={ctl} className="px-4 pb-3" />
         </TableContainer>
       </Panel>
 
@@ -140,16 +151,16 @@ export default function ConsoleHealthPage() {
           <Table className="min-w-[44rem]">
             <TableHeader>
               <TableRow>
-                <TableHead>{t("bkWhen")}</TableHead>
-                <TableHead>{t("bkKind")}</TableHead>
-                <TableHead>{t("bkResult")}</TableHead>
-                <TableHead className="text-end">{t("bkSize")}</TableHead>
-                <TableHead className="text-end">{t("bkDuration")}</TableHead>
+                <SortableHead label={t("bkWhen")} k="at" ctl={ctl2} />
+                <SortableHead label={t("bkKind")} k="kind" ctl={ctl2} />
+                <SortableHead label={t("bkResult")} k="result" ctl={ctl2} />
+                <SortableHead label={t("bkSize")} k="size" ctl={ctl2} align="end" />
+                <SortableHead label={t("bkDuration")} k="duration" ctl={ctl2} align="end" />
                 <TableHead>{t("bkNote")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {runs.map((r) => (
+              {ctl2.rows.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell className="text-sm">{dateTime(r.at)}</TableCell>
                   <TableCell className={cn("text-sm", r.kind === "restore_test" && "font-medium")}>{t(r.kind === "backup" ? "bkBackup" : "bkRestoreTest")}</TableCell>
@@ -161,6 +172,7 @@ export default function ConsoleHealthPage() {
               ))}
             </TableBody>
           </Table>
+          <TablePager ctl={ctl2} className="px-4 pb-3" />
         </TableContainer>
       </Panel>
     </div>

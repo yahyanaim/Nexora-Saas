@@ -4690,5 +4690,8 @@
   "cinCategory_team": "ग्राहक",
   "cinCategory_billing": "बिलिंग",
   "cinCategory_security": "सुरक्षा",
-  "cinCategory_system": "प्लेटफ़ॉर्म"
+  "cinCategory_system": "प्लेटफ़ॉर्म",
+  "tcSortBy": "{column} के अनुसार क्रमबद्ध करें",
+  "tcRange": "{total} में से {from}–{to}",
+  "tzCustomerTime": "ग्राहक का समय: {time} ({zone})"
 }

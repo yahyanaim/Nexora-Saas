@@ -4690,5 +4690,8 @@
   "cinCategory_team": "العملاء",
   "cinCategory_billing": "الفوترة",
   "cinCategory_security": "الأمان",
-  "cinCategory_system": "المنصة"
+  "cinCategory_system": "المنصة",
+  "tcSortBy": "الترتيب حسب {column}",
+  "tcRange": "{from}–{to} من {total}",
+  "tzCustomerTime": "توقيت العميل: {time} ({zone})"
 }

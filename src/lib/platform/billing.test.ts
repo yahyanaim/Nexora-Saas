@@ -9,12 +9,16 @@ import {
   listDunningApi,
   listInvoicesApi,
   listPaymentsApi,
+  listSubscriptionsApi,
   recordTransferApi,
   runBillingJobsApi,
   startSubscriptionApi,
   vatByMonth,
 } from "@/lib/api/platform-billing-api"
-import { createTrialApi, customersCollection, getCustomerApi, listCustomersApi } from "@/lib/api/platform-customers-api"
+import { cancelCustomerApi, createTrialApi, customersCollection, getCustomerApi, listCustomersApi } from "@/lib/api/platform-customers-api"
+import { decideSessionApi, requestSessionApi } from "@/lib/api/platform-support-api"
+import { fulfilExportApi, requestDataExportApi } from "@/lib/api/platform-data-api"
+import { monthlyTable } from "./metrics"
 import { PLATFORM_WS, listAuditApi, type ConsoleActor } from "@/lib/api/platform-console-api"
 import { ConsoleRole as R } from "@/types/platform-console"
 
@@ -108,6 +112,13 @@ describe("reference scenario (§13.2, Table 34): Souss Ingénierie", () => {
     await runBillingJobsApi(owner, "2026-11-20", "declined")
     expect((await listDunningApi()).filter((d) => d.invoiceId === renewal.id)).toHaveLength(runs.length)
 
+    // 8. 18 Nov: support asks for 60 minutes read-only; the administrator approves; both sides are in the audit trail
+    const liam: ConsoleActor = { id: "stf_liam", name: "Liam O'Connor", role: R.SUPPORT }
+    const session = await requestSessionApi(liam, { customerId: trial.id, reason: "Check the VAT return figures with the customer", scope: "read", minutes: 60 })
+    const approved = await decideSessionApi({ name: "Amal Souiri", email: "amal@souss.ma" }, session.id, true)
+    expect(approved.status).toBe("approved")
+    expect(new Date(approved.endsAt!).getTime() - new Date(approved.startsAt!).getTime()).toBe(60 * 60_000)
+
     // 9. 20 Nov: goodwill credit 1,000 + 200 → refund of 1,200 after Finance and the Owner's approval
     const credit = await issueCreditNoteApi(finance, renewal.id, { amount: 1000, reason: "Goodwill after the outage", refund: true }, "2026-11-20")
     expect(credit.creditNote).toMatchObject({ subtotal: 1000, vat: 200, total: 1200 })
@@ -121,8 +132,30 @@ describe("reference scenario (§13.2, Table 34): Souss Ingénierie", () => {
     expect(accountMrr(c)).toBe(3990)
     expect(accountMrr(c) * 12).toBe(47880)
 
-    // 13. every action is in the audit trail, and 2026 numbering has no gap (INV-01)
-    expect((await listAuditApi()).filter((e) => e.customerId === trial.id).length).toBeGreaterThanOrEqual(6)
+    // 11. 9 Dec: cancellation at period end → cancelled from 10 Dec, no December invoice; December churn shows 3,990 lost
+    await cancelCustomerApi(owner, trial.id)
+    const sub = (await listSubscriptionsApi()).find((x) => x.customerId === trial.id)!
+    expect(sub.periodEnd).toBe("2026-12-09")
+    customersCollection.update(PLATFORM_WS, trial.id, { cancelsOn: sub.periodEnd }) // the period end on 9 Dec (the API reads today's date)
+    await runBillingJobsApi(owner, "2026-12-10", "declined")
+    expect((await getCustomerApi(trial.id))!.status).toBe("cancelled")
+    expect((await listInvoicesApi()).some((i) => i.customerId === trial.id && i.date >= "2026-12-10")).toBe(false)
+    const mine = (await listInvoicesApi()).filter((i) => i.customerId === trial.id)
+    const december = monthlyTable(mine, [(await getCustomerApi(trial.id))!], "2026-12-31", 3).find((r) => r.month === "2026-12")!
+    expect(Math.abs(december.movements.churn)).toBe(3990)
+
+    // 12. 12 Dec: data export request → delivered within 7 days, request closed, audit event
+    const exportRequest = await requestDataExportApi({ name: "Amal Souiri", email: "amal@souss.ma" }, trial.id)
+    expect(new Date(`${exportRequest.dueOn}T00:00:00Z`).getTime() - new Date(`${exportRequest.receivedAt.slice(0, 10)}T00:00:00Z`).getTime()).toBe(7 * 86_400_000)
+    expect((await fulfilExportApi(owner, exportRequest.id)).status).toBe("fulfilled")
+
+    // 13. every action of rows 1 to 12 is in the audit trail with its actor and time, and 2026 numbering has no gap (INV-01)
+    const trail = (await listAuditApi()).filter((e) => e.customerId === trial.id)
+    for (const action of ["customer.trial_created", "subscription.started", "subscription.changed", "payment.matched", "support.session_requested", "support.session_approved", "invoice.credit_note", "refund.approved", "customer.cancelled", "data.export_requested", "data.export_fulfilled"]) {
+      const e = trail.find((x) => x.action === action)
+      expect(e, action).toBeDefined()
+      expect(e!.actorName && e!.at).toBeTruthy()
+    }
     const nums = (await listInvoicesApi()).map((i) => i.number).filter((n) => n.startsWith("NX-2026-")).map((n) => Number(n.slice(8))).sort((a, b) => a - b)
     expect(nums).toEqual(nums.map((_, i) => i + 1))
   })

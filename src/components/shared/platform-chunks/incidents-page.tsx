@@ -14,6 +14,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CalendarClock, Clock, Megaphone, Plus, Siren, Wrench } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { useConsoleActor, useConsoleCustomers } from "@/hooks/platform/use-platform-console"
 import { useIncidents, useOpsMutations } from "@/hooks/platform/use-platform-ops"
@@ -47,12 +49,15 @@ function Picker<T extends string>({ legend, options, value, onChange, hint }: { 
 }
 
 /** Incidents and planned maintenance (INC-03, INC-04, INC-05, INC-07). */
+const SORTERS: Sorters<Incident> = { title: (i) => i.title, severity: (i) => i.severity, status: (i) => i.status, started: (i) => i.startedAt ?? i.plannedStart, duration: (i) => durationMinutes(i) }
+
 export default function ConsoleIncidentsPage() {
   const t = useTranslations()
   const { dateTime } = useSupportFormat()
   const minutes = useMinutes()
   const actor = useConsoleActor()
   const { data: list = [], isLoading } = useIncidents()
+  const ctl = useTableControls(list, SORTERS, { key: "started", dir: "desc" })
   const { data: customers = [] } = useConsoleCustomers()
   const m = useOpsMutations()
   const [now] = useState(() => new Date())
@@ -108,17 +113,17 @@ export default function ConsoleIncidentsPage() {
             <Table className="min-w-[62rem]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("incIncident")}</TableHead>
-                  <TableHead>{t("incSeverity")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
+                  <SortableHead label={t("incIncident")} k="title" ctl={ctl} />
+                  <SortableHead label={t("incSeverity")} k="severity" ctl={ctl} />
+                  <SortableHead label={t("status")} k="status" ctl={ctl} />
                   <TableHead>{t("incServices")}</TableHead>
                   <TableHead>{t("incCustomers")}</TableHead>
-                  <TableHead>{t("incStarted")}</TableHead>
-                  <TableHead className="text-end">{t("incDuration")}</TableHead>
+                  <SortableHead label={t("incStarted")} k="started" ctl={ctl} />
+                  <SortableHead label={t("incDuration")} k="duration" ctl={ctl} align="end" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {list.map((i) => (
+                {ctl.rows.map((i) => (
                   <TableRow key={i.id}>
                     <TableCell className="max-w-80">
                       <button type="button" onClick={() => openDetail(i)} className="text-start font-medium hover:underline focus-visible:underline">
@@ -136,6 +141,7 @@ export default function ConsoleIncidentsPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
         <p className="mt-3 text-xs text-muted-foreground">{t("incSeverityNote")}</p>

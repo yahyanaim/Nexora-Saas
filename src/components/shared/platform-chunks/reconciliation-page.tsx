@@ -1,5 +1,6 @@
 "use client"
 
+import type { NxSettlement, ReconciliationDifference } from "@/types/platform-billing"
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +12,8 @@ import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CheckCircle, DownloadIcon, Landmark, Scale, Warning } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { useConsoleActor } from "@/hooks/platform/use-platform-console"
 import { useBillingMutations, useReconciliations, useSettlements } from "@/hooks/platform/use-platform-billing"
 import { consoleCan } from "@/lib/platform/console-roles"
@@ -25,6 +28,11 @@ import { Panel, useBillingFormat } from "./billing-shared"
  * settlements. The billing jobs run it every morning for the day before;
  * finance can run it for any day and export the differences.
  */
+const NO_DIFF: ReconciliationDifference[] = []
+const DIFF_SORT: Sorters<ReconciliationDifference> = { kind: (d) => d.kind, ref: (d) => d.ref, date: (d) => d.date, gap: (d) => Math.abs(d.actual - d.expected) }
+
+const SETTLE_SORT: Sorters<NxSettlement> = { date: (s) => s.date, gross: (s) => s.gross, fee: (s) => s.fee, net: (s) => s.net }
+
 export default function ConsoleReconciliationPage() {
   const t = useTranslations()
   const { money, date } = useBillingFormat()
@@ -36,6 +44,8 @@ export default function ConsoleReconciliationPage() {
   const [day, setDay] = useState(addDays(today, -1))
   const canRun = consoleCan(actor?.role, C.CREDIT_NOTES)
   const last = runs[0]
+  const ctl = useTableControls(last?.differences ?? NO_DIFF, DIFF_SORT, { key: "date", dir: "desc" })
+  const ctl2 = useTableControls(settlements, SETTLE_SORT, { key: "date", dir: "desc" })
   const month = today.slice(0, 7)
   const thisMonth = settlements.filter((s) => s.date.startsWith(month))
 
@@ -82,16 +92,16 @@ export default function ConsoleReconciliationPage() {
             <Table className="min-w-[44rem]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("recKind")}</TableHead>
-                  <TableHead>{t("trReference")}</TableHead>
-                  <TableHead>{t("biDate")}</TableHead>
+                  <SortableHead label={t("recKind")} k="kind" ctl={ctl} />
+                  <SortableHead label={t("trReference")} k="ref" ctl={ctl} />
+                  <SortableHead label={t("biDate")} k="date" ctl={ctl} />
                   <TableHead className="text-end">{t("recExpected")}</TableHead>
                   <TableHead className="text-end">{t("recActual")}</TableHead>
-                  <TableHead className="text-end">{t("recGap")}</TableHead>
+                  <SortableHead label={t("recGap")} k="gap" ctl={ctl} align="end" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {last.differences.map((d, i) => (
+                {ctl.rows.map((d, i) => (
                   <TableRow key={`${d.kind}-${d.ref}-${i}`}>
                     <TableCell><Badge variant="outline" className="border-transparent bg-danger-soft text-destructive">{t(`recKind_${d.kind}`)}</Badge></TableCell>
                     <TableCell className="font-mono text-xs">{d.ref}{d.customerName && <span className="ms-2 font-sans text-muted-foreground">{d.customerName}</span>}</TableCell>
@@ -103,6 +113,7 @@ export default function ConsoleReconciliationPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
         <p className="mt-3 text-xs text-muted-foreground">{t("recRules")}</p>
@@ -114,15 +125,15 @@ export default function ConsoleReconciliationPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("biDate")}</TableHead>
+                  <SortableHead label={t("biDate")} k="date" ctl={ctl2} />
                   <TableHead>{t("trReference")}</TableHead>
-                  <TableHead className="text-end">{t("recGross")}</TableHead>
-                  <TableHead className="text-end">{t("recFee")}</TableHead>
-                  <TableHead className="text-end">{t("recNet")}</TableHead>
+                  <SortableHead label={t("recGross")} k="gross" ctl={ctl2} align="end" />
+                  <SortableHead label={t("recFee")} k="fee" ctl={ctl2} align="end" />
+                  <SortableHead label={t("recNet")} k="net" ctl={ctl2} align="end" />
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {settlements.slice(0, 12).map((s) => (
+                {ctl2.rows.map((s) => (
                   <TableRow key={s.id}>
                     <TableCell className="whitespace-nowrap text-sm">{date(s.date)}</TableCell>
                     <TableCell className="whitespace-nowrap font-mono text-xs">{s.reference}</TableCell>
@@ -133,6 +144,7 @@ export default function ConsoleReconciliationPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl2} className="px-4 pb-3" />
           </TableContainer>
           {canRun && (
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-dashed border-border p-3 text-xs text-muted-foreground">

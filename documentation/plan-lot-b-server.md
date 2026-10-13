@@ -54,5 +54,5 @@ The front end calls the API modules in `src/lib/api/*`. Each module keeps its fu
 
 ## Still in the front end before Lot B
 
-- A9: sorting and pagination on every console table (UX-05), time zones on hover (UX-09), a property test of invoice totals (NFR-05), the reference scenario extended to row 13.
+- ~~A9~~ done (Lot A9): sorting and pagination (UX-05), time zones (UX-09), property test of invoice totals (NFR-05), reference scenario rows 1–13.
 - A10: bring every page under 500 KB of JavaScript (NFR-02, PERF-01, PERF-02).

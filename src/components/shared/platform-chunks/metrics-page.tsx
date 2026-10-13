@@ -8,6 +8,8 @@ import { ListSkeleton } from "@/components/ui/empty-state"
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Download, FileSpreadsheet, FileText } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { Link } from "@/i18n/navigation"
 import { useConsoleCustomers } from "@/hooks/platform/use-platform-console"
 import { useNxInvoices } from "@/hooks/platform/use-platform-billing"
@@ -39,6 +41,8 @@ function Kpi({ label, value, change, definition }: { label: string; value: strin
 }
 
 /** Recurring revenue, its movements, churn, trial conversion and money owed (MET-01 to MET-07). */
+const SORTERS: Sorters<MonthRow> = { month: (r) => r.month, mrr: (r) => r.mrr, change: (r) => r.change, customerChurn: (r) => r.customerChurn, revenueChurn: (r) => r.revenueChurn }
+
 export default function ConsoleMetricsPage() {
   const t = useTranslations()
   const locale = useLocale()
@@ -53,6 +57,7 @@ export default function ConsoleMetricsPage() {
   const compactMoney = (n: number, opts?: { compact?: boolean }) =>
     opts?.compact ? `${new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(n)} MAD` : money(n)
   const head = useMemo(() => headline(rows, accounts), [rows, accounts])
+  const ctl = useTableControls(rows, SORTERS, { key: "month", dir: "desc" }, 12)
   const trials = useMemo(() => trialConversion(accounts), [accounts])
   const aging = useMemo(() => overdueAging(invoices, today), [invoices, today])
   const isLoading = l1 || l2
@@ -155,16 +160,16 @@ export default function ConsoleMetricsPage() {
               <Table className="min-w-[66rem]">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t("metMonth")}</TableHead>
-                    <TableHead className="text-end">{t("metMrr")}</TableHead>
+                    <SortableHead label={t("metMonth")} k="month" ctl={ctl} />
+                    <SortableHead label={t("metMrr")} k="mrr" ctl={ctl} align="end" />
                     {MOVES.map((m) => <TableHead key={m} className="text-end">{t(`metMove_${m}`)}</TableHead>)}
-                    <TableHead className="text-end">{t("metChange")}</TableHead>
-                    <TableHead className="text-end">{t("metCustomerChurn")}</TableHead>
-                    <TableHead className="text-end">{t("metRevenueChurn")}</TableHead>
+                    <SortableHead label={t("metChange")} k="change" ctl={ctl} align="end" />
+                    <SortableHead label={t("metCustomerChurn")} k="customerChurn" ctl={ctl} align="end" />
+                    <SortableHead label={t("metRevenueChurn")} k="revenueChurn" ctl={ctl} align="end" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {[...rows].reverse().map((r) => (
+                  {ctl.rows.map((r) => (
                     <TableRow key={r.month}>
                       <TableCell className="font-medium capitalize">{monthLabel(r.month)}</TableCell>
                       <TableCell className="text-end tabular-nums">{money(r.mrr)}</TableCell>
@@ -176,6 +181,7 @@ export default function ConsoleMetricsPage() {
                   ))}
                 </TableBody>
               </Table>
+              <TablePager ctl={ctl} className="px-4 pb-3" />
             </TableContainer>
           </Panel>
 

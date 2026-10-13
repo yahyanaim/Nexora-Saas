@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Ban, DownloadIcon, Mail, ShieldCheck, UserX, Users } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { Link } from "@/i18n/navigation"
 import { useConsoleActor, useConsoleDirectory, useConsoleMutations, useRecordDirectoryExport } from "@/hooks/platform/use-platform-console"
@@ -32,6 +34,8 @@ const STATUS_CLASS: Record<DirectoryUser["status"], string> = {
 }
 
 /** People of the customer companies, account fields only (USR-01 to USR-06). */
+const SORTERS: Sorters<DirectoryUser> = { name: (u) => u.name, company: (u) => u.company, role: (u) => u.companyRole, twoFactor: (u) => (u.twoFactor ? 1 : 0), status: (u) => u.status, last: (u) => u.lastSignInAt }
+
 export default function ConsoleDirectoryPage() {
   const t = useTranslations()
   const locale = useLocale()
@@ -54,6 +58,7 @@ export default function ConsoleDirectoryPage() {
   const when = (iso?: string) => (iso ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(iso)) : "—")
   const q = query.trim().toLowerCase()
   const rows = people.filter((u) => (status === ALL || u.status === status) && (!q || `${u.name} ${u.email} ${u.company}`.toLowerCase().includes(q)))
+  const ctl = useTableControls(rows, SORTERS, { key: "name", dir: "asc" })
 
   const doExport = () => {
     // SEC-14: every row carries who exported it and when
@@ -101,17 +106,17 @@ export default function ConsoleDirectoryPage() {
             <Table className="min-w-[56rem]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("usrPerson")}</TableHead>
-                  <TableHead>{t("pfCompany")}</TableHead>
-                  <TableHead>{t("usrCompanyRole")}</TableHead>
-                  <TableHead>{t("stf2faCol")}</TableHead>
-                  <TableHead>{t("status")}</TableHead>
-                  <TableHead>{t("stfLastSignIn")}</TableHead>
+                  <SortableHead label={t("usrPerson")} k="name" ctl={ctl} />
+                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
+                  <SortableHead label={t("usrCompanyRole")} k="role" ctl={ctl} />
+                  <SortableHead label={t("stf2faCol")} k="twoFactor" ctl={ctl} />
+                  <SortableHead label={t("status")} k="status" ctl={ctl} />
+                  <SortableHead label={t("stfLastSignIn")} k="last" ctl={ctl} />
                   <TableHead>{t("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((u) => (
+                {ctl.rows.map((u) => (
                   <TableRow key={u.id}>
                     <TableCell>
                       <p className="font-medium">{u.name}</p>
@@ -142,6 +147,7 @@ export default function ConsoleDirectoryPage() {
                 ))}
               </TableBody>
             </Table>
+            <TablePager ctl={ctl} className="px-4 pb-3" />
           </TableContainer>
         )}
         <p className="mt-3 text-xs text-muted-foreground">{t("usrRule")}</p>

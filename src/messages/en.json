@@ -4690,5 +4690,8 @@
   "cinCategory_team": "Customers",
   "cinCategory_billing": "Billing",
   "cinCategory_security": "Security",
-  "cinCategory_system": "Platform"
+  "cinCategory_system": "Platform",
+  "tcSortBy": "Sort by {column}",
+  "tcRange": "{from}–{to} of {total}",
+  "tzCustomerTime": "Customer's time: {time} ({zone})"
 }

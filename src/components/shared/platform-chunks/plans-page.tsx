@@ -1,5 +1,6 @@
 "use client"
 
+import type { PlanVersion } from "@/types/platform-billing"
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ListChecks, Pencil } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
+import type { Sorters } from "@/lib/ui/table-sort"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { useConsoleActor, useConsoleCustomers } from "@/hooks/platform/use-platform-console"
 import { useBillingMutations, usePlanContent, usePlanVersions } from "@/hooks/platform/use-platform-billing"
@@ -24,6 +27,8 @@ import { StepUpDialog } from "./console-shared"
 import { Panel, useBillingFormat } from "./billing-shared"
 
 /** The three plans, their price versions and who is on them (PLA-01 to PLA-07). */
+const SORTERS: Sorters<PlanVersion> = { plan: (v) => v.plan, monthly: (v) => v.monthly, from: (v) => v.effectiveFrom, by: (v) => v.createdBy }
+
 export default function ConsolePlansPage() {
   const t = useTranslations()
   const { money, date } = useBillingFormat()
@@ -34,6 +39,7 @@ export default function ConsolePlansPage() {
   const [editing, setEditing] = useState<NexoraPlanId | null>(null)
   const [form, setForm] = useState({ monthly: "", effectiveFrom: "", existing: "keep" as "keep" | "move_at_renewal" })
   const [stepUp, setStepUp] = useState(false)
+  const ctl = useTableControls(versions, SORTERS, { key: "from", dir: "desc" })
   // reading the content keeps the catalogue in line with the owner's edits (PLA-02)
   usePlanContent()
   const [content, setContent] = useState<{ plan: NexoraPlanId; description: string; seats: string; unlimited: boolean; features: string; retired: boolean } | null>(null)
@@ -85,15 +91,15 @@ export default function ConsolePlansPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t("pfPlan")}</TableHead>
-                <TableHead className="text-end">{t("plMonthly")}</TableHead>
-                <TableHead>{t("plFrom")}</TableHead>
+                <SortableHead label={t("pfPlan")} k="plan" ctl={ctl} />
+                <SortableHead label={t("plMonthly")} k="monthly" ctl={ctl} align="end" />
+                <SortableHead label={t("plFrom")} k="from" ctl={ctl} />
                 <TableHead>{t("plExisting")}</TableHead>
-                <TableHead>{t("plBy")}</TableHead>
+                <SortableHead label={t("plBy")} k="by" ctl={ctl} />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {versions.map((v) => (
+              {ctl.rows.map((v) => (
                 <TableRow key={v.id}>
                   <TableCell className="font-medium">{NEXORA_PLANS.find((p) => p.id === v.plan)?.name}</TableCell>
                   <TableCell className="text-end tabular-nums">{money(v.monthly)}</TableCell>
@@ -104,6 +110,7 @@ export default function ConsolePlansPage() {
               ))}
             </TableBody>
           </Table>
+          <TablePager ctl={ctl} className="px-4 pb-3" />
         </TableContainer>
       </Panel>
 

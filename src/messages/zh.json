@@ -4690,5 +4690,8 @@
   "cinCategory_team": "客户",
   "cinCategory_billing": "计费",
   "cinCategory_security": "安全",
-  "cinCategory_system": "平台"
+  "cinCategory_system": "平台",
+  "tcSortBy": "按{column}排序",
+  "tcRange": "第 {from}–{to} 条，共 {total} 条",
+  "tzCustomerTime": "客户当地时间：{time}（{zone}）"
 }

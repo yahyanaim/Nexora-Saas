@@ -17,16 +17,17 @@ export interface InvoiceLine {
 
 /** BR-06: VAT is computed per line, then rounded per rate; totals recompute to the cent. */
 export function invoiceTotals(lines: InvoiceLine[]) {
+  // NFR-05: added up in whole centimes, so VAT on large amounts never drifts by a centime
   const byRate = new Map<number, number>()
   let subtotal = 0
   for (const l of lines) {
-    const amount = round2(l.quantity * l.unitPrice)
-    subtotal = round2(subtotal + amount)
-    byRate.set(l.vatRate, round2((byRate.get(l.vatRate) ?? 0) + amount))
+    const amount = Math.round(round2(l.quantity * l.unitPrice) * 100)
+    subtotal += amount
+    byRate.set(l.vatRate, (byRate.get(l.vatRate) ?? 0) + amount)
   }
-  const vatByRate = [...byRate.entries()].map(([rate, base]) => ({ rate, base, vat: round2((base * rate) / 100) }))
-  const vat = round2(vatByRate.reduce((s, r) => s + r.vat, 0))
-  return { subtotal, vat, total: round2(subtotal + vat), vatByRate }
+  const vatByRate = [...byRate.entries()].map(([rate, base]) => ({ rate, base: base / 100, vat: Math.round((base * rate) / 100) / 100 }))
+  const vatCents = [...byRate.entries()].reduce((s, [rate, base]) => s + Math.round((base * rate) / 100), 0)
+  return { subtotal: subtotal / 100, vat: vatCents / 100, total: (subtotal + vatCents) / 100, vatByRate }
 }
 
 /** BR-03: NX-YYYY-NNNNN for invoices, AV-YYYY-NNNNN for credit notes, sequential per calendar year, no gaps. */
