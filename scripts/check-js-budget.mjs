@@ -10,8 +10,8 @@
  *
  * Two limits, from scripts/js-budget.json:
  * - target (500 KB, PERF-02): pages above it are listed as work to do;
- * - ceiling: the build fails above it, so no page grows while the shared shell
- *   is brought under the target. Lower the ceiling as pages get lighter.
+ * - ceiling: the build fails above it. Since Lot A10 every page is under the
+ *   target and the ceiling equals it, so no page can grow back over 500 KB.
  *
  *   node scripts/check-js-budget.mjs [.next]
  */

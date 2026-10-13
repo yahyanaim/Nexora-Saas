@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import dynamic from "next/dynamic"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { Menu, Search, LockKeyholeOpen } from "@/components/ui/carbon/icons"
-import { CommandPalette } from "@/components/shared/command-palette/command-palette"
-import { WorkNotificationCenter } from "@/components/shared/notifications/work-notification-center"
 import { ChangeLanguage } from "@/components/shared/header-chunks/change-language"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
@@ -15,6 +14,13 @@ import { useDashboardNav } from "./use-dashboard-nav"
 import { UserMenu } from "./user-menu"
 import { WorkspaceSwitcher } from "./workspace-switcher"
 import { navIconButton, navSurface } from "./nav-styles"
+
+// PERF-01: search and the bell read many modules; they load after the page, not with it
+const CommandPalette = dynamic(() => import("@/components/shared/command-palette/command-palette").then((m) => m.CommandPalette), { ssr: false })
+const WorkNotificationCenter = dynamic(() => import("@/components/shared/notifications/work-notification-center").then((m) => m.WorkNotificationCenter), {
+  ssr: false,
+  loading: () => <span aria-hidden className={navIconButton} />,
+})
 
 /**
  * Floating top bar: brand, section tabs (desktop), search, notifications,
@@ -26,6 +32,19 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { isPasscodeLocked } = useAuthGuard()
   const { lock } = useLockScreenStore()
   const [searchOpen, setSearchOpen] = useState(false)
+  // the palette is fetched the first time it opens, then stays mounted
+  const [searchUsed, setSearchUsed] = useState(false)
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        setSearchUsed(true)
+        setSearchOpen((o) => !o)
+      }
+    }
+    document.addEventListener("keydown", down)
+    return () => document.removeEventListener("keydown", down)
+  }, [])
 
   return (
     <>
@@ -86,7 +105,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         <div className={cn(navSurface, "flex h-12 items-center gap-0.5 p-1 lg:h-14 lg:p-1.5")}>
           <button
             type="button"
-            onClick={() => setSearchOpen(true)}
+            onClick={() => { setSearchUsed(true); setSearchOpen(true) }}
             aria-label={t("search")}
             className={navIconButton}
           >
@@ -104,7 +123,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         <UserMenu />
       </header>
 
-      <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
+      {searchUsed && <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />}
     </>
   )
 }

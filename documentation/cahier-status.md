@@ -1,13 +1,12 @@
 # Cahier des charges — status of every requirement
 
-*Checked on 13 Oct 2026 against `Nexora_Platform_Console_Cahier_des_Charges.pdf` (version 1.0, 7 Oct 2026): same 184 identifiers as `documentation/cahier-des-charges-platform-console.md`. Status of the code after Lot A9b.*
+*Checked on 13 Oct 2026 against `Nexora_Platform_Console_Cahier_des_Charges.pdf` (version 1.0, 7 Oct 2026): same 184 identifiers as `documentation/cahier-des-charges-platform-console.md`. Status of the code after Lot A10.*
 
 | Mark | Meaning |
 |---|---|
 | ✅ Done | Works in the console today (demo data), with tests where it holds a rule |
 | ✅ Done · server part in B1/B2/B3 | The rule works; the real server must also enforce it, store it or send the e-mail (Lot B, `plan-lot-b-server.md`) |
 | ✅ Done · accountant to confirm | Built as decided; the accountant confirms in writing |
-| 🟡 Planned A10 | Small front-end work still to do |
 | 🔵 Planned B2/B3 | Needs the real server, payment provider or infrastructure |
 | 🟣 External | Done by an outside party |
 | ⚪ Later | The cahier puts it after the first release |
@@ -16,10 +15,9 @@
 
 | Status | Count |
 |---|---|
-| ✅ Done | 155 |
+| ✅ Done | 158 |
 | 🔵 Planned B3 | 9 |
 | ✅ Tracked | 7 |
-| 🟡 Planned A10 | 3 |
 | 🔵 Planned B2 | 3 |
 | 🔵 Planned B2/B3 | 2 |
 | 🟣 External (B3) | 1 |
@@ -183,7 +181,7 @@
 | SEC-14 | Exports are watermarked with the requester and time | ✅ Done · server part in B3 | Exports carry who and when; B3 adds the server-side watermark |
 | SEC-15 | Penetration test of the console before the first paying customer | 🟣 External (B3) | Penetration test by an outside firm before the first paying customer |
 | NFR-01 | Accessibility: WCAG 2.2 AA, no critical or serious finding | ✅ Done |  |
-| NFR-02 | Speed: console pages under 500 KB of JavaScript | 🟡 Planned A10 | 62 pages at 500–607 KB; the CI fails above 610 KB until the shared shell is split |
+| NFR-02 | Speed: console pages under 500 KB of JavaScript | ✅ Done | Every page under 500 KB (heaviest 419 KB); the CI fails above 500 KB (Lot A10) |
 | NFR-03 | Speed: list and account page under 500 ms (p95) with 1,000 customers | 🔵 Planned B2 | Load test with 1,000 customers |
 | NFR-04 | Reliability: jobs and webhooks idempotent | ✅ Done |  |
 | NFR-05 | Correctness: invoice totals recompute to the cent | ✅ Done |  |
@@ -195,8 +193,8 @@
 | A11Y-03 | The automated check runs on every console page in continuous integration and blocks critical and serious… | ✅ Done |  |
 | A11Y-04 | The "Skip to content" link and heading order rules apply to every console page | ✅ Done |  |
 | A11Y-05 | Icon-only buttons in the console have accessible names | ✅ Done |  |
-| PERF-01 | The chart library on the Overview page and on console metrics loads only when a chart is shown | 🟡 Planned A10 | Charts already load only when shown; Overview still above 500 KB |
-| PERF-02 | A JavaScript budget per page is enforced in the build (500 KB compressed) | 🟡 Planned A10 | 62 pages at 500–607 KB; the CI fails above 610 KB until the shared shell is split |
+| PERF-01 | The chart library on the Overview page and on console metrics loads only when a chart is shown | ✅ Done | Charts load only when shown; Overview 392 KB (Lot A10) |
+| PERF-02 | A JavaScript budget per page is enforced in the build (500 KB compressed) | ✅ Done | The build fails any page above 500 KB; heaviest 419 KB (Lot A10) |
 | PERF-03 | New images use WebP or AVIF with explicit sizes | ✅ Done |  |
 | PERF-04 | The documentation copy step stays in the build and start scripts | ✅ Done |  |
 | D-01 | How are payments collected? | ✅ Done · server part in B2 | Transfer is the default in the console and in My subscription (Lot A9b); a payment link for card customers until the provider is signed (B2) |
