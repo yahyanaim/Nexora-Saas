@@ -3,6 +3,8 @@
 import { useCallback, useMemo } from "react"
 import { useTranslations } from "next-intl"
 import {
+  Activity,
+  Rocket,
   Users,
   CircleHelp,
   LifeBuoy,
@@ -376,6 +378,20 @@ export function useDashboardNav() {
             url: "/dashboard/help",
             icon: CircleHelp,
             descriptionKey: "pageDescHelp",
+          },
+        ],
+      },
+      {
+        // Nexora team console (only operators): its home, where the team starts the day
+        id: "console-home",
+        title: t("dashboard"),
+        icon: Rocket,
+        items: [
+          {
+            title: t("consoleHomeNav"),
+            url: "/dashboard/console",
+            icon: Activity,
+            descriptionKey: "pageDescConsoleHome",
           },
         ],
       },

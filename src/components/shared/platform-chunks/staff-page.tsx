@@ -1,32 +1,29 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
-import { ListSkeleton } from "@/components/ui/empty-state"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Clock, Mail, ShieldCheck, ShieldUser, Trash, UserPlus, Users } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
-import type { Sorters } from "@/lib/ui/table-sort"
+import { DataTable } from "@/components/shared/data-table-chunks/data-table"
+import { DataTableRowActions, type RowAction } from "@/components/shared/data-table-chunks/data-table-row-actions"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { useConsoleActor, useConsoleMutations, useConsoleStaff } from "@/hooks/platform/use-platform-console"
 import { canManageStaff, needsStepUp } from "@/lib/platform/console-roles"
 import { inviteExpired } from "@/lib/platform/session-policy"
 import { CONSOLE_ROLES, ConsoleCapability, ConsoleRole, type PlatformStaff } from "@/types/platform-console"
 import { ROLE_LABEL, RoleBadge, StepUpDialog } from "./console-shared"
+import { NameCell, inSelection, searchIn, sortHeader } from "./console-table"
 
 type Pending = { kind: "role"; staff: PlatformStaff; role: ConsoleRole } | { kind: "remove"; staff: PlatformStaff } | { kind: "invite" }
 
 /** The Nexora team only, with console role and two-factor status (STF-01 to STF-07). */
-const SORTERS: Sorters<PlatformStaff> = { name: (s) => s.name, role: (s) => s.role, twoFactor: (s) => (s.twoFactor ? 1 : 0), status: (s) => s.status, last: (s) => s.lastSignInAt }
 
 export default function ConsoleStaffPage() {
   const t = useTranslations()
@@ -38,7 +35,6 @@ export default function ConsoleStaffPage() {
   const [form, setForm] = useState({ name: "", email: "", role: ConsoleRole.SUPPORT })
   const [pending, setPending] = useState<Pending | null>(null)
   const [stepUp, setStepUp] = useState(false)
-  const ctl = useTableControls(staff, SORTERS, { key: "name", dir: "asc" })
 
   const canInvite = !!actor && canManageStaff(actor.role, ConsoleRole.READ_ONLY)
   const stepUpNeeded = needsStepUp(actor?.role, ConsoleCapability.MANAGE_STAFF)
@@ -70,94 +66,87 @@ export default function ConsoleStaffPage() {
     if (stepUpNeeded) setStepUp(true)
   }
 
+  const columns = useMemo<ColumnDef<PlatformStaff>[]>(() => [
+    {
+      id: "name",
+      accessorFn: (s) => s.name,
+      header: sortHeader(t("stfMember")),
+      filterFn: searchIn<PlatformStaff>((s) => [s.name, s.email]),
+      cell: ({ row: { original: s } }) => <NameCell name={actor?.id === s.id ? `${s.name} (${t("stfYou")})` : s.name} sub={s.email} avatar={s.avatar} />,
+    },
+    {
+      id: "role",
+      accessorFn: (s) => s.role,
+      header: sortHeader(t("stfRole")),
+      filterFn: inSelection,
+      cell: ({ row: { original: s } }) => {
+        const manageable = !!actor && s.id !== actor.id && canManageStaff(actor.role, s.role)
+        return manageable && roleChoices(s.role).length > 1 ? (
+          <Select value={s.role} onValueChange={(v) => start({ kind: "role", staff: s, role: v as ConsoleRole })}>
+            <SelectTrigger className="h-8 w-44" aria-label={t("stfRoleOf", { name: s.name })}><SelectValue>{t(ROLE_LABEL[s.role])}</SelectValue></SelectTrigger>
+            <SelectContent>{roleChoices(s.role).map((r) => <SelectItem key={r} value={r}>{t(ROLE_LABEL[r])}</SelectItem>)}</SelectContent>
+          </Select>
+        ) : <RoleBadge role={s.role} />
+      },
+    },
+    {
+      id: "twoFactor",
+      accessorFn: (s) => (s.twoFactor ? "on" : "off"),
+      header: sortHeader(t("stf2faCol")),
+      filterFn: inSelection,
+      cell: ({ row: { original: s } }) => s.twoFactor
+        ? <Badge variant="outline" className="border-transparent bg-success-soft text-success-foreground">{t("stf2faOn")}</Badge>
+        : <Badge variant="outline" className="border-transparent bg-warning-soft text-warning-foreground">{t("stf2faOff")}</Badge>,
+    },
+    {
+      id: "status",
+      accessorFn: (s) => s.status,
+      header: sortHeader(t("status")),
+      filterFn: inSelection,
+      cell: ({ row: { original: s } }) => <span className="text-sm">{s.status === "invited" ? (inviteExpired(s) ? t("stfInviteExpired") : t("stfInvitedUntil", { date: when(s.inviteExpiresAt) })) : t("stfActive")}</span>,
+    },
+    { id: "last", accessorFn: (s) => s.lastSignInAt ?? "", header: sortHeader(t("stfLastSignIn")), cell: ({ row: { original: s } }) => <span className="text-sm text-muted-foreground">{when(s.lastSignInAt)}</span> },
+    {
+      id: "actions",
+      enableSorting: false,
+      cell: ({ row: { original: s } }) => {
+        const manageable = !!actor && s.id !== actor.id && canManageStaff(actor.role, s.role)
+        if (!manageable) return null
+        const actions: RowAction<PlatformStaff>[] = []
+        if (s.status === "invited") actions.push({ label: t("stfResend"), icon: Clock, onClick: (x) => m.resend.mutate(x.id) })
+        actions.push({ label: t("stfRemoveName", { name: s.name }), icon: Trash, variant: "destructive", separatorBefore: actions.length > 0, onClick: (x) => start({ kind: "remove", staff: x }) })
+        return <DataTableRowActions row={s} actions={actions} />
+      },
+    },
+  // the formatters only change with the language and who is signed in
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, locale, actor, stepUpNeeded])
+
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <PageHeader
-        actions={canInvite ? <Button onClick={() => setInviteOpen(true)}><UserPlus className="size-4" />{t("stfInvite")}</Button> : undefined}
-      />
+      <PageHeader />
       <MetricCardGrid cards={cards} />
 
-      <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
-        <h2 className="mb-3 text-base font-semibold">{t("stfListTitle")}</h2>
-        {isLoading ? (
-          <ListSkeleton />
-        ) : (
-          <TableContainer>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <SortableHead label={t("stfMember")} k="name" ctl={ctl} />
-                  <SortableHead label={t("stfRole")} k="role" ctl={ctl} />
-                  <SortableHead label={t("stf2faCol")} k="twoFactor" ctl={ctl} />
-                  <SortableHead label={t("status")} k="status" ctl={ctl} />
-                  <SortableHead label={t("stfLastSignIn")} k="last" ctl={ctl} />
-                  <TableHead>{t("actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ctl.rows.map((s) => {
-                  const manageable = !!actor && s.id !== actor.id && canManageStaff(actor.role, s.role)
-                  const expired = inviteExpired(s)
-                  return (
-                    <TableRow key={s.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <SpaceAvatar name={s.name} size="sm" />
-                          <div className="min-w-0">
-                            <p className="truncate font-medium">{s.name}{actor?.id === s.id && <span className="ms-2 text-xs text-muted-foreground">({t("stfYou")})</span>}</p>
-                            <p className="truncate text-xs text-muted-foreground">{s.email}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {manageable && roleChoices(s.role).length > 1 ? (
-                          <Select value={s.role} onValueChange={(v) => start({ kind: "role", staff: s, role: v as ConsoleRole })}>
-                            <SelectTrigger className="h-8 w-44" aria-label={t("stfRoleOf", { name: s.name })}><SelectValue>{t(ROLE_LABEL[s.role])}</SelectValue></SelectTrigger>
-                            <SelectContent>
-                              {roleChoices(s.role).map((r) => <SelectItem key={r} value={r}>{t(ROLE_LABEL[r])}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <RoleBadge role={s.role} />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {s.twoFactor ? (
-                          <Badge variant="outline" className="border-transparent bg-success-soft text-success-foreground">{t("stf2faOn")}</Badge>
-                        ) : (
-                          <Badge variant="outline" className="border-transparent bg-warning-soft text-warning-foreground">{t("stf2faOff")}</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {s.status === "invited" ? (
-                          <span className="text-sm">
-                            {expired ? t("stfInviteExpired") : t("stfInvitedUntil", { date: when(s.inviteExpiresAt) })}
-                          </span>
-                        ) : (
-                          <span className="text-sm">{t("stfActive")}</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{when(s.lastSignInAt)}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {manageable && s.status === "invited" && (
-                            <Button size="sm" variant="outline" onClick={() => m.resend.mutate(s.id)}><Clock className="size-4" />{t("stfResend")}</Button>
-                          )}
-                          {manageable && (
-                            <Button size="sm" variant="ghost" aria-label={t("stfRemoveName", { name: s.name })} onClick={() => start({ kind: "remove", staff: s })}><Trash className="size-4" /></Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-            <TablePager ctl={ctl} className="px-4 pb-3" />
-          </TableContainer>
-        )}
-        <p className="mt-3 text-xs text-muted-foreground">{t("stfRule")}</p>
-      </section>
+      <DataTable
+        title={t("stfListTitle")}
+        isLoading={isLoading}
+        columns={columns}
+        data={staff}
+        searchColumnId="name"
+        searchPlaceholder={t("stfSearch")}
+        emptyMessage={t("stfEmpty")}
+        defaultSorting={[{ id: "name", desc: false }]}
+        showRange
+        exportFilename="nexora-team"
+        getExportData={() => staff.map((s) => ({ name: s.name, email: s.email, role: t(ROLE_LABEL[s.role]), twoFactor: s.twoFactor ? "yes" : "no", status: s.status, lastSignIn: s.lastSignInAt ?? "" }))}
+        actions={canInvite ? [{ label: t("stfInvite"), icon: UserPlus, onClick: () => setInviteOpen(true), variant: "primary", iconOnly: true }] : []}
+        filters={[
+          { columnId: "role", title: t("stfRole"), options: CONSOLE_ROLES.map((r) => ({ value: r, label: t(ROLE_LABEL[r]) })) },
+          { columnId: "twoFactor", title: t("stf2faCol"), options: [{ value: "on", label: t("stf2faOn") }, { value: "off", label: t("stf2faOff") }] },
+          { columnId: "status", title: t("status"), options: [{ value: "active", label: t("stfActive") }, { value: "invited", label: t("stfStatusInvited") }] },
+        ]}
+      />
+      <p className="text-xs text-muted-foreground">{t("stfRule")}</p>
 
       <DataTableEntityFormSheet
         open={inviteOpen}

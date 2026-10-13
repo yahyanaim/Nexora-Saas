@@ -20,15 +20,20 @@ import { useTranslations } from "next-intl"
 interface DataTablePaginationProps<TData> {
   table: Table<TData>
   total?: number
+  /** "11–20 of 37", announced to screen readers when the page changes */
+  showRange?: boolean
 }
 
 export function DataTablePagination<TData>({
   table,
   total: _total,
+  showRange = false,
 }: DataTablePaginationProps<TData>) {
   const t = useTranslations()
   const { pageIndex, pageSize } = table.getState().pagination
   const totalPages = table.getPageCount()
+  const rows = table.getFilteredRowModel().rows.length
+  const sizes = [10, 20, 30, 50].includes(pageSize) ? [10, 20, 30, 50] : [10, 20, pageSize, 50].sort((a, b) => a - b)
 
   return (
     <div className="flex items-center justify-between gap-3 px-5 pt-2 pb-5 sm:px-6">
@@ -42,7 +47,7 @@ export function DataTablePagination<TData>({
             <SelectValue placeholder={pageSize} />
           </SelectTrigger>
           <SelectContent side="top">
-            {[10, 20, 30, 50].map((size) => (
+            {sizes.map((size) => (
               <SelectItem key={size} value={`${size}`}>
                 {size}
               </SelectItem>
@@ -51,6 +56,11 @@ export function DataTablePagination<TData>({
         </Select>
       </div>
       <div className="flex items-center gap-1">
+        {showRange && rows > 0 && (
+          <span className="me-2 hidden text-xs tabular-nums text-muted-foreground sm:inline" aria-live="polite">
+            {t("tcRange", { from: pageIndex * pageSize + 1, to: Math.min(rows, (pageIndex + 1) * pageSize), total: rows })}
+          </span>
+        )}
         <Button
           variant="ghost"
           size="icon"

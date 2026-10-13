@@ -1,19 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
 import { useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ListSkeleton } from "@/components/ui/empty-state"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ArrowLeftRight, CheckCircle, Landmark, Plus, Warning } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
-import type { Sorters } from "@/lib/ui/table-sort"
+import { DataTable } from "@/components/shared/data-table-chunks/data-table"
+import { DataTableRowActions } from "@/components/shared/data-table-chunks/data-table-row-actions"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
 import { useConsoleActor } from "@/hooks/platform/use-platform-console"
 import { useBillingMutations, useNxDunning, useNxInvoices, useNxPayments, useNxRefunds } from "@/hooks/platform/use-platform-billing"
@@ -25,6 +24,7 @@ import { ConsoleCapability as C } from "@/types/platform-console"
 import type { NxInvoice, NxPayment } from "@/types/platform-billing"
 import { StepUpDialog } from "./console-shared"
 import { Panel, useBillingFormat } from "./billing-shared"
+import { inSelection, searchIn, sortHeader } from "./console-table"
 
 const PAY_CLASS: Record<NxPayment["status"], string> = {
   succeeded: "bg-success-soft text-success-foreground",
@@ -35,7 +35,6 @@ const PAY_CLASS: Record<NxPayment["status"], string> = {
 }
 
 /** Money between customers and Nexora: payments, failures, refunds, the transfer queue and dunning (PAY-01 to PAY-09). */
-const SORTERS: Sorters<NxPayment> = { date: (p) => p.date, company: (p) => p.customerName ?? p.payer, invoice: (p) => p.invoiceNumber, method: (p) => p.method, amount: (p) => p.amount, status: (p) => p.status }
 
 export default function ConsoleTransactionsPage() {
   const t = useTranslations()
@@ -63,8 +62,45 @@ export default function ConsoleTransactionsPage() {
   const waiting = refunds.filter((r) => r.status === "awaiting_approval")
   const overdue = invoices.filter((i) => i.status === "overdue" && i.failedOn)
   const ledger = payments.filter((p) => p.status !== "unmatched")
-  const ctl = useTableControls(ledger, SORTERS, { key: "date", dir: "desc" })
   const month = today.slice(0, 7)
+
+  const columns = useMemo<ColumnDef<NxPayment>[]>(() => [
+    {
+      id: "date",
+      accessorFn: (p) => p.date,
+      header: sortHeader(t("biDate")),
+      filterFn: searchIn<NxPayment>((p) => [p.customerName, p.payer, p.invoiceNumber, p.reference]),
+      cell: ({ row: { original: p } }) => <span className="text-sm">{date(p.date)}</span>,
+    },
+    { id: "company", accessorFn: (p) => p.customerName ?? p.payer ?? "", header: sortHeader(t("pfCompany")), cell: ({ row: { original: p } }) => p.customerName ?? p.payer ?? "—" },
+    { id: "invoice", accessorFn: (p) => p.invoiceNumber ?? "", header: sortHeader(t("biForInvoice")), cell: ({ row: { original: p } }) => <span className="font-mono text-xs">{p.invoiceNumber ?? "—"}</span> },
+    { id: "method", accessorFn: (p) => p.method, header: sortHeader(t("subMethod")), filterFn: inSelection, cell: ({ row: { original: p } }) => t(p.method === "card" ? "subCard" : "subTransfer") },
+    { id: "reference", accessorFn: (p) => p.reference, enableSorting: false, header: t("trReference"), cell: ({ row: { original: p } }) => <span className="block max-w-48 truncate text-xs text-muted-foreground">{p.reference}</span> },
+    { id: "amount", accessorFn: (p) => p.amount, header: sortHeader(t("trAmount")), cell: ({ row: { original: p } }) => <span className={cn("tabular-nums", p.amount < 0 && "text-destructive")}>{money(p.amount)}</span> },
+    {
+      id: "status",
+      accessorFn: (p) => p.status,
+      header: sortHeader(t("status")),
+      filterFn: inSelection,
+      cell: ({ row: { original: p } }) => (
+        <span>
+          <Badge variant="outline" className={cn("border-transparent", PAY_CLASS[p.status])}>{t(`biPay_${p.status}`)}</Badge>
+          {p.chargedBackOn && <span className="ms-2 text-xs text-destructive">{t("trChargedBackOn", { date: date(p.chargedBackOn) })}</span>}
+          {p.reason && <span className="mt-1 block text-xs text-muted-foreground">{p.reason}</span>}
+        </span>
+      ),
+    },
+    ...(canRecord ? [{
+      id: "actions",
+      enableSorting: false,
+      cell: ({ row: { original: p } }: { row: { original: NxPayment } }) =>
+        p.status === "succeeded" && p.method === "card" && p.invoiceId && !p.chargedBackOn
+          ? <DataTableRowActions row={p} actions={[{ label: t("trChargebackOf", { reference: p.reference }), icon: Warning, variant: "destructive", onClick: (x) => { setCb({ reason: "", date: today }); setCharging(x) } }]} />
+          : null,
+    } satisfies ColumnDef<NxPayment>] : []),
+  // the formatters only change with the language and the role
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, canRecord, today])
 
   const cards: MetricCardItem[] = [
     { key: "in", title: t("trReceived"), value: money(payments.filter((p) => p.status === "succeeded" && p.date.startsWith(month)).reduce((s, p) => s + p.amount, 0)), valueClassName: "text-success", footer: { icon: CheckCircle, text: t("trThisMonth") } },
@@ -76,7 +112,7 @@ export default function ConsoleTransactionsPage() {
   return (
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader actions={canRecord ? <Button onClick={() => setRecording(true)}><Plus className="size-4" />{t("trRecordTransfer")}</Button> : undefined} />
-      <MetricCardGrid cards={cards} />
+      <MetricCardGrid cards={cards} columnsClassName="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" />
 
       {overdue.length > 0 && (
         <Panel title={t("trDunning")} hint={t("trDunningHint")}>
@@ -144,52 +180,24 @@ export default function ConsoleTransactionsPage() {
         </div>
       )}
 
-      <Panel title={t("trLedger")} hint={t("trLedgerHint")}>
-        {isLoading ? <ListSkeleton /> : (
-          <TableContainer>
-            <Table className="min-w-[52rem]">
-              <TableHeader>
-                <TableRow>
-                  <SortableHead label={t("biDate")} k="date" ctl={ctl} />
-                  <SortableHead label={t("pfCompany")} k="company" ctl={ctl} />
-                  <SortableHead label={t("biForInvoice")} k="invoice" ctl={ctl} />
-                  <SortableHead label={t("subMethod")} k="method" ctl={ctl} />
-                  <TableHead>{t("trReference")}</TableHead>
-                  <SortableHead label={t("trAmount")} k="amount" ctl={ctl} align="end" />
-                  <SortableHead label={t("status")} k="status" ctl={ctl} />
-                  {canRecord && <TableHead>{t("actions")}</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ctl.rows.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="text-sm">{date(p.date)}</TableCell>
-                    <TableCell>{p.customerName ?? p.payer ?? "—"}</TableCell>
-                    <TableCell className="font-mono text-xs">{p.invoiceNumber ?? "—"}</TableCell>
-                    <TableCell>{t(p.method === "card" ? "subCard" : "subTransfer")}</TableCell>
-                    <TableCell className="max-w-48 truncate text-xs text-muted-foreground">{p.reference}</TableCell>
-                    <TableCell className={cn("text-end tabular-nums", p.amount < 0 && "text-destructive")}>{money(p.amount)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn("border-transparent", PAY_CLASS[p.status])}>{t(`biPay_${p.status}`)}</Badge>
-                      {p.chargedBackOn && <span className="ms-2 text-xs text-destructive">{t("trChargedBackOn", { date: date(p.chargedBackOn) })}</span>}
-                      {p.reason && <p className="mt-1 text-xs text-muted-foreground">{p.reason}</p>}
-                    </TableCell>
-                    {canRecord && (
-                      <TableCell>
-                        {p.status === "succeeded" && p.method === "card" && p.invoiceId && !p.chargedBackOn && (
-                          <Button size="sm" variant="ghost" aria-label={t("trChargebackOf", { reference: p.reference })} onClick={() => { setCb({ reason: "", date: today }); setCharging(p) }}>{t("trChargeback")}</Button>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <TablePager ctl={ctl} className="px-4 pb-3" />
-          </TableContainer>
-        )}
-        <p className="mt-3 text-xs text-muted-foreground">{t("trCardNote")}</p>
-      </Panel>
+      <DataTable
+        title={t("trLedger")}
+        isLoading={isLoading}
+        columns={columns}
+        data={ledger}
+        searchColumnId="date"
+        searchPlaceholder={t("trSearch")}
+        emptyMessage={t("trEmpty")}
+        defaultSorting={[{ id: "date", desc: true }]}
+        showRange
+        exportFilename="nexora-payments"
+        getExportData={() => ledger.map((p) => ({ date: p.date, company: p.customerName ?? p.payer ?? "", invoice: p.invoiceNumber ?? "", method: p.method, reference: p.reference, amount: p.amount, status: p.status }))}
+        filters={[
+          { columnId: "method", title: t("subMethod"), options: [{ value: "card", label: t("subCard") }, { value: "transfer", label: t("subTransfer") }] },
+          { columnId: "status", title: t("status"), options: (Object.keys(PAY_CLASS) as NxPayment["status"][]).map((st) => ({ value: st, label: t(`biPay_${st}`) })) },
+        ]}
+      />
+      <p className="text-xs text-muted-foreground">{t("trLedgerHint")} {t("trCardNote")}</p>
 
       <DataTableEntityFormSheet
         open={recording}

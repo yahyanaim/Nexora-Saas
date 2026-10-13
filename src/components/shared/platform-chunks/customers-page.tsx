@@ -1,22 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
+import type { ColumnDef } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
-import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableContainer, TableHeader, TableRow } from "@/components/ui/table"
-import { Plus, Store, TrendingUp, Users, Warning } from "@/components/ui/carbon/icons"
+import { Eye, Plus } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
-import { SortableHead, TablePager, useTableControls } from "@/components/shared/table-controls"
-import type { Sorters } from "@/lib/ui/table-sort"
+import { KpiTile } from "@/components/shared/kpi-tile"
+import { DataTable } from "@/components/shared/data-table-chunks/data-table"
+import { DataTableRowActions } from "@/components/shared/data-table-chunks/data-table-row-actions"
 import type { CustomerAccount } from "@/types/platform-customers"
 import { DataTableEntityFormSheet } from "@/components/shared/data-table-chunks/data-table-entity-form-sheet"
-import { Link, useRouter } from "@/i18n/navigation"
+import { useRouter } from "@/i18n/navigation"
 import { useConsoleActor, useConsoleCustomers, useConsoleMutations } from "@/hooks/platform/use-platform-console"
 import { consoleCan } from "@/lib/platform/console-roles"
 import { accountMrr, accountsSummary, seatLimit } from "@/lib/platform/customer-lifecycle"
@@ -24,16 +22,8 @@ import { NEXORA_PLANS, formatMad, planById, type NexoraPlanId } from "@/lib/plat
 import { cn } from "@/lib/utils"
 import { ConsoleCapability } from "@/types/platform-console"
 import { LIFECYCLE, LifecycleBadge } from "./lifecycle-badge"
+import { NameCell, inSelection, searchIn, sortHeader } from "./console-table"
 
-const ALL = "all"
-const SORTERS: Sorters<CustomerAccount> = {
-  name: (c) => c.name,
-  plan: (c) => planById(c.plan).monthly,
-  status: (c) => c.status,
-  seats: (c) => c.seatsUsed,
-  mrr: (c) => accountMrr(c),
-  since: (c) => c.since,
-}
 const EMPTY_TRIAL = { name: "", city: "", country: "MA", ice: "", plan: "business" as NexoraPlanId, adminName: "", adminEmail: "" }
 
 /** The companies using Nexora (CUS-01 to CUS-03, CUS-05). Opening one shows its account page. */
@@ -44,36 +34,75 @@ export default function PlatformCustomersPage() {
   const actor = useConsoleActor()
   const { data: customers = [], isLoading } = useConsoleCustomers()
   const m = useConsoleMutations()
-  const [query, setQuery] = useState("")
-  const [status, setStatus] = useState<string>(ALL)
-  const [plan, setPlan] = useState<string>(ALL)
-  const [billing, setBilling] = useState<string>(ALL)
-  const [country, setCountry] = useState<string>(ALL)
   const [trialOpen, setTrialOpen] = useState(false)
   const [trial, setTrial] = useState(EMPTY_TRIAL)
 
   const sum = accountsSummary(customers)
   const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`))
-  const q = query.trim().toLowerCase()
-  const rows = customers
-    .filter(
-      (c) =>
-        (status === ALL || c.status === status) &&
-        (plan === ALL || c.plan === plan) &&
-        (billing === ALL || c.billing === billing) &&
-        (country === ALL || c.country === country) &&
-        (!q || `${c.name} ${c.city} ${c.ice ?? ""} ${c.admin.name} ${c.admin.email}`.toLowerCase().includes(q))
-    )
-  // UX-05: biggest revenue first, any column sorts, 10 per page
-  const ctl = useTableControls(rows, SORTERS, { key: "mrr", dir: "desc" })
+  const canTrial = consoleCan(actor?.role, ConsoleCapability.CREATE_TRIAL)
 
-  const cards: MetricCardItem[] = [
-    { key: "mrr", title: t("pfMrr"), value: money(sum.mrr), valueClassName: "text-primary", footer: { icon: TrendingUp, text: t("pfArr", { arr: money(sum.arr) }) } },
-    { key: "customers", title: t("pfCustomers"), value: sum.customers, footer: { icon: Store, text: t("pfCustomersHint", { paying: sum.paying, trials: sum.trials }) } },
-    { key: "seats", title: t("pfSeats"), value: sum.seats, footer: { icon: Users, text: t("pfSeatsHint") } },
-    { key: "risk", title: t("cuAtRisk"), value: money(sum.atRisk), valueClassName: sum.atRisk ? "text-warning-foreground" : undefined, footer: { icon: Warning, text: t("cuAtRiskHint", { overdue: sum.overdue, suspended: sum.suspended }) } },
-  ]
+  const columns = useMemo<ColumnDef<CustomerAccount>[]>(() => [
+    {
+      id: "name",
+      accessorFn: (c) => c.name,
+      header: sortHeader(t("pfCompany")),
+      filterFn: searchIn<CustomerAccount>((c) => [c.name, c.city, c.ice, c.admin.name, c.admin.email]),
+      cell: ({ row: { original: c } }) => <NameCell name={c.name} sub={`${c.city}, ${c.country} · ${c.admin.name}`} href={`/dashboard/platform/${c.id}`} />,
+    },
+    {
+      id: "plan",
+      accessorFn: (c) => c.plan,
+      sortingFn: (a, b) => planById(a.original.plan).monthly - planById(b.original.plan).monthly,
+      header: sortHeader(t("pfPlan")),
+      filterFn: inSelection,
+      cell: ({ row: { original: c } }) => <span>{planById(c.plan).name}<span className="block text-xs text-muted-foreground">{t(c.billing === "yearly" ? "pfYearly" : "pfMonthly")}</span></span>,
+    },
+    { id: "billing", accessorFn: (c) => c.billing, filterFn: inSelection, enableSorting: false, header: t("cuBilling") },
+    { id: "country", accessorFn: (c) => c.country, filterFn: inSelection, enableSorting: false, header: t("cuCountry") },
+    {
+      id: "status",
+      accessorFn: (c) => c.status,
+      header: sortHeader(t("status")),
+      filterFn: inSelection,
+      cell: ({ row: { original: c } }) => (
+        <span>
+          <LifecycleBadge status={c.status} />
+          {c.status === "trial" && c.trialEndsOn && <span className="block text-xs text-muted-foreground">{t("pfTrialEnds", { date: date(c.trialEndsOn) })}</span>}
+          {c.cancelsOn && <span className="block text-xs text-muted-foreground">{t("cuCancelsOn", { date: date(c.cancelsOn) })}</span>}
+        </span>
+      ),
+    },
+    {
+      id: "seats",
+      accessorFn: (c) => c.seatsUsed,
+      header: sortHeader(t("pfSeatsCol")),
+      meta: { className: "w-44" },
+      cell: ({ row: { original: c } }) => {
+        const limit = seatLimit(c)
+        return limit ? (
+          <div className="flex items-center gap-2">
+            <Progress value={Math.min(100, (c.seatsUsed / limit) * 100)} aria-label={t("pfSeatsCol")} className={cn("h-2 flex-1", c.seatsUsed >= limit && "[&>div]:bg-warning")} />
+            <span className="text-xs tabular-nums">{c.seatsUsed}/{limit}</span>
+          </div>
+        ) : <span className="text-xs tabular-nums">{t("pfUnlimited", { count: c.seatsUsed })}</span>
+      },
+    },
+    {
+      id: "mrr",
+      accessorFn: (c) => accountMrr(c),
+      header: sortHeader(t("pfMrrCol")),
+      cell: ({ row: { original: c } }) => <span className="font-medium tabular-nums">{accountMrr(c) ? money(accountMrr(c)) : "—"}</span>,
+    },
+    { id: "since", accessorFn: (c) => c.since, header: sortHeader(t("pfSince")), cell: ({ row: { original: c } }) => <span className="text-xs text-muted-foreground">{date(c.since)}</span> },
+    {
+      id: "actions",
+      enableSorting: false,
+      cell: ({ row: { original: c } }) => <DataTableRowActions row={c} actions={[{ label: t("cuOpenAccount"), icon: Eye, onClick: () => router.push(`/dashboard/platform/${c.id}`) }]} />,
+    },
+  // the formatters only change with the language
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [t, locale])
 
   const mix = NEXORA_PLANS.map((p) => {
     const list = customers.filter((c) => c.plan === p.id && c.status !== "cancelled")
@@ -82,8 +111,13 @@ export default function PlatformCustomersPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <PageHeader actions={consoleCan(actor?.role, ConsoleCapability.CREATE_TRIAL) ? <Button onClick={() => setTrialOpen(true)}><Plus className="size-4" />{t("cuNewTrial")}</Button> : undefined} />
-      <MetricCardGrid cards={cards} />
+      <PageHeader />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <KpiTile title={t("pfMrr")} value={money(sum.mrr)} period={t("chToday")} description={t("cuTileMrr")} noteLabel={t("anOperationalNote")} note={t("pfArr", { arr: money(sum.arr) })} isLoading={isLoading} />
+        <KpiTile title={t("pfCustomers")} value={String(sum.customers)} period={t("chToday")} description={t("cuTileCustomers")} noteLabel={t("anOperationalNote")} note={t("pfCustomersHint", { paying: sum.paying, trials: sum.trials })} isLoading={isLoading} />
+        <KpiTile title={t("pfSeats")} value={String(sum.seats)} period={t("chToday")} description={t("pfSeatsHint")} isLoading={isLoading} />
+        <KpiTile title={t("cuAtRisk")} value={money(sum.atRisk)} period={t("chToday")} description={t("cuTileAtRisk")} noteLabel={t("anOperationalNote")} note={t("cuAtRiskHint", { overdue: sum.overdue, suspended: sum.suspended })} isLoading={isLoading} />
+      </div>
 
       <section className="grid gap-3 md:grid-cols-3">
         {mix.map(({ plan: p, count, mrr }) => (
@@ -98,103 +132,28 @@ export default function PlatformCustomersPage() {
         ))}
       </section>
 
-      <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
-        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-base font-semibold">{t("pfList")}</h2>
-            <p className="text-sm text-muted-foreground">{t("cuListHint")}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Input className="w-56" placeholder={t("cuSearch")} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={t("cuSearch")} />
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-44 bg-card" aria-label={t("status")}><SelectValue>{status === ALL ? t("pfAllStatuses") : t(`lcStatus_${status}`)}</SelectValue></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>{t("pfAllStatuses")}</SelectItem>
-                {LIFECYCLE.map((s) => <SelectItem key={s} value={s}>{t(`lcStatus_${s}`)}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={plan} onValueChange={setPlan}>
-              <SelectTrigger className="w-36 bg-card" aria-label={t("pfPlan")}><SelectValue>{plan === ALL ? t("cuAllPlans") : planById(plan as NexoraPlanId).name}</SelectValue></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>{t("cuAllPlans")}</SelectItem>
-                {NEXORA_PLANS.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={billing} onValueChange={setBilling}>
-              <SelectTrigger className="w-36 bg-card" aria-label={t("cuBilling")}><SelectValue>{billing === ALL ? t("cuAllBilling") : t(billing === "yearly" ? "pfYearly" : "pfMonthly")}</SelectValue></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>{t("cuAllBilling")}</SelectItem>
-                <SelectItem value="monthly">{t("pfMonthly")}</SelectItem>
-                <SelectItem value="yearly">{t("pfYearly")}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={country} onValueChange={setCountry}>
-              <SelectTrigger className="w-32 bg-card" aria-label={t("cuCountry")}><SelectValue>{country === ALL ? t("cuAllCountries") : country}</SelectValue></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>{t("cuAllCountries")}</SelectItem>
-                {[...new Set(customers.map((c) => c.country))].sort().map((cc) => <SelectItem key={cc} value={cc}>{cc}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        {isLoading ? (
-          <ListSkeleton />
-        ) : rows.length === 0 ? (
-          <EmptyState icon={Store} title={t("cuEmpty")} hint={t("audEmptyHint")} />
-        ) : (
-          <>
-          <TableContainer>
-            <Table className="min-w-[52rem]">
-              <TableHeader>
-                <TableRow>
-                  <SortableHead label={t("pfCompany")} k="name" ctl={ctl} />
-                  <SortableHead label={t("pfPlan")} k="plan" ctl={ctl} />
-                  <SortableHead label={t("status")} k="status" ctl={ctl} />
-                  <SortableHead label={t("pfSeatsCol")} k="seats" ctl={ctl} className="w-44" />
-                  <SortableHead label={t("pfMrrCol")} k="mrr" ctl={ctl} align="end" />
-                  <SortableHead label={t("pfSince")} k="since" ctl={ctl} />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ctl.rows.map((c) => {
-                  const limit = seatLimit(c)
-                  const mrr = accountMrr(c)
-                  const open = () => router.push(`/dashboard/platform/${c.id}`)
-                  return (
-                    <TableRow key={c.id} className="cursor-pointer" onClick={open}>
-                      <TableCell>
-                        {/* a real link keeps keyboard and screen-reader access */}
-                        <Link href={`/dashboard/platform/${c.id}`} onClick={(e) => e.stopPropagation()} className="rounded font-medium hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{c.name}</Link>
-                        <p className="text-xs text-muted-foreground">{c.city}, {c.country} · {c.admin.name}</p>
-                      </TableCell>
-                      <TableCell>{planById(c.plan).name}<span className="block text-xs text-muted-foreground">{t(c.billing === "yearly" ? "pfYearly" : "pfMonthly")}</span></TableCell>
-                      <TableCell>
-                        <LifecycleBadge status={c.status} />
-                        {c.status === "trial" && c.trialEndsOn && <span className="block text-xs text-muted-foreground">{t("pfTrialEnds", { date: date(c.trialEndsOn) })}</span>}
-                        {c.cancelsOn && <span className="block text-xs text-muted-foreground">{t("cuCancelsOn", { date: date(c.cancelsOn) })}</span>}
-                      </TableCell>
-                      <TableCell>
-                        {limit ? (
-                          <div className="flex items-center gap-2">
-                            <Progress value={Math.min(100, (c.seatsUsed / limit) * 100)} aria-label={t("pfSeatsCol")} className={cn("h-2 flex-1", c.seatsUsed >= limit && "[&>div]:bg-warning")} />
-                            <span className="text-xs tabular-nums">{c.seatsUsed}/{limit}</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs tabular-nums">{t("pfUnlimited", { count: c.seatsUsed })}</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-end font-medium tabular-nums">{mrr ? money(mrr) : "—"}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{date(c.since)}</TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <TablePager ctl={ctl} />
-          </>
-        )}
-      </section>
+      {/* UX-05: biggest revenue first, any column sorts, 10 per page */}
+      <DataTable
+        title={t("pfList")}
+        isLoading={isLoading}
+        columns={columns}
+        data={customers}
+        searchColumnId="name"
+        searchPlaceholder={t("cuSearch")}
+        emptyMessage={t("cuEmpty")}
+        defaultSorting={[{ id: "mrr", desc: true }]}
+        defaultColumnVisibility={{ billing: false, country: false }}
+        showRange
+        exportFilename="nexora-customers"
+        getExportData={() => customers.map((c) => ({ company: c.name, city: c.city, country: c.country, ice: c.ice ?? "", plan: planById(c.plan).name, billing: c.billing, status: c.status, people: c.seatsUsed, mrr: accountMrr(c), since: c.since }))}
+        actions={canTrial ? [{ label: t("cuNewTrial"), icon: Plus, onClick: () => setTrialOpen(true), variant: "primary", iconOnly: true }] : []}
+        filters={[
+          { columnId: "status", title: t("status"), options: LIFECYCLE.map((s) => ({ value: s, label: t(`lcStatus_${s}`) })) },
+          { columnId: "plan", title: t("pfPlan"), options: NEXORA_PLANS.map((p) => ({ value: p.id, label: p.name })) },
+          { columnId: "billing", title: t("cuBilling"), options: [{ value: "monthly", label: t("pfMonthly") }, { value: "yearly", label: t("pfYearly") }] },
+          { columnId: "country", title: t("cuCountry"), options: [...new Set(customers.map((c) => c.country))].sort().map((cc) => ({ value: cc, label: cc })) },
+        ]}
+      />
 
       <DataTableEntityFormSheet
         open={trialOpen}

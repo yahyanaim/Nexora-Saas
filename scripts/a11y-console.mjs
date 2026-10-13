@@ -29,7 +29,7 @@ const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePa
 const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage()
 await page.goto(`${BASE}/en/auth`, { timeout: 120_000 })
 await page.getByText("Platform console demo (Nexora team)").click()
-await page.waitForURL(/\/dashboard\/platform/, { timeout: 60_000 })
+await page.waitForURL(/\/dashboard\/(console|platform)/, { timeout: 60_000 })
 
 const failures = []
 for (const path of pages) {

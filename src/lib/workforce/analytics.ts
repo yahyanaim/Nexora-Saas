@@ -10,6 +10,9 @@ import { todayIso } from "./project-metrics"
 import { UTILIZATION_TARGET } from "./kpis"
 import { roundMoney } from "./money"
 
+// shared with the console tiles; kept here for the ERP's existing imports
+export { sparkline } from "@/lib/ui/sparkline"
+
 /**
  * Business analytics for the Analytics page: revenue, margin, cash, capacity
  * and clients over a period, compared with an earlier one. Pure functions, so
@@ -490,15 +493,6 @@ export function computeAnalytics(
     showComparison,
     hasPrevious,
   }
-}
-
-/** Scales values to 0–100 for the small bar sparklines. */
-export function sparkline(values: number[], bars = 8) {
-  const step = Math.max(1, Math.ceil(values.length / bars))
-  const grouped: number[] = []
-  for (let i = 0; i < values.length; i += step) grouped.push(values.slice(i, i + step).reduce((s, v) => s + v, 0))
-  const max = Math.max(...grouped, 0)
-  return grouped.map((v) => (max > 0 ? Math.round((Math.max(0, v) / max) * 100) : 0))
 }
 
 /** Running total, for the cumulative revenue line. */

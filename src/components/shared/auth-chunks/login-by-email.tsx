@@ -165,7 +165,7 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
                   // Full page load so the edge guard sees the new demo session cookie
                   // and no stale client redirect can keep the user on /auth.
                   // The Nexora team lands on its console, companies on their ERP
-                  const path = demo.user?.platformOperator ? "/dashboard/platform" : resolveAfterLoginPath(window.location.search)
+                  const path = demo.user?.platformOperator ? "/dashboard/console" : resolveAfterLoginPath(window.location.search)
                   const target = new URL(`/${locale}${path}`, window.location.origin)
                   window.location.replace(target.toString())
                 }}
