@@ -49,10 +49,18 @@ The front end calls the API modules in `src/lib/api/*`. Each module keeps its fu
 | 9 | Server-side watermark on exports; strict content security policy | SEC-14 |
 | 10 | Real deletion job for AUD-05 requests (the workspace data, keeping invoices 10 years) | AUD-05, BR-13 |
 | 11 | Penetration test by an outside firm, findings fixed before the first paying customer | SEC-15 |
+| 12 | Support access only after the company's consent in its own workspace, recorded on both sides | SUP-09, D-09 |
 
 **Exit gate:** the release criteria of §13.3 are met: permission and separation suites pass, no open high finding in the penetration test.
 
 ## Still in the front end before Lot B
 
 - ~~A9~~ done (Lot A9): sorting and pagination (UX-05), time zones (UX-09), property test of invoice totals (NFR-05), reference scenario rows 1–13.
+- A9b: the last front-end gaps found when checking the cahier des charges again (13 Oct 2026; full list in `documentation/cahier-status.md`):
+  - D-01: bank transfer as the default payment method in the start form and in My subscription.
+  - D-02: an ended trial stays read-only 7 days, then the workspace is suspended (the purge after 30 days is a B1 job).
+  - D-03 / PAY-04: unpaid transfer invoices become overdue on their due date and start dunning; one dunning pause per invoice, up to 15 days, with a reason.
+  - D-04 / INV-08: 30-day payment terms for Enterprise invoices.
+  - D-07: show the retention periods (sessions 1 year, support 3 years, deleted data 30 days).
+  - STF-07: removing a team member also ends their support sessions and cancels their pending approvals.
 - A10: bring every page under 500 KB of JavaScript (NFR-02, PERF-01, PERF-02).
