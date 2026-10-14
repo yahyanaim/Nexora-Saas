@@ -4,7 +4,6 @@ import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle, CalendarClock, CreditCard, KeyRound, Megaphone, X } from "@/components/ui/carbon/icons"
-import { formatMad } from "@/lib/platform/nexora-catalog"
 import { useLocale } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -14,6 +13,7 @@ import { usePlatformNotices } from "@/hooks/platform/use-platform-ops"
 import { cn } from "@/lib/utils"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useSupportFormat } from "./support-shared"
+import { formatConsoleMoney } from "./billing-shared"
 
 const KEY = "nexora-dismissed-notices"
 const readDismissed = (): string[] => {
@@ -35,7 +35,7 @@ export function PlatformNoticeBanner() {
   const { dateTime, time, date } = useSupportFormat()
   const workspace = useCurrentWorkspace()
   const locale = useLocale()
-  const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
+  const money = (n: number) => formatConsoleMoney(n, locale)
   const { authedUser } = useAuthGuard()
   const isAdmin = can(authedUser, P.ROLES_READ)
   const { data: notices = [] } = usePlatformNotices(workspace.id)

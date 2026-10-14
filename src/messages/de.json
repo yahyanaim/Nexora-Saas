@@ -4754,6 +4754,8 @@
   "chByCountry": "Wiederkehrender Umsatz nach Land",
   "chByHint": "Monatlich, ohne MwSt., aktiver und im Zahlungsverzug befindlicher Kunden heute.",
   "chNoRevenue": "Noch kein wiederkehrender Umsatz.",
+  "chOthers": "Sonstige",
+  "chGuidance": "Bester Monat {best}; schwächster {worst}.",
   "chCustomers": "{n, plural, one {# Kunde} other {# Kunden}}",
   "chAttention": "Braucht Ihre Aufmerksamkeit",
   "chAttentionHint": "Zahlungsverzug, in 7 Tagen endende Testphasen und dringende Supportanfragen.",

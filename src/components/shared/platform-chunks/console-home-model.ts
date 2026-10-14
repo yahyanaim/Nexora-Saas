@@ -17,6 +17,8 @@ export type HomeCompare = (typeof HOME_COMPARES)[number]
 export interface HomeFigures {
   /** The months of the window, oldest first */
   window: MonthRow[]
+  /** The same number of months in the comparison period, month for month (the chart's dashed line) */
+  previous?: MonthRow[]
   /** The month the comparison is made against, when there is one */
   reference?: MonthRow
   mrr: number
@@ -45,6 +47,7 @@ export function homeFigures(invoices: NxInvoice[], accounts: CustomerAccount[], 
   const late = (["d1_30", "d31_60", "over_60"] as const).map((b) => aging.buckets[b])
   return {
     window,
+    previous: back ? rows.slice(0, months) : undefined,
     reference,
     mrr,
     arr: Math.round(mrr * 12 * 100) / 100,

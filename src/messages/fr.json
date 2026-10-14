@@ -4754,6 +4754,8 @@
   "chByCountry": "Revenu récurrent par pays",
   "chByHint": "Mensuel, hors TVA, des clients actifs et en retard de paiement aujourd'hui.",
   "chNoRevenue": "Pas encore de revenu récurrent.",
+  "chOthers": "Autres",
+  "chGuidance": "Meilleur mois {best} ; plus faible {worst}.",
   "chCustomers": "{n, plural, one {# client} other {# clients}}",
   "chAttention": "Demande votre attention",
   "chAttentionHint": "Paiements en retard, essais qui finissent sous 7 jours et demandes de support urgentes.",

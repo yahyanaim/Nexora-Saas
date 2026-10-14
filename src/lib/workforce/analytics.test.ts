@@ -83,7 +83,7 @@ describe("computeAnalytics on the demo year", () => {
         data()
           .invoices.filter((i) => i.clientId === "cli_orbit" && i.status === ClientInvoiceStatus.PAID)
           .flatMap((i) => i.payments ?? [])
-          .filter((p) => p.date >= "2025-10-05")
+          .filter((p) => p.date >= "2025-10-05" && p.date <= "2026-10-04") // the window of the analysis, whatever today is
           .reduce((s, p) => s + p.amount, 0) * 100
       ) / 100
     )

@@ -39,7 +39,7 @@ const STATUSES: NxInvoiceStatus[] = ["issued", "paid", "partly_paid", "overdue",
 export default function ConsoleInvoicesPage() {
   const t = useTranslations()
   const locale = useLocale()
-  const { money, date } = useBillingFormat()
+  const { money, wholeMoney, date } = useBillingFormat()
   const docs = useNxDocuments()
   const { data: identity } = useNexoraIdentity()
   const [period, setPeriod] = useState(ALL)
@@ -62,9 +62,9 @@ export default function ConsoleInvoicesPage() {
   const balance = (i: NxInvoice) => round2(i.total - i.paid - i.credited)
 
   const cards: MetricCardItem[] = [
-    { key: "issued", title: t("biIssuedMonth"), value: money(invoices.filter((i) => i.date.startsWith(month)).reduce((s, i) => s + i.total, 0)), footer: { icon: Receipt, text: t("biInclVat") } },
-    { key: "collected", title: t("biCollectedMonth"), value: money(payments.filter((p) => p.status === "succeeded" && p.date.startsWith(month)).reduce((s, p) => s + p.amount, 0)), valueClassName: "text-success", footer: { icon: TrendingUp, text: t("biCollectedHint") } },
-    { key: "overdue", title: t("biOverdue"), value: money(invoices.filter((i) => i.status === "overdue" || i.status === "partly_paid").reduce((s, i) => s + balance(i), 0)), valueClassName: "text-destructive", footer: { icon: Warning, text: t("biOverdueHint", { count: invoices.filter((i) => i.status === "overdue").length }) } },
+    { key: "issued", title: t("biIssuedMonth"), value: wholeMoney(invoices.filter((i) => i.date.startsWith(month)).reduce((s, i) => s + i.total, 0)), footer: { icon: Receipt, text: t("biInclVat") } },
+    { key: "collected", title: t("biCollectedMonth"), value: wholeMoney(payments.filter((p) => p.status === "succeeded" && p.date.startsWith(month)).reduce((s, p) => s + p.amount, 0)), valueClassName: "text-success", footer: { icon: TrendingUp, text: t("biCollectedHint") } },
+    { key: "overdue", title: t("biOverdue"), value: wholeMoney(invoices.filter((i) => i.status === "overdue" || i.status === "partly_paid").reduce((s, i) => s + balance(i), 0)), valueClassName: "text-destructive", footer: { icon: Warning, text: t("biOverdueHint", { count: invoices.filter((i) => i.status === "overdue").length }) } },
     { key: "credits", title: t("biCreditNotes"), value: notes.length, footer: { icon: ReceiptText, text: t("biCreditNotesHint") } },
   ]
 

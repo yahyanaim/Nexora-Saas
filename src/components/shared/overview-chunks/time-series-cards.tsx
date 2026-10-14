@@ -168,10 +168,10 @@ export function AverageOrderValueCard() {
 
         <div className="mt-3 h-40 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+            <LineChart data={data} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border/40" />
               <XAxis dataKey="time" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} className="fill-muted-foreground" ticks={ticks} />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} className="fill-muted-foreground" domain={[yDomainMin, yDomainMax]} tickFormatter={(v) => formatCurrency(Number(v))} />
+              <YAxis width={64} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} className="fill-muted-foreground" domain={[yDomainMin, yDomainMax]} tickFormatter={(v) => formatCurrency(Number(v))} />
               <Tooltip
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null

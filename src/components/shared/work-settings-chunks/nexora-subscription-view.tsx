@@ -15,12 +15,13 @@ import { listInvoicesApi, listPlanVersionsApi, listSubscriptionsApi } from "@/li
 import { can } from "@/lib/permissions/can"
 import { periodPrice, versionOn } from "@/lib/platform/billing"
 import { seatLimit } from "@/lib/platform/customer-lifecycle"
-import { NEXORA_PLANS, formatMad, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
+import { NEXORA_PLANS, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import { cn } from "@/lib/utils"
 import { AdminPermissionsPlatform as P } from "@/types/roles"
 import type { CustomerAccount } from "@/types/platform-customers"
 import { InvoiceStatusBadge } from "@/components/shared/platform-chunks/billing-shared"
 import { CompanyDataSection } from "./company-data-section"
+import { formatConsoleMoney } from "../platform-chunks/billing-shared"
 
 /**
  * My subscription for a company that Nexora bills (INV-07, PLA-02, SUB-01):
@@ -41,7 +42,7 @@ export function NexoraSubscriptionView({ customer, used }: { customer: CustomerA
   const [first, setFirst] = useState({ method: "transfer" as "card" | "transfer", billing: "monthly" as "monthly" | "yearly" })
   const sub = subs.find((s) => s.customerId === customer.id)
   const invoices = allInvoices.filter((i) => i.customerId === customer.id)
-  const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
+  const money = (n: number) => formatConsoleMoney(n, locale)
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`))
   const plan = planById(customer.plan)
   const limit = seatLimit(customer, today)

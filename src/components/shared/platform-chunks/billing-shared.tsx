@@ -2,15 +2,34 @@
 
 import { useLocale, useTranslations } from "next-intl"
 import { Badge } from "@/components/ui/badge"
-import { formatMad } from "@/lib/platform/nexora-catalog"
+import { NEXORA_CURRENCY } from "@/lib/platform/nexora-catalog"
 import { cn } from "@/lib/utils"
 import type { NxInvoiceStatus } from "@/types/platform-billing"
+
+/**
+ * Amounts written as on the companies' pages: in the reader's language, with
+ * the currency ("MAD 7,955.00" in English). Billing lists keep the cents;
+ * `whole` drops them for tiles and charts, as on the companies' Analytics.
+ */
+export function formatConsoleMoney(n: number, locale: string, opts?: { whole?: boolean; compact?: boolean }) {
+  const compact = opts?.compact && Math.abs(n) >= 1000
+  const digits = compact ? 1 : opts?.whole || opts?.compact ? 0 : 2
+  return new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: NEXORA_CURRENCY,
+    notation: compact ? "compact" : "standard",
+    minimumFractionDigits: compact ? 0 : digits,
+    maximumFractionDigits: digits,
+  }).format(n)
+}
 
 /** UX-04: amounts always show the currency; dates in the reader's locale. */
 export function useBillingFormat() {
   const locale = useLocale()
   return {
-    money: (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA"),
+    money: (n: number) => formatConsoleMoney(n, locale),
+    /** Without cents, or compact ("MAD 7.9K") for chart axes: tiles and charts */
+    wholeMoney: (n: number, opts?: { compact?: boolean }) => formatConsoleMoney(n, locale, { whole: true, compact: opts?.compact }),
     date: (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`)),
     dateTime: (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso)),
   }
