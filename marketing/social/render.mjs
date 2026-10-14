@@ -29,7 +29,7 @@ try {
     await Promise.all([...document.images].map((img) => img.decode().catch(() => {})))
   })
   const missing = await page.evaluate(() =>
-    ["IBM Plex Sans Arabic", "Inter", "Roboto Mono"].filter((f) => !document.fonts.check(`700 32px "${f}"`))
+    ["IBM Plex Sans Arabic", "Inter", "Roboto Mono", "Arimo", "Space Grotesk"].filter((f) => !document.fonts.check(`700 32px "${f}"`))
   )
   if (missing.length) throw new Error(`Fonts not loaded: ${missing.join(", ")}`)
 
