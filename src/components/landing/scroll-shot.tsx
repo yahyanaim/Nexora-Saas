@@ -43,9 +43,12 @@ export function ScrollShot({ src, alt, width, height, frame = 16 / 10, mode = "l
         loading={eager ? "eager" : "lazy"}
         fetchPriority={eager ? "high" : undefined}
       />
-      <span className={s.scrollTrack} aria-hidden>
-        <span className={s.scrollThumb} />
-      </span>
+      {/* in fill mode a short screen fits without scrolling, so it gets no scrollbar */}
+      {!(fill && height / width < 0.9) && (
+        <span className={s.scrollTrack} aria-hidden>
+          <span className={s.scrollThumb} />
+        </span>
+      )}
     </div>
   )
 }

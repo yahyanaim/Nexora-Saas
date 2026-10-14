@@ -22,6 +22,7 @@ import {
 import { DitherCanvas } from "./dither-canvas"
 import { geist, geistMono } from "./fonts"
 import { CountUp, RevealObserver, ScrollFX } from "./motion"
+import { PixelGlobe } from "./pixel-globe"
 import { ProductTabs } from "./product-tabs"
 import { ScrollShot } from "./scroll-shot"
 import s from "./landing.module.css"
@@ -116,40 +117,48 @@ export function LandingPage() {
         <div className={s.frame}>
           {/* Hero */}
           <section className={s.hero} id="product">
-            <div className={s.fadeIn} style={{ "--d": "0s" } as React.CSSProperties}>
-              <Eyebrow>
-                Nexora® · The ERP for service companies
-                <span className={s.cursor} aria-hidden />
-              </Eyebrow>
-            </div>
             <div className={s.heroTop}>
-              <h1 className={s.h1}>
-                <span className={s.line}>
-                  <span style={{ "--d": "0.05s" } as React.CSSProperties}>Humans use</span>
-                </span>
-                <span className={s.line}>
-                  <span style={{ "--d": "0.15s" } as React.CSSProperties}>spreadsheets.</span>
-                </span>
-                <span className={`${s.line} ${s.h1Accent}`}>
-                  <span style={{ "--d": "0.3s" } as React.CSSProperties}>Companies use</span>
-                </span>
-                <span className={`${s.line} ${s.h1Accent}`}>
-                  <span style={{ "--d": "0.4s" } as React.CSSProperties}>Nexora.</span>
-                </span>
-              </h1>
-              <div className={`${s.heroAside} ${s.fadeIn}`} style={{ "--d": "0.55s" } as React.CSSProperties}>
-                <p className={s.heroSub}>
-                  People, clients, projects, hours, invoices, cash and profit in one app. Built for agencies,
-                  consultancies, studios, IT services and engineering offices.
-                </p>
-                <div className={s.heroCtas}>
-                  <Link href={SIGN_UP} className={s.btn}>
-                    Start for free <span className={s.arrow}>→</span>
-                  </Link>
-                  <a href="/documentation/doc.html" className={s.btnGhost}>
-                    Read the docs
-                  </a>
+              <div className={s.heroCopy}>
+                <div className={s.fadeIn} style={{ "--d": "0s" } as React.CSSProperties}>
+                  <Eyebrow>
+                    Nexora® · The ERP for service companies
+                    <span className={s.cursor} aria-hidden />
+                  </Eyebrow>
                 </div>
+                <h1 className={s.h1}>
+                  <span className={s.line}>
+                    <span style={{ "--d": "0.05s" } as React.CSSProperties}>Humans use</span>
+                  </span>
+                  <span className={s.line}>
+                    <span style={{ "--d": "0.15s" } as React.CSSProperties}>spreadsheets.</span>
+                  </span>
+                  <span className={`${s.line} ${s.h1Accent}`}>
+                    <span style={{ "--d": "0.3s" } as React.CSSProperties}>Companies use</span>
+                  </span>
+                  <span className={`${s.line} ${s.h1Accent}`}>
+                    <span style={{ "--d": "0.4s" } as React.CSSProperties}>Nexora.</span>
+                  </span>
+                </h1>
+                <div className={s.fadeIn} style={{ "--d": "0.55s" } as React.CSSProperties}>
+                  <p className={s.heroSub}>
+                    People, clients, projects, hours, invoices, cash and profit in one app. Built for agencies,
+                    consultancies, studios, IT services and engineering offices.
+                  </p>
+                  <div className={s.heroCtas}>
+                    <Link href={SIGN_UP} className={s.btn}>
+                      Start for free <span className={s.arrow}>→</span>
+                    </Link>
+                    <a href="/documentation/doc.html" className={s.btnGhost}>
+                      Read the docs
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div className={`${s.heroGlobe} ${s.fadeIn}`} style={{ "--d": "0.35s" } as React.CSSProperties}>
+                <PixelGlobe />
+                <span className={s.globeTag}>
+                  <i aria-hidden /> Casablanca → the world
+                </span>
               </div>
             </div>
             <div className={`${s.heroMeta} ${s.fadeIn}`} style={{ "--d": "0.7s" } as React.CSSProperties}>

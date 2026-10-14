@@ -18,6 +18,7 @@
   --brand-hover: #1267e0; /* blue.600 */
   --brand-deep: #062455; /* blue.900 */
   --brand-tint: #e6f2ff; /* blue.100 */
+  --app-bg: #f4f8fb; /* background of the app screenshots */
   --live: #1f9d55;
   --rail: 1280px;
   --sans: var(--font-geist), var(--font-sans), system-ui, sans-serif;
@@ -305,22 +306,94 @@
 }
 .heroTop {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 56px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  gap: 40px;
+  align-items: center;
+}
+.heroCopy {
+  min-width: 0;
+}
+.heroCopy .heroSub {
+  margin-top: 28px;
+  max-width: 520px;
+}
+
+/* Pixel globe */
+.heroGlobe {
+  position: relative;
+  justify-self: end;
+  width: 100%;
+  max-width: 540px;
+}
+.globe {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  font-family: var(--mono);
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+.globe:active {
+  cursor: grabbing;
+}
+/* soft blue atmosphere behind the sphere */
+.globe::before {
+  content: "";
+  position: absolute;
+  inset: 4%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 50%, rgb(38 132 255 / 0.16) 0%, rgb(38 132 255 / 0.07) 48%, transparent 70%);
+  pointer-events: none;
+}
+.globeCanvas,
+.globeArcs {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.globeCanvas {
+  image-rendering: pixelated;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.globe[data-ready] .globeCanvas {
+  opacity: 1;
+}
+.globeTag {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.globeTag i {
+  width: 7px;
+  height: 7px;
+  background: var(--brand);
+  animation: blink 1.4s step-end infinite;
 }
 .h1 {
   margin-top: 24px;
-  font-size: clamp(48px, 8.2vw, 112px);
+  font-size: clamp(44px, 6.6vw, 92px);
   line-height: 0.92;
   letter-spacing: -0.06em;
   font-weight: 600;
 }
 .h1Accent {
   color: var(--brand);
-}
-.heroAside {
-  padding-bottom: 10px;
 }
 .heroSub {
   font-size: 17px;
@@ -502,14 +575,14 @@
   display: flex;
   flex-direction: column;
   padding: 32px;
-  background: var(--surface-2);
+  background: var(--app-bg);
 }
 .productFrame {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--surface);
+  background: var(--app-bg);
   border: 1px solid var(--line);
   border-radius: 8px;
   overflow: hidden;
@@ -1224,7 +1297,7 @@
   aspect-ratio: var(--frame);
   overflow: hidden;
   container-type: inline-size;
-  background: var(--surface);
+  background: var(--app-bg);
 }
 .scrollImg {
   display: block;
@@ -1588,6 +1661,10 @@
   .heroTop {
     grid-template-columns: 1fr;
     gap: 28px;
+  }
+  .heroGlobe {
+    justify-self: center;
+    max-width: 440px;
   }
   .product {
     grid-template-columns: 1fr;
