@@ -2,6 +2,8 @@
 
 import { ZonedTime } from "@/components/shared/zoned-time"
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Tabs } from "@/components/ui/tabs"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,6 +35,8 @@ import { ConsoleCapability as C, ConsoleRole } from "@/types/platform-console"
 import { ACTION_LABEL, StepUpDialog } from "./console-shared"
 import { LifecycleBadge } from "./lifecycle-badge"
 
+const ACCOUNT_TABS = ["account", "billing", "support", "history"] as const
+
 type Pending = "activate" | "cancel" | "undoCancel" | "lift" | "extend"
 
 /**
@@ -43,6 +47,14 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
   const t = useTranslations()
   const locale = useLocale()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const initialTab = ACCOUNT_TABS.find((x) => x === searchParams.get("tab")) ?? "account"
+  const keepTab = (id: string) => {
+    const url = new URL(window.location.href)
+    if (id === "account") url.searchParams.delete("tab")
+    else url.searchParams.set("tab", id)
+    window.history.replaceState(window.history.state, "", url)
+  }
   const setWorkspace = useWorkspaceStore((s) => s.setCurrent)
   const actor = useConsoleActor()
   const { data: customers = [], isLoading } = useConsoleCustomers()
@@ -182,14 +194,20 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
 
       {/* the account's headline figures, drawn like the companies' Analytics tiles */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiTile title={t("pfMrrCol")} value={accountMrr(c) ? money(accountMrr(c)) : "—"} period={t("chToday")} description={`${plan.name} · ${t(c.billing === "yearly" ? "pfYearly" : "pfMonthly")}`} noteLabel={t("anOperationalNote")} note={t("cuTileArr", { arr: money(accountMrr(c) * 12) })} />
+        <KpiTile title={t("pfMrrCol")} value={accountMrr(c) ? tileMoney(accountMrr(c)) : "—"} period={t("chToday")} description={`${plan.name} · ${t(c.billing === "yearly" ? "pfYearly" : "pfMonthly")}`} noteLabel={t("anOperationalNote")} note={t("cuTileArr", { arr: tileMoney(accountMrr(c) * 12) })} />
         <KpiTile title={t("pfSeatsCol")} value={limit ? `${c.seatsUsed} / ${limit}` : String(c.seatsUsed)} period={t("chToday")} description={limit ? t("cuTilePeopleDesc", { left: Math.max(0, limit - c.seatsUsed) }) : t("pfUnlimited", { count: c.seatsUsed })} />
         <KpiTile title={t("cuTileOwed")} value={tileMoney(owed)} period={t("chToday")} description={t("cuTileOwedDesc")} noteLabel={t("anOperationalNote")} note={t("cuTileOwedNote", { n: invoices.filter((i) => i.status === "overdue").length })} />
         <KpiTile title={t("cuTilePaid")} value={tileMoney(paidToDate)} period={t("chAllTime")} description={t("cuTilePaidDesc", { date: date(c.since) })} noteLabel={t("anOperationalNote")} note={t("cuTilePaidNote", { n: invoices.length })} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start">
-        <div className="flex flex-col gap-5">
+        {/* the account in tabs (A11 step 4); the chosen tab stays in the address (?tab=) */}
+        <Tabs
+          defaultTabId={initialTab}
+          onChange={(tab) => keepTab(tab.id)}
+          tabs={[
+            { id: "account", label: t("cuAccount"), content: (
+<div className="flex flex-col gap-5">
           <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <h2 className="flex-1 text-base font-semibold">{t("cuAccount")}</h2>
@@ -212,7 +230,10 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
             </div>
             <p className="mt-4 text-xs text-muted-foreground">{t("cuNoBusinessData")}</p>
           </section>
-
+</div>
+            ) },
+            { id: "billing", label: t("cuTabBilling", { n: invoices.length }), content: (
+<div className="flex flex-col gap-5">
           <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
             <h2 className="mb-3 text-base font-semibold">{t("pfInvoices")}</h2>
             {invoices.length === 0 ? (
@@ -282,7 +303,10 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
               </>
             )}
           </section>
-
+</div>
+            ) },
+            { id: "support", label: t("cuTabSupport", { n: theirRequests.length }), content: (
+<div className="flex flex-col gap-5">
           <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
             <div className="mb-3 flex items-center gap-2">
               <h2 className="flex-1 text-base font-semibold">{t("cuSupport")}</h2>
@@ -301,7 +325,10 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
               </ul>
             )}
           </section>
-
+</div>
+            ) },
+            { id: "history", label: t("cuTabHistory"), content: (
+<div className="flex flex-col gap-5">
           <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
             <h2 className="mb-3 text-base font-semibold">{t("cuHistory")}</h2>
             {history.length === 0 ? (
@@ -320,7 +347,10 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
               </ol>
             )}
           </section>
-        </div>
+</div>
+            ) },
+          ]}
+        />
 
         <div className="flex flex-col gap-5">
           <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
