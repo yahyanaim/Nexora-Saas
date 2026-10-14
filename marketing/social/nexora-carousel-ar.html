@@ -1,0 +1,1091 @@
+<!doctype html>
+<!--
+  Nexora — Arabic social carousel (10 slides, 1080×1350, Instagram / LinkedIn 4:5).
+  Colors, radii, buttons, tiles and icons follow the app (src/app/[locale]/globals.css,
+  components/shared/kpi-tile.tsx, the auth landing page). Icons: Lucide (ISC), as in the app.
+  Render to PNG: node marketing/social/render.mjs
+-->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1080" />
+<title>Nexora — منشورات التواصل الاجتماعي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700;800&display=block" rel="stylesheet" />
+<style>
+  @font-face {
+    font-family: "Roboto Mono";
+    src: url("../../src/fonts/roboto-mono-latin-var.woff2") format("woff2");
+    font-weight: 400 700;
+    font-display: block;
+  }
+
+  /* Nexora design system (DS-01), copied from globals.css */
+  :root {
+    --background: #f4f8fc;
+    --foreground: #0d131c;
+    --card: #ffffff;
+    --primary: #2684ff;
+    --primary-hover: #4c9eff;
+    --muted: #f4f8fc;
+    --muted-foreground: #536174;
+    --text-muted: #7d8da0;
+    --border: #d8e0ea;
+    --border-strong: #a8b5c5;
+    --ring: #82beff;
+    --success: #2fbf71;
+    --success-soft: #e8f8ef;
+    --success-foreground: #17804a;
+    --warning: #f5b83d;
+    --warning-soft: #fff6e0;
+    --warning-foreground: #9a6200;
+    --destructive: #e5484d;
+    --danger-soft: #fdecee;
+    --danger-foreground: #c62a3a;
+    --info-soft: #e6f2ff;
+    --info-foreground: #0e4fb3;
+    --blue-200: #bfdfff;
+    --blue-600: #1267e0;
+    --blue-800: #093a8f;
+    --gray-600: #3f4f66;
+    --gray-700: #293a52;
+    --gray-800: #172435;
+    --gray-900: #0d131c;
+    --violet: #8b5cf6;
+    --shadow-panel: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow-float: 0 30px 60px -24px rgb(13 19 28 / 0.22), 0 2px 6px rgb(13 19 28 / 0.05);
+    --font: "Inter", "IBM Plex Sans Arabic", system-ui, sans-serif;
+    --font-ar: "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif;
+    --mono: "Roboto Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: #c9d3df; }
+  body {
+    font-family: var(--font);
+    color: var(--foreground);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    padding: 48px 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  svg.i { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+  .num { font-family: "Inter", sans-serif; font-variant-numeric: tabular-nums; }
+  .mono { font-family: var(--mono); }
+
+  /* ───────── Slide frame ───────── */
+  .slide {
+    position: relative;
+    width: 1080px;
+    height: 1350px;
+    overflow: hidden;
+    background: var(--background);
+    flex-shrink: 0;
+  }
+  .slide::before { /* the canvas has a faint blue light at the top, like the app wallpaper */
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(900px 520px at 50% -8%, rgb(38 132 255 / 0.10), transparent 70%),
+      radial-gradient(700px 500px at 100% 105%, rgb(38 132 255 / 0.06), transparent 70%);
+    pointer-events: none;
+  }
+  .top, .bottom {
+    position: absolute;
+    left: 72px;
+    right: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 5;
+  }
+  .top { top: 56px; }
+  .bottom { bottom: 56px; }
+
+  /* Brand pill, exactly the auth landing / top-bar logo pill, scaled ×1.6 */
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    height: 76px;
+    padding: 8px 8px 8px 30px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    background: var(--card);
+    box-shadow: var(--shadow-panel);
+  }
+  .brand-mark {
+    width: 58px;
+    height: 58px;
+    border-radius: 999px;
+    background: var(--info-soft);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  .brand-mark img { width: 40px; height: 40px; object-fit: contain; mix-blend-mode: multiply; }
+  .brand-name { font-family: "Inter"; font-weight: 600; font-size: 25px; letter-spacing: -0.02em; direction: ltr; }
+  .count { font-family: var(--mono); font-weight: 700; font-size: 28px; color: var(--blue-600); letter-spacing: 0.04em; direction: ltr; unicode-bidi: isolate; }
+  .swipe { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-ar); font-weight: 700; font-size: 28px; color: var(--blue-600); }
+  .swipe svg.i { font-size: 30px; stroke-width: 2.4; }
+  .handle { font-family: var(--font); font-weight: 700; font-size: 27px; color: var(--foreground); direction: ltr; unicode-bidi: isolate; letter-spacing: -0.01em; }
+
+  /* ───────── Type ───────── */
+  .title {
+    font-family: var(--font-ar);
+    font-weight: 700;
+    font-size: 76px;
+    line-height: 1.3;
+    text-align: center;
+    color: var(--foreground);
+    letter-spacing: -0.005em;
+  }
+  .title .hl { color: var(--primary); }
+  .sub {
+    font-family: var(--font-ar);
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 1.55;
+    text-align: center;
+    color: var(--muted-foreground);
+  }
+  .accent {
+    font-family: "Inter";
+    font-weight: 800;
+    font-size: 74px;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    direction: ltr;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--blue-600) 55%, var(--info-foreground) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .caption { font-family: var(--font-ar); font-size: 20px; color: var(--text-muted); text-align: center; }
+
+  .body {
+    position: absolute;
+    top: 176px;
+    bottom: 160px;
+    left: 72px;
+    right: 72px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+  }
+  .body > * { flex-shrink: 0; }
+  .body.center { justify-content: center; }
+  .title.sm { font-size: 70px; }
+  .note { position: absolute; bottom: 62px; left: 50%; transform: translateX(-50%); z-index: 5; font-family: var(--font-ar); font-size: 19px; color: var(--text-muted); white-space: nowrap; }
+
+  /* "Try this" box of the references → Nexora info-soft note */
+  .callout {
+    width: 100%;
+    background: var(--info-soft);
+    border-radius: 30px;
+    border-top: 5px solid var(--primary);
+    padding: 26px 40px 30px;
+    text-align: center;
+  }
+  .callout .label { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-ar); font-weight: 700; font-size: 22px; color: var(--info-foreground); margin-bottom: 10px; }
+  .callout .label svg.i { font-size: 24px; }
+  .callout p { font-family: var(--font-ar); font-size: 28px; line-height: 1.6; color: var(--gray-700); }
+  .callout b { color: var(--foreground); font-weight: 600; }
+
+  /* ───────── App pieces (scaled from the components) ───────── */
+  .card { background: var(--card); border: 1.5px solid var(--border); border-radius: 30px; box-shadow: var(--shadow-panel); }
+  .float { box-shadow: var(--shadow-float); }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.5;
+    white-space: nowrap;
+  }
+  .chip .dot { width: 8px; height: 8px; border-radius: 99px; background: currentColor; }
+  .chip.success { background: var(--success-soft); color: var(--success-foreground); }
+  .chip.warning { background: var(--warning-soft); color: var(--warning-foreground); }
+  .chip.danger { background: var(--danger-soft); color: var(--danger-foreground); }
+  .chip.info { background: var(--info-soft); color: var(--info-foreground); }
+  .chip.muted { background: #eef3f8; color: var(--muted-foreground); }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 54px;
+    padding: 0 26px;
+    border-radius: 999px;
+    font-family: var(--font);
+    font-weight: 600;
+    font-size: 20px;
+    white-space: nowrap;
+  }
+  .btn svg.i { font-size: 20px; }
+  .btn.primary { background: var(--primary); color: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / 0.06); }
+  .btn.outline { background: var(--card); color: var(--foreground); border: 1.5px solid var(--border); }
+  .btn.dark { background: var(--gray-900); color: #fff; }
+  .howto { display: inline-flex; align-items: center; gap: 8px; background: var(--info-soft); color: var(--info-foreground); border-radius: 999px; padding: 6px 16px; font-size: 17px; font-weight: 500; }
+  .crumb { display: flex; align-items: center; gap: 8px; font-size: 17px; color: var(--muted-foreground); }
+  .crumb svg.i { font-size: 15px; }
+  .pg-title { font-family: var(--font-ar); font-weight: 700; font-size: 38px; margin-top: 6px; }
+  .pg-sub { font-family: var(--font-ar); font-size: 19px; color: var(--muted-foreground); margin-top: 2px; }
+
+  /* Summary card (receivables / invoices) */
+  .sum { padding: 22px 24px; border-radius: 26px; }
+  .sum .l { font-size: 19px; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .sum .v { font-size: 40px; font-weight: 700; letter-spacing: -0.02em; margin-top: 8px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sum .c { display: flex; align-items: center; gap: 6px; font-size: 16px; color: var(--muted-foreground); margin-top: 8px; font-family: var(--font-ar); }
+  .sum .c svg.i { font-size: 16px; }
+  .v.blue { color: var(--primary); }
+  .v.green { color: var(--success-foreground); }
+  .v.amber { color: var(--warning-foreground); }
+  .v.red { color: var(--destructive); }
+
+  /* KPI tile (components/shared/kpi-tile.tsx) */
+  .kpi { border-radius: 22px; border: 1.5px solid rgb(216 224 234 / 0.7); background: var(--card); padding: 22px 24px; }
+  .kpi .hd { display: flex; justify-content: space-between; align-items: center; font-size: 17px; color: var(--muted-foreground); font-weight: 500; }
+  .kpi .hd span:first-child { display: inline-flex; align-items: center; gap: 6px; }
+  .kpi .hd svg.i { font-size: 17px; opacity: 0.7; }
+  .kpi .per { opacity: 0.7; font-weight: 400; }
+  .kpi .row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px; }
+  .kpi .val { font-size: 40px; font-weight: 700; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .kpi .chg { display: inline-flex; margin-top: 6px; border-radius: 999px; padding: 2px 10px; font-size: 16px; font-weight: 600; direction: ltr; }
+  .kpi .chg.up { background: var(--success-soft); color: var(--success-foreground); }
+  .kpi .chg.down { background: var(--danger-soft); color: var(--danger-foreground); }
+  .kpi .desc { margin-top: 14px; font-size: 16px; line-height: 1.5; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .spark { direction: ltr; display: flex; align-items: flex-end; gap: 6px; height: 50px; }
+  .spark i { display: block; width: 9px; border-radius: 99px; background: rgb(83 97 116 / 0.25); }
+
+  .av { width: 44px; height: 44px; border-radius: 99px; object-fit: cover; flex-shrink: 0; }
+  .ini { width: 44px; height: 44px; border-radius: 99px; background: #eef3f8; color: var(--muted-foreground); display: grid; place-items: center; font-size: 15px; font-weight: 600; flex-shrink: 0; direction: ltr; }
+
+  /* ───────── 01 Cover ───────── */
+  .s1 .hero { position: absolute; top: 150px; left: 0; right: 0; height: 540px; z-index: 1; }
+  .s1 .ring { position: absolute; left: 50%; top: 270px; border-radius: 999px; transform: translate(-50%, -50%); border: 1.5px solid rgb(38 132 255 / 0.14); }
+  .s1 .ring.r1 { width: 380px; height: 380px; background: radial-gradient(circle, rgb(38 132 255 / 0.10), transparent 70%); }
+  .s1 .ring.r2 { width: 540px; height: 540px; border-style: dashed; border-color: rgb(38 132 255 / 0.16); }
+  .s1 .ring.r3 { width: 720px; height: 720px; border-color: rgb(38 132 255 / 0.08); }
+  .s1 .logo-orb {
+    position: absolute; left: 50%; top: 270px; transform: translate(-50%, -50%);
+    width: 250px; height: 250px; border-radius: 999px; background: var(--card);
+    border: 1.5px solid var(--border);
+    box-shadow: 0 40px 90px -20px rgb(38 132 255 / 0.45), 0 0 0 14px rgb(230 242 255 / 0.9);
+    display: grid; place-items: center;
+  }
+  .s1 .logo-orb img { width: 172px; height: 172px; mix-blend-mode: multiply; }
+  .s1 .f { position: absolute; background: var(--card); border: 1.5px solid var(--border); border-radius: 24px; }
+  .s1 .f1 { top: 34px; right: 64px; padding: 18px 22px; width: 300px; }
+  .s1 .f2 { top: 60px; left: 70px; padding: 12px 22px 12px 16px; border-radius: 999px; display: flex; align-items: center; gap: 14px; }
+  .s1 .f3 { top: 340px; right: 92px; padding: 14px 18px; display: flex; align-items: center; gap: 14px; }
+  .s1 .f4 { top: 318px; left: 64px; padding: 18px 22px; width: 280px; }
+  .s1 .f .l { font-family: var(--font-ar); font-size: 17px; color: var(--muted-foreground); display: flex; align-items: center; gap: 6px; }
+  .s1 .f .l svg.i { font-size: 16px; opacity: .7; }
+  .s1 .live { width: 12px; height: 12px; border-radius: 99px; background: var(--success); box-shadow: 0 0 0 6px rgb(47 191 113 / 0.18); }
+  .s1 .copy { position: absolute; top: 700px; left: 72px; right: 72px; display: flex; flex-direction: column; align-items: center; gap: 14px; z-index: 3; }
+  .s1 .skyline { position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); width: 600px; opacity: 0.9; z-index: 0;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 40%); mask-image: linear-gradient(to bottom, transparent 0%, #000 40%); }
+
+  /* ───────── 02 Concept ───────── */
+  .s2 .sphere {
+    width: 300px; height: 300px; border-radius: 999px; margin-top: 84px;
+    background: radial-gradient(circle at 32% 26%, #ffffff 0%, #d6eaff 14%, #6fb0ff 40%, #2684ff 62%, #1267e0 82%, #0e4fb3 100%);
+    box-shadow: 0 40px 90px -10px rgb(38 132 255 / 0.45), 0 0 0 26px rgb(38 132 255 / 0.06), 0 0 0 56px rgb(38 132 255 / 0.035);
+    display: grid; place-items: center;
+  }
+  .s2 .sphere span { font-family: "Inter"; font-weight: 800; font-size: 46px; color: #fff; letter-spacing: 0.04em; text-shadow: 0 2px 16px rgb(9 58 143 / 0.45); }
+  .s2 .track { position: relative; width: 760px; margin-top: 80px; height: 4px; background: var(--info-foreground); border-radius: 4px; opacity: .9; }
+  .s2 .track i { position: absolute; top: 50%; width: 22px; height: 22px; border-radius: 99px; background: var(--info-foreground); transform: translate(50%, -50%); box-shadow: 0 0 0 6px var(--background); }
+  .s2 .steps { display: flex; justify-content: space-between; width: 920px; margin-top: 36px; }
+  .s2 .step { width: 300px; text-align: center; }
+  .s2 .step b { display: block; font-family: var(--font-ar); font-weight: 700; font-size: 54px; color: var(--info-foreground); line-height: 1.2; }
+  .s2 .step span { display: block; margin-top: 8px; font-family: var(--font-ar); font-size: 26px; color: var(--muted-foreground); }
+  .s2 .idea { margin-top: 56px; font-family: var(--font-ar); font-size: 27px; color: var(--gray-700); text-align: center; line-height: 1.6; }
+  .s2 .idea b { color: var(--foreground); }
+
+  /* ───────── 03 Replaces ───────── */
+  .s3 .tools { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; width: 100%; margin-top: 48px; }
+  .s3 .tool { grid-column: span 2; position: relative; padding: 22px 18px 20px; border-radius: 24px; background: var(--card); border: 1.5px dashed var(--border-strong); text-align: center; color: var(--muted-foreground); }
+  .s3 .tool:nth-child(4) { grid-column: 2 / span 2; }
+  .s3 .tool .ic { width: 56px; height: 56px; margin: 0 auto 10px; border-radius: 16px; background: #eef3f8; display: grid; place-items: center; font-size: 28px; color: var(--muted-foreground); }
+  .s3 .tool b { display: block; font-family: var(--font-ar); font-size: 23px; font-weight: 600; color: var(--gray-600); text-decoration: line-through; text-decoration-color: rgb(229 72 77 / 0.6); text-decoration-thickness: 2px; }
+  .s3 .tool .x { position: absolute; top: -12px; left: -12px; width: 36px; height: 36px; border-radius: 99px; background: var(--danger-soft); color: var(--danger-foreground); display: grid; place-items: center; font-size: 20px; border: 3px solid var(--background); }
+  .s3 .down { margin: 26px 0; width: 64px; height: 64px; border-radius: 99px; background: var(--primary); color: #fff; display: grid; place-items: center; font-size: 30px; box-shadow: 0 14px 30px -8px rgb(38 132 255 / 0.6); }
+  .s3 .shell { display: flex; align-items: center; gap: 14px; }
+  .s3 .navpill { display: flex; align-items: center; gap: 4px; height: 80px; padding: 8px; border: 1.5px solid var(--border); border-radius: 999px; background: var(--card); }
+  .s3 .navpill span { height: 62px; display: flex; align-items: center; padding: 0 18px; border-radius: 999px; font-family: var(--font-ar); font-weight: 500; font-size: 22px; color: rgb(13 19 28 / 0.8); white-space: nowrap; }
+  .s3 .navpill span.on { background: var(--primary); color: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / 0.06); }
+  .s3 .callout { margin-top: 40px; padding: 24px 24px 28px; }
+  .s3 .chain { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 6px; }
+  .s3 .chain span { font-family: var(--font-ar); font-weight: 600; font-size: 21px; color: var(--foreground); background: var(--card); border-radius: 999px; padding: 5px 13px; border: 1.5px solid var(--blue-200); white-space: nowrap; }
+  .s3 .chain span.last { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .s3 .chain svg.i { font-size: 18px; color: var(--primary); }
+
+  /* ───────── 04 Time ───────── */
+  .win { width: 100%; background: var(--card); border: 1.5px solid var(--border); border-radius: 32px; box-shadow: var(--shadow-float); position: relative; }
+  .s4 .win { margin-top: 30px; padding: 28px 32px 62px; }
+  .s4 .ph { display: flex; justify-content: space-between; align-items: flex-start; }
+  .s4 .ph .acts { display: flex; gap: 10px; margin-top: 6px; }
+  .s4 .ts { margin-top: 24px; width: 100%; border-collapse: collapse; font-size: 21px; }
+  .s4 .ts th { font-weight: 500; font-size: 16px; color: var(--muted-foreground); padding: 8px 4px 12px; text-align: center; line-height: 1.35; }
+  .s4 .ts th small { display: block; font-size: 15px; }
+  .s4 .ts th.today { background: var(--info-soft); color: var(--info-foreground); border-radius: 14px; }
+  .s4 .ts th:first-child, .s4 .ts td:first-child { text-align: right; padding-right: 0; }
+  .s4 .ts td { padding: 10px 4px; text-align: center; border-top: 1.5px solid #edf1f6; font-variant-numeric: tabular-nums; }
+  .s4 .ts td.today { background: rgb(230 242 255 / 0.45); }
+  .s4 .ts td .pj { display: flex; flex-direction: column; gap: 2px; }
+  .s4 .ts td .pj b { font-size: 18px; font-weight: 600; direction: ltr; text-align: right; }
+  .s4 .ts td .pj small { font-size: 16px; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .s4 .ts td .code { font-family: var(--mono); font-size: 14px; color: var(--muted-foreground); font-weight: 500; margin-inline-end: 8px; }
+  .s4 .ts tr.tot td { font-weight: 700; border-top: 1.5px solid var(--border); }
+  .s4 .ts tr.tot td:first-child { font-weight: 500; color: var(--muted-foreground); font-size: 17px; font-family: var(--font-ar); }
+  .s4 .wk { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 17px; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .s4 .timer { position: absolute; left: -28px; bottom: -46px; display: flex; align-items: center; gap: 22px; background: var(--gray-900); color: #fff; border-radius: 26px; padding: 16px 18px 16px 24px; box-shadow: 0 30px 60px -18px rgb(13 19 28 / 0.55); }
+  .s4 .timer .t1 { display: flex; align-items: center; gap: 10px; font-size: 16px; color: #a8b5c5; font-family: var(--font-ar); }
+  .s4 .timer .t1 i { width: 10px; height: 10px; border-radius: 99px; background: var(--success); box-shadow: 0 0 0 5px rgb(58 209 131 / 0.2); }
+  .s4 .timer .t3 { font-size: 17px; color: #d8e0ea; margin-top: 2px; }
+  .s4 .timer .clock { font-family: var(--mono); font-size: 40px; font-weight: 600; letter-spacing: 0.02em; direction: ltr; }
+  .s4 .timer .stop { width: 54px; height: 54px; border-radius: 99px; background: #f0566a; display: grid; place-items: center; font-size: 20px; }
+  .s4 .timer .stop svg.i { fill: #fff; stroke: #fff; }
+  .s4 .callout { margin-top: 74px; padding: 22px 36px 26px; }
+  .s4 .flow { display: inline-flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+  /* ───────── 05 Invoice ───────── */
+  .s5 .ready { width: 100%; margin-top: 30px; display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 16px 24px; border-radius: 26px; position: relative; z-index: 2; }
+  .s5 .ready .who b { display: block; font-size: 23px; font-weight: 600; direction: ltr; text-align: right; }
+  .s5 .ready .who span { font-size: 18px; color: var(--muted-foreground); }
+  .s5 .ready .tag { font-family: var(--font-ar); font-weight: 700; font-size: 20px; color: var(--foreground); margin-bottom: 4px; display: block; }
+  .s5 .arrow { color: #fff; background: var(--primary); width: 46px; height: 46px; border-radius: 99px; display: grid; place-items: center; font-size: 22px; margin: -14px 0 -14px; position: relative; z-index: 3; box-shadow: 0 0 0 6px var(--background); }
+  .s5 .inv { padding: 26px 34px 22px; }
+  .s5 .inv-h { display: flex; justify-content: space-between; align-items: flex-start; }
+  .s5 .inv-h .co { display: flex; align-items: center; gap: 14px; }
+  .s5 .inv-h .co .m { width: 56px; height: 56px; border-radius: 16px; background: var(--info-soft); display: grid; place-items: center; color: var(--info-foreground); font-size: 28px; }
+  .s5 .inv-h h3 { font-family: var(--font-ar); font-size: 34px; font-weight: 700; }
+  .s5 .inv-h .no { font-family: var(--mono); font-size: 20px; font-weight: 500; color: var(--muted-foreground); direction: ltr; unicode-bidi: isolate; margin-inline-start: 8px; }
+  .s5 .inv-h .meta { font-family: var(--font-ar); font-size: 18px; color: var(--muted-foreground); margin-top: 2px; }
+  .s5 .inv-h .meta b { color: var(--foreground); font-weight: 600; font-family: var(--font); }
+  .s5 .inv-h .st { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .s5 .parties { display: flex; gap: 40px; margin-top: 20px; font-size: 18px; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .s5 .parties b { display: block; color: var(--foreground); font-family: var(--font); font-weight: 600; font-size: 21px; direction: ltr; text-align: right; }
+  .s5 table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 20px; }
+  .s5 th { font-weight: 500; font-size: 16px; color: var(--muted-foreground); text-align: right; padding: 10px 0; border-bottom: 1.5px solid var(--border); }
+  .s5 td { padding: 10px 0; border-bottom: 1.5px solid #edf1f6; font-variant-numeric: tabular-nums; }
+  .s5 th.n, .s5 td.n { text-align: left; }
+  .s5 td small { display: block; font-size: 15px; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .s5 .totals { margin-top: 14px; margin-right: auto; width: 440px; font-size: 19px; }
+  .s5 .totals div { display: flex; justify-content: space-between; padding: 3px 0; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .s5 .totals div span:last-child { font-family: var(--font); color: var(--foreground); font-variant-numeric: tabular-nums; }
+  .s5 .totals .g { border-top: 1.5px solid var(--border); margin-top: 6px; padding-top: 8px; font-weight: 700; color: var(--foreground); font-size: 23px; }
+  .s5 .totals .g span:last-child { color: var(--primary); }
+  .s5 .callout { margin-top: 22px; padding: 22px 36px 26px; }
+
+  /* ───────── 06 Receivables ───────── */
+  .s6 .sums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; width: 100%; margin-top: 34px; }
+  .s6 .sum { padding: 18px 18px; }
+  .s6 .sum .v { font-size: 31px; }
+  .s6 .sum .l { font-size: 17px; }
+  .s6 .sum .c { font-size: 14px; }
+  .s6 .aging { width: 100%; margin-top: 16px; padding: 22px 26px; }
+  .s6 .bar { display: flex; height: 18px; border-radius: 99px; overflow: hidden; gap: 3px; margin-top: 14px; }
+  .s6 .legend { display: flex; justify-content: space-between; margin-top: 12px; font-size: 15px; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .s6 .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .s6 .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .s6 .rows { margin-top: 10px; }
+  .s6 .r { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-top: 1.5px solid #edf1f6; }
+  .s6 .r .nm { flex: 1; }
+  .s6 .r .nm b { display: block; font-size: 20px; font-weight: 600; direction: ltr; text-align: right; }
+  .s6 .r .nm small { font-size: 15px; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .s6 .r .amt { font-size: 21px; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 160px; text-align: left; }
+  .s6 .hd2 { display: flex; justify-content: space-between; align-items: center; }
+  .s6 .hd2 h4 { font-family: var(--font-ar); font-size: 24px; font-weight: 700; }
+  .s6 .rem { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+  .s6 .lvl { border-radius: 18px; padding: 12px 14px; background: var(--muted); border: 1.5px solid #e6ecf3; font-family: var(--font-ar); }
+  .s6 .lvl b { display: block; font-size: 18px; }
+  .s6 .lvl span { font-size: 15px; color: var(--muted-foreground); }
+  .s6 .lvl.on { background: var(--success-soft); border-color: #c9eed9; }
+  .s6 .lvl.next { background: var(--warning-soft); border-color: #f6e2b0; }
+  .s6 .callout { margin-top: 22px; padding: 20px 36px 24px; }
+  .s6 .callout p { font-size: 25px; }
+
+  /* ───────── 07 Analytics ───────── */
+  .s7 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; margin-top: 30px; }
+  .s7 .kpi { padding: 18px 22px; }
+  .s7 .kpi .row { margin-top: 10px; }
+  .s7 .kpi .val { font-size: 36px; }
+  .s7 .kpi .desc { margin-top: 10px; }
+  .s7 .chart { width: 100%; margin-top: 12px; padding: 20px 26px 44px; border-radius: 26px; position: relative; }
+  .s7 .chart .hd { display: flex; justify-content: space-between; align-items: center; font-size: 17px; color: var(--muted-foreground); }
+  .s7 .chart .hd span:first-child { display: inline-flex; align-items: center; gap: 6px; }
+  .s7 .chart .big { display: flex; align-items: baseline; gap: 14px; margin-top: 6px; }
+  .s7 .chart .big b { font-size: 36px; font-weight: 700; letter-spacing: -0.02em; }
+  .s7 .chart .big span { font-size: 17px; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .s7 .chart .big span .ltr { color: var(--success-foreground); font-weight: 600; font-family: var(--font); }
+  .s7 .legend { display: flex; gap: 22px; font-size: 15px; color: var(--muted-foreground); margin-top: 6px; font-family: var(--font-ar); }
+  .s7 .legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .s7 .victor { position: absolute; left: 50%; bottom: -36px; transform: translateX(-50%); }
+  .s7 .vpill { display: inline-flex; align-items: center; gap: 14px; height: 70px; padding: 0 30px 0 10px; background: var(--gray-900); color: #fff; border-radius: 999px; font-family: var(--font-ar); font-weight: 600; font-size: 23px; box-shadow: 0 20px 40px -14px rgb(13 19 28 / 0.5); }
+  .s7 .vpill .sp { width: 52px; height: 52px; border-radius: 99px; background: linear-gradient(135deg, #a78bfa, var(--violet)); display: grid; place-items: center; font-size: 24px; }
+  .s7 .ask { background: var(--card); border: 1.5px solid var(--border); border-radius: 22px 22px 22px 6px; padding: 14px 20px; font-family: var(--font-ar); font-size: 21px; color: var(--gray-700); }
+  .s7 .callout { margin-top: 24px; padding: 20px 36px 24px; }
+  .s7 .callout p { font-size: 25px; }
+
+  /* ───────── 08 Roles ───────── */
+  .s8 .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; margin-top: 38px; }
+  .s8 .role { padding: 24px 26px; border-radius: 28px; }
+  .s8 .role .who { display: flex; align-items: center; gap: 14px; }
+  .s8 .role .who .av { width: 58px; height: 58px; }
+  .s8 .role .who b { font-family: var(--font-ar); font-size: 27px; font-weight: 700; display: block; line-height: 1.2; }
+  .s8 .role .who small { font-size: 16px; color: var(--muted-foreground); direction: ltr; display: block; text-align: right; }
+  .s8 .role ul { list-style: none; margin-top: 16px; display: flex; flex-direction: column; gap: 9px; }
+  .s8 .role li { display: flex; align-items: flex-start; gap: 10px; font-family: var(--font-ar); font-size: 19px; line-height: 1.45; color: var(--gray-700); }
+  .s8 .role li svg.i { font-size: 22px; margin-top: 2px; }
+  .s8 .role li.y svg.i { color: var(--success-foreground); }
+  .s8 .role li.n { color: var(--text-muted); }
+  .s8 .role li.n svg.i { color: var(--danger-foreground); }
+  .s8 .callout { margin-top: 34px; }
+
+  /* ───────── 09 Mobile ───────── */
+  .s9 .wrap { display: flex; align-items: center; gap: 46px; width: 100%; margin-top: 44px; }
+  .s9 .phone { width: 410px; height: 760px; border-radius: 64px; background: var(--gray-900); padding: 13px; box-shadow: 0 40px 80px -24px rgb(13 19 28 / 0.45); flex-shrink: 0; position: relative; }
+  .s9 .screen { width: 100%; height: 100%; border-radius: 52px; background: var(--background); overflow: hidden; position: relative; padding: 56px 18px 0; }
+  .s9 .notch { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 120px; height: 32px; border-radius: 99px; background: var(--gray-900); }
+  .s9 .bar { display: flex; justify-content: space-between; align-items: center; }
+  .s9 .pill { height: 48px; border: 1.5px solid var(--border); background: var(--card); border-radius: 999px; display: flex; align-items: center; gap: 12px; padding: 0 14px; color: var(--foreground); font-size: 20px; }
+  .s9 .pill .lg { width: 34px; height: 34px; border-radius: 99px; background: var(--info-soft); display: grid; place-items: center; }
+  .s9 .pill .lg img { width: 24px; height: 24px; mix-blend-mode: multiply; }
+  .s9 .pill .av { width: 36px; height: 36px; }
+  .s9 .hello { margin-top: 14px; padding: 18px 18px; border-radius: 26px; }
+  .s9 .hello .crumb { font-size: 13px; }
+  .s9 .hello h5 { font-family: var(--font-ar); font-size: 27px; font-weight: 700; margin-top: 2px; }
+  .s9 .hello p { font-family: var(--font-ar); font-size: 14px; color: var(--muted-foreground); }
+  .s9 .hello .btn { height: 46px; font-size: 17px; margin-top: 12px; padding: 0 20px; }
+  .s9 .run { margin-top: 12px; background: var(--gray-900); color: #fff; border-radius: 22px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .s9 .run .clk { font-family: var(--mono); font-size: 26px; font-weight: 600; direction: ltr; }
+  .s9 .run small { display: block; font-size: 12px; color: #a8b5c5; font-family: var(--font-ar); }
+  .s9 .run .stop { width: 40px; height: 40px; border-radius: 99px; background: #f0566a; display: grid; place-items: center; font-size: 15px; }
+  .s9 .run .stop svg.i { fill: #fff; stroke: #fff; }
+  .s9 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .s9 .t { padding: 14px 14px; border-radius: 22px; }
+  .s9 .t .l { font-size: 13px; color: var(--muted-foreground); font-family: var(--font-ar); }
+  .s9 .t .v { font-size: 28px; font-weight: 700; margin-top: 4px; }
+  .s9 .t .c { font-size: 11.5px; color: var(--muted-foreground); margin-top: 4px; font-family: var(--font-ar); display: flex; gap: 4px; align-items: center; }
+  .s9 .side { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+  .s9 .feat { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border-radius: 24px; }
+  .s9 .feat .ic { width: 54px; height: 54px; border-radius: 16px; background: var(--info-soft); color: var(--info-foreground); display: grid; place-items: center; font-size: 26px; flex-shrink: 0; }
+  .s9 .feat b { font-family: var(--font-ar); font-size: 22px; font-weight: 700; display: block; }
+  .s9 .feat span { font-family: var(--font-ar); font-size: 17px; color: var(--muted-foreground); }
+  .s9 .langs { display: flex; flex-wrap: wrap; gap: 8px; padding: 18px 20px; border-radius: 24px; }
+  .s9 .langs .h { width: 100%; display: flex; align-items: center; gap: 10px; font-family: var(--font-ar); font-weight: 700; font-size: 20px; margin-bottom: 4px; }
+  .s9 .langs .h svg.i { font-size: 22px; color: var(--info-foreground); }
+  .s9 .langs span.l { border: 1.5px solid var(--border); border-radius: 999px; padding: 4px 14px; font-size: 18px; color: var(--gray-700); }
+  .s9 .langs span.l.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+
+  /* ───────── 10 CTA ───────── */
+  .s10 .cos { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; margin-top: 40px; }
+  .s10 .co { padding: 22px 24px; border-radius: 26px; }
+  .s10 .co .h { display: flex; align-items: center; gap: 12px; }
+  .s10 .co .h .m { width: 50px; height: 50px; border-radius: 15px; background: var(--info-soft); color: var(--info-foreground); display: grid; place-items: center; font-size: 25px; }
+  .s10 .co .h b { font-size: 24px; font-weight: 700; direction: ltr; }
+  .s10 .co p { margin-top: 12px; font-family: var(--font-ar); font-size: 19px; line-height: 1.55; color: var(--muted-foreground); }
+  .s10 .auth { margin-top: 44px; width: 640px; padding: 34px 40px; border-radius: 40px; text-align: center; position: relative; z-index: 2; }
+  .s10 .auth h4 { font-family: var(--font-ar); font-size: 32px; font-weight: 700; }
+  .s10 .auth p { font-family: var(--font-ar); font-size: 19px; color: var(--muted-foreground); margin-top: 4px; }
+  .s10 .auth .btn { width: 100%; justify-content: center; height: 70px; font-size: 25px; margin-top: 22px; font-family: var(--font-ar); }
+  .s10 .auth .who { margin-top: 16px; font-family: var(--font-ar); font-size: 17px; color: var(--muted-foreground); line-height: 1.6; }
+  .s10 .skyline { position: absolute; left: 50%; bottom: -4px; transform: translateX(-50%); width: 620px; z-index: 0;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 45%); mask-image: linear-gradient(to bottom, transparent 0%, #000 45%); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+<symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+<symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></symbol>
+<symbol id="i-square" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/></symbol>
+<symbol id="i-file-text" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></symbol>
+<symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"/><path d="M20 2v4"/><path d="M22 4h-4"/><circle cx="4" cy="20" r="2"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
+<symbol id="i-smartphone" viewBox="0 0 24 24"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></symbol>
+<symbol id="i-camera" viewBox="0 0 24 24"><path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"/><circle cx="12" cy="13" r="3"/></symbol>
+<symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></symbol>
+<symbol id="i-building-2" viewBox="0 0 24 24"><path d="M10 12h4"/><path d="M10 8h4"/><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></symbol>
+<symbol id="i-triangle-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-circle-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+<symbol id="i-landmark" viewBox="0 0 24 24"><path d="M10 18v-7"/><path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/></symbol>
+<symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></symbol>
+<symbol id="i-languages" viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></symbol>
+<symbol id="i-trending-up" viewBox="0 0 24 24"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+<symbol id="i-calendar" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></symbol>
+<symbol id="i-briefcase" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></symbol>
+<symbol id="i-receipt" viewBox="0 0 24 24"><path d="M12 17V7"/><path d="M16 8h-6a2 2 0 0 0 0 4h4a2 2 0 0 1 0 4H8"/><path d="M4 3a1 1 0 0 1 1-1 1.3 1.3 0 0 1 .7.2l.933.6a1.3 1.3 0 0 0 1.4 0l.934-.6a1.3 1.3 0 0 1 1.4 0l.933.6a1.3 1.3 0 0 0 1.4 0l.933-.6a1.3 1.3 0 0 1 1.4 0l.934.6a1.3 1.3 0 0 0 1.4 0l.933-.6A1.3 1.3 0 0 1 19 2a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1 1.3 1.3 0 0 1-.7-.2l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.934.6a1.3 1.3 0 0 1-1.4 0l-.933-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-1.4 0l-.934-.6a1.3 1.3 0 0 0-1.4 0l-.933.6a1.3 1.3 0 0 1-.7.2 1 1 0 0 1-1-1z"/></symbol>
+<symbol id="i-arrow-down" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></symbol>
+<symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M17 3a2 2 0 0 1 2 2v15a1 1 0 0 1-1.496.868l-4.512-2.578a2 2 0 0 0-1.984 0l-4.512 2.578A1 1 0 0 1 5 20V5a2 2 0 0 1 2-2z"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+<symbol id="i-timer" viewBox="0 0 24 24"><line x1="10" x2="14" y1="2" y2="2"/><line x1="12" x2="15" y1="14" y2="11"/><circle cx="12" cy="14" r="8"/></symbol>
+<symbol id="i-eye-off" viewBox="0 0 24 24"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></symbol>
+<symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></symbol>
+<symbol id="i-layout-grid" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></symbol>
+<symbol id="i-log-out" viewBox="0 0 24 24"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></symbol>
+<symbol id="i-chart-line" viewBox="0 0 24 24"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></symbol>
+<symbol id="i-file-spreadsheet" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/></symbol>
+<symbol id="i-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></symbol>
+<symbol id="i-circle-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol>
+<symbol id="i-send-horizontal" viewBox="0 0 24 24"><path d="M3.714 3.048a.498.498 0 0 0-.683.627l2.843 7.627a2 2 0 0 1 0 1.396l-2.842 7.627a.498.498 0 0 0 .682.627l18-8.5a.5.5 0 0 0 0-.904z"/><path d="M6 12h16"/></symbol>
+<symbol id="i-banknote" viewBox="0 0 24 24"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></symbol>
+<symbol id="i-hourglass" viewBox="0 0 24 24"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></symbol>
+</defs></svg>
+
+<!-- ═════════════════════════ 01 · COVER ═════════════════════════ -->
+<section class="slide s1" data-slide="01">
+  <div class="top">
+    <div class="brand"><span class="brand-mark"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora SaaS</span></div>
+    <span class="count">01 / 10</span>
+  </div>
+
+  <div class="hero">
+    <div class="ring r3"></div>
+    <div class="ring r2"></div>
+    <div class="ring r1"></div>
+    <div class="logo-orb"><img src="../../public/app-logo.png" alt="Nexora" /></div>
+
+    <div class="f f1 float">
+      <div class="l"><svg class="i"><use href="#i-info" /></svg>الإيرادات المحققة</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:8px">
+        <div>
+          <div class="num" style="font-size:30px;font-weight:700;color:var(--primary);letter-spacing:-0.02em">1,092,100 د.م.</div>
+          <span class="chip success ltr" style="font-size:15px;padding:1px 10px;margin-top:4px">+12.4%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="f f2 float">
+      <span class="live"></span>
+      <div>
+        <div style="font-family:var(--font-ar);font-size:15px;color:var(--muted-foreground)">مؤقت قيد التشغيل</div>
+        <div class="mono ltr" style="font-size:28px;font-weight:600">01:24:36</div>
+      </div>
+    </div>
+
+    <div class="f f3 float">
+      <span style="width:46px;height:46px;border-radius:14px;background:var(--info-soft);color:var(--info-foreground);display:grid;place-items:center;font-size:24px"><svg class="i"><use href="#i-file-text" /></svg></span>
+      <div>
+        <div class="mono ltr" style="font-size:18px;font-weight:600;text-align:right">FAC-2026-0142</div>
+        <div style="font-family:var(--font-ar);font-size:15px;color:var(--muted-foreground)">Helio Energy</div>
+      </div>
+      <span class="chip success"><svg class="i"><use href="#i-circle-check" /></svg>مدفوعة</span>
+    </div>
+
+    <div class="f f4 float">
+      <div class="l"><svg class="i"><use href="#i-info" /></svg>الهامش الإجمالي</div>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:8px">
+        <div class="num" style="font-size:34px;font-weight:700;letter-spacing:-0.02em">41.2%</div>
+        <div class="spark" style="height:40px;gap:5px"><i style="height:30%"></i><i style="height:42%"></i><i style="height:38%"></i><i style="height:55%"></i><i style="height:60%"></i><i style="height:72%"></i><i style="height:80%"></i><i style="height:100%;background:var(--primary)"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="copy">
+    <h1 class="title">شركتك تبيع الوقت…<br />فلماذا يضيع بين خمس أدوات؟</h1>
+    <div class="accent">Nexora ERP</div>
+    <p class="sub">نظام واحد لشركات الخدمات: من الساعة المسجّلة إلى الفاتورة إلى الربح.</p>
+  </div>
+
+  <img class="skyline" src="../../public/auth-skyline-blue.png" alt="" />
+
+  <div class="bottom">
+    <span class="handle">Nexora ERP</span>
+    <span class="swipe">اسحب<svg class="i"><use href="#i-arrow-left" /></svg></span>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 02 · CONCEPT ═════════════════════════ -->
+<section class="slide s2" data-slide="02">
+  <div class="top">
+    <div class="brand"><span class="brand-mark"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora SaaS</span></div>
+    <span class="count">02 / 10</span>
+  </div>
+  <div class="body center">
+    <h2 class="title">القصة أكبر من برنامج فواتير!</h2>
+    <p class="sub" style="margin-top:14px">نظام موارد (ERP) يربط فريقك وعملاءك ومشاريعك في سلسلة واحدة.</p>
+    <div class="sphere"><span>NEXORA</span></div>
+    <div class="track"><i style="right:0"></i><i style="right:50%"></i><i style="right:100%"></i></div>
+    <div class="steps">
+      <div class="step"><b>سجّل</b><span>كل ساعة على مشروعها</span></div>
+      <div class="step"><b>فوتِر</b><span>من الساعات المعتمدة</span></div>
+      <div class="step"><b>اربح</b><span>هامش كل مشروع بوضوح</span></div>
+    </div>
+    <p class="idea"><b>الفكرة:</b> الساعة المسجّلة يوم الإثنين تصبح سطرًا صحيحًا في فاتورة،<br />ثم دفعة متابَعة، ثم رقمًا للهامش — دون نسخ يدوي.</p>
+  </div>
+  <div class="bottom">
+    <span class="handle">Nexora ERP</span>
+    <span class="swipe">اسحب<svg class="i"><use href="#i-arrow-left" /></svg></span>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 03 · REPLACES ═════════════════════════ -->
+<section class="slide s3" data-slide="03">
+  <div class="top">
+    <div class="brand"><span class="brand-mark"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora SaaS</span></div>
+    <span class="count">03 / 10</span>
+  </div>
+  <div class="body">
+    <h2 class="title">خمس أدوات متفرقة…<br />في مكان واحد!</h2>
+    <p class="sub" style="margin-top:10px">وداعًا لإعادة كتابة الأرقام بين الجداول والبرامج.</p>
+
+    <div class="tools">
+      <div class="tool"><span class="x"><svg class="i"><use href="#i-x" /></svg></span><div class="ic"><svg class="i"><use href="#i-file-spreadsheet" /></svg></div><b>جدول الساعات</b></div>
+      <div class="tool"><span class="x"><svg class="i"><use href="#i-x" /></svg></span><div class="ic"><svg class="i"><use href="#i-receipt" /></svg></div><b>أداة فوترة منفصلة</b></div>
+      <div class="tool"><span class="x"><svg class="i"><use href="#i-x" /></svg></span><div class="ic"><svg class="i"><use href="#i-users" /></svg></div><b>ملفات الموارد البشرية</b></div>
+      <div class="tool"><span class="x"><svg class="i"><use href="#i-x" /></svg></span><div class="ic"><svg class="i"><use href="#i-wallet" /></svg></div><b>قائمة «من لم يدفع؟»</b></div>
+      <div class="tool"><span class="x"><svg class="i"><use href="#i-x" /></svg></span><div class="ic"><svg class="i"><use href="#i-chart-line" /></svg></div><b>جدول الربحية الشهري</b></div>
+    </div>
+
+    <div class="down"><svg class="i"><use href="#i-arrow-down" /></svg></div>
+
+    <div class="shell">
+      <div class="brand" style="height:80px"><span class="brand-mark" style="width:62px;height:62px"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora</span></div>
+      <div class="navpill float">
+        <span class="on">لوحة التحكم</span><span>المؤسسة</span><span>المالية</span><span>التخطيط</span><span>الإدارة</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="label"><svg class="i"><use href="#i-sparkles" /></svg>السلسلة كاملة في نظام واحد</div>
+      <div class="chain">
+        <span>الأشخاص</span><svg class="i"><use href="#i-arrow-left" /></svg>
+        <span>العملاء</span><svg class="i"><use href="#i-arrow-left" /></svg>
+        <span>المشاريع</span><svg class="i"><use href="#i-arrow-left" /></svg>
+        <span>الساعات</span><svg class="i"><use href="#i-arrow-left" /></svg>
+        <span>الفواتير</span><svg class="i"><use href="#i-arrow-left" /></svg>
+        <span>النقد</span><svg class="i"><use href="#i-arrow-left" /></svg>
+        <span class="last">الربح</span>
+      </div>
+    </div>
+  </div>
+  <div class="bottom">
+    <span class="handle">Nexora ERP</span>
+    <span class="swipe">اسحب<svg class="i"><use href="#i-arrow-left" /></svg></span>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 04 · TIME ═════════════════════════ -->
+<section class="slide s4" data-slide="04">
+  <div class="top">
+    <div class="brand"><span class="brand-mark"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora SaaS</span></div>
+    <span class="count">04 / 10</span>
+  </div>
+  <div class="body">
+    <h2 class="title sm">سجّل وقتك بضغطة…<br />واعتمده بضغطة!</h2>
+    <p class="sub" style="margin-top:8px">مؤقّت، جدول أسبوعي، تسجيل سريع، ونسخ الأسبوع الماضي.</p>
+
+    <div class="win">
+      <div class="ph">
+        <div>
+          <div class="crumb">المؤسسة<svg class="i"><use href="#i-chevron-left" /></svg>جداول الوقت</div>
+          <div class="pg-title">جداول الوقت</div>
+        </div>
+        <div class="acts">
+          <span class="btn outline"><svg class="i"><use href="#i-copy" /></svg>نسخ الأسبوع الماضي</span>
+          <span class="btn primary"><svg class="i"><use href="#i-send" /></svg>إرسال الأسبوع</span>
+        </div>
+      </div>
+
+      <table class="ts">
+        <thead>
+          <tr>
+            <th style="width:34%">المشروع / المهمة</th>
+            <th>الإثنين<small class="num">12</small></th>
+            <th>الثلاثاء<small class="num">13</small></th>
+            <th class="today">الأربعاء<small class="num">14</small></th>
+            <th>الخميس<small class="num">15</small></th>
+            <th>الجمعة<small class="num">16</small></th>
+            <th>الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="pj"><b><span class="code">ORB-00</span>Orbit tracking MVP</b><small>تصميم الواجهة</small></div></td>
+            <td>3</td><td>4</td><td class="today">2.5</td><td>3</td><td>1.5</td><td><b>14</b></td>
+          </tr>
+          <tr>
+            <td><div class="pj"><b><span class="code">HEL-02</span>Helio energy dashboard</b><small>تطوير</small></div></td>
+            <td>4</td><td>2</td><td class="today">4.5</td><td>3</td><td>5</td><td><b>18.5</b></td>
+          </tr>
+          <tr>
+            <td><div class="pj"><b><span class="code">MED-00</span>Medica discovery</b><small>ورشة عمل</small></div></td>
+            <td>1</td><td>2</td><td class="today">1</td><td>2</td><td>1.5</td><td><b>7.5</b></td>
+          </tr>
+          <tr class="tot">
+            <td>إجمالي اليوم</td><td>8</td><td>8</td><td class="today">8</td><td>8</td><td>8</td><td style="color:var(--primary)">40 س</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="timer">
+        <div><div class="t1"><i></i>مؤقت قيد التشغيل</div><div class="t3"><span class="ltr">Orbit tracking MVP</span> · تصميم الواجهة</div></div>
+        <span class="clock">01:24:36</span>
+        <span class="stop"><svg class="i"><use href="#i-square" /></svg></span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="label"><svg class="i"><use href="#i-info" /></svg>كيف يعمل؟</div>
+      <p>يرسل الموظف أسبوعه ← يعتمده المدير أو يعيده بملاحظة<br />← وعند الاعتماد <b>تُجمَّد الأسعار</b> فلا تتغير الفاتورة.</p>
+    </div>
+  </div>
+  <span class="note">تصوّر توضيحي لواجهة Nexora — بيانات تجريبية</span>
+  <div class="bottom">
+    <span class="handle">Nexora ERP</span>
+    <span class="swipe">اسحب<svg class="i"><use href="#i-arrow-left" /></svg></span>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 05 · INVOICE ═════════════════════════ -->
+<section class="slide s5" data-slide="05">
+  <div class="top">
+    <div class="brand"><span class="brand-mark"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora SaaS</span></div>
+    <span class="count">05 / 10</span>
+  </div>
+  <div class="body">
+    <h2 class="title sm">من الساعات المعتمدة…<br />إلى فاتورة جاهزة!</h2>
+    <p class="sub" style="margin-top:8px">ترقيم متسلسل بلا فجوات، عدة نسب ضريبة، وملف PDF بشعارك.</p>
+
+    <div class="card ready">
+      <div class="who">
+        <span class="tag">جاهز للفوترة</span>
+        <b>Helio Energy</b>
+        <span><span class="num">48</span> ساعة معتمدة · <span class="num">62,100 د.م.</span></span>
+      </div>
+      <span class="btn primary"><svg class="i"><use href="#i-plus" /></svg>إنشاء فاتورة</span>
+    </div>
+
+    <span class="arrow"><svg class="i"><use href="#i-arrow-down" /></svg></span>
+
+    <div class="win inv">
+      <div class="inv-h">
+        <div class="co">
+          <span class="m"><svg class="i"><use href="#i-file-text" /></svg></span>
+          <div><h3>فاتورة <span class="no">FAC-2026-0142</span></h3><div class="meta">إلى <b class="ltr">Helio Energy</b> · الاستحقاق <b class="num">2026/11/13</b></div></div>
+        </div>
+        <div class="st">
+          <span class="chip info"><span class="dot"></span>صادرة</span>
+          <span class="chip muted"><svg class="i"><use href="#i-file-text" /></svg>فاتورة إلكترونية <span class="ltr">UBL 2.1</span></span>
+        </div>
+      </div>
+      <table>
+        <thead><tr><th>الوصف</th><th class="n">الكمية</th><th class="n">السعر</th><th class="n">المبلغ</th></tr></thead>
+        <tbody>
+          <tr><td><span class="ltr">Helio energy dashboard</span><small>تطوير — ساعات معتمدة</small></td><td class="n">30 س</td><td class="n">1,350.00</td><td class="n"><b>40,500.00</b></td></tr>
+          <tr><td><span class="ltr">Helio energy dashboard</span><small>تصميم الواجهة — ساعات معتمدة</small></td><td class="n">18 س</td><td class="n">1,200.00</td><td class="n"><b>21,600.00</b></td></tr>
+        </tbody>
+      </table>
+      <div class="totals">
+        <div><span>المجموع قبل الضريبة</span><span>62,100.00 د.م.</span></div>
+        <div><span>ضريبة القيمة المضافة 20%</span><span>12,420.00 د.م.</span></div>
+        <div class="g"><span>الإجمالي</span><span>74,520.00 د.م.</span></div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="label"><svg class="i"><use href="#i-shield-check" /></svg>مطابق للقواعد المغربية</div>
+      <p>لا تصدر فاتورة دون <b>ICE</b> و<b>IF</b>، ولكل فاتورة صادرة ملف فاتورة إلكترونية <b class="ltr">UBL 2.1</b>.</p>
+    </div>
+  </div>
+  <span class="note">تصوّر توضيحي لواجهة Nexora — بيانات تجريبية</span>
+  <div class="bottom">
+    <span class="handle">Nexora ERP</span>
+    <span class="swipe">اسحب<svg class="i"><use href="#i-arrow-left" /></svg></span>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 06 · RECEIVABLES ═════════════════════════ -->
+<section class="slide s6" data-slide="06">
+  <div class="top">
+    <div class="brand"><span class="brand-mark"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora SaaS</span></div>
+    <span class="count">06 / 10</span>
+  </div>
+  <div class="body">
+    <h2 class="title sm">اعرف من لم يدفع…<br />قبل أن تسأل!</h2>
+    <p class="sub" style="margin-top:8px">أرصدة مفتوحة حسب مدة التأخير، وتذكيرات تلقائية على 3 مستويات.</p>
+
+    <div class="sums">
+      <div class="card sum"><div class="l">الذمم المفتوحة</div><div class="v blue">299,700 د.م.</div><div class="c"><svg class="i"><use href="#i-users" /></svg>2 عملاء لديهم رصيد</div></div>
+      <div class="card sum"><div class="l">غير مستحق بعد</div><div class="v">68,490 د.م.</div><div class="c"><svg class="i"><use href="#i-clock" /></svg>قبل تاريخ الاستحقاق</div></div>
+      <div class="card sum"><div class="l">متأخر</div><div class="v amber">231,210 د.م.</div><div class="c"><svg class="i"><use href="#i-triangle-alert" /></svg>بعد تاريخ الاستحقاق</div></div>
+      <div class="card sum"><div class="l">أكثر من 90 يومًا</div><div class="v">0 د.م.</div><div class="c"><svg class="i"><use href="#i-triangle-alert" /></svg>تابِع الآن</div></div>
+    </div>
+
+    <div class="card aging">
+      <div class="hd2"><h4>أعمار الديون</h4><span class="chip warning"><svg class="i"><use href="#i-triangle-alert" /></svg>77% متأخر</span></div>
+      <div class="bar">
+        <i style="flex:68490;background:var(--primary)"></i>
+        <i style="flex:77130;background:var(--warning)"></i>
+        <i style="flex:154080;background:#eb6834"></i>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--primary)"></i>غير مستحق بعد</span>
+        <span><i style="background:var(--warning)"></i>1–30 يومًا</span>
+        <span><i style="background:#eb6834"></i>31–60 يومًا</span>
+        <span><i style="background:var(--border)"></i>61–90 يومًا</span>
+        <span><i style="background:var(--border-strong)"></i>أكثر من 90 يومًا</span>
+      </div>
+      <div class="rows" style="margin-top:14px">
+        <div class="r"><span class="ini">MH</span><div class="nm"><b>Medica Health</b><small>فاتورتان · متأخرة 41 يومًا</small></div><span class="chip warning">المستوى 2 أُرسل</span><span class="amt">231,210 د.م.</span></div>
+        <div class="r"><span class="ini">HE</span><div class="nm"><b>Helio Energy</b><small>فاتورة واحدة · تُستحق بعد 12 يومًا</small></div><span class="chip muted">لم يُستحق</span><span class="amt">68,490 د.م.</span></div>
+      </div>
+      <div class="rem">
+        <div class="lvl on"><b>المستوى 1</b><span>بعد 3 أيام · أُرسل</span></div>
+        <div class="lvl on"><b>المستوى 2</b><span>بعد 15 يومًا · أُرسل</span></div>
+        <div class="lvl next"><b>المستوى 3</b><span>بعد 30 يومًا · التالي</span></div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="label"><svg class="i"><use href="#i-landmark" /></svg>ومع كشف البنك</div>
+      <p>استورد ملف <b class="ltr">CSV</b> من بنكك، فيطابق Nexora التحويلات<br />مع الفواتير المفتوحة تلقائيًا — <b>ولا يسجّل دفعة مرتين.</b></p>
+    </div>
+  </div>
+  <span class="note">تصوّر توضيحي لواجهة Nexora — بيانات تجريبية</span>
+  <div class="bottom">
+    <span class="handle">Nexora ERP</span>
+    <span class="swipe">اسحب<svg class="i"><use href="#i-arrow-left" /></svg></span>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 07 · ANALYTICS ═════════════════════════ -->
+<section class="slide s7" data-slide="07">
+  <div class="top">
+    <div class="brand"><span class="brand-mark"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora SaaS</span></div>
+    <span class="count">07 / 10</span>
+  </div>
+  <div class="body">
+    <h2 class="title sm">أرقامك المهمة…<br />في نظرة واحدة!</h2>
+    <p class="sub" style="margin-top:8px">الإيراد، الهامش، الاستغلال، والنقد المحصّل — مقارنةً بالفترة السابقة.</p>
+
+    <div class="grid">
+      <div class="kpi">
+        <div class="hd"><span><svg class="i"><use href="#i-info" /></svg>الإيرادات المحققة</span><span class="per num">90d</span></div>
+        <div class="row"><div><div class="val num">1,092,100 د.م.</div><span class="chg up">+12.4%</span></div>
+          <div class="spark"><i style="height:35%"></i><i style="height:45%"></i><i style="height:40%"></i><i style="height:58%"></i><i style="height:62%"></i><i style="height:70%"></i><i style="height:84%"></i><i style="height:100%"></i></div></div>
+        <div class="desc">الساعات المعتمدة بأسعارها، مع فواتير السعر الثابت والمراحل.</div>
+      </div>
+      <div class="kpi">
+        <div class="hd"><span><svg class="i"><use href="#i-info" /></svg>الهامش الإجمالي</span><span class="per num">90d</span></div>
+        <div class="row"><div><div class="val num">41.2%</div><span class="chg up">+2.1 pts</span></div>
+          <div class="spark"><i style="height:50%"></i><i style="height:46%"></i><i style="height:60%"></i><i style="height:55%"></i><i style="height:66%"></i><i style="height:72%"></i><i style="height:78%"></i><i style="height:88%"></i></div></div>
+        <div class="desc">الإيرادات بعد تكلفة الساعات والمصروفات المعتمدة.</div>
+      </div>
+      <div class="kpi">
+        <div class="hd"><span><svg class="i"><use href="#i-info" /></svg>نسبة الاستغلال</span><span class="per num">90d</span></div>
+        <div class="row"><div><div class="val num">78%</div><span class="chg up">+3.4 pts</span></div>
+          <div class="spark"><i style="height:62%"></i><i style="height:70%"></i><i style="height:66%"></i><i style="height:74%"></i><i style="height:72%"></i><i style="height:80%"></i><i style="height:86%"></i><i style="height:90%"></i></div></div>
+        <div class="desc">الساعات القابلة للفوترة من الساعات المتاحة.</div>
+      </div>
+      <div class="kpi">
+        <div class="hd"><span><svg class="i"><use href="#i-info" /></svg>المبالغ المحصلة</span><span class="per num">90d</span></div>
+        <div class="row"><div><div class="val num">946,580 د.م.</div><span class="chg up">+7.3%</span></div>
+          <div class="spark"><i style="height:30%"></i><i style="height:52%"></i><i style="height:44%"></i><i style="height:60%"></i><i style="height:48%"></i><i style="height:74%"></i><i style="height:68%"></i><i style="height:95%"></i></div></div>
+        <div class="desc">مدفوعات العملاء المستلمة في الفترة.</div>
+      </div>
+    </div>
+
+    <div class="card chart">
+      <div class="hd"><span><svg class="i"><use href="#i-info" /></svg>تطور الإيرادات</span><span class="chip info">آخر 90 يومًا</span></div>
+      <div class="big"><b class="num">1,092,100 د.م.</b><span><span class="ltr">+12.4%</span> مقابل الفترة السابقة</span></div>
+      <svg viewBox="0 0 880 130" width="100%" height="130" style="display:block;margin-top:10px;overflow:visible" aria-hidden="true">
+        <defs>
+          <linearGradient id="rev-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2684ff" stop-opacity="0.22" /><stop offset="1" stop-color="#2684ff" stop-opacity="0" /></linearGradient>
+        </defs>
+        <g stroke="#e6ecf3" stroke-width="1.5"><line x1="0" y1="15" x2="880" y2="15" /><line x1="0" y1="54" x2="880" y2="54" /><line x1="0" y1="92" x2="880" y2="92" /><line x1="0" y1="126" x2="880" y2="126" /></g>
+        <path d="M0 115 C 80 109, 140 99, 220 90 S 360 73, 440 70 S 580 54, 660 46 S 800 32, 880 23" fill="none" stroke="#a8b5c5" stroke-width="3" stroke-dasharray="8 8" />
+        <path d="M0 121 C 70 115, 120 98, 190 86 S 320 66, 380 57 S 480 50, 550 38 S 740 23, 880 11 L 880 126 L 0 126 Z" fill="url(#rev-fill)" />
+        <path d="M0 121 C 70 115, 120 98, 190 86 S 320 66, 380 57 S 480 50, 550 38 S 740 23, 880 11" fill="none" stroke="#2684ff" stroke-width="4" stroke-linecap="round" />
+        <circle cx="880" cy="11" r="8" fill="#2684ff" stroke="#fff" stroke-width="4" />
+      </svg>
+      <div class="legend"><span><svg width="14" height="14"><circle cx="7" cy="7" r="6" fill="#2684ff" /></svg>الحالي (آخر 90 يومًا)</span><span><svg width="22" height="14"><line x1="1" y1="7" x2="21" y2="7" stroke="#a8b5c5" stroke-width="3" stroke-dasharray="4 4" /></svg>مقابل الفترة السابقة</span></div>
+      <div class="victor">
+        <span class="vpill"><span class="sp"><svg class="i"><use href="#i-sparkles" /></svg></span>اسأل فيكتور (Nexora AI)</span>
+      </div>
+    </div>
+  </div>
+  <span class="note">تصوّر توضيحي لواجهة Nexora — بيانات تجريبية</span>
+  <div class="bottom">
+    <span class="handle">Nexora ERP</span>
+    <span class="swipe">اسحب<svg class="i"><use href="#i-arrow-left" /></svg></span>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 08 · ROLES ═════════════════════════ -->
+<section class="slide s8" data-slide="08">
+  <div class="top">
+    <div class="brand"><span class="brand-mark"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora SaaS</span></div>
+    <span class="count">08 / 10</span>
+  </div>
+  <div class="body center">
+    <h2 class="title">كل شخص يرى…<br />ما يحتاجه فقط!</h2>
+    <p class="sub" style="margin-top:8px">الرواتب والتكاليف والهوامش محمية حسب الدور.</p>
+
+    <div class="roles">
+      <div class="card role float">
+        <div class="who"><img class="av" src="../../public/avatars/marcus-vance.jpg" alt="" /><div><b>المسؤول</b><small>Admin</small></div></div>
+        <ul>
+          <li class="y"><svg class="i"><use href="#i-circle-check" /></svg>كل شيء: الإعدادات وقواعد الموافقة</li>
+          <li class="y"><svg class="i"><use href="#i-circle-check" /></svg>إقفال الفترة وتصدير البيانات</li>
+          <li class="y"><svg class="i"><use href="#i-circle-check" /></svg>كل الأشخاص والفواتير والتكاليف</li>
+        </ul>
+      </div>
+      <div class="card role float">
+        <div class="who"><img class="av" src="../../public/avatars/sarah-chen.jpg" alt="" /><div><b>المدير</b><small>Manager</small></div></div>
+        <ul>
+          <li class="y"><svg class="i"><use href="#i-circle-check" /></svg>المشاريع والمهام والتخطيط</li>
+          <li class="y"><svg class="i"><use href="#i-circle-check" /></svg>وقت الفريق وإجازاته وموافقاته</li>
+          <li class="n"><svg class="i"><use href="#i-circle-x" /></svg>إعدادات مساحة العمل</li>
+        </ul>
+      </div>
+      <div class="card role float">
+        <div class="who"><img class="av" src="../../public/avatars/david-kim.jpg" alt="" /><div><b>المحاسب</b><small>Accountant</small></div></div>
+        <ul>
+          <li class="y"><svg class="i"><use href="#i-circle-check" /></svg>الفواتير والمدفوعات والإشعارات الدائنة</li>
+          <li class="y"><svg class="i"><use href="#i-circle-check" /></svg>الذمم والمصاريف والربحية</li>
+          <li class="n"><svg class="i"><use href="#i-circle-x" /></svg>تعديل المشاريع والمهام</li>
+        </ul>
+      </div>
+      <div class="card role float">
+        <div class="who"><img class="av" src="../../public/avatars/maya-patel.jpg" alt="" /><div><b>الموظف</b><small>Employee</small></div></div>
+        <ul>
+          <li class="y"><svg class="i"><use href="#i-circle-check" /></svg>وقته والمؤقّت ومهامه</li>
+          <li class="y"><svg class="i"><use href="#i-circle-check" /></svg>إجازاته ومصاريفه</li>
+          <li class="n"><svg class="i"><use href="#i-circle-x" /></svg>أسعار الآخرين وتكاليفهم والفواتير</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="label"><svg class="i"><use href="#i-lock" /></svg>قاعدة لا استثناء فيها</div>
+      <p>لا يمكن لأحد أن <b>يعتمد ساعاته أو إجازته أو مصاريفه بنفسه</b> — ولا حتى المسؤول.</p>
+    </div>
+  </div>
+  <div class="bottom">
+    <span class="handle">Nexora ERP</span>
+    <span class="swipe">اسحب<svg class="i"><use href="#i-arrow-left" /></svg></span>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 09 · MOBILE ═════════════════════════ -->
+<section class="slide s9" data-slide="09">
+  <div class="top">
+    <div class="brand"><span class="brand-mark"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora SaaS</span></div>
+    <span class="count">09 / 10</span>
+  </div>
+  <div class="body center">
+    <h2 class="title">في جيبك… وبلغتك!</h2>
+    <p class="sub" style="margin-top:8px">يُثبَّت على الهاتف كتطبيق، ويتحدث 9 لغات منها العربية.</p>
+
+    <div class="wrap">
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="bar">
+            <span class="pill" style="padding:0 6px"><img class="av" src="../../public/avatars/sophia-vance.jpg" alt="" /></span>
+            <span class="pill"><svg class="i"><use href="#i-bell" /></svg><svg class="i"><use href="#i-search" /></svg></span>
+            <span class="pill" style="padding:0 7px"><span class="lg"><img src="../../public/app-logo.png" alt="" /></span></span>
+            <span class="pill" style="padding:0 13px"><svg class="i"><use href="#i-menu" /></svg></span>
+          </div>
+          <div class="card hello">
+            <div class="crumb">لوحة التحكم<svg class="i"><use href="#i-chevron-left" /></svg>عملي</div>
+            <h5>مرحبًا، <span class="ltr">Sara</span></h5>
+            <p>مهامك اليوم وساعاتك هذا الأسبوع.</p>
+            <span class="btn primary"><svg class="i"><use href="#i-clock" /></svg>تسجيل الوقت</span>
+          </div>
+          <div class="run">
+            <div><small>مؤقت قيد التشغيل</small><span class="clk">00:42:18</span></div>
+            <span class="stop"><svg class="i"><use href="#i-square" /></svg></span>
+          </div>
+          <div class="tiles">
+            <div class="card t"><div class="l">ساعات هذا الأسبوع</div><div class="v num" style="color:var(--primary)">32 س</div><div class="c"><svg class="i"><use href="#i-clock" /></svg>8 س متبقية</div></div>
+            <div class="card t"><div class="l">الإجازة المتبقية</div><div class="v" style="color:var(--primary)"><span class="num">25</span> يوم</div><div class="c">رصيد هذا العام</div></div>
+            <div class="card t"><div class="l">مهام ذات أولوية</div><div class="v num">3</div><div class="c"><svg class="i"><use href="#i-triangle-alert" /></svg>1 متأخرة</div></div>
+            <div class="card t"><div class="l">بانتظار الاعتماد</div><div class="v num">8 س</div><div class="c"><svg class="i"><use href="#i-circle-check" /></svg>لا شيء مُعاد</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="card feat"><span class="ic"><svg class="i"><use href="#i-timer" /></svg></span><div><b>شاشة «اليوم»</b><span>المؤقّت وساعات اليوم مقابل الهدف.</span></div></div>
+        <div class="card feat"><span class="ic"><svg class="i"><use href="#i-camera" /></svg></span><div><b>صورة الإيصال</b><span>من الكاميرا مباشرة إلى المصروف.</span></div></div>
+        <div class="card feat"><span class="ic"><svg class="i"><use href="#i-smartphone" /></svg></span><div><b>اختصارات الشاشة الرئيسية</b><span>ابدأ المؤقّت أو سجّل الوقت بلمسة.</span></div></div>
+        <div class="card langs">
+          <div class="h"><svg class="i"><use href="#i-languages" /></svg>9 لغات</div>
+          <span class="l on">العربية</span><span class="l">English</span><span class="l">Français</span><span class="l">Deutsch</span><span class="l">Español</span><span class="l">اردو</span><span class="l">हिन्दी</span><span class="l">Русский</span><span class="l">中文</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <span class="note">تصوّر توضيحي لواجهة Nexora — بيانات تجريبية</span>
+  <div class="bottom">
+    <span class="handle">Nexora ERP</span>
+    <span class="swipe">اسحب<svg class="i"><use href="#i-arrow-left" /></svg></span>
+  </div>
+</section>
+
+<!-- ═════════════════════════ 10 · CTA ═════════════════════════ -->
+<section class="slide s10" data-slide="10">
+  <div class="top">
+    <div class="brand"><span class="brand-mark"><img src="../../public/app-logo.png" alt="" /></span><span class="brand-name">Nexora SaaS</span></div>
+    <span class="count">10 / 10</span>
+  </div>
+  <div class="body">
+    <h2 class="title">جرّبه الآن…<br />مع شركتين تجريبيتين!</h2>
+    <p class="sub" style="margin-top:8px">سنة كاملة من النشاط: موظفون، عملاء، مشاريع، ساعات، فواتير ومدفوعات.</p>
+
+    <div class="cos">
+      <div class="card co float">
+        <div class="h"><span class="m"><svg class="i"><use href="#i-building-2" /></svg></span><b>Atlas Consulting</b></div>
+        <p>10 موظفين في 5 أقسام، عملاء ومشاريع حالية ومنتهية، وفواتير متأخرة لتجربة كل شيء.</p>
+      </div>
+      <div class="card co float">
+        <div class="h"><span class="m"><svg class="i"><use href="#i-briefcase" /></svg></span><b>Northwind Studio</b></div>
+        <p>استوديو إبداعي أصغر بفريقه وعملائه ومشاريعه وفواتيره — مساحة عمل منفصلة تمامًا.</p>
+      </div>
+    </div>
+
+    <div class="card auth float">
+      <h4>مرحبًا بك في Nexora</h4>
+      <p>للوكالات، الاستشارات، الاستوديوهات، تقنية المعلومات ومكاتب الهندسة.</p>
+      <span class="btn primary">ابدأ النسخة التجريبية<svg class="i"><use href="#i-arrow-left" /></svg></span>
+      <div class="who">يعمل من المتصفح، ويُثبَّت على الهاتف كتطبيق.</div>
+    </div>
+  </div>
+  <img class="skyline" src="../../public/auth-skyline-blue.png" alt="" />
+  <div class="bottom">
+    <span class="handle">Nexora ERP</span>
+    <span class="swipe">احفظ وشارك<svg class="i"><use href="#i-bookmark" /></svg></span>
+  </div>
+</section>
+</body>
+</html>
