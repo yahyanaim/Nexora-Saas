@@ -306,8 +306,7 @@
   letter-spacing: -0.06em;
   font-weight: 600;
 }
-.h1 span {
-  display: block;
+.h1Accent {
   color: var(--brand);
 }
 .heroAside {
@@ -399,11 +398,6 @@
   border: 1px solid var(--line);
   border-radius: 4px;
 }
-.shot {
-  display: block;
-  width: 100%;
-  height: auto;
-}
 
 /* ---------- Logos ---------- */
 
@@ -411,10 +405,6 @@
   padding: 22px 24px;
   text-align: center;
   border-bottom: 1px solid var(--line);
-}
-.logos {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
 }
 .logo {
   display: grid;
@@ -429,12 +419,6 @@
   transition:
     color 0.15s ease,
     background 0.15s ease;
-}
-.logo:nth-child(4n) {
-  border-right: 0;
-}
-.logo:nth-last-child(-n + 4) {
-  border-bottom: 0;
 }
 .logo:hover {
   color: var(--ink);
@@ -642,6 +626,9 @@
   display: flex;
   align-items: center;
 }
+.splitCodeInner {
+  width: 100%;
+}
 .checks {
   margin-top: 32px;
 }
@@ -749,35 +736,6 @@
   color: var(--ink-3);
 }
 
-/* ---------- Gallery of more screens ---------- */
-
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--line);
-}
-.galleryItem {
-  padding: 24px;
-  border-right: 1px solid var(--line);
-}
-.galleryItem:last-child {
-  border-right: 0;
-}
-.galleryShot {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
-}
-.galleryItem figcaption {
-  margin-top: 14px;
-  font-family: var(--mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--ink-3);
-}
-
 /* ---------- Roles ---------- */
 
 .roles {
@@ -840,11 +798,6 @@
 
 /* ---------- Testimonials ---------- */
 
-.quotes {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--line);
-}
 .quote {
   display: flex;
   flex-direction: column;
@@ -852,9 +805,6 @@
   gap: 40px;
   padding: 36px 32px;
   border-right: 1px solid var(--line);
-}
-.quote:last-child {
-  border-right: 0;
 }
 .quote blockquote {
   font-size: 18px;
@@ -1092,22 +1042,32 @@
   line-height: 1.6;
 }
 .wordmark {
+  position: relative;
+  height: clamp(110px, 21vw, 280px);
+  margin: 8px 24px 0;
+}
+.wordmarkCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+.wordmarkFallback {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 2vw;
-  padding: 0 24px;
-  overflow: hidden;
+  font-size: clamp(90px, 22vw, 300px);
+  font-weight: 600;
+  letter-spacing: -0.06em;
+  line-height: 0.8;
+  color: var(--surface-2);
   user-select: none;
 }
-.wordmark span {
-  font-size: clamp(80px, 21vw, 290px);
-  font-weight: 600;
-  letter-spacing: -0.075em;
-  line-height: 0.78;
-  color: var(--surface-2);
-  -webkit-text-stroke: 0;
-  padding-bottom: 0.02em;
+.wordmark[data-ready] .wordmarkFallback {
+  visibility: hidden;
 }
 .legal {
   display: flex;
@@ -1130,6 +1090,362 @@
   width: 7px;
   height: 7px;
   background: var(--live);
+}
+
+/* ---------- Motion ---------- */
+
+/* Hero intro: lines rise out of a mask, the rest fades in after */
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+  margin-bottom: -0.06em;
+}
+.line > span {
+  display: block;
+  animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+  animation-delay: var(--d, 0s);
+}
+.fadeIn {
+  animation: fadeUp 0.8s cubic-bezier(0.2, 0.7, 0.1, 1) both;
+  animation-delay: var(--d, 0.5s);
+}
+@keyframes rise {
+  from {
+    transform: translateY(105%);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Blinking block cursor after the eyebrow, like a terminal prompt */
+.cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.2em;
+  background: var(--brand);
+  animation: blink 1.1s step-end infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Scroll reveals (turned on by RevealObserver, so content shows without JS) */
+.page[data-anim] [data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.7s cubic-bezier(0.2, 0.7, 0.1, 1),
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.1, 1);
+  transition-delay: var(--d, 0s);
+}
+.page[data-anim] [data-reveal][data-shown] {
+  opacity: 1;
+  transform: none;
+}
+
+/* Animated dither art */
+.ditherFill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+/* Full-page screenshot that scrolls inside a fixed frame */
+.scrollShot {
+  position: relative;
+  aspect-ratio: var(--frame);
+  overflow: hidden;
+  container-type: inline-size;
+  background: var(--surface);
+}
+.scrollImg {
+  display: block;
+  width: 100%;
+  height: auto;
+  --shift: min(0px, calc(-100cqw * (var(--r) - var(--fr))));
+  animation: shotLoop var(--dur) ease-in-out infinite;
+  will-change: transform;
+}
+.scrollOnce .scrollImg {
+  animation-name: shotOnce;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+.scrollShot:hover .scrollImg,
+.scrollShot:hover .scrollThumb {
+  animation-play-state: paused;
+}
+@keyframes shotLoop {
+  0%,
+  10% {
+    transform: translateY(0);
+  }
+  48%,
+  60% {
+    transform: translateY(var(--shift));
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes shotOnce {
+  0%,
+  12% {
+    transform: translateY(0);
+  }
+  88%,
+  100% {
+    transform: translateY(var(--shift));
+  }
+}
+.scrollTrack {
+  position: absolute;
+  top: 6px;
+  right: 5px;
+  bottom: 6px;
+  width: 4px;
+  border-radius: 4px;
+  background: rgb(13 19 28 / 0.06);
+}
+.scrollThumb {
+  display: block;
+  width: 100%;
+  height: calc(100% * min(1, var(--fr) / var(--r)));
+  border-radius: 4px;
+  background: rgb(38 132 255 / 0.55);
+  --travel: calc((var(--r) / var(--fr) - 1) * 100%);
+  animation: thumbLoop var(--dur) ease-in-out infinite;
+}
+.scrollOnce .scrollThumb {
+  animation-name: thumbOnce;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+@keyframes thumbLoop {
+  0%,
+  10% {
+    transform: translateY(0);
+  }
+  48%,
+  60% {
+    transform: translateY(max(0%, var(--travel)));
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes thumbOnce {
+  0%,
+  12% {
+    transform: translateY(0);
+  }
+  88%,
+  100% {
+    transform: translateY(max(0%, var(--travel)));
+  }
+}
+
+/* Product tabs: a line fills under the active tab, then the next one opens */
+.productTab {
+  position: relative;
+}
+.tabProgress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--brand);
+  transform-origin: left;
+  animation: tabFill var(--tab) linear forwards;
+}
+@keyframes tabFill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.product[data-paused] .tabProgress,
+.product[data-paused] .scrollImg,
+.product[data-paused] .scrollThumb {
+  animation-play-state: paused;
+}
+.productFrame .windowBar {
+  border-bottom: 1px solid var(--line);
+}
+
+/* Logo marquee */
+.marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.marqueeTrack {
+  display: flex;
+  width: max-content;
+  animation: marquee 38s linear infinite;
+}
+.marquee:hover .marqueeTrack {
+  animation-play-state: paused;
+}
+.marqueeTrack .logo {
+  flex: 0 0 auto;
+  min-width: 240px;
+  padding: 0 32px;
+  border-bottom: 0;
+  border-right: 1px solid var(--line);
+}
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Carousel */
+.carousel {
+  border-top: 1px solid var(--line);
+}
+.carouselViewport {
+  overflow: hidden;
+  cursor: grab;
+}
+.carouselViewport:active {
+  cursor: grabbing;
+}
+.carouselTrack {
+  display: flex;
+  touch-action: pan-y pinch-zoom;
+}
+.carouselSlide {
+  flex: 0 0 auto;
+  min-width: 0;
+  border-right: 1px solid var(--line);
+}
+.slideScreen {
+  width: 42%;
+  padding: 24px;
+}
+.slideQuote {
+  width: 33.333%;
+}
+.carouselBar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.carouselCount {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.carouselProgress {
+  flex: 1;
+  height: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.carouselProgress span {
+  display: block;
+  height: 100%;
+  background: var(--brand);
+  transform-origin: left;
+  transition: transform 0.4s ease;
+}
+.carouselButtons {
+  display: flex;
+  gap: 6px;
+}
+.carouselBtn {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--canvas);
+  font-family: var(--mono);
+  font-size: 15px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+.carouselBtn:hover {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+.shotCard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.shotCaption {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-3);
+}
+.slideQuote .quote {
+  height: 100%;
+  border-right: 0;
+}
+.slideQuote {
+  display: flex;
+}
+
+/* Hover lift on cards */
+.feature,
+.roleCard,
+.chainCell,
+.module {
+  position: relative;
+}
+.feature::after,
+.chainCell::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--brand);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s ease;
+}
+.feature:hover::after,
+.chainCell:hover::after {
+  transform: scaleX(1);
 }
 
 /* ---------- Responsive ---------- */
@@ -1207,7 +1523,29 @@
   }
 }
 
+@media (max-width: 1100px) {
+  .slideScreen {
+    width: 70%;
+  }
+  .slideQuote {
+    width: 50%;
+  }
+}
+
 @media (max-width: 768px) {
+  .slideScreen {
+    width: 88%;
+    padding: 16px;
+  }
+  .slideQuote {
+    width: 88%;
+  }
+  .carouselBar {
+    padding: 12px 16px;
+  }
+  .wordmark {
+    margin: 8px 12px 0;
+  }
   .pad,
   .splitCopy,
   .splitCode,
@@ -1243,33 +1581,16 @@
   .productView {
     padding: 16px;
   }
-  .logos {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .logo:nth-child(n) {
-    border-right: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-  }
-  .logo:nth-child(2n) {
-    border-right: 0;
-  }
-  .logo:nth-last-child(-n + 2) {
-    border-bottom: 0;
-  }
   .chain,
   .features,
-  .quotes,
   .plans,
-  .gallery,
   .roles {
     grid-template-columns: 1fr;
   }
   .chainCell,
   .feature,
-  .quote,
   .plan,
-  .roleCard,
-  .galleryItem {
+  .roleCard {
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
@@ -1278,8 +1599,6 @@
   }
   .feature:last-child,
   .plan:last-child,
-  .quote:last-child,
-  .galleryItem:last-child,
   .roleCard:last-child {
     border-bottom: 0;
   }
@@ -1323,7 +1642,16 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .page * {
+  .page *,
+  .page *::before,
+  .page *::after {
     transition: none !important;
+    animation: none !important;
+  }
+  .scrollShot {
+    overflow-y: auto;
+  }
+  .scrollTrack {
+    display: none;
   }
 }

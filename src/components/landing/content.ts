@@ -12,51 +12,85 @@ export const NAV_LINKS = [
   { label: "Docs", href: "/documentation/doc.html" },
 ]
 
-/** Real screens of the app (demo workspace), in public/landing */
+/** Real full-page screens of the app (demo workspace), in public/landing */
 export const SCREENS = [
   {
     id: "analytics",
     label: "Analytics",
     title: "Profit you can explain",
     body: "Revenue earned, gross margin, utilization and cash collected against the previous period, with the reason behind each number.",
-    src: "/landing/overview.webp",
+    src: "/landing/screens/overview.webp",
+    path: "overview",
+    width: 2000,
+    height: 2724,
   },
   {
     id: "projects",
     label: "Projects",
     title: "Projects that know their budget",
     body: "Board, list, milestones, Gantt and team views. Health, budget used and progress on every project, live.",
-    src: "/landing/project-detail.webp",
+    src: "/landing/screens/project-detail.webp",
+    path: "projects/orbit-fleet-portal",
+    width: 2000,
+    height: 1264,
   },
   {
     id: "invoicing",
     label: "Invoicing",
     title: "Invoices from approved hours",
     body: "What is ready to bill, outstanding and overdue, with DGI e-invoice status on every invoice.",
-    src: "/landing/client-invoices.webp",
+    src: "/landing/screens/client-invoices.webp",
+    path: "client-invoices",
+    width: 2000,
+    height: 1940,
   },
   {
     id: "receivables",
     label: "Receivables",
     title: "Know who owes you",
     body: "Open balances by age, three-level reminders and the rules that send them.",
-    src: "/landing/receivables.webp",
+    src: "/landing/screens/receivables.webp",
+    path: "receivables",
+    width: 2000,
+    height: 1386,
   },
   {
     id: "forecast",
     label: "Forecast",
     title: "Next month’s cash, today",
     body: "Income expected each month from invoices, recurring billing, booked work and weighted deals.",
-    src: "/landing/forecast.webp",
+    src: "/landing/screens/forecast.webp",
+    path: "forecast",
+    width: 2000,
+    height: 1662,
   },
   {
     id: "planning",
     label: "Planning",
     title: "Capacity before it is a problem",
     body: "Who is booked on what for the next 12 weeks, against capacity, leave and public holidays.",
-    src: "/landing/resourcing.webp",
+    src: "/landing/screens/resourcing.webp",
+    path: "resourcing",
+    width: 2000,
+    height: 2315,
   },
 ]
+
+/** Every captured screen, for the carousel */
+export const GALLERY = [
+  { src: "/landing/screens/deals.webp", width: 2000, height: 1667, caption: "Deals pipeline" },
+  { src: "/landing/screens/team.webp", width: 2000, height: 1890, caption: "Team dashboard" },
+  { src: "/landing/screens/kpis.webp", width: 2000, height: 1869, caption: "KPIs per person" },
+  { src: "/landing/screens/client-invoices.webp", width: 2000, height: 1940, caption: "Client invoices" },
+  { src: "/landing/screens/resourcing.webp", width: 2000, height: 2315, caption: "Resource planning" },
+  { src: "/landing/screens/forecast.webp", width: 2000, height: 1662, caption: "Revenue forecast" },
+  { src: "/landing/screens/receivables.webp", width: 2000, height: 1386, caption: "Receivables" },
+  { src: "/landing/screens/project-detail.webp", width: 2000, height: 1264, caption: "Project board" },
+  { src: "/landing/screens/overview.webp", width: 2000, height: 2724, caption: "Business analytics" },
+]
+
+export const FOOTER_TAGLINE =
+  "Nexora is the ERP for service companies. It connects the people you hire and the clients you serve to your projects, the hours you work, the invoices you send, the cash you collect and the profit you keep."
 
 export const CHAIN = [
   { step: "01", title: "People", body: "Roles, rates, capacity and real cost per hour." },
@@ -237,6 +271,21 @@ export const TESTIMONIALS = [
     quote: "For the first time I know which projects actually make money, per person and per phase, before the project ends.",
     name: "Alex Morgan",
     role: "Partner, Atlas Consulting",
+  },
+  {
+    quote: "Our team logs time from their phones and approvals take minutes. Nothing gets billed late any more.",
+    name: "Sarah Chen",
+    role: "Operations Lead, Northwind Studio",
+  },
+  {
+    quote: "The client portal ended the ‘where are we on this?’ emails. Clients approve milestones and download invoices on their own.",
+    name: "Yassine Alaoui",
+    role: "Project Director, Orbit Labs",
+  },
+  {
+    quote: "Resource planning showed us who was over-booked three weeks before it became a problem. That alone paid for it.",
+    name: "Lina Moreau",
+    role: "COO, Kasbah Creative",
   },
 ]
 
