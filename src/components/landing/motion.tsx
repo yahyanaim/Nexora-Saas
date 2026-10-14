@@ -35,7 +35,7 @@ export function RevealObserver() {
   return null
 }
 
-/** Counts up to a figure such as "40+", "99.9%" or "12" when it scrolls into view. */
+/** Counts up to a figure such as "40+", "99.9%" or "12" each time it scrolls into view. */
 export function CountUp({ value }: { value: string }) {
   const ref = useRef<HTMLElement>(null)
   const match = value.match(/^([\d.]+)(.*)$/)
@@ -50,10 +50,10 @@ export function CountUp({ value }: { value: string }) {
     let raf = 0
     const io = new IntersectionObserver(([e]) => {
       if (!e?.isIntersecting) return
-      io.disconnect()
+      cancelAnimationFrame(raf)
       const start = performance.now()
       const step = (now: number) => {
-        const p = Math.min(1, (now - start) / 1400)
+        const p = Math.min(1, (now - start) / 1600)
         const eased = 1 - Math.pow(1 - p, 3)
         el.textContent = (target * eased).toFixed(decimals) + suffix
         if (p < 1) raf = requestAnimationFrame(step)
@@ -68,4 +68,45 @@ export function CountUp({ value }: { value: string }) {
   }, [target, decimals, suffix])
 
   return <strong ref={ref}>{value}</strong>
+}
+
+/**
+ * Scroll-linked motion. Writes `--scroll` (0–1 down the page) on the landing
+ * root and `--sp` (0 as an element enters at the bottom, 1 as it leaves at the
+ * top) on every `[data-scroll]` element; the CSS turns those into the tilt,
+ * parallax and moving text. Throttled to one update a frame; nothing moves
+ * with reduced motion.
+ */
+export function ScrollFX() {
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const root = document.querySelector<HTMLElement>("[data-landing]")
+    if (!root) return
+    const items = [...root.querySelectorAll<HTMLElement>("[data-scroll]")]
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const vh = window.innerHeight
+      const max = Math.max(1, document.documentElement.scrollHeight - vh)
+      root.style.setProperty("--scroll", (window.scrollY / max).toFixed(4))
+      for (const el of items) {
+        const r = el.getBoundingClientRect()
+        if (r.bottom < -vh || r.top > vh * 2) continue
+        const p = (vh - r.top) / (vh + r.height)
+        el.style.setProperty("--sp", Math.min(1, Math.max(0, p)).toFixed(4))
+      }
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    window.addEventListener("resize", onScroll)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener("scroll", onScroll)
+      window.removeEventListener("resize", onScroll)
+    }
+  }, [])
+  return null
 }

@@ -76,6 +76,7 @@ export function ProductTabs() {
             mode={auto ? "once" : "loop"}
             duration={auto ? TAB_SECONDS : 18}
             sizes="(max-width: 1100px) 100vw, 900px"
+            fill
           />
         </div>
         <div className={s.productCaption}>

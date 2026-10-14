@@ -21,7 +21,7 @@ import {
 } from "./content"
 import { DitherCanvas } from "./dither-canvas"
 import { geist, geistMono } from "./fonts"
-import { CountUp, RevealObserver } from "./motion"
+import { CountUp, RevealObserver, ScrollFX } from "./motion"
 import { ProductTabs } from "./product-tabs"
 import { ScrollShot } from "./scroll-shot"
 import s from "./landing.module.css"
@@ -30,12 +30,6 @@ const SIGN_UP = "/auth?section=register"
 const SIGN_IN = "/auth"
 
 const formatMad = (n: number) => n.toLocaleString("en-US").replace(/,/g, " ")
-const initials = (name: string) =>
-  name
-    .split(" ")
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
 /** Stagger delay for the n-th item of a revealed group */
 const delay = (i: number, step = 70) => ({ "--d": `${i * step}ms` }) as React.CSSProperties
 
@@ -52,13 +46,34 @@ function Mark({ size = 28 }: { size?: number }) {
   return <Image src="/landing/nexora-mark.webp" alt="" width={size} height={size} loading="eager" />
 }
 
+/** Splits a heading into words that rise one after another when revealed */
+function Words({ text, from = 0 }: { text: string; from?: number }) {
+  return text.split(" ").map((w, i) => (
+    <span key={i}>
+      {i > 0 && " "}
+      <span className={s.word}>
+        <span style={{ "--i": from + i } as React.CSSProperties}>{w}</span>
+      </span>
+    </span>
+  ))
+}
+
+function Heading({ title, muted }: { title: string; muted: string }) {
+  return (
+    <h2 className={s.h2}>
+      <Words text={title} />{" "}
+      <span className={s.muted}>
+        <Words text={muted} from={title.split(" ").length} />
+      </span>
+    </h2>
+  )
+}
+
 function SectionHead({ index, label, title, muted }: { index: string; label: string; title: string; muted: string }) {
   return (
     <div data-reveal>
       <Eyebrow index={index}>{label}</Eyebrow>
-      <h2 className={s.h2}>
-        {title} <span>{muted}</span>
-      </h2>
+      <Heading title={title} muted={muted} />
     </div>
   )
 }
@@ -73,6 +88,7 @@ export function LandingPage() {
       </div>
 
       <header className={s.nav}>
+        <span className={s.scrollBar} aria-hidden />
         <div className={s.navInner}>
           <Link href="/" className={s.brand} aria-label="Nexora home">
             <Mark />
@@ -144,11 +160,11 @@ export function LandingPage() {
             </div>
 
             <div className={`${s.heroStage} ${s.fadeIn}`} style={{ "--d": "0.8s" } as React.CSSProperties}>
-              <div className={s.heroArt} aria-hidden>
+              <div className={s.heroArt} aria-hidden data-scroll>
                 <Image src="/landing/hero-dither.webp" alt="" width={1920} height={560} loading="eager" unoptimized />
                 <DitherCanvas variant="skyline" cell={6} className={s.ditherFill} />
               </div>
-              <div className={s.window}>
+              <div className={s.window} data-scroll>
                 <div className={s.windowBar}>
                   <span className={s.dot} />
                   <span className={s.dot} />
@@ -216,6 +232,20 @@ export function LandingPage() {
             </div>
           </section>
 
+          {/* Text band that slides with the scroll */}
+          <section className={`${s.section} ${s.band}`} aria-hidden data-scroll>
+            <div className={s.bandRow}>
+              {[0, 1, 2].flatMap((k) =>
+                ["People", "Clients", "Projects", "Hours"].flatMap((w) => [<span key={`${k}${w}`}>{w}</span>, <i key={`${k}${w}i`}>■</i>]),
+              )}
+            </div>
+            <div className={s.bandRow}>
+              {[0, 1, 2].flatMap((k) =>
+                ["Invoices", "Cash", "Profit", "Nexora"].flatMap((w) => [<span key={`${k}${w}`}>{w}</span>, <i key={`${k}${w}i`}>■</i>]),
+              )}
+            </div>
+          </section>
+
           {/* Chain */}
           <section className={s.section}>
             <div className={s.padHead}>
@@ -269,11 +299,15 @@ export function LandingPage() {
           <section className={s.section}>
             <div className={s.stats}>
               {STATS.map((st, i) => (
-                <div key={st.label} className={s.stat} data-reveal style={delay(i)}>
+                <div key={st.label} className={s.stat} data-reveal style={delay(i, 110)}>
                   <CountUp value={st.value} />
+                  <i className={s.statBar} aria-hidden />
                   <span>{st.label}</span>
                 </div>
               ))}
+            </div>
+            <div className={s.statsStrip} aria-hidden>
+              <DitherCanvas variant="field" cell={6} className={s.ditherFill} />
             </div>
           </section>
 
@@ -290,7 +324,7 @@ export function LandingPage() {
                 </div>
               ))}
             </div>
-            <Carousel label="Nexora screens" autoplay={6000} slideClass={s.slideScreen}>
+            <Carousel label="Nexora screens" speed={42} slideClass={s.slideScreen}>
               {GALLERY.map((g, i) => (
                 <figure key={g.src}>
                   <div className={s.shotCard}>
@@ -337,12 +371,12 @@ export function LandingPage() {
             <div className={s.padHead}>
               <SectionHead index="07" label="Customers" title="Fewer tools." muted="Clearer margins." />
             </div>
-            <Carousel label="What customers say" autoplay={5000} slideClass={s.slideQuote}>
+            <Carousel label="What customers say" speed={36} slideClass={s.slideQuote}>
               {TESTIMONIALS.map((t) => (
                 <figure key={t.name} className={s.quote}>
                   <blockquote>“{t.quote}”</blockquote>
                   <figcaption>
-                    <span className={s.avatar}>{initials(t.name)}</span>
+                    <Image src={t.photo} alt={t.name} width={88} height={88} className={s.avatarImg} />
                     <span>
                       {t.name}
                       <small>{t.role}</small>
@@ -415,15 +449,13 @@ export function LandingPage() {
           {/* CTA */}
           <section className={s.section}>
             <div className={s.cta}>
-              <div className={s.ctaArt} aria-hidden>
+              <div className={s.ctaArt} aria-hidden data-scroll>
                 <Image src="/landing/cta-dither.webp" alt="" width={1920} height={640} unoptimized />
                 <DitherCanvas variant="field" cell={8} className={s.ditherFill} />
               </div>
               <div className={s.ctaCard} data-reveal>
                 <Eyebrow index="10">Get started</Eyebrow>
-                <h2 className={s.h2}>
-                  Give your company <span>one place to run.</span>
-                </h2>
+                <Heading title="Give your company" muted="one place to run." />
                 <div className={s.heroCtas}>
                   <Link href={SIGN_UP} className={s.btn}>
                     Start for free <span className={s.arrow}>→</span>
@@ -471,6 +503,7 @@ export function LandingPage() {
         </div>
       </main>
       <RevealObserver />
+      <ScrollFX />
     </div>
   )
 }

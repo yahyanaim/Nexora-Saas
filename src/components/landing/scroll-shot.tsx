@@ -14,6 +14,8 @@ interface Props {
   duration?: number
   sizes: string
   eager?: boolean
+  /** Take the full height of the parent instead of a fixed frame shape */
+  fill?: boolean
 }
 
 /**
@@ -21,7 +23,7 @@ interface Props {
  * the whole page, with a thin scrollbar that follows. Pauses on hover; with
  * reduced motion it does not move and the frame scrolls by hand instead.
  */
-export function ScrollShot({ src, alt, width, height, frame = 16 / 10, mode = "loop", duration = 16, sizes, eager }: Props) {
+export function ScrollShot({ src, alt, width, height, frame = 16 / 10, mode = "loop", duration = 16, sizes, eager, fill }: Props) {
   const vars = {
     "--r": height / width,
     "--fr": 1 / frame,
@@ -30,7 +32,7 @@ export function ScrollShot({ src, alt, width, height, frame = 16 / 10, mode = "l
   } as React.CSSProperties
 
   return (
-    <div className={`${s.scrollShot} ${mode === "once" ? s.scrollOnce : ""}`} style={vars}>
+    <div className={`${s.scrollShot} ${mode === "once" ? s.scrollOnce : ""} ${fill ? s.scrollFill : ""}`} style={vars}>
       <Image
         src={src}
         alt={alt}

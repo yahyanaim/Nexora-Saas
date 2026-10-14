@@ -115,7 +115,7 @@
   font-weight: 600;
   text-wrap: balance;
 }
-.h2 span {
+.h2 .muted {
   color: var(--ink-3);
 }
 
@@ -227,6 +227,16 @@
   font-size: 11px;
 }
 
+.scrollBar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--brand);
+  transform-origin: left;
+  transform: scaleX(var(--scroll, 0));
+}
 .nav {
   position: sticky;
   top: 0;
@@ -352,6 +362,9 @@
   overflow: hidden;
   pointer-events: none;
 }
+.heroArt > * {
+  transform: translateY(calc((var(--sp, 0.5) - 0.5) * 70px)) scale(1.08);
+}
 .heroArt img {
   position: absolute;
   inset: auto 0 0 0;
@@ -364,6 +377,9 @@
 
 /* App window holding a real screenshot */
 .window {
+  --t: clamp(0, calc(var(--sp, 1) / 0.42), 1);
+  transform: perspective(1600px) rotateX(calc((1 - var(--t)) * 16deg)) scale(calc(0.9 + var(--t) * 0.1));
+  transform-origin: 50% 0;
   position: relative;
   margin: 56px auto 0;
   max-width: 1120px;
@@ -483,10 +499,16 @@
   color: var(--ink-2);
 }
 .productView {
-  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
   background: var(--surface-2);
 }
 .productFrame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -773,18 +795,46 @@
   background: var(--surface);
 }
 .stat {
-  padding: 48px 32px;
+  position: relative;
+  padding: 48px 32px 44px;
   border-right: 1px solid var(--line);
+  transition: background 0.25s ease;
+}
+.stat:hover {
+  background: var(--brand-tint);
 }
 .stat:last-child {
   border-right: 0;
 }
 .stat strong {
   display: block;
-  font-size: clamp(44px, 5.4vw, 72px);
+  font-size: clamp(48px, 5.8vw, 80px);
   font-weight: 600;
   letter-spacing: -0.06em;
   line-height: 1;
+  color: var(--brand);
+  font-variant-numeric: tabular-nums;
+}
+/* a blue line that draws in under each figure */
+.statBar {
+  display: block;
+  height: 3px;
+  margin-top: 22px;
+  background: linear-gradient(90deg, var(--brand), #82beff);
+  transform-origin: left;
+  transform: scaleX(0.15);
+  transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.1, 1);
+  transition-delay: calc(var(--d, 0s) + 0.2s);
+}
+.page:not([data-anim]) .statBar,
+.page[data-anim] [data-shown] .statBar {
+  transform: scaleX(1);
+}
+.statsStrip {
+  position: relative;
+  height: 44px;
+  border-top: 1px solid var(--line);
+  overflow: hidden;
 }
 .stat span {
   display: block;
@@ -825,16 +875,12 @@
   color: var(--ink-2);
   font-size: 12.5px;
 }
-.avatar {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 2px;
-  background: var(--brand-tint);
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--brand-hover);
+.avatarImg {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--line);
 }
 
 /* ---------- Pricing ---------- */
@@ -989,7 +1035,11 @@
 .ctaArt {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
+}
+.ctaArt > * {
+  transform: translateY(calc((var(--sp, 0.5) - 0.5) * 90px)) scale(1.15);
 }
 .ctaArt img {
   width: 100%;
@@ -1184,6 +1234,20 @@
   animation: shotLoop var(--dur) ease-in-out infinite;
   will-change: transform;
 }
+/* Fill mode: as tall as the parent; the travel uses the frame's own height */
+.scrollFill {
+  flex: 1;
+  min-height: 0;
+  aspect-ratio: auto;
+  container-type: size;
+}
+.scrollFill .scrollImg {
+  --shift: min(0px, calc(100cqh - 100cqw * var(--r)));
+}
+.scrollFill .scrollThumb {
+  height: 26%;
+  --travel: 284.6%;
+}
 .scrollOnce .scrollImg {
   animation-name: shotOnce;
   animation-iteration-count: 1;
@@ -1327,13 +1391,21 @@
 .carouselViewport {
   overflow: hidden;
   cursor: grab;
+  container-type: inline-size;
+  touch-action: pan-y;
+  user-select: none;
 }
 .carouselViewport:active {
   cursor: grabbing;
 }
 .carouselTrack {
   display: flex;
-  touch-action: pan-y pinch-zoom;
+  width: max-content;
+  will-change: transform;
+}
+.carouselTrack img {
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 .carouselSlide {
   flex: 0 0 auto;
@@ -1341,11 +1413,11 @@
   border-right: 1px solid var(--line);
 }
 .slideScreen {
-  width: 42%;
+  width: 42cqw;
   padding: 24px;
 }
 .slideQuote {
-  width: 33.333%;
+  width: 34cqw;
 }
 .carouselBar {
   display: flex;
@@ -1372,7 +1444,6 @@
   height: 100%;
   background: var(--brand);
   transform-origin: left;
-  transition: transform 0.4s ease;
 }
 .carouselButtons {
   display: flex;
@@ -1446,6 +1517,63 @@
 .feature:hover::after,
 .chainCell:hover::after {
   transform: scaleX(1);
+}
+
+/* Headings: each word rises out of its own mask when the heading appears */
+.word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.word > span {
+  display: inline-block;
+}
+.page[data-anim] [data-reveal] .word > span {
+  transform: translateY(110%);
+  transition: transform 0.85s cubic-bezier(0.2, 0.7, 0.1, 1);
+  transition-delay: calc(var(--i, 0) * 45ms + 80ms);
+}
+.page[data-anim] [data-reveal][data-shown] .word > span {
+  transform: none;
+}
+
+/* Big text band that slides sideways as the page scrolls */
+.band {
+  overflow: hidden;
+  padding: 36px 0;
+  background: var(--surface);
+}
+.bandRow {
+  display: flex;
+  gap: 0.35em;
+  width: max-content;
+  font-size: clamp(56px, 9vw, 128px);
+  font-weight: 600;
+  letter-spacing: -0.055em;
+  line-height: 1.02;
+  white-space: nowrap;
+  will-change: transform;
+}
+.bandRow:first-child {
+  transform: translateX(calc(var(--sp, 0.5) * -40%));
+}
+.bandRow:last-child {
+  transform: translateX(calc(-40% + var(--sp, 0.5) * 40%));
+}
+.bandRow span:nth-child(odd) {
+  color: var(--ink);
+}
+.bandRow span:nth-child(even) {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--brand);
+}
+.bandRow i {
+  font-style: normal;
+  color: var(--brand);
+  font-size: 0.4em;
+  align-self: center;
 }
 
 /* ---------- Responsive ---------- */
@@ -1524,21 +1652,32 @@
 }
 
 @media (max-width: 1100px) {
+  .productFrame {
+    flex: none;
+  }
+  .scrollFill {
+    flex: none;
+    aspect-ratio: var(--frame);
+    container-type: inline-size;
+  }
+  .scrollFill .scrollImg {
+    --shift: min(0px, calc(-100cqw * (var(--r) - var(--fr))));
+  }
   .slideScreen {
-    width: 70%;
+    width: 66cqw;
   }
   .slideQuote {
-    width: 50%;
+    width: 52cqw;
   }
 }
 
 @media (max-width: 768px) {
   .slideScreen {
-    width: 88%;
+    width: 86cqw;
     padding: 16px;
   }
   .slideQuote {
-    width: 88%;
+    width: 86cqw;
   }
   .carouselBar {
     padding: 12px 16px;
@@ -1650,6 +1789,12 @@
   }
   .scrollShot {
     overflow-y: auto;
+  }
+  .window,
+  .heroArt > *,
+  .ctaArt > *,
+  .bandRow {
+    transform: none !important;
   }
   .scrollTrack {
     display: none;

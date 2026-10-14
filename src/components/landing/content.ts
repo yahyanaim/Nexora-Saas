@@ -255,36 +255,42 @@ export const STATS = [
   { value: "99.9%", label: "uptime commitment" },
 ]
 
-// Placeholder testimonials
+// Placeholder testimonials (photos are the app's demo avatars)
 export const TESTIMONIALS = [
   {
     quote: "We closed five spreadsheets the week we moved. Invoices now come straight from approved hours, and month-end takes an afternoon.",
     name: "Nadia El Fassi",
+    photo: "/avatars/maya-patel.jpg",
     role: "Managing Director, Marrakech Digital",
   },
   {
     quote: "The DGI e-invoice file and the VAT return used to be a whole day with our accountant. Now it is an export.",
     name: "Hicham Benjelloun",
+    photo: "/avatars/marcus-vance.jpg",
     role: "CFO, Dar Al Bina Ingénierie",
   },
   {
     quote: "For the first time I know which projects actually make money, per person and per phase, before the project ends.",
     name: "Alex Morgan",
+    photo: "/avatars/alex-morgan.jpg",
     role: "Partner, Atlas Consulting",
   },
   {
     quote: "Our team logs time from their phones and approvals take minutes. Nothing gets billed late any more.",
     name: "Sarah Chen",
+    photo: "/avatars/sarah-chen.jpg",
     role: "Operations Lead, Northwind Studio",
   },
   {
     quote: "The client portal ended the ‘where are we on this?’ emails. Clients approve milestones and download invoices on their own.",
     name: "Yassine Alaoui",
+    photo: "/avatars/lucas-dubois.jpg",
     role: "Project Director, Orbit Labs",
   },
   {
     quote: "Resource planning showed us who was over-booked three weeks before it became a problem. That alone paid for it.",
     name: "Lina Moreau",
+    photo: "/avatars/sophia-vance.jpg",
     role: "COO, Kasbah Creative",
   },
 ]
