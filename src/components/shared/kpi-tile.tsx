@@ -77,7 +77,7 @@ export function KpiTile({ title, value, period, change, isPositive = true, spark
           {sparkline && sparkline.length > 0 && <MiniBarSparkline heights={sparkline} />}
         </div>
 
-        <p className="mt-3 text-xs text-muted-foreground line-clamp-2">{description}</p>
+        <p className="mt-3 text-xs text-muted-foreground">{description}</p>
       </div>
 
       {note && (

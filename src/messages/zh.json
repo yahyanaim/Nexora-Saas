@@ -4754,6 +4754,8 @@
   "chByCountry": "按国家的经常性收入",
   "chByHint": "今日活跃及逾期付款客户的月度收入（不含增值税）。",
   "chNoRevenue": "尚无经常性收入。",
+  "chOthers": "其他",
+  "chGuidance": "最佳月份 {best}；最弱 {worst}。",
   "chCustomers": "{n} 位客户",
   "chAttention": "需要您处理",
   "chAttentionHint": "逾期付款、7 天内结束的试用以及紧急支持请求。",

@@ -24,10 +24,10 @@ import { consoleCan, needsStepUp } from "@/lib/platform/console-roles"
 import { accountMrr, canTransition, customerHealth, isoDay, seatLimit, trialDataDeletedOn, trialSuspendsOn } from "@/lib/platform/customer-lifecycle"
 import { termsFor } from "@/lib/platform/billing"
 import { KpiTile } from "@/components/shared/kpi-tile"
-import { NEXORA_PLANS, formatMad, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
+import { NEXORA_PLANS, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import { useBillingMutations, useNxDunning, useNxInvoices, useNxPayments, useNxSubscriptions, useProFormas } from "@/hooks/platform/use-platform-billing"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { InvoiceStatusBadge } from "./billing-shared"
+import { InvoiceStatusBadge, formatConsoleMoney } from "./billing-shared"
 import { cn } from "@/lib/utils"
 import { ConsoleCapability as C, ConsoleRole } from "@/types/platform-console"
 import { ACTION_LABEL, StepUpDialog } from "./console-shared"
@@ -72,7 +72,9 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
   const [pfOpen, setPfOpen] = useState(false)
   const [pf, setPf] = useState({ plan: "business" as NexoraPlanId, billing: "yearly" as "monthly" | "yearly" })
 
-  const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
+  const money = (n: number) => formatConsoleMoney(n, locale)
+  // tiles without cents, as on the companies' Analytics
+  const tileMoney = (n: number) => formatConsoleMoney(n, locale, { whole: true })
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`))
 
   if (isLoading) return <div className="p-4 md:p-6"><ListSkeleton /></div>
@@ -182,8 +184,8 @@ export default function CustomerAccountPage({ customerId }: { customerId: string
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <KpiTile title={t("pfMrrCol")} value={accountMrr(c) ? money(accountMrr(c)) : "—"} period={t("chToday")} description={`${plan.name} · ${t(c.billing === "yearly" ? "pfYearly" : "pfMonthly")}`} noteLabel={t("anOperationalNote")} note={t("cuTileArr", { arr: money(accountMrr(c) * 12) })} />
         <KpiTile title={t("pfSeatsCol")} value={limit ? `${c.seatsUsed} / ${limit}` : String(c.seatsUsed)} period={t("chToday")} description={limit ? t("cuTilePeopleDesc", { left: Math.max(0, limit - c.seatsUsed) }) : t("pfUnlimited", { count: c.seatsUsed })} />
-        <KpiTile title={t("cuTileOwed")} value={money(owed)} period={t("chToday")} description={t("cuTileOwedDesc")} noteLabel={t("anOperationalNote")} note={t("cuTileOwedNote", { n: invoices.filter((i) => i.status === "overdue").length })} />
-        <KpiTile title={t("cuTilePaid")} value={money(paidToDate)} period={t("chAllTime")} description={t("cuTilePaidDesc", { date: date(c.since) })} noteLabel={t("anOperationalNote")} note={t("cuTilePaidNote", { n: invoices.length })} />
+        <KpiTile title={t("cuTileOwed")} value={tileMoney(owed)} period={t("chToday")} description={t("cuTileOwedDesc")} noteLabel={t("anOperationalNote")} note={t("cuTileOwedNote", { n: invoices.filter((i) => i.status === "overdue").length })} />
+        <KpiTile title={t("cuTilePaid")} value={tileMoney(paidToDate)} period={t("chAllTime")} description={t("cuTilePaidDesc", { date: date(c.since) })} noteLabel={t("anOperationalNote")} note={t("cuTilePaidNote", { n: invoices.length })} />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:items-start">

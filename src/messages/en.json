@@ -4754,6 +4754,8 @@
   "chByCountry": "Recurring revenue by country",
   "chByHint": "Monthly, before VAT, of active and payment-overdue customers today.",
   "chNoRevenue": "No recurring revenue yet.",
+  "chOthers": "Others",
+  "chGuidance": "Best month {best}; weakest {worst}.",
   "chCustomers": "{n, plural, one {# customer} other {# customers}}",
   "chAttention": "Needs your attention",
   "chAttentionHint": "Late payments, trials ending within 7 days and urgent support requests.",

@@ -38,7 +38,7 @@ const PAY_CLASS: Record<NxPayment["status"], string> = {
 
 export default function ConsoleTransactionsPage() {
   const t = useTranslations()
-  const { money, date } = useBillingFormat()
+  const { money, wholeMoney, date } = useBillingFormat()
   const actor = useConsoleActor()
   const { data: payments = [], isLoading } = useNxPayments()
   const { data: invoices = [] } = useNxInvoices()
@@ -103,7 +103,7 @@ export default function ConsoleTransactionsPage() {
   ], [t, canRecord, today])
 
   const cards: MetricCardItem[] = [
-    { key: "in", title: t("trReceived"), value: money(payments.filter((p) => p.status === "succeeded" && p.date.startsWith(month)).reduce((s, p) => s + p.amount, 0)), valueClassName: "text-success", footer: { icon: CheckCircle, text: t("trThisMonth") } },
+    { key: "in", title: t("trReceived"), value: wholeMoney(payments.filter((p) => p.status === "succeeded" && p.date.startsWith(month)).reduce((s, p) => s + p.amount, 0)), valueClassName: "text-success", footer: { icon: CheckCircle, text: t("trThisMonth") } },
     { key: "failed", title: t("trFailed"), value: payments.filter((p) => p.status === "failed" && p.date.startsWith(month)).length, valueClassName: "text-destructive", footer: { icon: Warning, text: t("trFailedHint") } },
     { key: "queue", title: t("trQueue"), value: queue.length, valueClassName: queue.length ? "text-warning-foreground" : undefined, footer: { icon: Landmark, text: t("trQueueHint") } },
     { key: "refunds", title: t("trRefundsWaiting"), value: waiting.length, footer: { icon: ArrowLeftRight, text: t("trRefundsHint") } },

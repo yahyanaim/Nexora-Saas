@@ -21,12 +21,13 @@ import { cn } from "@/lib/utils"
 import { Panel, useBillingFormat } from "./billing-shared"
 import { KpiTile } from "@/components/shared/kpi-tile"
 import { sparkline } from "@/lib/ui/sparkline"
+import { FilterPill } from "@/components/shared/overview-chunks/filter-pill"
 
 const MOVES = ["new", "expansion", "contraction", "churn", "reactivation"] as const
 const RANGES = [3, 6, 12] as const
 
 // recharts loads in its own bundle after the page shows (PERF-01), like the companies' Analytics
-const ChartPlaceholder = () => <div className="h-96 animate-pulse rounded-xl border border-border bg-card" aria-hidden />
+const ChartPlaceholder = () => <div className="h-96 animate-pulse rounded-xl border border-border/70 bg-card" aria-hidden />
 const MrrTrendChart = dynamic(() => import("./metrics-charts").then((m) => m.MrrTrendChart), { ssr: false, loading: ChartPlaceholder })
 const MrrBridgeChart = dynamic(() => import("./metrics-charts").then((m) => m.MrrBridgeChart), { ssr: false, loading: ChartPlaceholder })
 
@@ -36,7 +37,8 @@ const SORTERS: Sorters<MonthRow> = { month: (r) => r.month, mrr: (r) => r.mrr, c
 export default function ConsoleMetricsPage() {
   const t = useTranslations()
   const locale = useLocale()
-  const { money } = useBillingFormat()
+  // the table keeps the cents; tiles and charts are written as on the companies' Analytics
+  const { money, wholeMoney } = useBillingFormat()
   const { data: invoices = [], isLoading: l1 } = useNxInvoices()
   const { data: accounts = [], isLoading: l2 } = useConsoleCustomers()
   const { data: identity } = useNexoraIdentity()
@@ -44,8 +46,6 @@ export default function ConsoleMetricsPage() {
   const [today] = useState(() => new Date().toISOString().slice(0, 10))
   const [range, setRange] = useState<(typeof RANGES)[number]>(12)
   const rows = useMemo(() => monthlyTable(invoices, accounts, today, range), [invoices, accounts, today, range])
-  const compactMoney = (n: number, opts?: { compact?: boolean }) =>
-    opts?.compact ? `${new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(n)} MAD` : money(n)
   const head = useMemo(() => headline(rows, accounts), [rows, accounts])
   const ctl = useTableControls(rows, SORTERS, { key: "month", dir: "desc" }, 12)
   const trials = useMemo(() => trialConversion(accounts), [accounts])
@@ -119,31 +119,24 @@ export default function ConsoleMetricsPage() {
             <Button variant="outline" onClick={() => void exportPdf()} disabled={!rows.length}><FileText className="size-4" />{t("metPdf")}</Button>
           </div>
         }
-      />
+      >
+        <FilterPill label={t("chLastMonths", { n: range })} value={range} width="w-44" onChange={setRange} options={RANGES.map((r) => ({ value: r, label: t("chLastMonths", { n: r }) }))} />
+      </PageHeader>
       {isLoading ? <ListSkeleton /> : (
         <>
           {/* MET-06: each figure with its definition and period; the change is against last month */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-            <KpiTile title={t("metMrr")} value={money(head.mrr)} period={tilePeriod} change={pctChange(head.mrrChange)} isPositive={(head.mrrChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => r.mrr))} description={t("metDefMrr")} noteLabel={t("anOperationalNote")} note={t("metVsLastMonthNote")} />
-            <KpiTile title={t("metArr")} value={money(head.arr)} period={tilePeriod} change={pctChange(head.mrrChange)} isPositive={(head.mrrChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => r.mrr * 12))} description={t("metDefArr")} />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <KpiTile title={t("metMrr")} value={wholeMoney(head.mrr)} period={tilePeriod} change={pctChange(head.mrrChange)} isPositive={(head.mrrChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => r.mrr))} description={t("metDefMrr")} noteLabel={t("anOperationalNote")} note={t("metVsLastMonthNote")} />
+            <KpiTile title={t("metArr")} value={wholeMoney(head.arr)} period={tilePeriod} change={pctChange(head.mrrChange)} isPositive={(head.mrrChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => r.mrr * 12))} description={t("metDefArr")} />
             <KpiTile title={t("metPaying")} value={String(head.paying)} period={tilePeriod} change={head.payingChange === null ? "—" : `${head.payingChange > 0 ? "+" : head.payingChange < 0 ? "−" : ""}${Math.abs(head.payingChange)}`} isPositive={(head.payingChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => r.paying))} description={t("metDefPaying")} />
-            <KpiTile title={t("metArpa")} value={money(head.arpa)} period={tilePeriod} change={pctChange(head.arpaChange)} isPositive={(head.arpaChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => (r.paying ? r.mrr / r.paying : 0)))} description={t("metDefArpa")} />
+            <KpiTile title={t("metArpa")} value={wholeMoney(head.arpa)} period={tilePeriod} change={pctChange(head.arpaChange)} isPositive={(head.arpaChange ?? 0) >= 0} sparkline={sparkline(rows.map((r) => (r.paying ? r.mrr / r.paying : 0)))} description={t("metDefArpa")} />
             <KpiTile title={t("metSeats")} value={pct(head.seatUsage, 0)} period={t("chToday")} description={t("metDefSeats", { used: head.seatsUsed, included: head.seatsIncluded })} />
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">{t("metMrrOverTimeHint", { period })}</p>
-            <div className="flex rounded-full border border-border bg-card p-1 text-sm" role="group" aria-label={t("repPeriod")}>
-              {RANGES.map((r) => (
-                <button key={r} type="button" aria-pressed={range === r} onClick={() => setRange(r)} className={cn("rounded-full px-3 py-1", range === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground")}>
-                  {t("metLastMonths", { n: r })}
-                </button>
-              ))}
-            </div>
-          </div>
+          <p className="text-sm text-muted-foreground">{t("metMrrOverTimeHint", { period })}</p>
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
-            <div className="xl:col-span-3"><MrrTrendChart rows={rows} money={compactMoney} rangeLabel={t("metLastMonths", { n: range })} /></div>
-            <div className="xl:col-span-2"><MrrBridgeChart rows={rows} money={compactMoney} rangeLabel={t("metLastMonths", { n: range })} /></div>
+            <div className="xl:col-span-3"><MrrTrendChart rows={rows} money={wholeMoney} rangeLabel={t("metLastMonths", { n: range })} /></div>
+            <div className="xl:col-span-2"><MrrBridgeChart rows={rows} money={wholeMoney} rangeLabel={t("metLastMonths", { n: range })} /></div>
           </div>
 
           <Panel title={t("metMovements")} hint={t("metMovementsHint")}>
