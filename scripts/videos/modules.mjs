@@ -83,7 +83,77 @@ export const MODULES = [
       },
     ],
   },
-  { n: 2, slug: "team", name: "Team", tagline: "The manager's home page" },
+  {
+    n: 2,
+    slug: "team",
+    name: "Team",
+    tagline: "The manager's home page",
+    // Karim Haddad, Engineering Manager: sees his team, never invoices or costs
+    login: "karim@atlas.example",
+    path: "/dashboard/team",
+    warm: ["/dashboard/time-approvals"],
+    /** @type {Scene[]} */
+    scenes: [
+      {
+        say: "This is Team: the home page for every manager in Nexora.",
+        run: async (v) => {
+          await v.wait(2200)
+          await v.hideCard()
+          await v.spot("box:Projects at risk, budgets, team workload and approvals waiting.")
+        },
+      },
+      {
+        say: "Four cards show what needs you: projects at risk, approvals, team load, and budget alerts.",
+        run: async (v) => {
+          await v.until("projects")
+          await v.spot("box:Projects needing attention")
+          await v.until("approvals")
+          await v.spot("box:Approvals waiting")
+          await v.until("team load")
+          await v.spot("box:Team load this week")
+          await v.until("budget")
+          await v.spot("box:Budget alerts")
+        },
+      },
+      {
+        say: "Each project at risk shows its budget used and the late tasks behind it.",
+        run: async (v) => {
+          await v.clearSpot()
+          await v.scrollTo("box:All projects")
+          await v.spot("box:All projects")
+          await v.until("late tasks")
+          await v.spot("box:Caused by")
+        },
+      },
+      {
+        say: "Workload compares each person's planned hours with their capacity.",
+        run: async (v) => {
+          await v.clearSpot()
+          await v.scrollTo("box:Team workload this week")
+          await v.spot("box:Team workload this week")
+        },
+      },
+      {
+        say: "Beside it: approvals waiting, and documents about to expire.",
+        run: async (v) => {
+          await v.spot("box:Hours to approve")
+          await v.until("documents")
+          await v.spot("box:Work permit")
+        },
+      },
+      {
+        say: "One click on Hours to approve opens your team's timesheets.",
+        run: async (v) => {
+          await v.clearSpot()
+          await v.scrollTo("box:Hours to approve")
+          await v.click("text:Hours to approve")
+          await v.waitForHeading("Time approvals")
+          await v.hideCursor()
+          await v.wait(1000)
+        },
+      },
+    ],
+  },
   { n: 3, slug: "workspace-settings", name: "Workspace settings", tagline: "Company identity, taxes and rules" },
   { n: 4, slug: "employees", name: "Employees", tagline: "People, rates and real cost per hour" },
   { n: 5, slug: "project-planning", name: "Project planning", tagline: "Dependencies, Gantt and project close" },

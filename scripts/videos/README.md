@@ -5,7 +5,8 @@ One video of about 30 seconds per module, recorded from the demo app with a spok
 | # | Module | Status |
 | :--- | :--- | :--- |
 | 01 | My work | ✅ [script](../../docs/videos/01-my-work.md) |
-| 02–40 | Team, Workspace settings, Employees … Console health & incidents | Listed in `modules.mjs`, scenes to write |
+| 02 | Team | ✅ [script](../../docs/videos/02-team.md) |
+| 03–40 | Workspace settings, Employees … Console health & incidents | Listed in `modules.mjs`, scenes to write |
 
 ## What a video contains
 
