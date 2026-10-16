@@ -20,6 +20,7 @@ import { downloadXlsx } from "@/lib/utils/xlsx"
 import { cn } from "@/lib/utils"
 import { Panel, useBillingFormat } from "./billing-shared"
 import { KpiTile } from "@/components/shared/kpi-tile"
+import { SaveReportMenu } from "./save-report-menu"
 import { sparkline } from "@/lib/ui/sparkline"
 import { FilterPill } from "@/components/shared/overview-chunks/filter-pill"
 
@@ -113,11 +114,14 @@ export default function ConsoleMetricsPage() {
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={exportXlsx} disabled={!rows.length}><FileSpreadsheet className="size-4" />{t("metExcel")}</Button>
-            <Button variant="outline" onClick={exportCsv} disabled={!rows.length}><Download className="size-4" />{t("metCsv")}</Button>
-            <Button variant="outline" onClick={() => void exportPdf()} disabled={!rows.length}><FileText className="size-4" />{t("metPdf")}</Button>
-          </div>
+          <SaveReportMenu
+            disabled={!rows.length}
+            options={[
+              { icon: Download, title: t("anDownloadPdf"), hint: t("crPdfHint"), onClick: () => void exportPdf() },
+              { icon: FileSpreadsheet, title: t("crExportExcel"), hint: t("crExcelHint"), onClick: exportXlsx },
+              { icon: FileText, title: t("exportCsv"), hint: t("anCsvHint"), onClick: exportCsv },
+            ]}
+          />
         }
       >
         <FilterPill label={t("chLastMonths", { n: range })} value={range} width="w-44" onChange={setRange} options={RANGES.map((r) => ({ value: r, label: t("chLastMonths", { n: r }) }))} />

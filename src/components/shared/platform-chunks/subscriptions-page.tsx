@@ -170,7 +170,7 @@ export default function ConsoleSubscriptionsPage() {
         searchPlaceholder={t("subSearch")}
         emptyMessage={t("subEmpty")}
         defaultSorting={[{ id: "period", desc: false }]}
-        showRange
+        showRange savedViewsKey="console-subscriptions"
         exportFilename="nexora-subscriptions"
         getExportData={() => rows.map(({ s, c }) => ({ company: c.name, plan: planById(s.plan).name, billing: s.billing, price: periodPrice(price(s), s.billing), periodStart: s.periodStart, periodEnd: s.periodEnd, method: s.method, status: c.status }))}
         filters={[

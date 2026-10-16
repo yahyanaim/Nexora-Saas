@@ -188,7 +188,7 @@ export default function ConsoleInvoicesPage() {
         searchPlaceholder={t("biSearch")}
         emptyMessage={t("biNoInvoice")}
         defaultSorting={[{ id: "number", desc: true }]}
-        showRange
+        showRange savedViewsKey="console-invoices"
         exportOptions={[
           { label: "Excel", icon: FileSpreadsheet, onClick: (rows) => doXlsx(exportRowsOf(rows as NxInvoice[])) },
           { label: "CSV", icon: DownloadIcon, onClick: (rows) => doExport(exportRowsOf(rows as NxInvoice[])) },

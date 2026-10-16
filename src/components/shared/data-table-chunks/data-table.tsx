@@ -92,6 +92,8 @@ interface DataTableProps<TData, TValue> {
   defaultPageSize?: number
   /** Show "11–20 of 37" next to the pager (UX-05, console lists) */
   showRange?: boolean
+  /** Named saved views of filters, search, sort and rows per page (A11 step 5); the key names the list */
+  savedViewsKey?: string
 }
 
 export function DataTable<TData, TValue>({
@@ -130,6 +132,7 @@ export function DataTable<TData, TValue>({
   defaultColumnFilters,
   defaultPageSize = 10,
   showRange = false,
+  savedViewsKey,
 }: DataTableProps<TData, TValue>) {
   const t = useTranslations()
   const [rowSelection, setRowSelection] = React.useState({})
@@ -227,6 +230,7 @@ export function DataTable<TData, TValue>({
           getExportData={getExportData}
           enableExport={enableExport}
           exportOptions={exportOptions}
+          savedViewsKey={savedViewsKey}
         />
         {renderAfterJsxToolbar && renderAfterJsxToolbar()}
         {/* Phones and tablets: each row becomes a card with labelled fields */}

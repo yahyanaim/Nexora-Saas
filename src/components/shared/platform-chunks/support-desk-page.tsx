@@ -118,7 +118,7 @@ export default function ConsoleSupportDeskPage() {
         emptyMessage={t("sdEmpty")}
         defaultSorting={[{ id: "updated", desc: true }]}
         defaultColumnFilters={[{ id: "status", value: ["open", "waiting_customer"] }]}
-        showRange
+        showRange savedViewsKey="console-support-desk"
         exportFilename="nexora-support-requests"
         getExportData={() => requests.map((r) => ({ number: r.number, company: r.customerName, subject: r.subject, category: r.category, priority: r.priority, assignee: r.assigneeName ?? "", status: r.status, updated: r.updatedAt }))}
         filters={[

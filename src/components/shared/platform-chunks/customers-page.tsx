@@ -146,7 +146,7 @@ export default function PlatformCustomersPage() {
         emptyMessage={t("cuEmpty")}
         defaultSorting={[{ id: "mrr", desc: true }]}
         defaultColumnVisibility={{ billing: false, country: false }}
-        showRange
+        showRange savedViewsKey="console-customers"
         exportFilename="nexora-customers"
         getExportData={() => customers.map((c) => ({ company: c.name, city: c.city, country: c.country, ice: c.ice ?? "", plan: planById(c.plan).name, billing: c.billing, status: c.status, people: c.seatsUsed, mrr: accountMrr(c), since: c.since }))}
         actions={canTrial ? [{ label: t("cuNewTrial"), icon: Plus, onClick: () => setTrialOpen(true), variant: "primary", iconOnly: true }] : []}

@@ -99,7 +99,7 @@ export default function ConsoleAuditPage() {
         emptyMessage={t("audEmpty")}
         defaultSorting={[{ id: "at", desc: true }]}
         defaultPageSize={25}
-        showRange
+        showRange savedViewsKey="console-audit"
         // AUD-03, AUD-07: platform owners only, with the authenticator code; the export is itself audited
         enableExport={canExport}
         exportOptions={[{ label: t("audExport"), icon: DownloadIcon, onClick: (list) => list.length && setExporting(list as ConsoleAuditEvent[]) }]}

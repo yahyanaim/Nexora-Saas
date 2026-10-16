@@ -189,7 +189,7 @@ export default function ConsoleTransactionsPage() {
         searchPlaceholder={t("trSearch")}
         emptyMessage={t("trEmpty")}
         defaultSorting={[{ id: "date", desc: true }]}
-        showRange
+        showRange savedViewsKey="console-transactions"
         exportFilename="nexora-payments"
         getExportData={() => ledger.map((p) => ({ date: p.date, company: p.customerName ?? p.payer ?? "", invoice: p.invoiceNumber ?? "", method: p.method, reference: p.reference, amount: p.amount, status: p.status }))}
         filters={[
