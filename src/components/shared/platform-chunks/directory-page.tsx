@@ -132,7 +132,7 @@ export default function ConsoleDirectoryPage() {
         searchPlaceholder={t("usrSearch")}
         emptyMessage={t("usrEmpty")}
         defaultSorting={[{ id: "name", desc: false }]}
-        showRange
+        showRange savedViewsKey="console-directory"
         // USR-08: platform owners only, with the authenticator code, audited (AUD-07)
         enableExport={canExport}
         exportOptions={[{ label: t("usrExport"), icon: DownloadIcon, onClick: (rows) => rows.length && setExporting(rows as DirectoryUser[]) }]}

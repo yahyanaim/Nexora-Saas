@@ -136,7 +136,7 @@ export default function ConsoleStaffPage() {
         searchPlaceholder={t("stfSearch")}
         emptyMessage={t("stfEmpty")}
         defaultSorting={[{ id: "name", desc: false }]}
-        showRange
+        showRange savedViewsKey="console-staff"
         exportFilename="nexora-team"
         getExportData={() => staff.map((s) => ({ name: s.name, email: s.email, role: t(ROLE_LABEL[s.role]), twoFactor: s.twoFactor ? "yes" : "no", status: s.status, lastSignIn: s.lastSignInAt ?? "" }))}
         actions={canInvite ? [{ label: t("stfInvite"), icon: UserPlus, onClick: () => setInviteOpen(true), variant: "primary", iconOnly: true }] : []}
