@@ -18,13 +18,15 @@ import { planById } from "@/lib/platform/nexora-catalog"
 import { HOME_COMPARES, HOME_RANGES, attentionList, homeFigures, revenueBy, type AttentionItem, type HomeCompare, type HomeRange } from "./console-home-model"
 import { useBillingFormat } from "./billing-shared"
 import { SaveReportMenu } from "./save-report-menu"
-import { useMetricsExportAudit, useNexoraIdentity } from "@/hooks/platform/use-platform-config"
+import { useFeatureFlags, useMetricsExportAudit, useNexoraIdentity } from "@/hooks/platform/use-platform-config"
 import { exportToCsv } from "@/lib/utils/export-data"
 import { RevenueByChart } from "./console-home-charts"
 
 // recharts loads in its own bundle after the page shows (PERF-01), as on the companies' Overview
 const ChartPlaceholder = () => <div className="h-80 animate-pulse rounded-xl border border-border/70 bg-card" aria-hidden />
 const MrrTrendChart = dynamic(() => import("./metrics-charts").then((m) => m.MrrTrendChart), { ssr: false, loading: ChartPlaceholder })
+// Victor loads in its own bundle, only when the Victor setting is on (A11 step 6)
+const ConsoleVictor = dynamic(() => import("./console-victor").then((m) => m.ConsoleVictor), { ssr: false })
 
 const COMPARE_LABEL: Record<HomeCompare, string> = { previous: "comparePrevious", lastYear: "compareLastYear", none: "compareNone" }
 
@@ -59,6 +61,9 @@ export default function ConsoleHomePage() {
   const refLabel = f.reference ? monthLabel(f.reference.month) : ""
   const isLoading = l1 || l2
   const { data: identity } = useNexoraIdentity()
+  // the Victor setting's plans target companies; for the Nexora team only its on/off switch counts
+  const { data: flags = [] } = useFeatureFlags()
+  const victorOn = flags.some((x) => x.key === "victor_assistant" && x.enabled)
   const auditExport = useMetricsExportAudit()
 
   // "Save as report" (A11 step 5): the four figures and the months of the period, with the comparison when chosen
@@ -118,7 +123,7 @@ export default function ConsoleHomePage() {
   }
 
   return (
-    <div className="w-full space-y-5 p-4 md:p-6">
+    <div className="w-full space-y-5 p-4 pb-24 md:p-6 md:pb-28">
       <PageHeader
         actions={
           <>
@@ -193,6 +198,20 @@ export default function ConsoleHomePage() {
             <RevenueByChart title={t("chByCountry")} hint={t("chByHint")} rows={byCountry} money={money} />
           </div>
         </>
+      )}
+
+      {victorOn && !isLoading && (
+        <ConsoleVictor
+          f={f}
+          attention={attention}
+          byPlan={byPlan}
+          byCountry={byCountry}
+          money={money}
+          pct={pct}
+          signedPct={signedPct}
+          month={monthLabel}
+          compareLabel={compared ? t(COMPARE_LABEL[compare]) : null}
+        />
       )}
     </div>
   )
