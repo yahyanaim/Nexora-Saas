@@ -57,7 +57,7 @@ await notice.first().waitFor({ timeout: 5000 }).catch(() => {})
 for (let i = 0; i < 5 && (await notice.count()); i++) await notice.first().click()
 await page.waitForTimeout(1500)
 await page.evaluate(installOverlay)
-await page.evaluate(showCard, { kind: "title", number: mod.n, name: mod.name, tagline: mod.tagline })
+await page.evaluate(showCard, { kind: "title", number: mod.n, name: mod.name, tagline: mod.task, actor: mod.actor })
 
 const cdp = await context.newCDPSession(page)
 const frames = []
@@ -80,7 +80,8 @@ for (const [i, scene] of mod.scenes.entries()) {
   await Promise.all([scene.run?.(helpers(page, scene.say, start, length)), sleep((length + GAP) * 1000)])
 }
 await page.evaluate(installOverlay)
-await page.evaluate(showCard, { kind: "end", number: next?.n, name: next?.name, tagline: next?.tagline })
+await page.evaluate(() => window.__vid.step(null))
+await page.evaluate(showCard, { kind: "end", number: next?.n, name: next?.name, tagline: next?.task, actor: next?.actor })
 await sleep(END_CARD * 1000)
 const total = now() - t0
 await cdp.send("Page.stopScreencast")
@@ -168,19 +169,34 @@ function helpers(page, say, start, length) {
       await sleep(900)
     },
     waitForHeading: (name) => page.getByRole("heading", { level: 1, name }).waitFor({ timeout: 15_000 }),
-    click: async (target) => {
+    /** Shows "<n> <title>" at the top of the screen; `null` hides it. */
+    step: async (n, title) => {
       await page.evaluate(installOverlay)
-      const b = await page.evaluate((t) => window.__vid.rect(t), target)
-      const x = b.x + b.w / 2
-      const y = b.y + b.h / 2
-      await page.evaluate(([x, y]) => window.__vid.cursorTo(x, y), [x, y])
-      await sleep(900)
-      await page.mouse.move(x, y)
+      await page.evaluate(([n, title]) => window.__vid.step(n, title), [n, title])
+    },
+    click: (target) => pointAndClick(page, target),
+    /** Clicks a field, replaces its value as if typed, then presses Enter. */
+    type: async (target, text) => {
+      await pointAndClick(page, target)
+      await page.keyboard.press("Control+A")
+      await page.keyboard.type(text, { delay: 140 })
       await sleep(250)
-      await page.evaluate(() => window.__vid.clickFx())
-      await page.mouse.click(x, y)
+      await page.keyboard.press("Enter")
     },
   }
+}
+
+async function pointAndClick(page, target) {
+  await page.evaluate(installOverlay)
+  const b = await page.evaluate((t) => window.__vid.rect(t), target)
+  const x = b.x + b.w / 2
+  const y = b.y + b.h / 2
+  await page.evaluate(([x, y]) => window.__vid.cursorTo(x, y), [x, y])
+  await sleep(900)
+  await page.mouse.move(x, y)
+  await sleep(250)
+  await page.evaluate(() => window.__vid.clickFx())
+  await page.mouse.click(x, y)
 }
 
 /** Splits a line into balanced caption chunks of at most about 52 characters, preferring punctuation. */
@@ -247,6 +263,10 @@ function installOverlay() {
     #vid-ring{position:absolute;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;border:3px solid #2684ff;opacity:0}
     #vid-ring.on{animation:vidring .55s ease-out}
     @keyframes vidring{from{transform:scale(.3);opacity:1}to{transform:scale(1.6);opacity:0}}
+    #vid-step{position:absolute;top:24px;left:1048px;display:flex;align-items:center;gap:10px;height:40px;padding:0 18px 0 6px;border-radius:999px;background:#07122b;color:#fff;
+      font-size:15px;font-weight:600;white-space:nowrap;box-shadow:0 8px 22px rgba(7,18,43,.35);opacity:0;transform:translate(-50%,-10px);transition:opacity .35s,transform .35s}
+    #vid-step.on{opacity:1;transform:translate(-50%,0)}
+    #vid-step b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#2684ff;font-size:14px}
     .vid-card{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 120px;color:#fff;
       background:radial-gradient(1200px 700px at 85% 15%,rgba(38,132,255,.55),transparent 60%),radial-gradient(900px 600px at 0% 100%,rgba(38,132,255,.25),transparent 60%),#07122b;transition:opacity .6s ease}
     .vid-card>*{opacity:0;transform:translateY(18px);animation:vidup .7s cubic-bezier(.2,.7,.2,1) forwards}
@@ -254,15 +274,18 @@ function installOverlay() {
     @keyframes vidup{to{opacity:1;transform:none}}
     .vid-brand{display:flex;align-items:center;gap:14px;font-size:22px;font-weight:600;letter-spacing:.02em;color:#cfe0ff}
     .vid-brand img{width:44px;height:44px;border-radius:12px;background:#fff;padding:6px}
-    .vid-pill{margin-top:56px;align-self:flex-start;padding:8px 16px;border-radius:999px;background:rgba(38,132,255,.22);border:1px solid rgba(38,132,255,.6);font-size:20px;font-weight:600;color:#9cc4ff;letter-spacing:.08em;text-transform:uppercase}
+    .vid-pills{margin-top:56px;display:flex;gap:12px}
+    .vid-pill{padding:8px 16px;border-radius:999px;background:rgba(38,132,255,.22);border:1px solid rgba(38,132,255,.6);font-size:20px;font-weight:600;color:#9cc4ff;letter-spacing:.08em;text-transform:uppercase}
+    .vid-actor{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#fff}
     .vid-name{margin-top:22px;font-size:104px;line-height:1;font-weight:700;letter-spacing:-.03em}
     .vid-tag{margin-top:22px;font-size:34px;color:#b9c6e4}
-  </style><div id="vid-spot"></div><div id="vid-ring"></div>
+  </style><div id="vid-spot"></div><div id="vid-ring"></div><div id="vid-step"></div>
   <svg id="vid-cursor" viewBox="0 0 24 24"><path d="M4 2l15 11.2-6.6 1.1 3.9 7.4-3 1.5-3.9-7.5L4 20z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg>`
   document.body.appendChild(root)
   const spot = root.querySelector("#vid-spot")
   const cursor = root.querySelector("#vid-cursor")
   const ring = root.querySelector("#vid-ring")
+  const stepChip = root.querySelector("#vid-step")
   const s = { el: null, x: 0, y: 0, w: 0, h: 0, o: 0, cx: 1500, cy: 900, tx: 1500, ty: 900 }
   const tick = () => {
     if (s.el) {
@@ -284,10 +307,16 @@ function installOverlay() {
     requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
-  // "box:<text>" is the bordered panel around the text, "text:<text>" the element showing it
+  // "box:<text>" is the bordered panel around the text, "text:<text>" the element showing it,
+  // "css:<selector>" the first visible element matching the selector
   const resolve = (t, quiet) => {
     if (!t) return null
     const [kind, text] = [t.slice(0, t.indexOf(":")), t.slice(t.indexOf(":") + 1)]
+    if (kind === "css") {
+      const el = [...document.querySelectorAll(text)].find((e) => e.getBoundingClientRect().width)
+      if (el || quiet) return el ?? null
+      throw new Error(`Not on the page: ${t}`)
+    }
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
       if (n.textContent.trim() !== text || n.parentElement.closest("#vid-root")) continue
@@ -329,6 +358,14 @@ function installOverlay() {
     hideCursor: () => {
       cursor.style.opacity = "0"
     },
+    step: (n, title) => {
+      stepChip.classList.remove("on")
+      if (n == null) return
+      setTimeout(() => {
+        stepChip.innerHTML = `<b>${n}</b>${title}`
+        stepChip.classList.add("on")
+      }, stepChip.innerHTML ? 250 : 0)
+    },
     clickFx: () => {
       Object.assign(ring.style, { left: `${s.tx}px`, top: `${s.ty}px` })
       ring.classList.remove("on")
@@ -344,13 +381,13 @@ function installOverlay() {
   }
 }
 
-/** Title card (module number, name, tagline) or end card (what comes next). */
-function showCard({ kind, number, name, tagline }) {
+/** Title card (module, who it is for, the task) or end card (what comes next). */
+function showCard({ kind, number, name, tagline, actor }) {
   const card = document.createElement("div")
   card.className = "vid-card"
   const pill = kind === "title" ? `Module ${String(number).padStart(2, "0")}` : name ? `Next · Module ${String(number).padStart(2, "0")}` : "Nexora ERP"
   card.innerHTML = `<div class="vid-brand"><img src="/app-logo.png" alt="">Nexora ERP</div>
-    <div class="vid-pill">${pill}</div>
+    <div class="vid-pills"><span class="vid-pill">${pill}</span>${actor ? `<span class="vid-pill vid-actor">For ${actor}</span>` : ""}</div>
     <div class="vid-name">${name ?? "Thanks for watching"}</div>
     <div class="vid-tag">${tagline ?? "people → clients → projects → hours → invoices → cash → profit"}</div>`
   document.getElementById("vid-root").appendChild(card)

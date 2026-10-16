@@ -1,22 +1,21 @@
-# Video 02 · Team (29 s)
+# Video 02 · Team: check your team and approve their hours (28 s)
 
-**Who it is for:** managers and team leads. **Signed in as:** Karim Haddad (Engineering Manager, Atlas Consulting demo).
-**Page:** Dashboard → Team (`/dashboard/team`). **Rendered by:** `node scripts/videos/make-video.mjs 2`.
+**For:** managers. **Signed in as:** Karim Haddad (Engineering Manager, Atlas Consulting demo).
+**Pages:** Dashboard → Team, then Organization → Time approvals. **Rendered by:** `node scripts/videos/make-video.mjs 2`.
 
-| Time | Narration | On screen |
-| :--- | :--- | :--- |
-| 0:00 | This is Team: the home page for every manager in Nexora. | Title card "Module 02 · Team · The manager's home page", then it fades into the page; the spotlight is on the page header (manager filter, last update time, Refresh) |
-| 0:04 | Four cards show what needs you: projects at risk, approvals, team load, and budget alerts. | The spotlight moves across the cards as each one is named: 2 projects needing attention, 8 approvals waiting (95 h · 2 leave · 2 expenses), 46% team load, 1 budget alert |
-| 0:10 | Each project at risk shows its budget used and the late tasks behind it. | Scroll to "Projects needing attention"; spotlight on the panel (Orbit fleet portal, Helio energy dashboard), then on the Helio card: 95% of the budget used, caused by *Production charts*, late since Oct 12 |
-| 0:15 | Workload compares each person's planned hours with their capacity. | Scroll down; spotlight on "Team workload this week", one bar per person (red above 100%) |
-| 0:19 | Beside it: approvals waiting, and documents about to expire. | Spotlight on the approvals list (hours, leave, expenses), then on "Documents to renew" (a work permit expired 4 days ago, two contracts expiring soon) |
-| 0:23 | One click on Hours to approve opens your team's timesheets. | Scroll back; the cursor clicks **Hours to approve** and Time approvals opens with each person's week, Send back and Approve |
-| 0:27 | — | End card "Next · Module 03 · Workspace settings · Company identity, taxes and rules" |
+| Time | Step | Narration | On screen |
+| :--- | :--- | :--- | :--- |
+| 0:00 | — | Managers: here's how to check on your team and approve their hours in Nexora. | Title card "Module 02 · For managers · Team · Check your team and approve their hours", then the page header |
+| 0:05 | 1 · Read the cards | Step one: open Team. The cards show projects at risk, approvals waiting, team load, and budget alerts. | Spotlight on each card as it is named: 2 projects, 8 approvals (95 h · 2 leave · 2 expenses), team load, 1 budget alert |
+| 0:12 | 2 · See what's late | Step two: each project at risk shows its budget used and the late task behind it. | Scroll to "Projects needing attention"; spotlight on the panel, then on the Helio card: budget almost used, caused by *Production charts* |
+| 0:18 | 3 · Open approvals | Step three: click Hours to approve. | The cursor clicks **Hours to approve**; Time approvals opens with one card per person and week |
+| 0:20 | 4 · Approve the week | Step four: check Lina's week, then click Approve. Her hours are locked and ready to invoice. | Spotlight on Lina's 40 h; the cursor clicks **Approve**; Nexora confirms "10 entries approved" and the hours to review drop from 95 h to 55 h |
+| 0:26 | — | — | End card "Next · Module 03 · For administrators · Workspace settings" |
 
-**Words:** 68. **Voice:** Kokoro `am_michael` at 1.05×. Captions are burned in, and `videos/02-team.srt` holds the same text.
+**Words:** 69. **Voice:** Kokoro `am_michael` at 1.05×. Captions are burned in; `videos/02-team.srt` has the same text.
 
-## Key messages
+## What the manager learns
 
-- Team answers "what needs my attention?": risky projects with the tasks causing the risk, team load and everything waiting for approval.
-- Health and budget are computed for you; budgets alert at 80% and 100%.
-- Approving the team's hours is one click away. A manager never approves their own hours.
+- Team is the manager's home: risky projects with the tasks causing the risk, team load and everything waiting for approval.
+- Approving hours takes two clicks from the Team page. Approval freezes the rates, and the hours can then be invoiced.
+- A manager never approves their own hours; Send back returns a week to its owner with a reason.
