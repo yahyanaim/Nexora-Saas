@@ -34,7 +34,7 @@ await page.waitForURL(/\/dashboard\/(console|platform)/, { timeout: 60_000 })
 const failures = []
 for (const path of pages) {
   await page.goto(`${BASE}/en${path}`, { timeout: 120_000 })
-  await page.locator("main#main-content").waitFor({ timeout: 30_000 })
+  await page.locator("main#main-content >> visible=true").waitFor({ timeout: 30_000 })
   await page.waitForTimeout(1500)
   if (SEED) await page.evaluate(() => document.querySelector("main")?.appendChild(document.createElement("button")))
   const skip = await page.locator('a[href="#main-content"]').count()
