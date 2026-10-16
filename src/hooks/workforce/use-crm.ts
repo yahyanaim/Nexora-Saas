@@ -8,9 +8,13 @@ import {
   addClientNoteApi,
   deleteClientNoteApi,
   deleteContractApi,
+  deleteFollowUpApi,
   listClientNotesApi,
   listContractsApi,
+  listFollowUpsApi,
   saveContractApi,
+  saveFollowUpApi,
+  setFollowUpDoneApi,
 } from "@/lib/api/crm-api"
 import {
   deleteRecurringApi,
@@ -22,7 +26,7 @@ import {
 } from "@/lib/api/recurring-invoices-api"
 import { sendReminderApi } from "@/lib/api/work-billing-api"
 import { updateRemindersApi } from "@/lib/api/settings-api"
-import type { ClientNote, ContractInput, RecurringInput, ReminderSettings } from "@/types/work-crm"
+import type { ClientNote, ContractInput, FollowUpInput, RecurringInput, ReminderSettings } from "@/types/work-crm"
 import { translateError } from "@/lib/errors/translate-error"
 
 export function useContracts() {
@@ -33,6 +37,11 @@ export function useContracts() {
 export function useClientNotes() {
   const { id } = useCurrentWorkspace()
   return useQuery({ queryKey: ["client-notes", id], queryFn: () => listClientNotesApi(id) })
+}
+
+export function useFollowUps() {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: ["client-follow-ups", id], queryFn: () => listFollowUpsApi(id) })
 }
 
 export function useRecurringInvoices() {
@@ -68,6 +77,24 @@ export function useCrmMutations() {
       onError,
     }),
     deleteNote: useMutation({ mutationFn: (id: string) => deleteClientNoteApi(ws, id), onSuccess: ok(t("noteDeleted")), onError }),
+  }
+}
+
+/** Plan, change, complete and delete follow-ups (CRM step 1). */
+export function useFollowUpMutations() {
+  const { t, ws, onError, ok } = useHelpers(["client-follow-ups"])
+  return {
+    save: useMutation({
+      mutationFn: ({ input, id }: { input: FollowUpInput; id?: string }) => saveFollowUpApi(ws, input, id),
+      onSuccess: ok(t("fuSaved")),
+      onError,
+    }),
+    setDone: useMutation({
+      mutationFn: ({ id, done, by }: { id: string; done: boolean; by?: string }) => setFollowUpDoneApi(ws, id, done, by),
+      onSuccess: ok(t("fuUpdated")),
+      onError,
+    }),
+    remove: useMutation({ mutationFn: (id: string) => deleteFollowUpApi(ws, id), onSuccess: ok(t("fuDeleted")), onError }),
   }
 }
 

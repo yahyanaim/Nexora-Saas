@@ -134,12 +134,34 @@ export enum ClientStatus {
   ARCHIVED = "archived",
 }
 
+/** Where a lead came from (CRM step 1) */
+export enum LeadSource {
+  WEBSITE = "website",
+  REFERRAL = "referral",
+  EVENT = "event",
+  LINKEDIN = "linkedin",
+  OUTREACH = "outreach",
+  PARTNER = "partner",
+  OTHER = "other",
+}
+
+/** A contact's part in the client's decisions (CRM step 1) */
+export enum ContactRole {
+  DECISION_MAKER = "decision_maker",
+  FINANCE = "finance",
+  TECHNICAL = "technical",
+  USER = "user",
+  OTHER = "other",
+}
+
 export interface ClientContact {
   id: string
   name: string
   email: string
   phone?: string
   position?: string
+  /** Part in the client's decisions */
+  role?: ContactRole
   isPrimary: boolean
 }
 
@@ -201,6 +223,10 @@ export interface Client {
   notes?: string
   /** Values of the workspace's custom fields (PLT-12) */
   customFields?: Record<string, string>
+  /** Free labels for grouping clients, e.g. "VIP" or "Public sector" */
+  tags?: string[]
+  /** Where the client first came from */
+  leadSource?: LeadSource
   createdAt: string
   updatedAt: string
 }

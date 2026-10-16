@@ -120,3 +120,25 @@ export interface ReminderSettings {
   /** Days overdue for levels 1, 2 and 3 */
   days: [number, number, number]
 }
+
+/** Something to do for a client by a date: call back, send a proposal… (CRM step 1) */
+export interface ClientFollowUp {
+  id: string
+  workspaceId: string
+  clientId: string
+  title: string
+  /** yyyy-mm-dd */
+  dueDate: string
+  /** Employee who will do it */
+  ownerId?: string
+  /** The client contact it concerns */
+  contactId?: string
+  note?: string
+  /** Set when done */
+  doneAt?: string
+  doneBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type FollowUpInput = Pick<ClientFollowUp, "clientId" | "title" | "dueDate"> & Partial<Pick<ClientFollowUp, "ownerId" | "contactId" | "note">>
