@@ -22,12 +22,25 @@ interface DataTablePaginationProps<TData> {
   total?: number
   /** "11–20 of 37", announced to screen readers when the page changes */
   showRange?: boolean
+  /** Page numbers to click (1 2 3 … 9) instead of "3/9" (CRM clients list) */
+  numbered?: boolean
+}
+
+/** Pages shown as buttons: the first, the last and two around the current one, with gaps as null. */
+export function pageWindow(current: number, total: number): (number | null)[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i)
+  const keep = new Set([0, total - 1, current - 1, current, current + 1].filter((p) => p >= 0 && p < total))
+  if (current <= 2) [1, 2, 3].forEach((p) => keep.add(p))
+  if (current >= total - 3) [total - 4, total - 3, total - 2].forEach((p) => keep.add(p))
+  const pages = [...keep].sort((a, b) => a - b)
+  return pages.flatMap((p, i) => (i > 0 && p - pages[i - 1]! > 1 ? [null, p] : [p]))
 }
 
 export function DataTablePagination<TData>({
   table,
   total: _total,
   showRange = false,
+  numbered = false,
 }: DataTablePaginationProps<TData>) {
   const t = useTranslations()
   const { pageIndex, pageSize } = table.getState().pagination
@@ -83,9 +96,31 @@ export function DataTablePagination<TData>({
           <span className="hidden lg:inline">{t("prev")}</span>
         </Button>
 
-        <span className="min-w-10 text-center text-[13px] font-medium text-muted-foreground tabular-nums sm:min-w-14 px-1">
-          {pageIndex + 1}/{totalPages || 1}
-        </span>
+        {numbered && totalPages > 1 ? (
+          <span className="flex items-center gap-1">
+            {pageWindow(pageIndex, totalPages).map((p, i) =>
+              p === null ? (
+                <span key={`gap-${i}`} className="px-1 text-muted-foreground" aria-hidden>…</span>
+              ) : (
+                <Button
+                  key={p}
+                  variant={p === pageIndex ? "primary" : "ghost"}
+                  size="icon"
+                  className="size-9 text-[13px] tabular-nums"
+                  aria-label={t("pageN", { n: p + 1 })}
+                  aria-current={p === pageIndex ? "page" : undefined}
+                  onClick={() => table.setPageIndex(p)}
+                >
+                  {p + 1}
+                </Button>
+              )
+            )}
+          </span>
+        ) : (
+          <span className="min-w-10 text-center text-[13px] font-medium text-muted-foreground tabular-nums sm:min-w-14 px-1">
+            {pageIndex + 1}/{totalPages || 1}
+          </span>
+        )}
 
         <Button
           variant="outline"

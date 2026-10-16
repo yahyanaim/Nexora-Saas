@@ -100,12 +100,22 @@ const CONTACT_ROLE: Record<string, ContactRole> = {
   con_6: ContactRole.DECISION_MAKER,
 }
 
+/** Phone numbers of the demo contacts */
+const CONTACT_PHONE: Record<string, string> = {
+  con_1: "+33 6 12 34 56 78",
+  con_2: "+33 6 98 76 54 32",
+  con_3: "+212 661 23 45 67",
+  con_4: "+212 662 98 76 54",
+  con_5: "+49 151 2345 6789",
+  con_6: "+1 503 555 0142",
+}
+
 export function seedClients(workspaceId: string): Client[] {
   const rows = workspaceId === "ws_northwind" ? NORTHWIND_CLIENTS : workspaceId === "ws_atlas" ? ATLAS_CLIENTS : []
   return rows.map((row) => ({
     ...row,
     ...CLIENT_CRM[row.id],
-    contacts: row.contacts.map((c) => ({ ...c, role: CONTACT_ROLE[c.id] })),
+    contacts: row.contacts.map((c) => ({ ...c, role: CONTACT_ROLE[c.id], phone: c.phone ?? CONTACT_PHONE[c.id] })),
     workspaceId,
     createdAt: STAMP,
     updatedAt: STAMP,
