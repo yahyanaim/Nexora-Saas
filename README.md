@@ -335,6 +335,7 @@ Security already in place:
 | Phase | Scope | Status |
 | :--- | :--- | :--- |
 | 0–3 | Fixes, settings, HR, CRM, projects, time, billing, receivables | ✅ Done |
+| CRM 1 | Client figures (`lib/workforce/client-figures.ts`: projects, open deals, billed this year, balance, last contact, next follow-up, satisfaction, health), tags, lead source, contact roles, follow-ups (`crm-api.ts`, `useClientFigures`) | ⏳ Review |
 | Analytics | Analytics on ERP data, PDF/CSV report, assistant | ✅ Done |
 | 4 | My work and Team dashboards, standard reports, Excel/CSV/PDF export, freshness indicator, phone cards and empty/loading states on every list | ✅ Done |
 | 5a | Org chart, documents and contracts with expiry alerts, leave balances with half-days and carry-over | ✅ Done |

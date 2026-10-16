@@ -6,8 +6,10 @@ import {
   ClientNoteKind,
   ContractType,
   type ClientContract,
+  type ClientFollowUp,
   type ClientNote,
   type ContractInput,
+  type FollowUpInput,
 } from "@/types/work-crm"
 
 const STAMP = "2026-01-01T00:00:00.000Z"
@@ -40,12 +42,29 @@ function seedNotes(workspaceId: string): ClientNote[] {
   return rows.map((r) => ({ ...r, workspaceId, createdAt: STAMP, updatedAt: STAMP }))
 }
 
+function seedFollowUps(workspaceId: string): ClientFollowUp[] {
+  const t = todayIso()
+  const rows: Omit<ClientFollowUp, "workspaceId" | "createdAt" | "updatedAt">[] =
+    workspaceId === "ws_atlas"
+      ? [
+          { id: "fu_1", clientId: "cli_helio", title: "Send the new rates before the framework renewal", dueDate: addDays(t, 2), ownerId: "emp_sara", contactId: "con_3" },
+          { id: "fu_2", clientId: "cli_medica", title: "Call about the two unpaid invoices", dueDate: addDays(t, -1), ownerId: "emp_emma", contactId: "con_4" },
+          { id: "fu_3", clientId: "cli_vela", title: "Follow up on the store redesign quote", dueDate: addDays(t, 5), ownerId: "emp_emma", contactId: "con_5" },
+          { id: "fu_4", clientId: "cli_orbit", title: "Book the portal launch review", dueDate: addDays(t, -4), ownerId: "emp_karim", contactId: "con_1", doneAt: `${addDays(t, -4)}T16:00:00.000Z`, doneBy: "emp_karim" },
+        ]
+      : workspaceId === "ws_northwind"
+        ? [{ id: "fu_10", clientId: "cli_lumen", title: "Plan the winter campaign brief", dueDate: addDays(t, 7), ownerId: "emp_mateo", contactId: "con_6" }]
+        : []
+  return rows.map((r) => ({ ...r, workspaceId, createdAt: STAMP, updatedAt: STAMP }))
+}
+
 /**
  * Client contracts and notes (CRM-4, CRM-7). Backed by the browser demo store
  * for now; replace the bodies with apiClient calls once the backend exists.
  */
 const contracts = createCollection<ClientContract>("client-contracts", "ctr", seedContracts)
 const notes = createCollection<ClientNote>("client-notes", "cn", seedNotes)
+const followUps = createCollection<ClientFollowUp>("client-follow-ups", "fu", seedFollowUps)
 
 export async function listContractsApi(workspaceId: string): Promise<ClientContract[]> {
   return contracts.list(workspaceId)
@@ -84,4 +103,37 @@ export async function addClientNoteApi(
 
 export async function deleteClientNoteApi(workspaceId: string, id: string) {
   notes.remove(workspaceId, id)
+}
+
+// ---------- Follow-ups (CRM step 1) ----------
+
+export async function listFollowUpsApi(workspaceId: string): Promise<ClientFollowUp[]> {
+  return followUps.list(workspaceId)
+}
+
+function validateFollowUp(input: FollowUpInput) {
+  if (!input.clientId) throw new Error("Pick a client")
+  if (!input.title.trim()) throw new Error("Say what needs to be done")
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.dueDate)) throw new Error("Pick a date")
+}
+
+/** Plans a follow-up, or changes one that is still to do. */
+export async function saveFollowUpApi(workspaceId: string, input: FollowUpInput, id?: string): Promise<ClientFollowUp> {
+  validateFollowUp(input)
+  const clean = { ...input, title: input.title.trim(), note: input.note?.trim() || undefined }
+  if (id) {
+    if (followUps.get(workspaceId, id)?.doneAt) throw new Error("This follow-up is already done")
+    return followUps.update(workspaceId, id, clean)
+  }
+  return followUps.create(workspaceId, clean)
+}
+
+/** Marks a follow-up done, or to do again (`done: false`). */
+export async function setFollowUpDoneApi(workspaceId: string, id: string, done: boolean, by?: string): Promise<ClientFollowUp> {
+  if (!followUps.get(workspaceId, id)) throw new Error("This follow-up no longer exists")
+  return followUps.update(workspaceId, id, done ? { doneAt: new Date().toISOString(), doneBy: by } : { doneAt: undefined, doneBy: undefined })
+}
+
+export async function deleteFollowUpApi(workspaceId: string, id: string) {
+  followUps.remove(workspaceId, id)
 }
