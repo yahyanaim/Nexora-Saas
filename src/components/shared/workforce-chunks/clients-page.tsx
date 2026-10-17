@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils"
 import { CLIENT_FILTER_COLUMNS, getClientsColumns } from "./clients-columns"
 import { ClientForm, type ClientFormHandle } from "./client-form"
 import { ClientProfileSheet } from "./client-profile-sheet"
+import { ClientDetailsPanel } from "./client-details-panel"
 import { formatMoney } from "./workforce-labels"
 
 type StatusPill = "all" | ClientStatus
@@ -66,6 +67,9 @@ export default function ClientsPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Client | null>(null)
   const [viewing, setViewing] = useState<Client | null>(null)
+  // the client shown in the details panel (CRM step 3); kept by id so edits show at once
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const selected = selectedId ? (clients.find((c) => c.id === selectedId) ?? null) : null
   const [deleting, setDeleting] = useState<Client | null>(null)
   const [tagging, setTagging] = useState<{ clients: Client[]; done: () => void } | null>(null)
   const [tag, setTag] = useState("")
@@ -112,11 +116,12 @@ export default function ClientsPage() {
         canSelect: true,
         canEdit,
         canDelete,
-        onView: setViewing,
+        onView: (c: Client) => setSelectedId(c.id),
+        selectedId,
         onEdit: openForm,
         onDelete: setDeleting,
       }),
-    [t, locale, employees, workspace.currency, figures, canSeeMoney, canEdit, canDelete]
+    [t, locale, employees, workspace.currency, figures, canSeeMoney, canEdit, canDelete, selectedId]
   )
 
   const cards = useMemo<MetricCardItem[]>(() => {
@@ -249,7 +254,9 @@ export default function ClientsPage() {
         </div>
       </PageHeader>
 
-      <MetricCardGrid cards={cards} isLoading={isLoading} columnsClassName="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" />
+      <div className={cn("grid items-start gap-6", selected && "xl:grid-cols-[minmax(0,1fr)_24rem]")}>
+      <div className="min-w-0 space-y-6">
+      <MetricCardGrid cards={cards} isLoading={isLoading} columnsClassName={cn("grid-cols-1 sm:grid-cols-2", selected ? "2xl:grid-cols-4" : "xl:grid-cols-4")} />
 
       <DataTable
         title={t("clients")}
@@ -290,6 +297,23 @@ export default function ClientsPage() {
           { columnId: "health", title: t("clHealth"), options: (["good", "watch", "at_risk"] as const).map((h) => ({ label: t(`clHealth_${h}`), value: h })) },
         ].filter((f) => f.options.length > 0)}
       />
+
+      </div>
+
+      <ClientDetailsPanel
+        client={selected}
+        figures={selected ? figures.get(selected.id) : undefined}
+        employees={employees}
+        currency={workspace.currency}
+        canSeeMoney={canSeeMoney}
+        canEdit={canEdit}
+        canDelete={canDelete}
+        onClose={() => setSelectedId(null)}
+        onEdit={openForm}
+        onDelete={setDeleting}
+        onOpenProfile={setViewing}
+      />
+      </div>
 
       <DataTableEntityFormSheet
         open={formOpen}
@@ -332,7 +356,15 @@ export default function ClientsPage() {
         confirmLabel={t("delete")}
         destructive
         isLoading={remove.isPending}
-        onConfirm={() => deleting && remove.mutate(deleting.id, { onSuccess: () => setDeleting(null) })}
+        onConfirm={() =>
+          deleting &&
+          remove.mutate(deleting.id, {
+            onSuccess: () => {
+              if (deleting.id === selectedId) setSelectedId(null)
+              setDeleting(null)
+            },
+          })
+        }
       />
     </div>
   )

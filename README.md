@@ -336,7 +336,8 @@ Security already in place:
 | :--- | :--- | :--- |
 | 0–3 | Fixes, settings, HR, CRM, projects, time, billing, receivables | ✅ Done |
 | CRM 1 | Client figures (`lib/workforce/client-figures.ts`: projects, open deals, billed this year, balance, last contact, next follow-up, satisfaction, health), tags, lead source, contact roles, follow-ups (`crm-api.ts`, `useClientFigures`) | ✅ Done |
-| CRM 2 | New Clients list: status pills with counts, CRM tiles, columns (contact, phone, projects, owed, last contact, health dot), filters, saved views, numbered pager, bulk e-mail / tag / export (`renderBulkActions`, `numberedPages` on the shared table, `lib/ui/mail-list.ts`) | ⏳ Review |
+| CRM 2 | New Clients list: status pills with counts, CRM tiles, columns (contact, phone, projects, owed, last contact, health dot), filters, saved views, numbered pager, bulk e-mail / tag / export (`renderBulkActions`, `numberedPages` on the shared table, `lib/ui/mail-list.ts`) | ✅ Done |
+| CRM 3 | Client details panel beside the list (`client-details-panel.tsx`: identity and quick actions, health, counters, satisfaction, account overview, links, log a call), docked from 1280 px and a side sheet below; dialogs now named by their title for screen readers | ⏳ Review |
 | Analytics | Analytics on ERP data, PDF/CSV report, assistant | ✅ Done |
 | 4 | My work and Team dashboards, standard reports, Excel/CSV/PDF export, freshness indicator, phone cards and empty/loading states on every list | ✅ Done |
 | 5a | Org chart, documents and contracts with expiry alerts, leave balances with half-days and carry-over | ✅ Done |
