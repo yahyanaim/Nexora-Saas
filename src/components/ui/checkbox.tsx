@@ -31,7 +31,10 @@ export const Checkbox = React.forwardRef<HTMLButtonElement, CheckboxProps>(
     const [uncontrolledChecked, setUncontrolledChecked] = React.useState(defaultChecked)
     const isChecked = controlledChecked !== undefined ? controlledChecked : uncontrolledChecked
 
-    const toggle = () => {
+    const toggle = (event: React.MouseEvent<HTMLButtonElement>) => {
+      // Cancel the click so a wrapping <label> doesn't hand it back to the button:
+      // once the check mark under the pointer unmounts, browsers would toggle again
+      event.preventDefault()
       if (disabled) return
       const next = isChecked === "indeterminate" ? true : !isChecked
       if (controlledChecked === undefined) {
