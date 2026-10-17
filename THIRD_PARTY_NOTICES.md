@@ -38,6 +38,14 @@ SOFTWARE.
 
 `public/fonts/inter-400.ttf` and `public/fonts/inter-700.ttf` (Latin subset, embedded in generated PDFs) are from Inter, Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter), licensed under the SIL Open Font License, Version 1.1 (https://openfontlicense.org).
 
+## Geist and Geist Mono fonts (SIL Open Font License 1.1)
+
+`src/fonts/geist-var.woff2` and `src/fonts/geist-mono-var.woff2` (used on the public landing page) are from Geist, Copyright (c) 2023 Vercel, in collaboration with basement.studio (https://github.com/vercel/geist-font), licensed under the SIL Open Font License, Version 1.1. The full license is in `src/fonts/LICENSE-geist.txt`.
+
+## Natural Earth land data (public domain)
+
+`public/landing/earth-mask.webp` (the land map of the landing-page globe) is rasterized from the 1:50m land boundaries of Natural Earth (https://www.naturalearthdata.com), which are in the public domain, as redistributed in TopoJSON by world-atlas (https://github.com/topojson/world-atlas, ISC).
+
 ## npm dependencies
 
 Every package in `package.json` keeps its own license (mostly MIT, Apache-2.0,
