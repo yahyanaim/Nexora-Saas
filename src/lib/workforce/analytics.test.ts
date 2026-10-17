@@ -70,7 +70,11 @@ describe("computeAnalytics on the demo year", () => {
 
   it("flags overdue clients and reports receivables", () => {
     expect(a.receivables.overdue).toBeGreaterThan(0)
-    expect(a.risks.find((r) => r.clientId === "cli_medica")).toMatchObject({ reason: "overdue", level: "high" })
+    // the demo invoices are issued monthly from the real today, so how late Medica is depends on
+    // the day the tests run: high once its oldest unpaid invoice is more than 30 days late
+    const medica = a.risks.find((r) => r.clientId === "cli_medica")
+    expect(medica).toMatchObject({ reason: "overdue" })
+    expect(medica!.level).toBe(medica!.overdueDays! > 30 ? "high" : "medium")
     expect(a.current.utilization).toBeGreaterThan(20)
     expect(a.current.margin).toBeGreaterThan(0)
   })
@@ -83,7 +87,7 @@ describe("computeAnalytics on the demo year", () => {
         data()
           .invoices.filter((i) => i.clientId === "cli_orbit" && i.status === ClientInvoiceStatus.PAID)
           .flatMap((i) => i.payments ?? [])
-          .filter((p) => p.date >= "2025-10-05")
+          .filter((p) => p.date >= "2025-10-05" && p.date <= "2026-10-04") // the window of the analysis, whatever today is
           .reduce((s, p) => s + p.amount, 0) * 100
       ) / 100
     )

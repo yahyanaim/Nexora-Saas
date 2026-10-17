@@ -70,9 +70,10 @@ export function useConfigMutations() {
 export function useMetricsExportAudit() {
   const actor = useConsoleActor()
   const queryClient = useQueryClient()
-  return (format: string, period: string) => {
+  // `page` names where the figures were exported from: Metrics, or the console home
+  return (format: string, period: string, page = "Metrics") => {
     if (!actor) return
-    audit(actor, "metrics.exported", "metrics", `Metrics · ${format}`, { after: period })
+    audit(actor, "metrics.exported", "metrics", `${page} · ${format}`, { after: period })
     queryClient.invalidateQueries({ queryKey: ["platform", "audit"] })
   }
 }

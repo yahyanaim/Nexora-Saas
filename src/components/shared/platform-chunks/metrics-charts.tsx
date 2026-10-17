@@ -15,16 +15,26 @@ import type { MonthRow } from "@/lib/platform/metrics"
 
 type Props = { rows: MonthRow[]; money: (n: number, opts?: { compact?: boolean }) => string; rangeLabel: string }
 
-export function MrrTrendChart({ rows, money, rangeLabel }: Props) {
+/**
+ * `previous` draws the comparison period month for month as a dashed grey
+ * line, as on the companies' Revenue growth; `guidance` replaces the reading
+ * line where the movements table is not on the page.
+ */
+type TrendProps = Props & { previous?: MonthRow[]; compareLabel?: string; guidance?: (best: string, worst: string) => string }
+
+export function MrrTrendChart({ rows, money, rangeLabel, previous, compareLabel, guidance }: TrendProps) {
   const t = useTranslations()
   const locale = useLocale()
   const month = (m: string) => new Intl.DateTimeFormat(locale, { month: "short", year: "2-digit" }).format(new Date(`${m}-01T00:00:00`))
-  const data = rows.map((r) => ({ label: month(r.month), mrr: r.mrr, paying: r.paying, change: r.change }))
+  const compared = !!previous?.length
+  const data = rows.map((r, i) => ({ label: month(r.month), mrr: r.mrr, paying: r.paying, change: r.change, previous: previous?.[i]?.mrr ?? null }))
   const first = rows[0]
   const last = rows[rows.length - 1]
   const diff = first && last ? last.mrr - first.mrr : 0
   const pct = first?.mrr ? diff / first.mrr : null
-  const max = Math.max(1, ...rows.map((r) => r.mrr))
+  const max = Math.max(1, ...rows.map((r) => r.mrr), ...(previous ?? []).map((r) => r.mrr))
+  // dots on short periods only, as on the companies' charts
+  const dot = rows.length <= 6
   const best = [...rows].sort((a, b) => b.change - a.change)[0]
   const worst = [...rows].sort((a, b) => a.change - b.change)[0]
 
@@ -64,6 +74,7 @@ export function MrrTrendChart({ rows, money, rangeLabel }: Props) {
                     <p className="font-semibold text-foreground">{label}</p>
                     <div className="mt-1 space-y-1">
                       <p className="font-medium text-primary tabular-nums">MRR: {money(p.mrr)}</p>
+                      {compared && p.previous !== null && <p className="text-muted-foreground tabular-nums">{compareLabel}: {money(p.previous)}</p>}
                       <p className="text-muted-foreground tabular-nums">{t("metPaying")}: {p.paying}</p>
                       <p className={cn("tabular-nums", p.change >= 0 ? "text-success-foreground" : "text-danger-foreground")}>{t("metChange")}: {p.change >= 0 ? "+" : "−"}{money(Math.abs(p.change))}</p>
                     </div>
@@ -71,15 +82,24 @@ export function MrrTrendChart({ rows, money, rangeLabel }: Props) {
                 )
               }}
             />
-            <Line type="monotone" dataKey="mrr" stroke="#0284c7" strokeWidth={2} dot={{ r: 3, fill: "#0284c7" }} activeDot={{ r: 5, fill: "#0284c7" }} />
+            <Line type="monotone" dataKey="mrr" stroke="#0284c7" strokeWidth={2} dot={dot ? { r: 3, fill: "#0284c7" } : false} activeDot={{ r: 5, fill: "#0284c7" }} />
+            {compared && <Line type="monotone" dataKey="previous" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="3 3" dot={dot ? { r: 2.5, fill: "#94a3b8" } : false} activeDot={{ r: 4, fill: "#94a3b8" }} />}
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-3 text-xs text-muted-foreground">
-        <div className="flex items-center gap-1.5">
-          <span className="size-2 rounded-full bg-[#0284c7]" />
-          <span className="font-medium text-foreground">MRR ({rangeLabel})</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <span className="size-2 rounded-full bg-[#0284c7]" />
+            <span className="font-medium text-foreground">MRR ({rangeLabel})</span>
+          </div>
+          {compared && (
+            <div className="flex items-center gap-1.5">
+              <span className="size-2 rounded-full border border-dashed border-[#94a3b8]" />
+              <span>{compareLabel}</span>
+            </div>
+          )}
         </div>
         <span className="tabular-nums">{t("metPayingNow", { n: last?.paying ?? 0 })}</span>
       </div>
@@ -87,7 +107,9 @@ export function MrrTrendChart({ rows, money, rangeLabel }: Props) {
       {best && worst && (
         <div className="mt-3 rounded-lg border border-border/40 bg-muted/30 p-2.5 text-xs text-muted-foreground">
           <span className="font-semibold text-foreground">{t("anExecutiveGuidance")} </span>
-          {t("metGuidance", { best: month(best.month), bestAmount: money(best.change), worst: month(worst.month), worstAmount: money(worst.change) })}
+          {guidance
+            ? guidance(`${month(best.month)} (${money(best.change)})`, `${month(worst.month)} (${money(worst.change)})`)
+            : t("metGuidance", { best: month(best.month), bestAmount: money(best.change), worst: month(worst.month), worstAmount: money(worst.change) })}
         </div>
       )}
     </div>

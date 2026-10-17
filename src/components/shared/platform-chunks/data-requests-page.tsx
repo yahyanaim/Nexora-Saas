@@ -130,7 +130,7 @@ export default function ConsoleDataRequestsPage() {
         searchPlaceholder={t("drSearch")}
         emptyMessage={t("drEmpty")}
         defaultSorting={[{ id: "received", desc: true }]}
-        showRange
+        showRange savedViewsKey="console-data-requests"
         exportFilename="nexora-data-requests"
         getExportData={() => requests.map((r) => ({ number: r.number, company: r.customerName, requestedBy: r.requestedBy.name, kind: r.kind, received: r.receivedAt, due: r.dueOn, status: expired(r) ? "expired" : r.status }))}
         filters={[

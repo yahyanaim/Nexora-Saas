@@ -35,6 +35,11 @@ describe("console home tiles", () => {
     expect(prev.reference!.month).toBe(long[long.length - 4]!.month)
     expect(year.reference!.month).toBe(long[long.length - 13]!.month)
     expect(none.reference).toBeUndefined()
+    expect(none.previous).toBeUndefined()
+    // the dashed line: each month of the window against the same month of the comparison period
+    expect(prev.previous!.map((r) => r.month)).toEqual(long.slice(-6, -3).map((r) => r.month))
+    expect(year.previous!.map((r) => r.month)).toEqual(long.slice(0, 3).map((r) => r.month))
+    expect(prev.previous![prev.previous!.length - 1]).toEqual(prev.reference)
     expect(none.mrrChange).toBeNull()
     if (prev.reference!.mrr) expect(prev.mrrChange).toBeCloseTo((prev.mrr - prev.reference!.mrr) / prev.reference!.mrr, 10)
   })

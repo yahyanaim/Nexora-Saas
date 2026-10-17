@@ -23,7 +23,7 @@ function storageKey(collection: string, workspaceId: string) {
  * an older version starts again from fresh demo data instead of mixing old
  * records with new rules (the workspace choice and UI preferences are kept).
  */
-export const DEMO_DATA_VERSION = "2026-10-28"
+export const DEMO_DATA_VERSION = "2026-10-30"
 const VERSION_KEY = `${PREFIX}:data-version`
 const KEEP = new Set([VERSION_KEY, `${PREFIX}:workspace`, `${PREFIX}:guide-open`])
 /** Every collection and its seed, so a tenant export can include collections never opened (AUD-04). */

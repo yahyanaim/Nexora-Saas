@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from "vitest"
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { act, fireEvent, render, screen, within } from "@testing-library/react"
+import { readTableViews } from "@/lib/ui/saved-views"
 import { NextIntlClientProvider } from "next-intl"
 import type { ColumnDef } from "@tanstack/react-table"
 import messages from "@/messages/en.json"
@@ -7,6 +8,8 @@ import { DataTable } from "@/components/shared/data-table-chunks/data-table"
 import { inSelection, searchIn, sortHeader } from "./console-table"
 
 vi.mock("@/i18n/navigation", () => ({ Link: ({ href, children }: { href: string; children: React.ReactNode }) => <a href={href}>{children}</a> }))
+vi.mock("@/lib/utils/toast", () => ({ toast: { success: vi.fn(), error: vi.fn() } }))
+vi.mock("@/hooks/auth/use-auth-guard", () => ({ useAuthGuard: () => ({ authedUser: { id: "u_sophia" } }) }))
 
 type Row = { id: string; name: string; city: string; status: "open" | "waiting_customer" | "closed"; mrr: number }
 const rows: Row[] = Array.from({ length: 13 }, (_, i) => ({
@@ -56,6 +59,51 @@ describe("console lists on the ERP's rich table", () => {
     expect(headers[2]).toHaveAttribute("aria-sort", "none")
     fireEvent.click(screen.getByRole("button", { name: "Sort by MRR" }))
     expect(headers[2]).toHaveAttribute("aria-sort", "ascending")
+  })
+})
+
+describe("saved views (A11 step 5)", () => {
+  beforeEach(() => localStorage.clear())
+  const search = () => screen.getByRole("textbox", { name: "Search companies" }) as HTMLInputElement
+  const openViews = () => {
+    const trigger = screen.getByRole("button", { name: /^Views/ })
+    act(() => {
+      fireEvent.pointerDown(trigger, { button: 0, pointerType: "mouse" })
+      fireEvent.click(trigger)
+    })
+  }
+
+  it("save the search, sort and rows per page under a name, and bring them back in one click", async () => {
+    renderTable({ savedViewsKey: "console-customers", defaultSorting: [{ id: "mrr", desc: true }] })
+    fireEvent.change(search(), { target: { value: "rabat" } })
+    expect(desktopRows()).toHaveLength(6)
+
+    openViews()
+    fireEvent.click(await screen.findByText("Save the current view…"))
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Rabat" } })
+    fireEvent.click(screen.getByRole("button", { name: "Save" }))
+
+    const saved = readTableViews("console-customers", "u_sophia")
+    expect(saved).toHaveLength(1)
+    expect(saved[0]).toMatchObject({ name: "Rabat", sorting: [{ id: "mrr", desc: true }], columnFilters: [{ id: "name", value: "rabat" }], pageSize: 10 })
+    // the menu names the view the list shows
+    expect(screen.getByRole("button", { name: "Views: Rabat" })).toBeInTheDocument()
+
+    fireEvent.change(search(), { target: { value: "" } })
+    expect(desktopRows()).toHaveLength(10)
+    openViews()
+    fireEvent.click(await screen.findByText("Rabat"))
+    expect(search().value).toBe("rabat")
+    expect(desktopRows()).toHaveLength(6)
+
+    openViews()
+    fireEvent.click(await screen.findByRole("button", { name: "Delete the view Rabat" }))
+    expect(readTableViews("console-customers", "u_sophia")).toEqual([])
+  })
+
+  it("are not offered on lists that do not ask for them", () => {
+    renderTable()
+    expect(screen.queryByRole("button", { name: /^Views/ })).not.toBeInTheDocument()
   })
 })
 

@@ -18,11 +18,12 @@ import { useRouter } from "@/i18n/navigation"
 import { useConsoleActor, useConsoleCustomers, useConsoleMutations } from "@/hooks/platform/use-platform-console"
 import { consoleCan } from "@/lib/platform/console-roles"
 import { accountMrr, accountsSummary, seatLimit } from "@/lib/platform/customer-lifecycle"
-import { NEXORA_PLANS, formatMad, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
+import { NEXORA_PLANS, planById, type NexoraPlanId } from "@/lib/platform/nexora-catalog"
 import { cn } from "@/lib/utils"
 import { ConsoleCapability } from "@/types/platform-console"
 import { LIFECYCLE, LifecycleBadge } from "./lifecycle-badge"
 import { NameCell, inSelection, searchIn, sortHeader } from "./console-table"
+import { formatConsoleMoney } from "./billing-shared"
 
 const EMPTY_TRIAL = { name: "", city: "", country: "MA", ice: "", plan: "business" as NexoraPlanId, adminName: "", adminEmail: "" }
 
@@ -38,7 +39,9 @@ export default function PlatformCustomersPage() {
   const [trial, setTrial] = useState(EMPTY_TRIAL)
 
   const sum = accountsSummary(customers)
-  const money = (n: number) => formatMad(n, locale === "ar" ? "ar-MA" : "fr-MA")
+  const money = (n: number) => formatConsoleMoney(n, locale)
+  // tiles without cents, as on the companies' Analytics
+  const tileMoney = (n: number) => formatConsoleMoney(n, locale, { whole: true })
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso.slice(0, 10)}T00:00:00`))
   const canTrial = consoleCan(actor?.role, ConsoleCapability.CREATE_TRIAL)
 
@@ -113,10 +116,10 @@ export default function PlatformCustomersPage() {
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader />
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiTile title={t("pfMrr")} value={money(sum.mrr)} period={t("chToday")} description={t("cuTileMrr")} noteLabel={t("anOperationalNote")} note={t("pfArr", { arr: money(sum.arr) })} isLoading={isLoading} />
+        <KpiTile title={t("pfMrr")} value={tileMoney(sum.mrr)} period={t("chToday")} description={t("cuTileMrr")} noteLabel={t("anOperationalNote")} note={t("pfArr", { arr: money(sum.arr) })} isLoading={isLoading} />
         <KpiTile title={t("pfCustomers")} value={String(sum.customers)} period={t("chToday")} description={t("cuTileCustomers")} noteLabel={t("anOperationalNote")} note={t("pfCustomersHint", { paying: sum.paying, trials: sum.trials })} isLoading={isLoading} />
         <KpiTile title={t("pfSeats")} value={String(sum.seats)} period={t("chToday")} description={t("pfSeatsHint")} isLoading={isLoading} />
-        <KpiTile title={t("cuAtRisk")} value={money(sum.atRisk)} period={t("chToday")} description={t("cuTileAtRisk")} noteLabel={t("anOperationalNote")} note={t("cuAtRiskHint", { overdue: sum.overdue, suspended: sum.suspended })} isLoading={isLoading} />
+        <KpiTile title={t("cuAtRisk")} value={tileMoney(sum.atRisk)} period={t("chToday")} description={t("cuTileAtRisk")} noteLabel={t("anOperationalNote")} note={t("cuAtRiskHint", { overdue: sum.overdue, suspended: sum.suspended })} isLoading={isLoading} />
       </div>
 
       <section className="grid gap-3 md:grid-cols-3">
@@ -143,7 +146,7 @@ export default function PlatformCustomersPage() {
         emptyMessage={t("cuEmpty")}
         defaultSorting={[{ id: "mrr", desc: true }]}
         defaultColumnVisibility={{ billing: false, country: false }}
-        showRange
+        showRange savedViewsKey="console-customers"
         exportFilename="nexora-customers"
         getExportData={() => customers.map((c) => ({ company: c.name, city: c.city, country: c.country, ice: c.ice ?? "", plan: planById(c.plan).name, billing: c.billing, status: c.status, people: c.seatsUsed, mrr: accountMrr(c), since: c.since }))}
         actions={canTrial ? [{ label: t("cuNewTrial"), icon: Plus, onClick: () => setTrialOpen(true), variant: "primary", iconOnly: true }] : []}

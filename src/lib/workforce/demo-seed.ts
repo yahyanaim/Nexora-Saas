@@ -1,5 +1,7 @@
 import {
   ClientStatus,
+  ContactRole,
+  LeadSource,
   EmployeeStatus,
   EmploymentType,
   WorkRole,
@@ -78,7 +80,34 @@ const NORTHWIND_CLIENTS: ClientSeed[] = [
   { id: "cli_peak", name: "Peak Outdoors", industry: "Retail", email: "ap@peak.example", status: ClientStatus.LEAD, paymentTermsDays: 30, contacts: [] },
 ]
 
+/** Tags and lead sources of the demo clients (CRM step 1) */
+const CLIENT_CRM: Record<string, Pick<Client, "tags" | "leadSource">> = {
+  cli_orbit: { tags: ["Key account", "Europe"], leadSource: LeadSource.REFERRAL },
+  cli_helio: { tags: ["Key account", "Casablanca"], leadSource: LeadSource.EVENT },
+  cli_medica: { tags: ["Healthcare", "Casablanca"], leadSource: LeadSource.WEBSITE },
+  cli_vela: { tags: ["E-commerce"], leadSource: LeadSource.LINKEDIN },
+  cli_kappa: { tags: ["Public sector"], leadSource: LeadSource.OUTREACH },
+  cli_lumen: { tags: ["Key account"], leadSource: LeadSource.REFERRAL },
+  cli_peak: { leadSource: LeadSource.WEBSITE },
+}
+/** Each demo contact's part in the decisions */
+const CONTACT_ROLE: Record<string, ContactRole> = {
+  con_1: ContactRole.DECISION_MAKER,
+  con_2: ContactRole.FINANCE,
+  con_3: ContactRole.TECHNICAL,
+  con_4: ContactRole.USER,
+  con_5: ContactRole.DECISION_MAKER,
+  con_6: ContactRole.DECISION_MAKER,
+}
+
 export function seedClients(workspaceId: string): Client[] {
   const rows = workspaceId === "ws_northwind" ? NORTHWIND_CLIENTS : workspaceId === "ws_atlas" ? ATLAS_CLIENTS : []
-  return rows.map((row) => ({ ...row, workspaceId, createdAt: STAMP, updatedAt: STAMP }))
+  return rows.map((row) => ({
+    ...row,
+    ...CLIENT_CRM[row.id],
+    contacts: row.contacts.map((c) => ({ ...c, role: CONTACT_ROLE[c.id] })),
+    workspaceId,
+    createdAt: STAMP,
+    updatedAt: STAMP,
+  }))
 }

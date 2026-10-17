@@ -2,6 +2,7 @@ import type { Client, ClientInput } from "@/types/workforce"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { seedClients } from "@/lib/workforce/demo-seed"
 import { assertClientIds, cleanId } from "@/lib/workforce/tax-ids"
+import { cleanTags } from "@/lib/workforce/client-figures"
 
 /**
  * Clients a workspace works for and bills. Backed by the browser demo store
@@ -52,8 +53,10 @@ export async function deleteClientApi(workspaceId: string, id: string): Promise<
 
 /** Exactly one primary contact whenever a client has contacts. */
 /** Drops the spaces and dots people type in the ICE. */
+/** Clean identifiers, and tags trimmed without duplicates (CRM step 1). */
 function withCleanIds<T extends Partial<ClientInput>>(input: T): T {
-  return "ice" in input ? { ...input, ice: cleanId(input.ice) } : input
+  const ids = "ice" in input ? { ...input, ice: cleanId(input.ice) } : input
+  return ids.tags ? { ...ids, tags: cleanTags(ids.tags) } : ids
 }
 
 function normalizeContacts<T extends Partial<ClientInput>>(input: T): T {

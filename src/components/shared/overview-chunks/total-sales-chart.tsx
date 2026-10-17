@@ -96,7 +96,7 @@ export function TotalSalesChart() {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
-            margin={{ top: 10, right: 10, left: -10, bottom: 0 }}
+            margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -111,7 +111,9 @@ export function TotalSalesChart() {
               className="fill-muted-foreground"
               ticks={xTicks}
             />
+            {/* wide enough for "MAD 1.5M": a narrower axis cut the currency off */}
             <YAxis
+              width={76}
               tickLine={false}
               axisLine={false}
               tick={{ fontSize: 11 }}

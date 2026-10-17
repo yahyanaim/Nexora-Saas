@@ -18,6 +18,7 @@ import {
   ArrowUp as LArrowUp,
   ArrowUpRight as LArrowUpRight,
   BadgeCheck as LBadgeCheck,
+  Bookmark as LBookmark,
   Ban as LBan,
   Bell as LBell,
   BrushCleaning as LBrushCleaning,
@@ -290,6 +291,7 @@ export const ShieldUser = icon(LShieldUser, "ShieldUser")
 export const Smartphone = icon(LSmartphone, "Smartphone")
 export const Sparkles = icon(LSparkles, "Sparkles")
 export const Trash = icon(LTrash, "Trash")
+export const Bookmark = icon(LBookmark, "Bookmark")
 export const Trash2 = icon(LTrash2, "Trash2")
 export const TreePalm = icon(LTreePalm, "TreePalm")
 export const FileBadge = icon(LFileBadge, "FileBadge")
