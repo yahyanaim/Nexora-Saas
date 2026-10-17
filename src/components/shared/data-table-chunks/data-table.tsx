@@ -94,6 +94,10 @@ interface DataTableProps<TData, TValue> {
   showRange?: boolean
   /** Named saved views of filters, search, sort and rows per page (A11 step 5); the key names the list */
   savedViewsKey?: string
+  /** Page numbers to click instead of "3/9" */
+  numberedPages?: boolean
+  /** Actions for the ticked rows, given those rows and a way to untick them (replaces bulkActions) */
+  renderBulkActions?: (rows: TData[], clearSelection: () => void) => React.ReactNode
 }
 
 export function DataTable<TData, TValue>({
@@ -133,6 +137,8 @@ export function DataTable<TData, TValue>({
   defaultPageSize = 10,
   showRange = false,
   savedViewsKey,
+  numberedPages = false,
+  renderBulkActions,
 }: DataTableProps<TData, TValue>) {
   const t = useTranslations()
   const [rowSelection, setRowSelection] = React.useState({})
@@ -223,7 +229,7 @@ export function DataTable<TData, TValue>({
           searchColumnId={searchColumnId}
           searchPlaceholder={searchPlaceholder}
           filters={filters}
-          bulkActions={bulkActions}
+          bulkActions={renderBulkActions ? renderBulkActions(table.getFilteredSelectedRowModel().rows.map((r) => r.original), () => table.resetRowSelection()) : bulkActions}
           searchValue={manual ? searchValue : undefined}
           onSearchChange={manual ? onSearchChange : undefined}
           exportFilename={exportFilename}
@@ -376,6 +382,7 @@ export function DataTable<TData, TValue>({
           table={table}
           total={manual ? rowCount : undefined}
           showRange={showRange}
+          numbered={numberedPages}
         />
       </div>
     </div>
