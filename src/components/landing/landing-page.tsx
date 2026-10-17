@@ -21,6 +21,7 @@ import {
 } from "./content"
 import { DitherCanvas } from "./dither-canvas"
 import { geist, geistMono } from "./fonts"
+import { HeroTeaser } from "./hero-teaser"
 import { CountUp, RevealObserver, ScrollFX } from "./motion"
 import { PixelGlobe } from "./pixel-globe"
 import { ProductTabs } from "./product-tabs"
@@ -174,21 +175,7 @@ export function LandingPage() {
                 <DitherCanvas variant="skyline" cell={6} className={s.ditherFill} />
               </div>
               <div className={s.window} data-scroll>
-                <div className={s.windowBar}>
-                  <span className={s.dot} />
-                  <span className={s.dot} />
-                  <span className={s.dot} />
-                  <span className={s.windowUrl}>app.nexora.ma/dashboard/overview</span>
-                </div>
-                <ScrollShot
-                  src="/landing/screens/overview.webp"
-                  alt="Nexora business analytics dashboard, full page: revenue, margin, utilization, cash, revenue over time, by client, bridge and top projects"
-                  width={2000}
-                  height={2724}
-                  duration={22}
-                  sizes="(max-width: 1200px) 100vw, 1120px"
-                  eager
-                />
+                <HeroTeaser />
               </div>
             </div>
           </section>

@@ -25,6 +25,11 @@ const isProduction =
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   devIndicators: false,
+  // Dev only: let the dev server be opened from the local network (the
+  // "Network:" address, a phone on the same Wi-Fi, name.local). Without this,
+  // Next.js refuses the live-reload connection from those addresses and the
+  // page reloads itself over and over.
+  allowedDevOrigins: ["127.0.0.1", "192.168.*.*", "10.*.*.*", "172.*.*.*", "*.local"],
   images: {
     remotePatterns: [
       {

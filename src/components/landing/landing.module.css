@@ -480,6 +480,15 @@
   border-radius: 50%;
   background: var(--line);
 }
+/* the teaser fills the window exactly (16:9, like the video) */
+.teaserVideo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: #0b2a6b;
+}
 .windowUrl {
   margin: 0 auto;
   padding: 3px 16px;
