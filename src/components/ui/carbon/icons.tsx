@@ -147,6 +147,7 @@ import {
   Tablet as LTablet,
   Terminal as LTerminal,
   Trash as LTrash,
+  Phone as LPhone,
   Tag as LTag,
   Trash2 as LTrash2,
   TreePalm as LTreePalm,
@@ -293,6 +294,7 @@ export const Smartphone = icon(LSmartphone, "Smartphone")
 export const Sparkles = icon(LSparkles, "Sparkles")
 export const Trash = icon(LTrash, "Trash")
 export const Bookmark = icon(LBookmark, "Bookmark")
+export const Phone = icon(LPhone, "Phone")
 export const Tag = icon(LTag, "Tag")
 export const Trash2 = icon(LTrash2, "Trash2")
 export const TreePalm = icon(LTreePalm, "TreePalm")

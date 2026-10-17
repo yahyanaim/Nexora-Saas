@@ -7,6 +7,11 @@ import { cn } from "@/lib/utils"
 interface DialogContextType {
   open: boolean
   setOpen: (open: boolean) => void
+  /** Id of the title, which names the dialog for screen readers */
+  titleId: string
+  /** Whether a DialogTitle is on screen (set by the title itself) */
+  titled: boolean
+  setTitled: (titled: boolean) => void
 }
 
 const DialogContext = React.createContext<DialogContextType | null>(null)
@@ -49,9 +54,11 @@ export function Dialog({
 
   const close = React.useCallback(() => setOpen(false), [setOpen])
   useEscapeToClose(open, close)
+  const titleId = React.useId()
+  const [titled, setTitled] = React.useState(false)
 
   return (
-    <DialogContext.Provider value={{ open, setOpen }}>
+    <DialogContext.Provider value={{ open, setOpen, titleId, titled, setTitled }}>
       {children}
     </DialogContext.Provider>
   )
@@ -139,6 +146,7 @@ export function DialogContent({
       <div
         role="dialog"
         aria-modal="true"
+        aria-labelledby={context.titled ? context.titleId : undefined}
         className={cn(
           "relative z-50 w-full max-w-lg rounded-3xl border border-border bg-card p-6 text-card-foreground shadow-2xl animate-in zoom-in-95 fade-in-0 duration-200",
           className
@@ -192,8 +200,16 @@ export function DialogTitle({
   className,
   ...props
 }: React.HTMLAttributes<HTMLHeadingElement>) {
+  const context = React.useContext(DialogContext)
+  const setTitled = context?.setTitled
+  // names the dialog after this title while it is shown
+  React.useEffect(() => {
+    setTitled?.(true)
+    return () => setTitled?.(false)
+  }, [setTitled])
   return (
     <h2
+      id={context?.titleId}
       className={cn("text-lg font-semibold leading-none tracking-tight text-foreground", className)}
       {...props}
     />

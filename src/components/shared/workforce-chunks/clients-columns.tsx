@@ -30,6 +30,8 @@ interface Options {
   canEdit: boolean
   canDelete: boolean
   onView: (client: Client) => void
+  /** The client open in the details panel, shown as pressed */
+  selectedId?: string | null
   onEdit: (client: Client) => void
   onDelete: (client: Client) => void
 }
@@ -89,7 +91,7 @@ export function getClientsColumns(o: Options): ColumnDef<Client>[] {
         const c = row.original
         const health = fig(c)?.health
         return (
-          <button type="button" onClick={() => o.onView(c)} className="flex items-center gap-3 rounded-lg text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <button type="button" onClick={() => o.onView(c)} aria-pressed={o.selectedId === c.id} className={cn("flex items-center gap-3 rounded-lg text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", o.selectedId === c.id && "text-primary [&_span.font-medium]:text-primary")}>
             <span className="relative">
               <SpaceAvatar name={c.name} size="md" />
               {health && (
@@ -120,7 +122,7 @@ export function getClientsColumns(o: Options): ColumnDef<Client>[] {
       enableSorting: false,
       cell: ({ getValue }) => {
         const phone = String(getValue() ?? "")
-        return phone ? <a href={`tel:${phone.replace(/\s/g, "")}`} className="text-sm tabular-nums text-muted-foreground hover:text-foreground" dir="ltr">{phone}</a> : <span className="text-sm text-muted-foreground">—</span>
+        return phone ? <a href={`tel:${phone.replace(/\s/g, "")}`} className="whitespace-nowrap text-sm tabular-nums text-muted-foreground hover:text-foreground" dir="ltr">{phone}</a> : <span className="text-sm text-muted-foreground">—</span>
       },
     },
     {
