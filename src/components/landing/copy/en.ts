@@ -325,11 +325,8 @@ export const en = {
       "A bar chart whose bars lift under the pointer",
     ],
     chain: "A hub with branches; the path to the tile under the pointer lights hop by hop",
-    compliance: "A padlock whose shackle lifts as the pointer comes near",
     modules: "A hub with eight module tiles; the tile under the pointer rises",
     roles: "A bank of lockers; the one under the pointer opens",
-    faq: "A question mark whose hook turns toward the pointer",
-    cta: "Scattered tiles that slide into one tree as the pointer comes near",
   },
   carousel: {
     previous: "Previous slide",

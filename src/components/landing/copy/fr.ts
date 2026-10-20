@@ -346,11 +346,8 @@ export const fr: LandingCopy = {
       "Un graphique à barres dont les barres se lèvent sous le pointeur",
     ],
     chain: "Un pivot et ses branches ; le chemin vers la tuile sous le pointeur s’allume étape par étape",
-    compliance: "Un cadenas dont l’anse se lève quand le pointeur approche",
     modules: "Un pivot entouré de huit modules ; la tuile sous le pointeur monte",
     roles: "Une rangée de casiers ; celui sous le pointeur s’ouvre",
-    faq: "Un point d’interrogation dont le crochet se tourne vers le pointeur",
-    cta: "Des tuiles éparses qui s’assemblent en un arbre quand le pointeur approche",
   },
   carousel: {
     previous: "Diapositive précédente",

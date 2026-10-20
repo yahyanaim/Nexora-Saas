@@ -1710,26 +1710,6 @@
 .headFig {
   width: 100%;
 }
-.inlineFig {
-  max-width: 300px;
-  margin-top: 44px;
-}
-.ctaRow {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 640px) minmax(240px, 340px);
-  justify-content: space-between;
-  align-items: center;
-  gap: 32px;
-}
-.ctaFig {
-  padding: 18px 18px 14px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-}
-.ctaFig .figure {
-  --hairline-plate: var(--surface);
-}
 
 /* ---------- Language menu (the app's language icon) ---------- */
 
@@ -1866,9 +1846,6 @@
 }
 
 @media (max-width: 1100px) {
-  .ctaRow {
-    grid-template-columns: 1fr;
-  }
   .navInner {
     grid-template-columns: 1fr auto;
   }
@@ -1970,8 +1947,7 @@
     grid-template-columns: 1fr;
     gap: 32px;
   }
-  .headFig,
-  .ctaFig {
+  .headFig {
     max-width: 340px;
   }
   .slideScreen {
