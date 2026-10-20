@@ -17,7 +17,7 @@ import type { SatisfactionResponse } from "@/types/work-feedback"
 /** Read-only stars, e.g. 4 of 5. */
 export function Stars({ value, className }: { value: number; className?: string }) {
   return (
-    <span className={cn("inline-flex gap-0.5", className)} aria-label={`${value}/5`}>
+    <span className={cn("inline-flex gap-0.5", className)} role="img" aria-label={`${value}/5`}>
       {[1, 2, 3, 4, 5].map((n) => <Star key={n} className={cn("size-3.5", n <= Math.round(value) ? "fill-warning text-warning" : "text-muted-foreground/40")} />)}
     </span>
   )
