@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useSearchParams } from "next/navigation"
-import { AlertTriangle, ArrowLeft, CalendarDays, FolderKanban, Globe, Handshake, Mail, MessagesSquare, Pencil, Phone, Receipt, Wallet } from "@/components/ui/carbon/icons"
+import { AlertTriangle, ArrowLeft, CalendarDays, FolderKanban, Globe, Handshake, ListChecks, Mail, MessagesSquare, Pencil, Phone, Plus, Receipt, Wallet } from "@/components/ui/carbon/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
@@ -20,10 +20,13 @@ import { useClientFigures } from "@/hooks/workforce/use-client-figures"
 import { useClientInvoices } from "@/hooks/workforce/use-work-billing"
 import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useDeals } from "@/hooks/workforce/use-deals"
+import { useFollowUps } from "@/hooks/workforce/use-crm"
 import { useQuotes } from "@/hooks/workforce/use-quotes"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { fieldsFor } from "@/lib/workforce/custom-fields"
 import { projectStatsById, todayIso } from "@/lib/workforce/project-metrics"
+import { sortFollowUps } from "@/lib/workforce/follow-ups"
+import type { ClientFollowUp } from "@/types/work-crm"
 import { cn } from "@/lib/utils"
 import type { Client, ClientInput } from "@/types/workforce"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
@@ -36,6 +39,8 @@ import { CLIENT_PAGE_TABS, tabFromQuery } from "./client-page-tabs"
 import { ContactsSection, DealsSection, PageSection, ProjectsSection, QuotesInvoicesSection, Row } from "./client-page-sections"
 import { HEALTH_CLASS, relativeDay } from "./clients-columns"
 import { CustomFieldValuesList } from "./custom-fields"
+import { FollowUpDialog } from "./follow-up-dialog"
+import { FollowUpList } from "./follow-up-list"
 import { CLIENT_STATUS_CLASS, CLIENT_STATUS_LABEL, formatMoney } from "./workforce-labels"
 
 /**
@@ -80,11 +85,16 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
   const { data: tasks = [] } = useTasks()
   const { data: deals = [] } = useDeals()
   const { data: quotes = [] } = useQuotes()
+  const { data: allFollowUps = [] } = useFollowUps()
   const { data: settings } = useWorkspaceSettings()
   const { update } = useClientMutations()
 
   const [formOpen, setFormOpen] = React.useState(false)
   const [logging, setLogging] = React.useState(false)
+  const [planning, setPlanning] = React.useState(false)
+  const [editingFollowUp, setEditingFollowUp] = React.useState<ClientFollowUp | null>(null)
+  const followUps = React.useMemo(() => sortFollowUps(allFollowUps.filter((x) => x.clientId === c.id)), [allFollowUps, c.id])
+  const openFollowUps = followUps.filter((x) => !x.doneAt).length
   const formRef = React.useRef<ClientFormHandle>(null)
 
   // the tab is kept in the address (?tab=), billing only for people who may read invoices
@@ -220,6 +230,21 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
         </div>
       ),
     },
+    {
+      id: "followups",
+      label: t("cpTabFollowUps", { n: openFollowUps }),
+      content: (
+        <PageSection title={t("followUps")} action={canEdit && <Button size="sm" variant="outline" onClick={() => setPlanning(true)}><Plus className="size-4" />{t("fuPlan")}</Button>}>
+          <FollowUpList
+            items={followUps}
+            showClient={false}
+            canEdit={canEdit}
+            onEdit={setEditingFollowUp}
+            empty={<p className="rounded-2xl border border-dashed border-border py-6 text-center text-sm text-muted-foreground">{t("fuNoneForClient")}</p>}
+          />
+        </PageSection>
+      ),
+    },
     { id: "deals", label: t("cpTabDeals", { n: deals.filter((d) => d.clientId === c.id).length }), content: <DealsSection deals={deals.filter((d) => d.clientId === c.id)} employees={employees} currency={currency} /> },
     ...(canSeeMoney
       ? [
@@ -270,6 +295,7 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
           <>
             <Button variant="outline" asChild><Link href="/dashboard/clients"><ArrowLeft className="size-4 rtl:rotate-180" />{t("cpBack")}</Link></Button>
             <Button variant="outline" onClick={() => setLogging(true)}><MessagesSquare className="size-4" />{t("cdLog")}</Button>
+            {canEdit && <Button variant="outline" onClick={() => setPlanning(true)}><ListChecks className="size-4" />{t("fuPlan")}</Button>}
             {canEdit && <Button variant="primary" onClick={() => setFormOpen(true)}><Pencil className="size-4" />{t("edit")}</Button>}
           </>
         }
@@ -285,7 +311,14 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
 
       <Tabs defaultTabId={initialTab} onChange={(tab) => keepTab(tab.id)} tabs={tabs} />
 
-      <LogDialog open={logging} onOpenChange={setLogging} client={c} />
+      <LogDialog open={logging} onOpenChange={setLogging} client={c} canPlan={canEdit} />
+      <FollowUpDialog
+        open={planning || !!editingFollowUp}
+        onOpenChange={(o) => { if (!o) { setPlanning(false); setEditingFollowUp(null) } }}
+        followUp={editingFollowUp}
+        defaults={{ clientId: c.id, contactId: contact?.id }}
+        lockClient
+      />
 
       <DataTableEntityFormSheet
         open={formOpen}

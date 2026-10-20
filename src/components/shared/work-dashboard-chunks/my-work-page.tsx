@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
-import { AlertTriangle, CalendarDays, CheckCircle, Clock, FolderKanban, Star, TreePalm } from "@/components/ui/carbon/icons"
+import { AlertTriangle, CalendarDays, CheckCircle, Clock, FolderKanban, ListChecks, Star, TreePalm } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
 import { useReviews } from "../work-reviews-chunks/use-reviews"
@@ -17,6 +17,14 @@ import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useLeave } from "@/hooks/workforce/use-leave"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
+import { useFollowUps } from "@/hooks/workforce/use-crm"
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { can } from "@/lib/permissions/can"
+import { AdminPermissionsPlatform as P } from "@/types/roles"
+import { followUpWhen, sortFollowUps } from "@/lib/workforce/follow-ups"
+import type { ClientFollowUp } from "@/types/work-crm"
+import { FollowUpList } from "../workforce-chunks/follow-up-list"
+import { FollowUpDialog } from "../workforce-chunks/follow-up-dialog"
 import { myDay, vacationAllowance } from "@/lib/workforce/dashboards"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { EmployeeStatus } from "@/types/workforce"
@@ -44,6 +52,11 @@ export default function MyWorkPage() {
   const { data: entries = [] } = useTimeEntries()
   const { data: leave = [] } = useLeave()
   const { data: settings } = useWorkspaceSettings()
+  const { data: followUps = [] } = useFollowUps()
+  const { authedUser } = useAuthGuard()
+  const canEditClients = can(authedUser, P.CLIENTS_UPDATE)
+  const canReadClients = can(authedUser, P.CLIENTS_READ)
+  const [editingFollowUp, setEditingFollowUp] = useState<ClientFollowUp | null>(null)
 
   const staff = useMemo(() => employees.filter((e) => e.status !== EmployeeStatus.INACTIVE), [employees])
   // The signed-in person; anyone can be picked to preview their view
@@ -64,6 +77,8 @@ export default function MyWorkPage() {
     [employee, tasks, entries, leave, settings, today]
   )
   const isLoading = loadingPeople || loadingTasks
+  // the person's client follow-ups: late, today and the coming week (CRM step 5)
+  const myFollowUps = employee ? sortFollowUps(followUps.filter((f) => f.ownerId === employee.id && ["late", "today", "week"].includes(followUpWhen(f, today)))) : []
   // Reviews where it is this person's turn: rate themselves, review someone, or read a finished review
   const reviewTodos = employee ? reviews.filter((r) => reviewAction(r, { employeeId: employee.id, isAdmin: false })) : []
   const nameOf = (id: string) => employees.find((e) => e.id === id)?.name ?? "—"
@@ -151,6 +166,16 @@ export default function MyWorkPage() {
               )
             })}
           </ul>
+        </section>
+      )}
+
+      {myFollowUps.length > 0 && (
+        <section aria-labelledby="mw-follow-ups" className="rounded-3xl border border-border bg-card p-5 shadow-panel">
+          <header className="mb-3 flex items-center justify-between">
+            <h2 id="mw-follow-ups" className="flex items-center gap-2 font-semibold"><ListChecks className="size-4 text-primary" />{t("fuMyFollowUps")}</h2>
+            {canReadClients && <Link href="/dashboard/follow-ups?mine=1" className="text-sm text-primary hover:underline">{t("fuSeeAll")}</Link>}
+          </header>
+          <FollowUpList items={myFollowUps} canEdit={canEditClients} canOpenClients={canReadClients} onEdit={setEditingFollowUp} empty={null} />
         </section>
       )}
 
@@ -260,6 +285,7 @@ export default function MyWorkPage() {
           )}
         </section>
       </div>
+      <FollowUpDialog open={!!editingFollowUp} onOpenChange={(o) => !o && setEditingFollowUp(null)} followUp={editingFollowUp} />
     </div>
   )
 }

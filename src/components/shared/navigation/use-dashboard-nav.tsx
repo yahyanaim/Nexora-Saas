@@ -70,6 +70,7 @@ import {
   ChartColumnStacked,
   UsersRound,
   CalendarRange,
+  ListChecks,
 } from "@/components/ui/carbon/icons"
 import { usePathname } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -194,6 +195,12 @@ export function useDashboardNav() {
             url: "/dashboard/clients",
             icon: Handshake,
             descriptionKey: "pageDescClients",
+          },
+          {
+            title: t("followUps"),
+            url: "/dashboard/follow-ups",
+            icon: ListChecks,
+            descriptionKey: "pageDescFollowUps",
           },
           {
             title: t("clientPortal"),

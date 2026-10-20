@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
-import { AlertTriangle, CalendarDays, ChevronRight, Close, Eye, FolderKanban, Globe, Mail, MessagesSquare, MoreHorizontal, Pencil, Phone, Receipt, Star, Trash2, Wallet } from "@/components/ui/carbon/icons"
+import { AlertTriangle, CalendarDays, ChevronRight, Close, Eye, FolderKanban, Globe, ListChecks, Mail, MessagesSquare, MoreHorizontal, Pencil, Phone, Receipt, Star, Trash2, Wallet } from "@/components/ui/carbon/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -12,7 +12,9 @@ import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useCrmMutations } from "@/hooks/workforce/use-crm"
+import { useCrmMutations, useFollowUpMutations } from "@/hooks/workforce/use-crm"
+import { Checkbox } from "@/components/ui/checkbox"
+import { addDays } from "@/lib/workforce/billing"
 import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
 import type { ClientFigures } from "@/lib/workforce/client-figures"
 import { todayIso } from "@/lib/workforce/project-metrics"
@@ -22,6 +24,7 @@ import type { Client, Employee } from "@/types/workforce"
 import { HEALTH_CLASS, relativeDay } from "./clients-columns"
 import type { ClientPageTab } from "./client-page-tabs"
 import { CLIENT_STATUS_CLASS, CLIENT_STATUS_LABEL, formatMoney } from "./workforce-labels"
+import { FollowUpDialog } from "./follow-up-dialog"
 
 export const HEALTH_BADGE = { good: "bg-success-soft text-success-foreground", watch: "bg-warning-soft text-warning-foreground", at_risk: "bg-danger-soft text-destructive" } as const
 
@@ -94,6 +97,7 @@ function Details({ client: c, figures: f, employees, currency, canSeeMoney, canE
   const locale = useLocale()
   const today = todayIso()
   const [logging, setLogging] = React.useState(false)
+  const [planning, setPlanning] = React.useState(false)
   const money = (n: number) => formatMoney(n, currency, locale)
   const contact = c.contacts.find((x) => x.isPrimary)
   const phone = contact?.phone || c.phone
@@ -253,6 +257,7 @@ function Details({ client: c, figures: f, employees, currency, canSeeMoney, canE
       <nav aria-label={t("cdMoreAbout", { name: c.name })} className="divide-y divide-border rounded-2xl border border-border">
         {[
           ...(canSeeMoney ? [{ icon: Receipt, label: t("cdInvoicesPayments"), tab: "billing" as const }] : []),
+          { icon: ListChecks, label: t("followUps"), tab: "followups" as const },
           { icon: FolderKanban, label: t("cdProjectsQuotes"), tab: "projects" as const },
           { icon: CalendarDays, label: t("cdContracts"), tab: "contracts" as const },
           { icon: MessagesSquare, label: t("cdNotesActivity"), tab: "activity" as const },
@@ -265,6 +270,12 @@ function Details({ client: c, figures: f, employees, currency, canSeeMoney, canE
         ))}
       </nav>
 
+      {canEdit && (
+        <Button variant="outline" className="w-full" onClick={() => setPlanning(true)}>
+          <ListChecks className="size-4" />
+          {t("fuPlan")}
+        </Button>
+      )}
       <div className="grid grid-cols-2 gap-2">
         <Button variant="primary" onClick={() => setLogging(true)}>
           <MessagesSquare className="size-4" />
@@ -276,7 +287,8 @@ function Details({ client: c, figures: f, employees, currency, canSeeMoney, canE
         </Button>
       </div>
 
-      <LogDialog open={logging} onOpenChange={setLogging} client={c} />
+      <LogDialog open={logging} onOpenChange={setLogging} client={c} canPlan={canEdit} />
+      <FollowUpDialog open={planning} onOpenChange={setPlanning} defaults={{ clientId: c.id, contactId: c.contacts.find((x) => x.isPrimary)?.id }} lockClient />
     </div>
   )
 }
@@ -333,20 +345,31 @@ export function Stars({ value }: { value: number }) {
 }
 
 /** Records a call, meeting or note on the client's timeline. */
-export function LogDialog({ open, onOpenChange, client }: { open: boolean; onOpenChange: (open: boolean) => void; client: Client }) {
+export function LogDialog({ open, onOpenChange, client, canPlan = false }: { open: boolean; onOpenChange: (open: boolean) => void; client: Client; canPlan?: boolean }) {
   const t = useTranslations()
   const me = useCurrentEmployee()
   const { addNote } = useCrmMutations()
+  const { save: saveFollowUp } = useFollowUpMutations()
   const [kind, setKind] = React.useState<ClientNoteKind>(ClientNoteKind.CALL)
   const [date, setDate] = React.useState(() => todayIso())
   const [text, setText] = React.useState("")
+  // the next step, planned in the same go (CRM step 5)
+  const [plan, setPlan] = React.useState(false)
+  const [nextTitle, setNextTitle] = React.useState("")
+  const [nextDate, setNextDate] = React.useState(() => addDays(todayIso(), 7))
+  const planReady = !plan || (!!nextTitle.trim() && !!nextDate)
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!planReady) return
     addNote.mutate(
       { clientId: client.id, kind, date, text, authorId: me?.id },
       {
         onSuccess: () => {
+          if (plan) saveFollowUp.mutate({ input: { clientId: client.id, title: nextTitle, dueDate: nextDate, ownerId: me?.id, contactId: client.contacts.find((x) => x.isPrimary)?.id } })
           setText("")
+          setPlan(false)
+          setNextTitle("")
+          setNextDate(addDays(todayIso(), 7))
           onOpenChange(false)
         },
       }
@@ -382,9 +405,29 @@ export function LogDialog({ open, onOpenChange, client }: { open: boolean; onOpe
             <Label htmlFor="cd-log-text">{t("cdLogWhat")}</Label>
             <Textarea id="cd-log-text" rows={3} value={text} onChange={(e) => setText(e.target.value)} placeholder={t("cdLogPlaceholder")} />
           </div>
+          {canPlan && (
+            <div className="space-y-3 rounded-2xl border border-border p-3">
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <Checkbox checked={plan} onCheckedChange={(v) => setPlan(!!v)} />
+                {t("fuPlanNext")}
+              </label>
+              {plan && (
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cd-next-title">{t("fuWhat")}</Label>
+                    <Input id="cd-next-title" value={nextTitle} onChange={(e) => setNextTitle(e.target.value)} placeholder={t("fuWhatPlaceholder")} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cd-next-date">{t("fuDue")}</Label>
+                    <Input id="cd-next-date" type="date" min={todayIso()} value={nextDate} onChange={(e) => setNextDate(e.target.value)} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
-            <Button type="submit" disabled={!text.trim() || addNote.isPending}>{t("save")}</Button>
+            <Button type="submit" disabled={!text.trim() || !planReady || addNote.isPending}>{t("save")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

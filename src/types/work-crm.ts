@@ -121,6 +121,12 @@ export interface ReminderSettings {
   days: [number, number, number]
 }
 
+/** Where a follow-up stands while it is open; done is `doneAt` (CRM step 5) */
+export enum FollowUpStatus {
+  TODO = "todo",
+  IN_PROGRESS = "in_progress",
+}
+
 /** Something to do for a client by a date: call back, send a proposal… (CRM step 1) */
 export interface ClientFollowUp {
   id: string
@@ -133,6 +139,10 @@ export interface ClientFollowUp {
   ownerId?: string
   /** The client contact it concerns */
   contactId?: string
+  /** The deal it moves forward */
+  dealId?: string
+  /** Unset means to do */
+  status?: FollowUpStatus
   note?: string
   /** Set when done */
   doneAt?: string
@@ -141,4 +151,4 @@ export interface ClientFollowUp {
   updatedAt: string
 }
 
-export type FollowUpInput = Pick<ClientFollowUp, "clientId" | "title" | "dueDate"> & Partial<Pick<ClientFollowUp, "ownerId" | "contactId" | "note">>
+export type FollowUpInput = Pick<ClientFollowUp, "clientId" | "title" | "dueDate"> & Partial<Pick<ClientFollowUp, "ownerId" | "contactId" | "dealId" | "status" | "note">>

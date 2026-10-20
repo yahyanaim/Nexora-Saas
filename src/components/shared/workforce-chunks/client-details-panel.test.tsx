@@ -1,13 +1,19 @@
 import { describe, expect, it, vi } from "vitest"
-import { fireEvent, render, screen, within } from "@testing-library/react"
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { NextIntlClientProvider } from "next-intl"
 import messages from "@/messages/en.json"
 import { ClientDetailsPanel } from "./client-details-panel"
 import { ClientStatus, type Client } from "@/types/workforce"
 import type { ClientFigures } from "@/lib/workforce/client-figures"
 
-const addNote = vi.fn()
-vi.mock("@/hooks/workforce/use-crm", () => ({ useCrmMutations: () => ({ addNote: { mutate: addNote, isPending: false } }) }))
+const addNote = vi.fn((_input: unknown, opts?: { onSuccess?: () => void }) => opts?.onSuccess?.())
+const saveFollowUp = vi.fn()
+vi.mock("@/hooks/workforce/use-crm", () => ({
+  useCrmMutations: () => ({ addNote: { mutate: addNote, isPending: false } }),
+  useFollowUpMutations: () => ({ save: { mutate: saveFollowUp, isPending: false } }),
+}))
+// the planning dialog reads clients, people and deals: replaced by a marker here
+vi.mock("./follow-up-dialog", () => ({ FollowUpDialog: ({ open }: { open: boolean }) => (open ? <div role="dialog" aria-label="Plan a follow-up" /> : null) }))
 vi.mock("@/hooks/workforce/use-current-employee", () => ({ useCurrentEmployee: () => ({ id: "emp_emma" }) }))
 
 const client: Client = {
@@ -79,5 +85,26 @@ describe("client details panel", () => {
     fireEvent.change(within(dialog).getByLabelText("What was said"), { target: { value: "Agreed a payment plan" } })
     fireEvent.click(within(dialog).getByRole("button", { name: "Save" }))
     expect(addNote).toHaveBeenCalledWith(expect.objectContaining({ clientId: "cli_medica", kind: "meeting", text: "Agreed a payment plan", authorId: "emp_emma" }), expect.anything())
+  })
+
+  it("plans the next follow-up while logging the call", () => {
+    renderPanel()
+    fireEvent.click(screen.getByRole("button", { name: "Log a call" }))
+    const dialog = screen.getByRole("dialog", { name: "Log a contact with Medica Health" })
+    fireEvent.change(within(dialog).getByLabelText("What was said"), { target: { value: "They want the scope" } })
+    fireEvent.click(within(dialog).getByRole("checkbox", { name: "Plan the next follow-up" }))
+    expect(within(dialog).getByRole("button", { name: "Save" })).toBeDisabled()
+    fireEvent.change(within(dialog).getByLabelText("What needs to be done"), { target: { value: "Send the scope" } })
+    fireEvent.click(within(dialog).getByRole("button", { name: "Save" }))
+    expect(saveFollowUp).toHaveBeenCalledWith({ input: expect.objectContaining({ clientId: "cli_medica", title: "Send the scope", ownerId: "emp_emma", contactId: "c" }) })
+  })
+
+  it("plans a follow-up only for people who can edit clients", () => {
+    renderPanel()
+    fireEvent.click(screen.getByRole("button", { name: "Plan a follow-up" }))
+    expect(screen.getByRole("dialog", { name: "Plan a follow-up" })).toBeInTheDocument()
+    cleanup()
+    renderPanel({ canEdit: false })
+    expect(screen.queryByRole("button", { name: "Plan a follow-up" })).not.toBeInTheDocument()
   })
 })

@@ -10,6 +10,7 @@ import { useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
 import { useSatisfaction } from "@/hooks/workforce/use-satisfaction"
 import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useLeave } from "@/hooks/workforce/use-leave"
+import { useFollowUps } from "@/hooks/workforce/use-crm"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { useDocuments } from "@/hooks/workforce/use-documents"
 import { useCurrentWorkspace } from "@/store/workspace-store"
@@ -51,6 +52,7 @@ function WorkInbox() {
   const { data: tasks = [] } = useTasks()
   const { data: feedback = [] } = useSatisfaction()
   const { data: projects = [] } = useProjects()
+  const { data: followUps = [] } = useFollowUps()
 
   const isAdmin = can(authedUser, P.ROLES_UPDATE)
   const rights = { approveTime: can(authedUser, P.TIME_APPROVE), invoices: can(authedUser, P.INVOICES_READ), hr: can(authedUser, P.EMPLOYEES_UPDATE) }
@@ -71,6 +73,7 @@ function WorkInbox() {
         tasks,
         feedback,
         projects,
+        followUps,
         today: todayIso(),
       }).map((i) => ({
         id: i.id,
@@ -82,7 +85,7 @@ function WorkInbox() {
         href: i.href,
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- rights is rebuilt each render; rightsKey carries its value
-    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, feedback, projects, t]
+    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, feedback, projects, followUps, t]
   )
   const labels: NotificationLabels = {
     title: t("notifications"),
