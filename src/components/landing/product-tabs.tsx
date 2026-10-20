@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { SCREENS } from "./content"
+import { fill, type LandingCopy } from "./copy"
 import { ScrollShot } from "./scroll-shot"
 import s from "./landing.module.css"
 
@@ -12,11 +13,12 @@ const TAB_SECONDS = 10
  * under the active tab while its screen scrolls top to bottom) until someone
  * picks a tab; they pause off screen.
  */
-export function ProductTabs() {
+export function ProductTabs({ copy }: { copy: LandingCopy["product"] }) {
   const [active, setActive] = useState(0)
   const [auto, setAuto] = useState(true)
   const rootRef = useRef<HTMLDivElement>(null)
   const screen = SCREENS[active]!
+  const words = copy.screens[active]!
 
   useEffect(() => {
     const root = rootRef.current
@@ -30,7 +32,7 @@ export function ProductTabs() {
 
   return (
     <div ref={rootRef} className={s.product} style={{ "--tab": `${TAB_SECONDS}s` } as React.CSSProperties}>
-      <div className={s.productTabs} role="tablist" aria-label="Nexora screens">
+      <div className={s.productTabs} role="tablist" aria-label={copy.tabs}>
         {SCREENS.map((sc, i) => (
           <button
             key={sc.id}
@@ -47,9 +49,9 @@ export function ProductTabs() {
           >
             <span className={s.productTabTop}>
               <small>{String(i + 1).padStart(2, "0")}</small>
-              <strong>{sc.label}</strong>
+              <strong>{copy.screens[i]?.label}</strong>
             </span>
-            <p>{sc.body}</p>
+            <p>{copy.screens[i]?.body}</p>
             {auto && i === active && (
               <span
                 className={s.tabProgress}
@@ -66,11 +68,11 @@ export function ProductTabs() {
             <span className={s.dot} />
             <span className={s.dot} />
             <span className={s.dot} />
-            <span className={s.windowUrl}>app.nexora.ma/dashboard/{screen.path}</span>
+            <span className={s.windowUrl} dir="ltr">app.nexora.ma/dashboard/{screen.path}</span>
           </div>
           <ScrollShot
             src={screen.src}
-            alt={`Nexora ${screen.label} screen, full page`}
+            alt={fill(copy.alt, { name: words.label })}
             width={screen.width}
             height={screen.height}
             mode={auto ? "once" : "loop"}
@@ -80,8 +82,8 @@ export function ProductTabs() {
           />
         </div>
         <div className={s.productCaption}>
-          <span>{screen.title}</span>
-          <span>Full page · demo workspace</span>
+          <span>{words.title}</span>
+          <span>{copy.caption}</span>
         </div>
       </div>
     </div>

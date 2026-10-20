@@ -1,14 +1,20 @@
 import type { Metadata } from "next"
 import { LandingPage } from "@/components/landing/landing-page"
+import { getLandingCopy } from "@/components/landing/copy"
 
-export const metadata: Metadata = {
-  title: "Nexora: the ERP for service companies",
-  description:
-    "People, clients, projects, hours, invoices, cash and profit in one place. Built for agencies, consultancies, studios and IT services, with Moroccan compliance built in.",
+interface PageProps {
+  params: Promise<{ locale: string }>
 }
 
-const page = () => {
-  return <LandingPage />
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { locale } = await params
+  const { meta } = getLandingCopy(locale)
+  return { title: meta.title, description: meta.description }
+}
+
+const page = async ({ params }: PageProps) => {
+  const { locale } = await params
+  return <LandingPage locale={locale} />
 }
 
 export default page
