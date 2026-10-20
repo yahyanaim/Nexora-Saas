@@ -1765,6 +1765,11 @@
   direction: ltr;
   text-align: right;
 }
+/* Prices are grouped with spaces (1 490): keep the groups in order */
+.page[dir="rtl"] .price strong {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
 /* The globe canvas draws its city labels left to right */
 .page[dir="rtl"] .globe {
   direction: ltr;
