@@ -20,9 +20,10 @@ import { cn } from "@/lib/utils"
 import { ClientNoteKind } from "@/types/work-crm"
 import type { Client, Employee } from "@/types/workforce"
 import { HEALTH_CLASS, relativeDay } from "./clients-columns"
+import type { ClientPageTab } from "./client-page-tabs"
 import { CLIENT_STATUS_CLASS, CLIENT_STATUS_LABEL, formatMoney } from "./workforce-labels"
 
-const HEALTH_BADGE = { good: "bg-success-soft text-success-foreground", watch: "bg-warning-soft text-warning-foreground", at_risk: "bg-danger-soft text-destructive" } as const
+export const HEALTH_BADGE = { good: "bg-success-soft text-success-foreground", watch: "bg-warning-soft text-warning-foreground", at_risk: "bg-danger-soft text-destructive" } as const
 
 /** True at and above the given width; false while prerendering. */
 function useMinWidth(px: number) {
@@ -49,8 +50,8 @@ interface Props {
   onClose: () => void
   onEdit: (client: Client) => void
   onDelete: (client: Client) => void
-  /** Opens everything about the client (contracts, invoices, activity…) */
-  onOpenProfile: (client: Client) => void
+  /** Opens the client's page, on a tab when given (contracts, invoices, activity…) */
+  onOpenProfile: (client: Client, tab?: ClientPageTab) => void
 }
 
 /**
@@ -189,7 +190,7 @@ function Details({ client: c, figures: f, employees, currency, canSeeMoney, canE
         <div className="flex items-center justify-between">
           <h3 id="cd-sat" className="text-sm font-semibold">{t("cdSatisfaction")}</h3>
           {f && f.satisfaction.count > 0 && (
-            <button type="button" onClick={() => onOpenProfile(c)} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+            <button type="button" onClick={() => onOpenProfile(c, "activity")} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
               {t("cdViewAll")} <ChevronRight className="size-3 rtl:rotate-180" />
             </button>
           )}
@@ -251,12 +252,12 @@ function Details({ client: c, figures: f, employees, currency, canSeeMoney, canE
       {/* everything else lives on the client's full record */}
       <nav aria-label={t("cdMoreAbout", { name: c.name })} className="divide-y divide-border rounded-2xl border border-border">
         {[
-          ...(canSeeMoney ? [{ icon: Receipt, label: t("cdInvoicesPayments") }] : []),
-          { icon: FolderKanban, label: t("cdProjectsQuotes") },
-          { icon: CalendarDays, label: t("cdContracts") },
-          { icon: MessagesSquare, label: t("cdNotesActivity") },
+          ...(canSeeMoney ? [{ icon: Receipt, label: t("cdInvoicesPayments"), tab: "billing" as const }] : []),
+          { icon: FolderKanban, label: t("cdProjectsQuotes"), tab: "projects" as const },
+          { icon: CalendarDays, label: t("cdContracts"), tab: "contracts" as const },
+          { icon: MessagesSquare, label: t("cdNotesActivity"), tab: "activity" as const },
         ].map((row) => (
-          <button key={row.label} type="button" onClick={() => onOpenProfile(c)} className="flex w-full items-center gap-3 px-3 py-2.5 text-start text-sm transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+          <button key={row.label} type="button" onClick={() => onOpenProfile(c, row.tab)} className="flex w-full items-center gap-3 px-3 py-2.5 text-start text-sm transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
             <row.icon className="size-4 text-muted-foreground" />
             <span className="flex-1">{row.label}</span>
             <ChevronRight className="size-4 text-muted-foreground rtl:rotate-180" />
@@ -280,7 +281,7 @@ function Details({ client: c, figures: f, employees, currency, canSeeMoney, canE
   )
 }
 
-function QuickAction({ label, href, icon: Icon, external }: { label: string; href?: string; icon: React.ComponentType<{ className?: string }>; external?: boolean }) {
+export function QuickAction({ label, href, icon: Icon, external }: { label: string; href?: string; icon: React.ComponentType<{ className?: string }>; external?: boolean }) {
   const cls = "grid size-9 place-items-center rounded-full border border-border text-muted-foreground transition-colors"
   if (!href) {
     return (
@@ -296,7 +297,7 @@ function QuickAction({ label, href, icon: Icon, external }: { label: string; hre
   )
 }
 
-function Counter({ icon: Icon, tone, value, label }: { icon: React.ComponentType<{ className?: string }>; tone: string; value: number; label: string }) {
+export function Counter({ icon: Icon, tone, value, label }: { icon: React.ComponentType<{ className?: string }>; tone: string; value: number; label: string }) {
   return (
     <div className="flex flex-col items-center gap-0.5 px-1">
       <Icon className={cn("size-4", tone)} aria-hidden />
@@ -306,7 +307,7 @@ function Counter({ icon: Icon, tone, value, label }: { icon: React.ComponentType
   )
 }
 
-function Tile({ icon: Icon, label, value, sub, danger }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; sub?: string; danger?: boolean }) {
+export function Tile({ icon: Icon, label, value, sub, danger }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string; sub?: string; danger?: boolean }) {
   return (
     <div className="flex items-start gap-2.5 rounded-2xl border border-border p-3">
       <span className={cn("grid size-8 shrink-0 place-items-center rounded-xl", danger ? "bg-danger-soft text-destructive" : "bg-primary/10 text-primary")}>
@@ -321,7 +322,7 @@ function Tile({ icon: Icon, label, value, sub, danger }: { icon: React.Component
   )
 }
 
-function Stars({ value }: { value: number }) {
+export function Stars({ value }: { value: number }) {
   return (
     <span className="inline-flex" role="img" aria-label={`${value} / 5`}>
       {[1, 2, 3, 4, 5].map((i) => (
@@ -332,7 +333,7 @@ function Stars({ value }: { value: number }) {
 }
 
 /** Records a call, meeting or note on the client's timeline. */
-function LogDialog({ open, onOpenChange, client }: { open: boolean; onOpenChange: (open: boolean) => void; client: Client }) {
+export function LogDialog({ open, onOpenChange, client }: { open: boolean; onOpenChange: (open: boolean) => void; client: Client }) {
   const t = useTranslations()
   const me = useCurrentEmployee()
   const { addNote } = useCrmMutations()

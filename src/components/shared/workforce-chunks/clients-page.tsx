@@ -30,7 +30,8 @@ import { translateError } from "@/lib/errors/translate-error"
 import { cn } from "@/lib/utils"
 import { CLIENT_FILTER_COLUMNS, getClientsColumns } from "./clients-columns"
 import { ClientForm, type ClientFormHandle } from "./client-form"
-import { ClientProfileSheet } from "./client-profile-sheet"
+import { clientPageHref } from "./client-page-tabs"
+import { useRouter } from "@/i18n/navigation"
 import { ClientDetailsPanel } from "./client-details-panel"
 import { formatMoney } from "./workforce-labels"
 
@@ -66,7 +67,7 @@ export default function ClientsPage() {
   const [pill, setPill] = useState<StatusPill>("all")
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Client | null>(null)
-  const [viewing, setViewing] = useState<Client | null>(null)
+  const router = useRouter()
   // the client shown in the details panel (CRM step 3); kept by id so edits show at once
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const selected = selectedId ? (clients.find((c) => c.id === selectedId) ?? null) : null
@@ -84,7 +85,7 @@ export default function ClientsPage() {
     if (canEdit) {
       setEditing(linked)
       setFormOpen(true)
-    } else setViewing(linked)
+    } else router.push(clientPageHref(linked.id))
   }
 
   const openForm = (client: Client | null) => {
@@ -311,7 +312,7 @@ export default function ClientsPage() {
         onClose={() => setSelectedId(null)}
         onEdit={openForm}
         onDelete={setDeleting}
-        onOpenProfile={setViewing}
+        onOpenProfile={(client, tab) => router.push(clientPageHref(client.id, tab))}
       />
       </div>
 
@@ -328,7 +329,6 @@ export default function ClientsPage() {
         <ClientForm ref={formRef} client={editing ?? undefined} existingClients={clients} employees={employees} currency={workspace.currency} onValid={handleValid} />
       </DataTableEntityFormSheet>
 
-      <ClientProfileSheet client={viewing} employees={employees} currency={workspace.currency} onOpenChange={(open) => !open && setViewing(null)} />
 
       <Dialog open={!!tagging} onOpenChange={(open) => !open && setTagging(null)}>
         <DialogContent className="max-w-md">
