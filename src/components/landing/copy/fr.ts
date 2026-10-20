@@ -336,6 +336,22 @@ export const fr: LandingCopy = {
     rights: "Nexora. Tous droits réservés.",
     status: "Tous les systèmes fonctionnent",
   },
+  figures: {
+    features: [
+      "Des caisses d’heures sur un tapis vers la facturation ; le survol ralentit le tapis",
+      "Un plateau de factures ; la carte sous le pointeur se lève",
+      "Une fenêtre de projet en couches : tableau, liste, Gantt et équipe",
+      "Une porte de coffre dont le cadran tourne vers le pointeur",
+      "Un champ de piliers qui montent là où l’équipe est planifiée",
+      "Un graphique à barres dont les barres se lèvent sous le pointeur",
+    ],
+    chain: "Un pivot et ses branches ; le chemin vers la tuile sous le pointeur s’allume étape par étape",
+    compliance: "Un cadenas dont l’anse se lève quand le pointeur approche",
+    modules: "Un pivot entouré de huit modules ; la tuile sous le pointeur monte",
+    roles: "Une rangée de casiers ; celui sous le pointeur s’ouvre",
+    faq: "Un point d’interrogation dont le crochet se tourne vers le pointeur",
+    cta: "Des tuiles éparses qui s’assemblent en un arbre quand le pointeur approche",
+  },
   carousel: {
     previous: "Diapositive précédente",
     next: "Diapositive suivante",
