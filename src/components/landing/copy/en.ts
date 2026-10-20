@@ -315,6 +315,22 @@ export const en = {
     rights: "Nexora. All rights reserved.",
     status: "All systems normal",
   },
+  figures: {
+    features: [
+      "Crates of hours riding a belt toward billing; hovering slows the belt",
+      "A tray of invoice cards; the card under the pointer stands up",
+      "A project window in layers: board, list, Gantt and team",
+      "A vault door whose dial turns toward the pointer",
+      "A field of pillars that rise where the team is booked",
+      "A bar chart whose bars lift under the pointer",
+    ],
+    chain: "A hub with branches; the path to the tile under the pointer lights hop by hop",
+    compliance: "A padlock whose shackle lifts as the pointer comes near",
+    modules: "A hub with eight module tiles; the tile under the pointer rises",
+    roles: "A bank of lockers; the one under the pointer opens",
+    faq: "A question mark whose hook turns toward the pointer",
+    cta: "Scattered tiles that slide into one tree as the pointer comes near",
+  },
   carousel: {
     previous: "Previous slide",
     next: "Next slide",

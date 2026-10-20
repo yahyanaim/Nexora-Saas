@@ -9,6 +9,7 @@ import { DitherCanvas } from "./dither-canvas"
 import { arabic, geist, geistMono } from "./fonts"
 import { HeroTeaser } from "./hero-teaser"
 import { LanguageMenu } from "./language-menu"
+import { LineFigure, type FigureName } from "./line-figure"
 import { CountUp, RevealObserver, ScrollFX } from "./motion"
 import { PixelGlobe } from "./pixel-globe"
 import { ProductTabs } from "./product-tabs"
@@ -17,6 +18,9 @@ import s from "./landing.module.css"
 
 const SIGN_UP = "/auth?section=register"
 const SIGN_IN = "/auth"
+
+/** The line figure on each feature card, in the order of the features */
+const FEATURE_FIGURES: FigureName[] = ["slow", "riffle", "exploded", "vault", "terrain", "plot"]
 
 const formatMad = (n: number) => n.toLocaleString("en-US").replace(/,/g, " ")
 /** Stagger delay for the n-th item of a revealed group */
@@ -206,6 +210,12 @@ export function LandingPage({ locale }: { locale: string }) {
                     <b>{f.tag}</b>
                     <span>{String(i + 1).padStart(2, "0")}</span>
                   </div>
+                  <LineFigure
+                    name={FEATURE_FIGURES[i] ?? "plot"}
+                    label={c.figures.features[i] ?? f.title}
+                    tag={`FIG. 02.${i + 1}`}
+                    className={s.featureFig}
+                  />
                   <h3>{f.title}</h3>
                   <p>{f.body}</p>
                 </article>
@@ -229,16 +239,19 @@ export function LandingPage({ locale }: { locale: string }) {
 
           {/* Chain */}
           <section className={s.section}>
-            <div className={s.padHead}>
-              <SectionHead index="03" label={c.chain.label} title={c.chain.title} muted={c.chain.muted} />
-              <p className={s.lead} data-reveal>
-                {c.chain.lead}
-              </p>
-              <div className={s.replaces} data-reveal>
-                {c.chain.replaces.map((r) => (
-                  <span key={r}>{r}</span>
-                ))}
+            <div className={`${s.padHead} ${s.headSplit}`}>
+              <div>
+                <SectionHead index="03" label={c.chain.label} title={c.chain.title} muted={c.chain.muted} />
+                <p className={s.lead} data-reveal>
+                  {c.chain.lead}
+                </p>
+                <div className={s.replaces} data-reveal>
+                  {c.chain.replaces.map((r) => (
+                    <span key={r}>{r}</span>
+                  ))}
+                </div>
               </div>
+              <LineFigure name="relay" label={c.figures.chain} tag="FIG. 03" className={s.headFig} />
             </div>
             <div className={s.chain}>
               {c.chain.steps.map((step, i) => (
@@ -268,6 +281,7 @@ export function LandingPage({ locale }: { locale: string }) {
                     </li>
                   ))}
                 </ul>
+                <LineFigure name="padlock" label={c.figures.compliance} tag="FIG. 04" className={s.inlineFig} />
               </div>
               <div className={s.splitCode}>
                 <div className={s.splitCodeInner} data-reveal>
@@ -295,8 +309,9 @@ export function LandingPage({ locale }: { locale: string }) {
 
           {/* Modules */}
           <section className={s.section} id="modules">
-            <div className={s.padHead}>
+            <div className={`${s.padHead} ${s.headSplit}`}>
               <SectionHead index="05" label={c.modules.label} title={c.modules.title} muted={c.modules.muted} />
+              <LineFigure name="hub" label={c.figures.modules} tag="FIG. 05" className={s.headFig} />
             </div>
             <div className={s.modules}>
               {c.modules.items.map((m, i) => (
@@ -330,8 +345,9 @@ export function LandingPage({ locale }: { locale: string }) {
 
           {/* Roles */}
           <section className={s.section}>
-            <div className={s.padHead}>
+            <div className={`${s.padHead} ${s.headSplit}`}>
               <SectionHead index="06" label={c.roles.label} title={c.roles.title} muted={c.roles.muted} />
+              <LineFigure name="lockers" label={c.figures.roles} tag="FIG. 06" className={s.headFig} />
             </div>
             <div className={s.roles}>
               {c.roles.items.map((r, i) => (
@@ -418,6 +434,7 @@ export function LandingPage({ locale }: { locale: string }) {
                 <p className={s.lead} data-reveal>
                   {c.faq.lead} <a href="mailto:hello@nexora.ma">hello@nexora.ma</a>.
                 </p>
+                <LineFigure name="query" label={c.figures.faq} tag="FIG. 09" className={s.inlineFig} />
               </div>
               <div className={s.faqList}>
                 {c.faq.items.map((f, i) => (
@@ -437,16 +454,21 @@ export function LandingPage({ locale }: { locale: string }) {
                 <Image src="/landing/cta-dither.webp" alt="" width={1920} height={640} unoptimized />
                 <DitherCanvas variant="field" cell={8} className={s.ditherFill} />
               </div>
-              <div className={s.ctaCard} data-reveal>
-                <Eyebrow index="10">{c.cta.label}</Eyebrow>
-                <Heading title={c.cta.title} muted={c.cta.muted} />
-                <div className={s.heroCtas}>
-                  <Link href={SIGN_UP} className={s.btn}>
-                    {c.cta.start} <span className={s.arrow}>{c.arrow}</span>
-                  </Link>
-                  <a href="mailto:sales@nexora.ma" className={s.btnGhost}>
-                    {c.cta.demo}
-                  </a>
+              <div className={s.ctaRow}>
+                <div className={s.ctaCard} data-reveal>
+                  <Eyebrow index="10">{c.cta.label}</Eyebrow>
+                  <Heading title={c.cta.title} muted={c.cta.muted} />
+                  <div className={s.heroCtas}>
+                    <Link href={SIGN_UP} className={s.btn}>
+                      {c.cta.start} <span className={s.arrow}>{c.arrow}</span>
+                    </Link>
+                    <a href="mailto:sales@nexora.ma" className={s.btnGhost}>
+                      {c.cta.demo}
+                    </a>
+                  </div>
+                </div>
+                <div className={s.ctaFig} data-reveal>
+                  <LineFigure name="settle" label={c.figures.cta} tag="FIG. 10" />
                 </div>
               </div>
             </div>
