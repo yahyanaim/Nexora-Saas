@@ -26,7 +26,7 @@ const pathAt = (t: number) => {
   return path
 }
 
-export function HeroTeaser() {
+export function HeroTeaser({ label }: { label: string }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [path, setPath] = useState(CHAPTERS[0]!.path)
   const [reduced, setReduced] = useState(false)
@@ -72,7 +72,7 @@ export function HeroTeaser() {
         <span className={s.dot} />
         <span className={s.dot} />
         <span className={s.dot} />
-        <span className={s.windowUrl}>app.nexora.ma/dashboard/{path}</span>
+        <span className={s.windowUrl} dir="ltr">app.nexora.ma/dashboard/{path}</span>
       </div>
       <video
         ref={videoRef}
@@ -86,7 +86,7 @@ export function HeroTeaser() {
         playsInline
         preload="auto"
         controls={reduced}
-        aria-label="Nexora teaser: an invoice created from approved hours and issued, every project on one timeline, then business analytics"
+        aria-label={label}
       />
     </>
   )

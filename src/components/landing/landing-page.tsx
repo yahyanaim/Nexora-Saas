@@ -3,25 +3,12 @@ import { Link } from "@/i18n/navigation"
 import { NEXORA_PLANS, NEXORA_VAT_RATE } from "@/lib/platform/nexora-catalog"
 import { Carousel } from "./carousel"
 import { CodeTabs } from "./code-tabs"
-import {
-  CHAIN,
-  COMPLIANCE,
-  FAQ,
-  FEATURES,
-  FOOTER_COLUMNS,
-  FOOTER_TAGLINE,
-  GALLERY,
-  LOGOS,
-  MODULES,
-  NAV_LINKS,
-  REPLACES,
-  ROLES,
-  STATS,
-  TESTIMONIALS,
-} from "./content"
+import { FOOTER_HREFS, GALLERY, LANDING_LOCALES, LOGOS, NAV_HREFS, STAT_VALUES, TESTIMONIAL_PHOTOS } from "./content"
+import { fill, getLandingCopy } from "./copy"
 import { DitherCanvas } from "./dither-canvas"
-import { geist, geistMono } from "./fonts"
+import { arabic, geist, geistMono } from "./fonts"
 import { HeroTeaser } from "./hero-teaser"
+import { LanguageMenu } from "./language-menu"
 import { CountUp, RevealObserver, ScrollFX } from "./motion"
 import { PixelGlobe } from "./pixel-globe"
 import { ProductTabs } from "./product-tabs"
@@ -80,35 +67,44 @@ function SectionHead({ index, label, title, muted }: { index: string; label: str
   )
 }
 
-export function LandingPage() {
+export function LandingPage({ locale }: { locale: string }) {
+  const c = getLandingCopy(locale)
+  // "docs" and "docsAlt" in the link lists open the documentation in this page's language, or the other one
+  const href = (h: string) => (h === "docs" ? c.docsHref : h === "docsAlt" ? c.docsAltHref : h)
   return (
-    <div className={`${s.page} ${geist.variable} ${geistMono.variable}`} data-landing>
+    <div
+      className={`${s.page} ${geist.variable} ${geistMono.variable} ${arabic.variable}`}
+      data-landing
+      dir={c.dir}
+      lang={LANDING_LOCALES.some((l) => l.code === locale) ? locale : "en"}
+    >
       <div className={s.announce}>
-        <span className={s.tag}>NEW</span>
-        <span className={s.hideSm}>DGI e-invoices, VAT return and the CGNC journal are live in Nexora.</span>
-        <a href="#compliance">Read more →</a>
+        <span className={s.tag}>{c.announce.tag}</span>
+        <span className={s.hideSm}>{c.announce.text}</span>
+        <a href="#compliance">{c.announce.link}</a>
       </div>
 
       <header className={s.nav}>
         <span className={s.scrollBar} aria-hidden />
         <div className={s.navInner}>
-          <Link href="/" className={s.brand} aria-label="Nexora home">
+          <Link href="/" className={s.brand} aria-label={c.nav.home}>
             <Mark />
             nexora
           </Link>
-          <nav className={s.navLinks} aria-label="Main">
-            {NAV_LINKS.map((l) => (
-              <a key={l.label} href={l.href}>
-                {l.label}
+          <nav className={s.navLinks} aria-label={c.nav.main}>
+            {NAV_HREFS.map((h, i) => (
+              <a key={h} href={href(h)}>
+                {c.nav.links[i]}
               </a>
             ))}
           </nav>
           <div className={s.navActions}>
+            <LanguageMenu current={locale} label={c.nav.language} />
             <Link href={SIGN_IN} className={`${s.signIn} ${s.hideSm}`}>
-              Sign in
+              {c.nav.signIn}
             </Link>
             <Link href={SIGN_UP} className={`${s.btn} ${s.btnSm}`}>
-              Start for free
+              {c.nav.start}
             </Link>
           </div>
         </div>
@@ -122,35 +118,25 @@ export function LandingPage() {
               <div className={s.heroCopy}>
                 <div className={s.fadeIn} style={{ "--d": "0s" } as React.CSSProperties}>
                   <Eyebrow>
-                    Nexora® · The ERP for service companies
+                    {c.hero.eyebrow}
                     <span className={s.cursor} aria-hidden />
                   </Eyebrow>
                 </div>
                 <h1 className={s.h1}>
-                  <span className={s.line}>
-                    <span style={{ "--d": "0.05s" } as React.CSSProperties}>Humans use</span>
-                  </span>
-                  <span className={s.line}>
-                    <span style={{ "--d": "0.15s" } as React.CSSProperties}>spreadsheets.</span>
-                  </span>
-                  <span className={`${s.line} ${s.h1Accent}`}>
-                    <span style={{ "--d": "0.3s" } as React.CSSProperties}>Companies use</span>
-                  </span>
-                  <span className={`${s.line} ${s.h1Accent}`}>
-                    <span style={{ "--d": "0.4s" } as React.CSSProperties}>Nexora.</span>
-                  </span>
+                  {c.hero.lines.map((line, i) => (
+                    <span key={i} className={`${s.line} ${i > 1 ? s.h1Accent : ""}`}>
+                      <span style={{ "--d": `${[0.05, 0.15, 0.3, 0.4][i]}s` } as React.CSSProperties}>{line}</span>
+                    </span>
+                  ))}
                 </h1>
                 <div className={s.fadeIn} style={{ "--d": "0.55s" } as React.CSSProperties}>
-                  <p className={s.heroSub}>
-                    People, clients, projects, hours, invoices, cash and profit in one app. Built for agencies,
-                    consultancies, studios, IT services and engineering offices.
-                  </p>
+                  <p className={s.heroSub}>{c.hero.sub}</p>
                   <div className={s.heroCtas}>
                     <Link href={SIGN_UP} className={s.btn}>
-                      Start for free <span className={s.arrow}>→</span>
+                      {c.hero.start} <span className={s.arrow}>{c.arrow}</span>
                     </Link>
-                    <a href="/documentation/doc.html" className={s.btnGhost}>
-                      Read the docs
+                    <a href={c.docsHref} className={s.btnGhost}>
+                      {c.hero.docs}
                     </a>
                   </div>
                 </div>
@@ -158,15 +144,14 @@ export function LandingPage() {
               <div className={`${s.heroGlobe} ${s.fadeIn}`} style={{ "--d": "0.35s" } as React.CSSProperties}>
                 <PixelGlobe />
                 <span className={s.globeTag}>
-                  <i aria-hidden /> Casablanca → the world
+                  <i aria-hidden /> {c.hero.globeTag}
                 </span>
               </div>
             </div>
             <div className={`${s.heroMeta} ${s.fadeIn}`} style={{ "--d": "0.7s" } as React.CSSProperties}>
-              <span>14-day free trial</span>
-              <span>No card required</span>
-              <span>9 languages incl. Arabic</span>
-              <span>DGI e-invoicing ready</span>
+              {c.hero.meta.map((m) => (
+                <span key={m}>{m}</span>
+              ))}
             </div>
 
             <div className={`${s.heroStage} ${s.fadeIn}`} style={{ "--d": "0.8s" } as React.CSSProperties}>
@@ -175,7 +160,7 @@ export function LandingPage() {
                 <DitherCanvas variant="skyline" cell={6} className={s.ditherFill} />
               </div>
               <div className={s.window} data-scroll>
-                <HeroTeaser />
+                <HeroTeaser label={c.hero.teaser} />
               </div>
             </div>
           </section>
@@ -183,7 +168,7 @@ export function LandingPage() {
           {/* Logos */}
           <section className={s.section}>
             <div className={s.logosHead}>
-              <Eyebrow>Trusted by service companies across Morocco and beyond</Eyebrow>
+              <Eyebrow>{c.logos}</Eyebrow>
             </div>
             <div className={s.marquee}>
               <div className={s.marqueeTrack}>
@@ -200,22 +185,22 @@ export function LandingPage() {
           <section className={s.section}>
             <div className={s.padHead}>
               <div className={s.headRow}>
-                <SectionHead index="01" label="Product" title="Run the whole company." muted="From one screen." />
+                <SectionHead index="01" label={c.product.label} title={c.product.title} muted={c.product.muted} />
                 <Link href={SIGN_UP} className={s.btnGhost} data-reveal>
-                  Try the demo <span className={s.arrow}>→</span>
+                  {c.product.demo} <span className={s.arrow}>{c.arrow}</span>
                 </Link>
               </div>
             </div>
-            <ProductTabs />
+            <ProductTabs copy={c.product} />
           </section>
 
           {/* Features */}
           <section className={s.section}>
             <div className={s.padHead}>
-              <SectionHead index="02" label="Features" title="Everything a service company runs on." muted="Nothing it doesn't." />
+              <SectionHead index="02" label={c.features.label} title={c.features.title} muted={c.features.muted} />
             </div>
             <div className={s.features}>
-              {FEATURES.map((f, i) => (
+              {c.features.items.map((f, i) => (
                 <article key={f.tag} className={s.feature} data-reveal style={delay(i % 3)}>
                   <div className={s.featureTop}>
                     <b>{f.tag}</b>
@@ -232,12 +217,12 @@ export function LandingPage() {
           <section className={`${s.section} ${s.band}`} aria-hidden data-scroll>
             <div className={s.bandRow}>
               {[0, 1, 2].flatMap((k) =>
-                ["People", "Clients", "Projects", "Hours"].flatMap((w) => [<span key={`${k}${w}`}>{w}</span>, <i key={`${k}${w}i`}>■</i>]),
+                c.band[0]!.flatMap((w) => [<span key={`${k}${w}`}>{w}</span>, <i key={`${k}${w}i`}>■</i>]),
               )}
             </div>
             <div className={s.bandRow}>
               {[0, 1, 2].flatMap((k) =>
-                ["Invoices", "Cash", "Profit", "Nexora"].flatMap((w) => [<span key={`${k}${w}`}>{w}</span>, <i key={`${k}${w}i`}>■</i>]),
+                c.band[1]!.flatMap((w) => [<span key={`${k}${w}`}>{w}</span>, <i key={`${k}${w}i`}>■</i>]),
               )}
             </div>
           </section>
@@ -245,22 +230,24 @@ export function LandingPage() {
           {/* Chain */}
           <section className={s.section}>
             <div className={s.padHead}>
-              <SectionHead index="03" label="One chain, one app" title="From the first hour logged" muted="to the profit it made." />
+              <SectionHead index="03" label={c.chain.label} title={c.chain.title} muted={c.chain.muted} />
               <p className={s.lead} data-reveal>
-                Every step is connected, so the numbers at the end agree with the work at the start. Nexora replaces:
+                {c.chain.lead}
               </p>
               <div className={s.replaces} data-reveal>
-                {REPLACES.map((r) => (
+                {c.chain.replaces.map((r) => (
                   <span key={r}>{r}</span>
                 ))}
               </div>
             </div>
             <div className={s.chain}>
-              {CHAIN.map((c, i) => (
-                <div key={c.step} className={s.chainCell} data-reveal style={delay(i, 60)}>
-                  <span className={s.chainStep}>{c.step} →</span>
-                  <h3>{c.title}</h3>
-                  <p>{c.body}</p>
+              {c.chain.steps.map((step, i) => (
+                <div key={i} className={s.chainCell} data-reveal style={delay(i, 60)}>
+                  <span className={s.chainStep}>
+                    {String(i + 1).padStart(2, "0")} {c.arrow}
+                  </span>
+                  <h3>{step.title}</h3>
+                  <p>{step.body}</p>
                 </div>
               ))}
             </div>
@@ -270,22 +257,21 @@ export function LandingPage() {
           <section className={s.section} id="compliance">
             <div className={s.split}>
               <div className={s.splitCopy}>
-                <SectionHead index="04" label="Built for Morocco" title="Compliance," muted="by default." />
+                <SectionHead index="04" label={c.compliance.label} title={c.compliance.title} muted={c.compliance.muted} />
                 <p className={s.lead} data-reveal>
-                  Invoices can&apos;t be issued without the right identifiers, and every figure lands in the right
-                  account. Your accountant gets exports, not a shoebox.
+                  {c.compliance.lead}
                 </p>
                 <ul className={s.checks}>
-                  {COMPLIANCE.map((c, i) => (
-                    <li key={c} data-reveal style={delay(i, 50)}>
-                      {c}
+                  {c.compliance.items.map((item, i) => (
+                    <li key={item} data-reveal style={delay(i, 50)}>
+                      {item}
                     </li>
                   ))}
                 </ul>
               </div>
               <div className={s.splitCode}>
                 <div className={s.splitCodeInner} data-reveal>
-                  <CodeTabs />
+                  <CodeTabs copy={c.compliance} />
                 </div>
               </div>
             </div>
@@ -294,11 +280,11 @@ export function LandingPage() {
           {/* Stats */}
           <section className={s.section}>
             <div className={s.stats}>
-              {STATS.map((st, i) => (
-                <div key={st.label} className={s.stat} data-reveal style={delay(i, 110)}>
-                  <CountUp value={st.value} />
+              {STAT_VALUES.map((value, i) => (
+                <div key={value} className={s.stat} data-reveal style={delay(i, 110)}>
+                  <CountUp value={value} />
                   <i className={s.statBar} aria-hidden />
-                  <span>{st.label}</span>
+                  <span>{c.stats[i]}</span>
                 </div>
               ))}
             </div>
@@ -310,23 +296,23 @@ export function LandingPage() {
           {/* Modules */}
           <section className={s.section} id="modules">
             <div className={s.padHead}>
-              <SectionHead index="05" label="Modules" title="Forty modules." muted="One login, one source of truth." />
+              <SectionHead index="05" label={c.modules.label} title={c.modules.title} muted={c.modules.muted} />
             </div>
             <div className={s.modules}>
-              {MODULES.map((m, i) => (
+              {c.modules.items.map((m, i) => (
                 <div key={m} className={s.module} data-reveal style={delay(i % 6, 40)}>
                   <small>{String(i + 1).padStart(2, "0")}</small>
                   {m}
                 </div>
               ))}
             </div>
-            <Carousel label="Nexora screens" speed={42} slideClass={s.slideScreen}>
+            <Carousel label={c.modules.carousel} speed={42} slideClass={s.slideScreen} words={c.carousel}>
               {GALLERY.map((g, i) => (
                 <figure key={g.src}>
                   <div className={s.shotCard}>
                     <ScrollShot
                       src={g.src}
-                      alt={`Nexora ${g.caption} screen, full page`}
+                      alt={fill(c.product.alt, { name: c.modules.gallery[i] ?? "" })}
                       width={g.width}
                       height={g.height}
                       duration={16 + (i % 3) * 2}
@@ -334,8 +320,8 @@ export function LandingPage() {
                     />
                   </div>
                   <figcaption className={s.shotCaption}>
-                    <span>{g.caption}</span>
-                    <span>Full page</span>
+                    <span>{c.modules.gallery[i]}</span>
+                    <span>{c.modules.fullPage}</span>
                   </figcaption>
                 </figure>
               ))}
@@ -345,15 +331,10 @@ export function LandingPage() {
           {/* Roles */}
           <section className={s.section}>
             <div className={s.padHead}>
-              <SectionHead
-                index="06"
-                label="Roles & permissions"
-                title="Everyone sees their part."
-                muted="Costs stay with the people allowed to see them."
-              />
+              <SectionHead index="06" label={c.roles.label} title={c.roles.title} muted={c.roles.muted} />
             </div>
             <div className={s.roles}>
-              {ROLES.map((r, i) => (
+              {c.roles.items.map((r, i) => (
                 <div key={r.role} className={s.roleCard} data-reveal style={delay(i)}>
                   <h3>{r.role}</h3>
                   <p>{r.body}</p>
@@ -365,14 +346,18 @@ export function LandingPage() {
           {/* Testimonials */}
           <section className={s.section}>
             <div className={s.padHead}>
-              <SectionHead index="07" label="Customers" title="Fewer tools." muted="Clearer margins." />
+              <SectionHead index="07" label={c.customers.label} title={c.customers.title} muted={c.customers.muted} />
             </div>
-            <Carousel label="What customers say" speed={36} slideClass={s.slideQuote}>
-              {TESTIMONIALS.map((t) => (
+            <Carousel label={c.customers.carousel} speed={36} slideClass={s.slideQuote} words={c.carousel}>
+              {c.customers.quotes.map((t, i) => (
                 <figure key={t.name} className={s.quote}>
-                  <blockquote>“{t.quote}”</blockquote>
+                  <blockquote>
+                    {c.quoteMarks[0]}
+                    {t.quote}
+                    {c.quoteMarks[1]}
+                  </blockquote>
                   <figcaption>
-                    <Image src={t.photo} alt={t.name} width={88} height={88} className={s.avatarImg} />
+                    <Image src={TESTIMONIAL_PHOTOS[i] ?? TESTIMONIAL_PHOTOS[0]!} alt={t.name} width={88} height={88} className={s.avatarImg} />
                     <span>
                       {t.name}
                       <small>{t.role}</small>
@@ -386,39 +371,42 @@ export function LandingPage() {
           {/* Pricing */}
           <section className={s.section} id="pricing">
             <div className={s.padHead}>
-              <SectionHead index="08" label="Pricing" title="Simple plans." muted="Start free for 14 days." />
+              <SectionHead index="08" label={c.pricing.label} title={c.pricing.title} muted={c.pricing.muted} />
             </div>
             <div className={s.plans}>
-              {NEXORA_PLANS.filter((p) => !p.retired).map((p, i) => (
+              {NEXORA_PLANS.filter((p) => !p.retired).map((p, i) => {
+                const words = c.pricing.plans?.[p.id] ?? p
+                return (
                 <div key={p.id} className={`${s.plan} ${p.featured ? s.planFeatured : ""}`} data-reveal style={delay(i, 90)}>
                   <div className={s.planHead}>
                     {p.name}
-                    {p.featured && <span className={s.planBadge}>Most popular</span>}
+                    {p.featured && <span className={s.planBadge}>{c.pricing.popular}</span>}
                   </div>
                   <div className={s.price}>
                     <strong>{formatMad(p.monthly)}</strong>
-                    <span>MAD / month</span>
+                    <span>{c.pricing.perMonth}</span>
                   </div>
-                  <p className={s.planDesc}>{p.description}</p>
+                  <p className={s.planDesc}>{words.description}</p>
                   <ul className={s.planList}>
-                    {p.features.map((f) => (
+                    {words.features.map((f) => (
                       <li key={f}>{f}</li>
                     ))}
                   </ul>
                   {p.id === "enterprise" ? (
                     <a href="mailto:sales@nexora.ma" className={s.btnGhost}>
-                      Talk to sales
+                      {c.pricing.sales}
                     </a>
                   ) : (
                     <Link href={SIGN_UP} className={p.featured ? s.btn : s.btnGhost}>
-                      Start free trial
+                      {c.pricing.trial}
                     </Link>
                   )}
                 </div>
-              ))}
+                )
+              })}
             </div>
             <p className={s.priceNote}>
-              Prices before {NEXORA_VAT_RATE}% VAT · Pay by bank transfer or card · Yearly billing available
+              {fill(c.pricing.note, { vat: NEXORA_VAT_RATE })}
             </p>
           </section>
 
@@ -426,13 +414,13 @@ export function LandingPage() {
           <section className={s.section}>
             <div className={s.faq}>
               <div className={s.faqIntro}>
-                <SectionHead index="09" label="FAQ" title="Questions," muted="answered." />
+                <SectionHead index="09" label={c.faq.label} title={c.faq.title} muted={c.faq.muted} />
                 <p className={s.lead} data-reveal>
-                  Something else? Write to <a href="mailto:hello@nexora.ma">hello@nexora.ma</a>.
+                  {c.faq.lead} <a href="mailto:hello@nexora.ma">hello@nexora.ma</a>.
                 </p>
               </div>
               <div className={s.faqList}>
-                {FAQ.map((f, i) => (
+                {c.faq.items.map((f, i) => (
                   <details key={f.q} data-reveal style={delay(i, 50)}>
                     <summary>{f.q}</summary>
                     <p>{f.a}</p>
@@ -450,14 +438,14 @@ export function LandingPage() {
                 <DitherCanvas variant="field" cell={8} className={s.ditherFill} />
               </div>
               <div className={s.ctaCard} data-reveal>
-                <Eyebrow index="10">Get started</Eyebrow>
-                <Heading title="Give your company" muted="one place to run." />
+                <Eyebrow index="10">{c.cta.label}</Eyebrow>
+                <Heading title={c.cta.title} muted={c.cta.muted} />
                 <div className={s.heroCtas}>
                   <Link href={SIGN_UP} className={s.btn}>
-                    Start for free <span className={s.arrow}>→</span>
+                    {c.cta.start} <span className={s.arrow}>{c.arrow}</span>
                   </Link>
                   <a href="mailto:sales@nexora.ma" className={s.btnGhost}>
-                    Book a demo
+                    {c.cta.demo}
                   </a>
                 </div>
               </div>
@@ -472,15 +460,15 @@ export function LandingPage() {
                   <Mark size={26} />
                   nexora
                 </Link>
-                <p className={s.footerTag}>{FOOTER_TAGLINE}</p>
+                <p className={s.footerTag}>{c.footer.tagline}</p>
               </div>
-              {FOOTER_COLUMNS.map((col) => (
+              {c.footer.columns.map((col, ci) => (
                 <div key={col.title}>
                   <h4>{col.title}</h4>
                   <ul>
-                    {col.links.map((l) => (
-                      <li key={l.label}>
-                        <a href={l.href}>{l.label}</a>
+                    {col.links.map((label, li) => (
+                      <li key={label}>
+                        <a href={href(FOOTER_HREFS[ci]?.[li] ?? "#")}>{label}</a>
                       </li>
                     ))}
                   </ul>
@@ -492,8 +480,10 @@ export function LandingPage() {
               <DitherCanvas variant="wordmark" cell={5} className={s.wordmarkCanvas} />
             </div>
             <div className={s.legal}>
-              <span>© {new Date().getFullYear()} Nexora. All rights reserved.</span>
-              <span className={s.status}>All systems normal</span>
+              <span>
+                © {new Date().getFullYear()} {c.footer.rights}
+              </span>
+              <span className={s.status}>{c.footer.status}</span>
             </div>
           </footer>
         </div>

@@ -42,6 +42,10 @@ SOFTWARE.
 
 `src/fonts/geist-var.woff2` and `src/fonts/geist-mono-var.woff2` (used on the public landing page) are from Geist, Copyright (c) 2023 Vercel, in collaboration with basement.studio (https://github.com/vercel/geist-font), licensed under the SIL Open Font License, Version 1.1. The full license is in `src/fonts/LICENSE-geist.txt`.
 
+## Noto Sans Arabic font (SIL Open Font License 1.1)
+
+`src/fonts/noto-sans-arabic-var.woff2` (the Arabic letters on the landing page) is the Arabic subset of Noto Sans Arabic, Copyright 2022 The Noto Project Authors (https://github.com/notofonts/arabic), as packaged by Fontsource, licensed under the SIL Open Font License, Version 1.1. The full license is in `src/fonts/LICENSE-noto-sans-arabic.txt`.
+
 ## Natural Earth land data (public domain)
 
 `public/landing/earth-mask.webp` (the land map of the landing-page globe) is rasterized from the 1:50m land boundaries of Natural Earth (https://www.naturalearthdata.com), which are in the public domain, as redistributed in TopoJSON by world-atlas (https://github.com/topojson/world-atlas, ISC).

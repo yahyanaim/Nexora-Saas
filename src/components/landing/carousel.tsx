@@ -1,6 +1,7 @@
 "use client"
 
 import { Children, useEffect, useRef, useState } from "react"
+import { fill, type LandingCopy } from "./copy"
 import s from "./landing.module.css"
 
 interface Props {
@@ -10,6 +11,8 @@ interface Props {
   speed?: number
   /** Slide width class (from landing.module.css) */
   slideClass?: string
+  /** Button and slide names for assistive tech */
+  words: LandingCopy["carousel"]
 }
 
 /**
@@ -19,7 +22,7 @@ interface Props {
  * loop has no seam (the copy is hidden from assistive tech). With reduced
  * motion it stays still and the arrows still work.
  */
-export function Carousel({ children, label, speed = 45, slideClass }: Props) {
+export function Carousel({ children, label, speed = 45, slideClass, words }: Props) {
   const slides = Children.toArray(children)
   const count = slides.length
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -141,7 +144,7 @@ export function Carousel({ children, label, speed = 45, slideClass }: Props) {
                 className={`${s.carouselSlide} ${slideClass ?? ""}`}
                 role={copy ? undefined : "group"}
                 aria-roledescription={copy ? undefined : "slide"}
-                aria-label={copy ? undefined : `${i + 1} of ${count}`}
+                aria-label={copy ? undefined : fill(words.slide, { n: i + 1, count })}
                 aria-hidden={copy ? true : undefined}
                 inert={copy ? true : undefined}
               >
@@ -159,10 +162,10 @@ export function Carousel({ children, label, speed = 45, slideClass }: Props) {
           <span ref={progressRef} />
         </span>
         <span className={s.carouselButtons}>
-          <button type="button" className={s.carouselBtn} onClick={() => glide(-1)} aria-label="Previous slide">
+          <button type="button" className={s.carouselBtn} onClick={() => glide(-1)} aria-label={words.previous}>
             ←
           </button>
-          <button type="button" className={s.carouselBtn} onClick={() => glide(1)} aria-label="Next slide">
+          <button type="button" className={s.carouselBtn} onClick={() => glide(1)} aria-label={words.next}>
             →
           </button>
         </span>
