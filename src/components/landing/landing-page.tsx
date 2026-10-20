@@ -281,7 +281,6 @@ export function LandingPage({ locale }: { locale: string }) {
                     </li>
                   ))}
                 </ul>
-                <LineFigure name="padlock" label={c.figures.compliance} tag="FIG. 04" className={s.inlineFig} />
               </div>
               <div className={s.splitCode}>
                 <div className={s.splitCodeInner} data-reveal>
@@ -434,7 +433,6 @@ export function LandingPage({ locale }: { locale: string }) {
                 <p className={s.lead} data-reveal>
                   {c.faq.lead} <a href="mailto:hello@nexora.ma">hello@nexora.ma</a>.
                 </p>
-                <LineFigure name="query" label={c.figures.faq} tag="FIG. 09" className={s.inlineFig} />
               </div>
               <div className={s.faqList}>
                 {c.faq.items.map((f, i) => (
@@ -454,21 +452,16 @@ export function LandingPage({ locale }: { locale: string }) {
                 <Image src="/landing/cta-dither.webp" alt="" width={1920} height={640} unoptimized />
                 <DitherCanvas variant="field" cell={8} className={s.ditherFill} />
               </div>
-              <div className={s.ctaRow}>
-                <div className={s.ctaCard} data-reveal>
-                  <Eyebrow index="10">{c.cta.label}</Eyebrow>
-                  <Heading title={c.cta.title} muted={c.cta.muted} />
-                  <div className={s.heroCtas}>
-                    <Link href={SIGN_UP} className={s.btn}>
-                      {c.cta.start} <span className={s.arrow}>{c.arrow}</span>
-                    </Link>
-                    <a href="mailto:sales@nexora.ma" className={s.btnGhost}>
-                      {c.cta.demo}
-                    </a>
-                  </div>
-                </div>
-                <div className={s.ctaFig} data-reveal>
-                  <LineFigure name="settle" label={c.figures.cta} tag="FIG. 10" />
+              <div className={s.ctaCard} data-reveal>
+                <Eyebrow index="10">{c.cta.label}</Eyebrow>
+                <Heading title={c.cta.title} muted={c.cta.muted} />
+                <div className={s.heroCtas}>
+                  <Link href={SIGN_UP} className={s.btn}>
+                    {c.cta.start} <span className={s.arrow}>{c.arrow}</span>
+                  </Link>
+                  <a href="mailto:sales@nexora.ma" className={s.btnGhost}>
+                    {c.cta.demo}
+                  </a>
                 </div>
               </div>
             </div>
