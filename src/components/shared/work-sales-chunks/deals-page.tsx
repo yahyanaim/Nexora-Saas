@@ -69,6 +69,7 @@ export default function DealsPage() {
   const money = (n: number) => formatMoney(n, currency, locale)
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso}T00:00:00`))
   const clientName = (id: string) => clients.find((c) => c.id === id)?.name ?? "—"
+  const contactOf = (clientId: string, contactId?: string) => (contactId ? clients.find((c) => c.id === clientId)?.contacts.find((x) => x.id === contactId) : undefined)
   const personName = (id?: string) => employees.find((e) => e.id === id)?.name
   const quoteNumber = (id?: string) => quotes.find((q) => q.id === id)?.number
   const set = (patch: Partial<DealInput>) => setEditing((e) => (e ? { ...e, input: { ...e.input, ...patch } } : e))
@@ -81,7 +82,7 @@ export default function DealsPage() {
   ]
 
   const edit = (d: Deal) =>
-    setEditing({ id: d.id, input: { title: d.title, clientId: d.clientId, amount: d.amount, stage: d.stage, probability: d.probability, expectedClose: d.expectedClose, ownerId: d.ownerId, quoteId: d.quoteId, lostReason: d.lostReason, note: d.note } })
+    setEditing({ id: d.id, input: { title: d.title, clientId: d.clientId, amount: d.amount, stage: d.stage, probability: d.probability, expectedClose: d.expectedClose, ownerId: d.ownerId, contactId: d.contactId, quoteId: d.quoteId, lostReason: d.lostReason, note: d.note } })
 
   // A lost deal needs a reason, so that move goes through the form
   const moveTo = (d: Deal, stage: DealStage) => {
@@ -108,7 +109,7 @@ export default function DealsPage() {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{d.title}</p>
-            <p className="truncate text-xs text-muted-foreground">{clientName(d.clientId)}</p>
+            <p className="truncate text-xs text-muted-foreground">{[clientName(d.clientId), contactOf(d.clientId, d.contactId)?.name].filter(Boolean).join(" · ")}</p>
           </div>
           <div className="flex shrink-0">
             {open && <Button size="icon-sm" variant="ghost" aria-label={t("fuPlanForDeal", { deal: d.title })} title={t("fuPlan")} onClick={() => setPlanning({ clientId: d.clientId, dealId: d.id })}><ListChecks className="size-3.5" /></Button>}
@@ -229,7 +230,7 @@ export default function DealsPage() {
             </div>
             <div className="col-span-2 flex flex-col gap-1.5">
               <Label>{t("client")}</Label>
-              <Select value={editing.input.clientId || undefined} onValueChange={(v) => set({ clientId: v, quoteId: undefined })}>
+              <Select value={editing.input.clientId || undefined} onValueChange={(v) => set({ clientId: v, quoteId: undefined, contactId: clients.find((c) => c.id === v)?.contacts.find((x) => x.isPrimary)?.id })}>
                 <SelectTrigger className="w-full bg-card" aria-label={t("client")}><SelectValue placeholder={t("dealChooseClient")}>{editing.input.clientId ? clientName(editing.input.clientId) : undefined}</SelectValue></SelectTrigger>
                 <SelectContent>{pickClients.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
               </Select>
@@ -273,6 +274,16 @@ export default function DealsPage() {
               <Select value={editing.input.ownerId || undefined} onValueChange={(v) => set({ ownerId: v })}>
                 <SelectTrigger className="w-full bg-card" aria-label={t("dealOwner")}><SelectValue placeholder={t("dealChooseOwner")}>{personName(editing.input.ownerId)}</SelectValue></SelectTrigger>
                 <SelectContent>{employees.filter((e) => e.status !== EmployeeStatus.INACTIVE).map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>{t("dealContact")}</Label>
+              <Select value={editing.input.contactId || "none"} onValueChange={(v) => set({ contactId: v === "none" ? undefined : v })}>
+                <SelectTrigger className="w-full bg-card" aria-label={t("dealContact")} disabled={!editing.input.clientId}><SelectValue>{contactOf(editing.input.clientId, editing.input.contactId)?.name ?? "—"}</SelectValue></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">—</SelectItem>
+                  {(clients.find((c) => c.id === editing.input.clientId)?.contacts ?? []).map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">

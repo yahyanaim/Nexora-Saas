@@ -19,6 +19,8 @@ export const ROUTE_PERMISSIONS: Record<string, P> = {
   "/dashboard/access": P.EMPLOYEES_UPDATE,
   "/dashboard/clients": P.CLIENTS_READ,
   "/dashboard/follow-ups": P.CLIENTS_READ,
+  "/dashboard/leads": P.CLIENTS_READ,
+  "/dashboard/contacts": P.CLIENTS_READ,
   "/dashboard/portal": P.CLIENTS_UPDATE,
   "/dashboard/projects": P.PROJECTS_READ,
   "/dashboard/timesheets": P.TIME_TRACK,

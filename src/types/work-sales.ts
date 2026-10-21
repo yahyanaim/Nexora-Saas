@@ -25,6 +25,8 @@ export interface Deal {
   expectedClose: string
   /** Employee who follows the deal */
   ownerId?: string
+  /** The person at the client the deal is discussed with (CRM step 6) */
+  contactId?: string
   /** Quote sent for this deal */
   quoteId?: string
   lostReason?: string
@@ -36,4 +38,4 @@ export interface Deal {
 }
 
 export type DealInput = Pick<Deal, "title" | "clientId" | "amount" | "stage" | "expectedClose"> &
-  Partial<Pick<Deal, "probability" | "ownerId" | "quoteId" | "lostReason" | "note">>
+  Partial<Pick<Deal, "probability" | "ownerId" | "contactId" | "quoteId" | "lostReason" | "note">>

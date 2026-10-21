@@ -6,6 +6,7 @@ import {
   EmploymentType,
   WorkRole,
   type Client,
+  type ClientContact,
   type Department,
   type Employee,
   type Workspace,
@@ -73,6 +74,9 @@ const ATLAS_CLIENTS: ClientSeed[] = [
   { id: "cli_medica", name: "Medica Health", industry: "Healthcare", email: "finance@medica.example", address: "Boulevard Zerktouni, Casablanca", ice: "002196385000041", status: ClientStatus.ACTIVE, hourlyRate: 1400, rateCard: [{ id: "rc_1", employeeId: "emp_julia", rate: 1500 }, { id: "rc_2", jobTitle: "UI Designer", rate: 1200 }], paymentTermsDays: 30, accountManagerId: "emp_emma", contacts: [{ id: "con_4", name: "Sofia Conti", email: "sofia@medica.example", position: "Product owner", isPrimary: true }] },
   { id: "cli_vela", name: "Vela Retail", industry: "Retail", email: "hello@vela.example", status: ClientStatus.LEAD, paymentTermsDays: 30, accountManagerId: "emp_emma", contacts: [{ id: "con_5", name: "Tom Becker", email: "tom@vela.example", position: "CEO", isPrimary: true }], notes: "Interested in an e-commerce rebuild for Q1." },
   { id: "cli_kappa", name: "Kappa Bank", industry: "Finance", email: "vendors@kappa.example", ice: "000847261000019", status: ClientStatus.ARCHIVED, paymentTermsDays: 60, contacts: [] },
+  { id: "cli_nova", name: "Nova Clinics", industry: "Healthcare", email: "contact@nova.example", address: "Rue Ibn Sina, Rabat", status: ClientStatus.LEAD, paymentTermsDays: 30, accountManagerId: "emp_sara", contacts: [{ id: "con_7", name: "Yasmine Alaoui", email: "yasmine@nova.example", position: "Operations director", isPrimary: true }], notes: "Wants a booking app for 12 clinics." },
+  { id: "cli_atlasm", name: "Atlas Motors", industry: "Automotive", email: "info@atlasmotors.example", status: ClientStatus.LEAD, paymentTermsDays: 30, accountManagerId: "emp_emma", contacts: [{ id: "con_8", name: "Omar Tazi", email: "omar@atlasmotors.example", position: "Marketing manager", isPrimary: true }] },
+  { id: "cli_sahara", name: "Sahara Foods", industry: "Food & beverage", email: "hello@sahara.example", status: ClientStatus.ARCHIVED, paymentTermsDays: 30, contacts: [{ id: "con_9", name: "Nadia Berrada", email: "nadia@sahara.example", position: "CEO", isPrimary: true }], lostReason: "No budget this year" },
 ]
 
 const NORTHWIND_CLIENTS: ClientSeed[] = [
@@ -80,11 +84,24 @@ const NORTHWIND_CLIENTS: ClientSeed[] = [
   { id: "cli_peak", name: "Peak Outdoors", industry: "Retail", email: "ap@peak.example", status: ClientStatus.LEAD, paymentTermsDays: 30, contacts: [] },
 ]
 
+/** yyyy-mm-dd some days before today, for demo dates that stay recent */
+const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10)
+/** When the recent demo leads were added and dropped (CRM step 6) */
+const CLIENT_DATES: Record<string, { createdAt: string; updatedAt?: string }> = {
+  cli_vela: { createdAt: `${daysAgo(50)}T09:00:00.000Z` },
+  cli_nova: { createdAt: `${daysAgo(6)}T09:00:00.000Z` },
+  cli_atlasm: { createdAt: `${daysAgo(15)}T09:00:00.000Z` },
+  cli_sahara: { createdAt: `${daysAgo(60)}T09:00:00.000Z`, updatedAt: `${daysAgo(20)}T09:00:00.000Z` },
+}
+
 /** Tags and lead sources of the demo clients (CRM step 1) */
-const CLIENT_CRM: Record<string, Pick<Client, "tags" | "leadSource">> = {
+const CLIENT_CRM: Record<string, Pick<Client, "tags" | "leadSource" | "convertedAt">> = {
   cli_orbit: { tags: ["Key account", "Europe"], leadSource: LeadSource.REFERRAL },
-  cli_helio: { tags: ["Key account", "Casablanca"], leadSource: LeadSource.EVENT },
-  cli_medica: { tags: ["Healthcare", "Casablanca"], leadSource: LeadSource.WEBSITE },
+  cli_helio: { tags: ["Key account", "Casablanca"], leadSource: LeadSource.EVENT, convertedAt: daysAgo(70) },
+  cli_medica: { tags: ["Healthcare", "Casablanca"], leadSource: LeadSource.WEBSITE, convertedAt: daysAgo(40) },
+  cli_nova: { tags: ["Healthcare"], leadSource: LeadSource.REFERRAL },
+  cli_atlasm: { leadSource: LeadSource.EVENT },
+  cli_sahara: { leadSource: LeadSource.WEBSITE },
   cli_vela: { tags: ["E-commerce"], leadSource: LeadSource.LINKEDIN },
   cli_kappa: { tags: ["Public sector"], leadSource: LeadSource.OUTREACH },
   cli_lumen: { tags: ["Key account"], leadSource: LeadSource.REFERRAL },
@@ -98,6 +115,16 @@ const CONTACT_ROLE: Record<string, ContactRole> = {
   con_4: ContactRole.USER,
   con_5: ContactRole.DECISION_MAKER,
   con_6: ContactRole.DECISION_MAKER,
+  con_7: ContactRole.DECISION_MAKER,
+  con_8: ContactRole.USER,
+  con_9: ContactRole.DECISION_MAKER,
+}
+
+/** More ways to reach some demo contacts (CRM step 6) */
+const CONTACT_EXTRA: Record<string, Pick<ClientContact, "otherEmails" | "otherPhones" | "linkedin">> = {
+  con_1: { linkedin: "https://www.linkedin.com/in/claire-petit", otherPhones: ["+33 1 00 00 00 11"] },
+  con_3: { otherEmails: ["it@helio.example"], linkedin: "https://www.linkedin.com/in/rachid-amrani" },
+  con_7: { linkedin: "https://www.linkedin.com/in/yasmine-alaoui" },
 }
 
 /** Phone numbers of the demo contacts */
@@ -108,6 +135,8 @@ const CONTACT_PHONE: Record<string, string> = {
   con_4: "+212 662 98 76 54",
   con_5: "+49 151 2345 6789",
   con_6: "+1 503 555 0142",
+  con_7: "+212 537 12 34 56",
+  con_8: "+212 522 98 76 54",
 }
 
 export function seedClients(workspaceId: string): Client[] {
@@ -115,9 +144,9 @@ export function seedClients(workspaceId: string): Client[] {
   return rows.map((row) => ({
     ...row,
     ...CLIENT_CRM[row.id],
-    contacts: row.contacts.map((c) => ({ ...c, role: CONTACT_ROLE[c.id], phone: c.phone ?? CONTACT_PHONE[c.id] })),
+    contacts: row.contacts.map((c) => ({ ...c, role: CONTACT_ROLE[c.id], phone: c.phone ?? CONTACT_PHONE[c.id], ...CONTACT_EXTRA[c.id] })),
     workspaceId,
-    createdAt: STAMP,
-    updatedAt: STAMP,
+    createdAt: CLIENT_DATES[row.id]?.createdAt ?? STAMP,
+    updatedAt: CLIENT_DATES[row.id]?.updatedAt ?? CLIENT_DATES[row.id]?.createdAt ?? STAMP,
   }))
 }

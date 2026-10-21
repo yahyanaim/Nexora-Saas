@@ -14,11 +14,11 @@ const deals = createCollection<Deal>("deals", "deal", (workspaceId) => {
   const today = todayIso()
   const d = (n: number) => addDays(today, n)
   const rows: Omit<Deal, "workspaceId" | "createdAt" | "updatedAt">[] = [
-    { id: "deal_vela", title: "E-commerce rebuild", clientId: "cli_vela", amount: 420000, stage: DealStage.PROPOSAL, expectedClose: d(21), ownerId: "emp_emma", quoteId: "quo_1", note: "Quote DEV-2026-004 sent; decision after their board meeting" },
-    { id: "deal_helio", title: "Energy dashboard phase 2", clientId: "cli_helio", amount: 260000, stage: DealStage.NEGOTIATION, probability: 80, expectedClose: d(10), ownerId: "emp_sara", quoteId: "quo_2" },
-    { id: "deal_medica", title: "Patient mobile app", clientId: "cli_medica", amount: 680000, stage: DealStage.QUALIFIED, expectedClose: d(45), ownerId: "emp_emma" },
-    { id: "deal_orbit", title: "Fleet tracking support contract", clientId: "cli_orbit", amount: 144000, stage: DealStage.LEAD, expectedClose: d(60), ownerId: "emp_emma" },
-    { id: "deal_orbit_old", title: "Warehouse app audit", clientId: "cli_orbit", amount: 90000, stage: DealStage.NEGOTIATION, expectedClose: d(-5), ownerId: "emp_sara", note: "Waiting for the purchase order" },
+    { id: "deal_vela", title: "E-commerce rebuild", clientId: "cli_vela", amount: 420000, stage: DealStage.PROPOSAL, expectedClose: d(21), contactId: "con_5", ownerId: "emp_emma", quoteId: "quo_1", note: "Quote DEV-2026-004 sent; decision after their board meeting" },
+    { id: "deal_helio", title: "Energy dashboard phase 2", clientId: "cli_helio", amount: 260000, stage: DealStage.NEGOTIATION, probability: 80, expectedClose: d(10), contactId: "con_3", ownerId: "emp_sara", quoteId: "quo_2" },
+    { id: "deal_medica", title: "Patient mobile app", clientId: "cli_medica", amount: 680000, stage: DealStage.QUALIFIED, expectedClose: d(45), contactId: "con_4", ownerId: "emp_emma" },
+    { id: "deal_orbit", title: "Fleet tracking support contract", clientId: "cli_orbit", amount: 144000, stage: DealStage.LEAD, expectedClose: d(60), contactId: "con_1", ownerId: "emp_emma" },
+    { id: "deal_orbit_old", title: "Warehouse app audit", clientId: "cli_orbit", amount: 90000, stage: DealStage.NEGOTIATION, expectedClose: d(-5), contactId: "con_2", ownerId: "emp_sara", note: "Waiting for the purchase order" },
     { id: "deal_won", title: "Orbit portal redesign", clientId: "cli_orbit", amount: 310000, stage: DealStage.WON, expectedClose: d(-40), closedAt: d(-42), ownerId: "emp_emma", quoteId: "quo_4" },
     { id: "deal_lost", title: "Kappa intranet", clientId: "cli_kappa", amount: 200000, stage: DealStage.LOST, expectedClose: d(-30), closedAt: d(-28), ownerId: "emp_sara", lostReason: "Chose a cheaper offer" },
   ]
@@ -31,6 +31,7 @@ const clean = (input: DealInput): DealInput => ({
   amount: Number(input.amount) || 0,
   probability: input.probability === undefined || Number.isNaN(input.probability) ? undefined : input.probability,
   ownerId: input.ownerId || undefined,
+  contactId: input.contactId || undefined,
   quoteId: input.quoteId || undefined,
   lostReason: input.stage === DealStage.LOST ? input.lostReason?.trim() : undefined,
   note: input.note?.trim() || undefined,
@@ -54,7 +55,7 @@ export async function saveDealApi(workspaceId: string, input: DealInput, id?: st
     if (!previous) throw new Error("Deal not found")
     if (previous.stage !== value.stage) audit(workspaceId, value.title, value.stage)
     // update() merges; list optional fields so clearing them sticks
-    return deals.update(workspaceId, id, { ...value, probability: value.probability, ownerId: value.ownerId, quoteId: value.quoteId, lostReason: value.lostReason, note: value.note, closedAt: closedAtFor(value.stage, previous) })
+    return deals.update(workspaceId, id, { ...value, probability: value.probability, ownerId: value.ownerId, contactId: value.contactId, quoteId: value.quoteId, lostReason: value.lostReason, note: value.note, closedAt: closedAtFor(value.stage, previous) })
   }
   const created = deals.create(workspaceId, { ...value, closedAt: closedAtFor(value.stage) })
   recordAudit(workspaceId, { action: "Deal created", actionKey: "deal.created", category: "Billing", target: value.title })

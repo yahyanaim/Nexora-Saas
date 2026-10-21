@@ -71,6 +71,7 @@ import {
   UsersRound,
   CalendarRange,
   ListChecks,
+  BookUser,
 } from "@/components/ui/carbon/icons"
 import { usePathname } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -195,6 +196,18 @@ export function useDashboardNav() {
             url: "/dashboard/clients",
             icon: Handshake,
             descriptionKey: "pageDescClients",
+          },
+          {
+            title: t("leads"),
+            url: "/dashboard/leads",
+            icon: Funnel,
+            descriptionKey: "pageDescLeads",
+          },
+          {
+            title: t("contacts"),
+            url: "/dashboard/contacts",
+            icon: BookUser,
+            descriptionKey: "pageDescContacts",
           },
           {
             title: t("followUps"),

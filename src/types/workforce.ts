@@ -159,6 +159,10 @@ export interface ClientContact {
   name: string
   email: string
   phone?: string
+  /** More addresses and numbers beside the main ones (CRM step 6) */
+  otherEmails?: string[]
+  otherPhones?: string[]
+  linkedin?: string
   position?: string
   /** Part in the client's decisions */
   role?: ContactRole
@@ -227,6 +231,10 @@ export interface Client {
   tags?: string[]
   /** Where the client first came from */
   leadSource?: LeadSource
+  /** yyyy-mm-dd, when the lead became a client (CRM step 6) */
+  convertedAt?: string
+  /** Why a lead was dropped, when it was archived as a lead (CRM step 6) */
+  lostReason?: string
   createdAt: string
   updatedAt: string
 }

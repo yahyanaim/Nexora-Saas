@@ -172,6 +172,7 @@ import {
   Zap as LZap,
   FileChartColumn as LFileChartColumn,
   IdCard as LIdCard,
+  BookUser as LBookUser,
   ChartColumnStacked as LChartColumnStacked,
   Truck as LTruck,
   ReceiptText as LReceiptText,
@@ -393,6 +394,7 @@ export const Percent = icon(LPercent, "Percent")
 export const PanelLeft = icon(LPanelLeft, "PanelLeft")
 export const FileChartColumn = icon(LFileChartColumn, "FileChartColumn")
 export const IdCard = icon(LIdCard, "IdCard")
+export const BookUser = icon(LBookUser, "BookUser")
 export const ChartColumnStacked = icon(LChartColumnStacked, "ChartColumnStacked")
 export const Truck = icon(LTruck, "Truck")
 export const ReceiptText = icon(LReceiptText, "ReceiptText")
