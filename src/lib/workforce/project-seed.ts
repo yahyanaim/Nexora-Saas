@@ -1,6 +1,7 @@
 import {
   BudgetType,
   Priority,
+  TaskRelationType,
   TaskStatus,
   WorkProjectStatus,
   type Milestone,
@@ -96,9 +97,26 @@ function completedAt(task: TaskSeed) {
   return d.toISOString()
 }
 
+/** More on some demo tasks: people, watchers, links, relations and a formatted description (P1) */
+const TASK_EXTRAS: Record<string, Partial<WorkTask>> = {
+  tsk_3: {
+    collaboratorIds: ["emp_lina"],
+    watcherIds: ["emp_karim"],
+    description: "Expose the **tracking events** coming from the carriers.\n\n- Webhooks from each carrier\n- One _status history_ endpoint per shipment\n- See the [carrier API notes](https://developers.example.com/carriers)\n\nThe page work is in ORB-01#4.",
+    links: [{ id: "lnk_1", url: "https://developers.example.com/carriers", title: "Carrier API notes" }],
+    relations: [{ type: TaskRelationType.RELATES, taskId: "tsk_4" }],
+  },
+  tsk_4: { collaboratorIds: ["emp_julia"], watcherIds: ["emp_karim"] },
+  tsk_5: { watcherIds: ["emp_sara"], relations: [{ type: TaskRelationType.RELATES, taskId: "tsk_3" }] },
+  tsk_9: { collaboratorIds: ["emp_amina"], watcherIds: ["emp_sara", "emp_karim"] },
+}
+
 export function seedTasks(workspaceId: string): WorkTask[] {
+  const numbers = new Map<string, number>()
   return stamp(TASKS[workspaceId] ?? [], workspaceId).map((task, index) => ({
     ...task,
+    number: numbers.set(task.projectId, (numbers.get(task.projectId) ?? 0) + 1).get(task.projectId),
+    ...TASK_EXTRAS[task.id],
     subtasks: task.subtasks ?? [],
     order: index,
     completedAt: task.status === TaskStatus.DONE ? completedAt(task) : undefined,

@@ -39,6 +39,10 @@ export function TaskDiscussion({ taskId, team, labels }: Props) {
         return t("activityStatus", { from: t(TASK_STATUS_LABEL[a.from as TaskStatus]), to: t(TASK_STATUS_LABEL[a.to as TaskStatus]) })
       case "assignee":
         return t("activityAssignee", { to: name(a.to) })
+      case "collaborators":
+        return t("activityCollaborators", { to: (a.to ? a.to.split(",") : []).map((id) => name(id)).join(", ") || "—" })
+      case "attachment":
+        return t("activityAttachment", { name: a.to ?? "" })
       case "due":
         return t("activityDue", { to: a.to ?? "—" })
       case "estimate":

@@ -1,5 +1,6 @@
 "use client"
 
+import { taskKey } from "@/lib/workforce/task-extras"
 import * as React from "react"
 import { useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
@@ -122,7 +123,8 @@ export function CommandPalette({ open: controlledOpen, onOpenChange: setControll
       hits: allowed.projects
         ? match(tasks.map((x) => {
             const p = projects.find((pr) => pr.id === x.projectId)
-            return { id: x.id, label: x.title, detail: p ? `${p.code} · ${p.name}` : undefined, keywords: `${x.title} ${p?.code ?? ""} ${p?.name ?? ""}`, href: `/dashboard/projects/${x.projectId}` }
+            const key = taskKey(x, p)
+            return { id: x.id, label: key ? `${key} · ${x.title}` : x.title, detail: p ? `${p.code} · ${p.name}` : undefined, keywords: `${key} ${x.title} ${p?.code ?? ""} ${p?.name ?? ""}`, href: `/dashboard/projects/${x.projectId}?task=${x.id}` }
           }))
         : [],
     },

@@ -1,5 +1,6 @@
 "use client"
 
+import { taskKey } from "@/lib/workforce/task-extras"
 import { useMemo } from "react"
 import type { ColumnDef } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
@@ -27,10 +28,12 @@ interface Props {
   onOpen: (task: WorkTask) => void
   /** Dependency problems per task id (PRJ-6) */
   warnings?: Record<string, string>
+  /** Project code, for the task keys (P1) */
+  projectCode?: string
 }
 
 /** All tasks of a project as a sortable, filterable table. */
-export function TaskList({ tasks, team, milestones, onOpen, warnings = {} }: Props) {
+export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, projectCode }: Props) {
   const t = useTranslations()
   const locale = useLocale()
 
@@ -39,7 +42,10 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {} }: Pro
       {
         accessorKey: "title",
         header: ({ column }) => <DataTableColumnHeader column={column} title={t("task")} />,
-        filterFn: (row, _id, value: string) => row.original.title.toLowerCase().includes(String(value ?? "").toLowerCase()),
+        filterFn: (row, _id, value: string) => {
+          const q = String(value ?? "").toLowerCase()
+          return row.original.title.toLowerCase().includes(q) || (!!projectCode && taskKey(row.original, { code: projectCode }).toLowerCase().includes(q))
+        },
         cell: ({ row }) => (
           <button
             type="button"
@@ -49,6 +55,7 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {} }: Pro
               row.original.status === TaskStatus.DONE && "text-muted-foreground line-through"
             )}
           >
+            {projectCode && row.original.number && <span className="me-2 font-mono text-xs font-normal text-muted-foreground">{taskKey(row.original, { code: projectCode })}</span>}
             {row.original.title}
             {warnings[row.original.id] && (
               <span className="ms-2 inline-flex rounded-full bg-danger-soft px-1.5 py-0.5 align-middle text-[10px] font-medium text-destructive" title={warnings[row.original.id]}>!</span>
@@ -86,10 +93,12 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {} }: Pro
         filterFn: (row, id, value) => includesFilter(row.getValue(id), value),
         cell: ({ row }) => {
           const person = team.find((e) => e.id === row.original.assigneeId)
+          const others = (row.original.collaboratorIds ?? []).filter((id) => id !== row.original.assigneeId).length
           return person ? (
             <span className="flex items-center gap-2 text-sm">
               <SpaceAvatar name={person.name} size="xs" />
               {person.name}
+              {others > 0 && <span className="text-xs text-muted-foreground" title={(row.original.collaboratorIds ?? []).map((id) => team.find((e) => e.id === id)?.name).filter(Boolean).join(", ")}>+{others}</span>}
             </span>
           ) : (
             <span className="text-sm text-muted-foreground">{t("unassigned")}</span>
@@ -121,7 +130,7 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {} }: Pro
         cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.estimatedHours} h</span>,
       },
     ],
-    [t, locale, team, milestones, onOpen, warnings]
+    [t, locale, team, milestones, onOpen, warnings, projectCode]
   )
 
   return (

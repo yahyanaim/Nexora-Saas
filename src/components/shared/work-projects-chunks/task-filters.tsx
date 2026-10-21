@@ -1,5 +1,6 @@
 "use client"
 
+import { isOnTask } from "@/lib/workforce/task-extras"
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
@@ -24,7 +25,7 @@ export const NO_FILTERS: TaskFilterValues = { assigneeId: ALL, labelId: ALL, pri
 export function applyTaskFilters(tasks: WorkTask[], f: TaskFilterValues) {
   return tasks.filter(
     (task) =>
-      (f.assigneeId === ALL || (f.assigneeId === UNASSIGNED ? !task.assigneeId : task.assigneeId === f.assigneeId)) &&
+      (f.assigneeId === ALL || (f.assigneeId === UNASSIGNED ? !task.assigneeId : isOnTask(task, f.assigneeId))) &&
       (f.labelId === ALL || (task.labelIds ?? []).includes(f.labelId)) &&
       (f.priority === ALL || task.priority === f.priority)
   )
