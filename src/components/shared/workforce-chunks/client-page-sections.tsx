@@ -180,7 +180,7 @@ function ContactDialog({ contact, onClose, onSave, saving }: { contact: ClientCo
             <div className="space-y-1.5">
               <Label htmlFor="cp-role">{t("cpRole")}</Label>
               <Select value={draft.role ?? "none"} onValueChange={(v) => set({ role: v === "none" ? undefined : (v as ContactRole) })}>
-                <SelectTrigger id="cp-role"><SelectValue /></SelectTrigger>
+                <SelectTrigger id="cp-role"><SelectValue>{draft.role ? t(`ctRole_${draft.role}`) : "—"}</SelectValue></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">—</SelectItem>
                   {Object.values(ContactRole).map((r) => <SelectItem key={r} value={r}>{t(`ctRole_${r}`)}</SelectItem>)}

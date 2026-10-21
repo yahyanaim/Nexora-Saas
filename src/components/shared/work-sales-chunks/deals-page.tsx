@@ -11,10 +11,13 @@ import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Funnel, Pencil, Plus, Trash2, TrendingUp, Trophy, Warning, Wallet } from "@/components/ui/carbon/icons"
+import { Funnel, ListChecks, Pencil, Plus, Trash2, TrendingUp, Trophy, Warning, Wallet } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
+import { FollowUpDialog, type FollowUpDefaults } from "../workforce-chunks/follow-up-dialog"
+import { useFollowUps } from "@/hooks/workforce/use-crm"
+import { sortFollowUps } from "@/lib/workforce/follow-ups"
 import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useQuotes } from "@/hooks/workforce/use-quotes"
 import { useDealMutations, useDeals } from "@/hooks/workforce/use-deals"
@@ -51,6 +54,14 @@ export default function DealsPage() {
   const [editing, setEditing] = useState<{ id?: string; input: DealInput } | null>(null)
   const [deleting, setDeleting] = useState<Deal | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
+  const [planning, setPlanning] = useState<FollowUpDefaults | null>(null)
+  const { data: followUps = [] } = useFollowUps()
+  // the next open follow-up of each deal (CRM step 5)
+  const nextStep = useMemo(() => {
+    const map = new Map<string, (typeof followUps)[number]>()
+    for (const f of sortFollowUps(followUps)) if (f.dealId && !f.doneAt && !map.has(f.dealId)) map.set(f.dealId, f)
+    return map
+  }, [followUps])
 
   const today = todayIso()
   const summary = useMemo(() => pipelineSummary(deals, today), [deals, today])
@@ -83,7 +94,9 @@ export default function DealsPage() {
   }
 
   const renderCard = (d: Deal) => {
-    const overdue = OPEN_STAGES.includes(d.stage as (typeof OPEN_STAGES)[number]) && d.expectedClose < today
+    const open = OPEN_STAGES.includes(d.stage as (typeof OPEN_STAGES)[number])
+    const overdue = open && d.expectedClose < today
+    const next = nextStep.get(d.id)
     return (
       <li
         key={d.id}
@@ -98,6 +111,7 @@ export default function DealsPage() {
             <p className="truncate text-xs text-muted-foreground">{clientName(d.clientId)}</p>
           </div>
           <div className="flex shrink-0">
+            {open && <Button size="icon-sm" variant="ghost" aria-label={t("fuPlanForDeal", { deal: d.title })} title={t("fuPlan")} onClick={() => setPlanning({ clientId: d.clientId, dealId: d.id })}><ListChecks className="size-3.5" /></Button>}
             <Button size="icon-sm" variant="ghost" aria-label={t("edit")} onClick={() => edit(d)}><Pencil className="size-3.5" /></Button>
             <Button size="icon-sm" variant="ghost" aria-label={t("delete")} onClick={() => setDeleting(d)}><Trash2 className="size-3.5" /></Button>
           </div>
@@ -110,6 +124,12 @@ export default function DealsPage() {
           <span className={cn("text-muted-foreground", overdue && "font-medium text-destructive")}>{t("dealCloses", { date: date(d.expectedClose) })}</span>
           {quoteNumber(d.quoteId) && <Badge variant="outline" className="border-transparent bg-muted text-muted-foreground">{quoteNumber(d.quoteId)}</Badge>}
         </div>
+        {open && (
+          <p className={cn("flex items-center gap-1.5 truncate text-xs", next ? (next.dueDate < today ? "text-destructive" : "text-muted-foreground") : "text-warning-foreground")}>
+            <ListChecks className="size-3.5 shrink-0" />
+            <span className="truncate">{next ? t("fuNextStep", { title: next.title, date: date(next.dueDate) }) : t("fuNoNextStep")}</span>
+          </p>
+        )}
         <div className="flex items-center justify-between gap-2">
           <span className="truncate text-xs text-muted-foreground">{personName(d.ownerId) ?? ""}</span>
           <Select value={d.stage} onValueChange={(v) => moveTo(d, v as DealStage)}>
@@ -276,6 +296,8 @@ export default function DealsPage() {
           </div>
         )}
       </DataTableEntityFormSheet>
+
+      <FollowUpDialog open={!!planning} onOpenChange={(o) => !o && setPlanning(null)} defaults={planning ?? undefined} lockClient />
 
       <ConfirmAlertDialog
         open={!!deleting}

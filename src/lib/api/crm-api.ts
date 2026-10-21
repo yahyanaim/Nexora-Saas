@@ -10,6 +10,7 @@ import {
   type ClientNote,
   type ContractInput,
   type FollowUpInput,
+  FollowUpStatus,
 } from "@/types/work-crm"
 
 const STAMP = "2026-01-01T00:00:00.000Z"
@@ -47,9 +48,11 @@ function seedFollowUps(workspaceId: string): ClientFollowUp[] {
   const rows: Omit<ClientFollowUp, "workspaceId" | "createdAt" | "updatedAt">[] =
     workspaceId === "ws_atlas"
       ? [
-          { id: "fu_1", clientId: "cli_helio", title: "Send the new rates before the framework renewal", dueDate: addDays(t, 2), ownerId: "emp_sara", contactId: "con_3" },
+          { id: "fu_1", clientId: "cli_helio", title: "Send the new rates before the framework renewal", dueDate: addDays(t, 2), ownerId: "emp_sara", contactId: "con_3", dealId: "deal_helio", status: FollowUpStatus.IN_PROGRESS },
           { id: "fu_2", clientId: "cli_medica", title: "Call about the two unpaid invoices", dueDate: addDays(t, -1), ownerId: "emp_emma", contactId: "con_4" },
-          { id: "fu_3", clientId: "cli_vela", title: "Follow up on the store redesign quote", dueDate: addDays(t, 5), ownerId: "emp_emma", contactId: "con_5" },
+          { id: "fu_3", clientId: "cli_vela", title: "Follow up on the store redesign quote", dueDate: addDays(t, 5), ownerId: "emp_emma", contactId: "con_5", dealId: "deal_vela" },
+          { id: "fu_5", clientId: "cli_medica", title: "Send the scope of the patient app", dueDate: t, ownerId: "emp_emma", contactId: "con_4", dealId: "deal_medica" },
+          { id: "fu_6", clientId: "cli_orbit", title: "Ask for the purchase order of the warehouse audit", dueDate: t, ownerId: "emp_sara", contactId: "con_2", dealId: "deal_orbit_old" },
           { id: "fu_4", clientId: "cli_orbit", title: "Book the portal launch review", dueDate: addDays(t, -4), ownerId: "emp_karim", contactId: "con_1", doneAt: `${addDays(t, -4)}T16:00:00.000Z`, doneBy: "emp_karim" },
         ]
       : workspaceId === "ws_northwind"

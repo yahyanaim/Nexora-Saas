@@ -3,6 +3,7 @@ import { TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/wor
 import { LeaveStatus, type LeaveRequest } from "@/types/work-planning"
 import { TaskStatus, type WorkProject, type WorkTask } from "@/types/work-projects"
 import type { SatisfactionResponse } from "@/types/work-feedback"
+import type { ClientFollowUp } from "@/types/work-crm"
 import { lowRatingsFor } from "./satisfaction"
 import type { EmployeeDocument } from "@/types/work-hr"
 import type { PerformanceReview } from "@/types/work-reviews"
@@ -39,6 +40,8 @@ export interface InboxInput {
   /** Client answers and projects, for low ratings (Phase 6h.2) */
   feedback?: SatisfactionResponse[]
   projects?: WorkProject[]
+  /** Client follow-ups (CRM step 5) */
+  followUps?: ClientFollowUp[]
   today: string
 }
 
@@ -96,6 +99,11 @@ export function buildInbox(d: InboxInput): InboxItem[] {
   if (me) {
     const late = d.tasks.filter((t) => t.assigneeId === me && t.status !== TaskStatus.DONE && t.dueDate && t.dueDate < d.today)
     if (late.length) items.push({ id: `tasks:${late.map((t) => t.id).join(",")}`, category: "system", title: "inboxTasks", message: "inboxTasksMessage", values: { count: late.length }, href: "/dashboard/my-work" })
+    const due = (d.followUps ?? []).filter((f) => f.ownerId === me && !f.doneAt && f.dueDate <= d.today)
+    if (due.length) {
+      const lateCount = due.filter((f) => f.dueDate < d.today).length
+      items.push({ id: `follow-ups:${due.map((f) => `${f.id}-${f.dueDate}`).join(",")}`, category: "team", title: "inboxFollowUps", message: lateCount ? "inboxFollowUpsLate" : "inboxFollowUpsToday", values: { count: due.length, late: lateCount }, href: "/dashboard/my-work" })
+    }
   }
   return items
 }
