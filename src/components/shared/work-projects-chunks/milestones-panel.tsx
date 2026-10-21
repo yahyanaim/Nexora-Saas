@@ -75,7 +75,7 @@ export function MilestonesPanel({ projectId, milestones, tasks, canEdit, onCreat
       ) : (
         <ol className="flex flex-col gap-3">
           {milestones.map((milestone) => {
-            const own = tasks.filter((task) => task.milestoneId === milestone.id)
+            const own = tasks.filter((task) => task.milestoneId === milestone.id && task.status !== TaskStatus.CANCELLED)
             const state = milestoneState(milestone, tasks)
             const done = own.filter((task) => task.status === TaskStatus.DONE).length
             return (

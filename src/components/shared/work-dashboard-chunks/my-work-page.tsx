@@ -29,7 +29,8 @@ import { myDay, vacationAllowance } from "@/lib/workforce/dashboards"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { EmployeeStatus } from "@/types/workforce"
 import { cn } from "@/lib/utils"
-import { PRIORITY_LABEL, TASK_STATUS_LABEL, formatShortDate } from "../work-projects-chunks/project-labels"
+import { PRIORITY_LABEL, formatShortDate, stateLabel } from "../work-projects-chunks/project-labels"
+import { projectStates, stateOf } from "@/lib/workforce/task-states"
 import { LEAVE_TYPE_LABEL } from "../work-planning-chunks/planning-labels"
 import { formatHours } from "../work-billing-chunks/billing-labels"
 
@@ -201,7 +202,7 @@ export default function MyWorkPage() {
                     <div className="min-w-0 flex-1">
                       <Link href={`/dashboard/projects/${task.projectId}`} className="block truncate font-medium hover:text-primary">{task.title}</Link>
                       <p className="truncate text-xs text-muted-foreground">
-                        {project?.code} · {project?.name} · {t(TASK_STATUS_LABEL[task.status])} · {t(PRIORITY_LABEL[task.priority])}
+                        {project?.code} · {project?.name} · {stateLabel(stateOf(task, projectStates(project)), t)} · {t(PRIORITY_LABEL[task.priority])}
                       </p>
                     </div>
                     <span className="flex items-center gap-1 text-sm text-muted-foreground tabular-nums">

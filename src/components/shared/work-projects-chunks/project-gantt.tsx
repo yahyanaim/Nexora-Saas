@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 import { addDays } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { dependencyIssues, shiftedDates, taskSpan } from "@/lib/workforce/scheduling"
-import { TaskStatus, type Milestone, type WorkProject, type WorkTask } from "@/types/work-projects"
+import { TaskStatus, type Milestone, type WorkProject, type WorkTask, isClosedStatus } from "@/types/work-projects"
 import type { Employee } from "@/types/workforce"
 import { TASK_STATUS_LABEL } from "./project-labels"
 
@@ -18,6 +18,7 @@ const BAR: Record<TaskStatus, string> = {
   [TaskStatus.IN_PROGRESS]: "bg-primary",
   [TaskStatus.REVIEW]: "bg-warning-foreground",
   [TaskStatus.DONE]: "bg-success-foreground",
+  [TaskStatus.CANCELLED]: "bg-destructive/40",
 }
 
 function days(from: string, to: string) {
@@ -178,7 +179,7 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
                     const y1 = j * ROW + ROW / 2
                     const x2 = x(start) + shiftT
                     const y2 = i * ROW + ROW / 2
-                    const bad = p.task.status !== TaskStatus.DONE && p.end >= start
+                    const bad = !isClosedStatus(p.task.status) && p.end >= start
                     const mid = Math.max(x1 + 8, Math.min(x2 - 8, x1 + 12))
                     return (
                       <path
@@ -197,7 +198,7 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
               {/* Bars */}
               {rows.map(({ task, start, end }, i) => {
                 const shift = drag?.id === task.id ? drag.delta : 0
-                const late = task.status !== TaskStatus.DONE && end < today
+                const late = !isClosedStatus(task.status) && end < today
                 return (
                   <button
                     key={task.id}

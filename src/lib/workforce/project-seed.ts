@@ -10,6 +10,16 @@ import {
 } from "@/types/work-projects"
 import { todayIso } from "./project-metrics"
 
+/** Orbit has its own statuses, with "Waiting for client" among the started ones (P2) */
+const ORBIT_STATES = [
+  { id: TaskStatus.TODO, group: TaskStatus.TODO },
+  { id: TaskStatus.IN_PROGRESS, group: TaskStatus.IN_PROGRESS },
+  { id: "st_orbit_waiting", name: "Waiting for client", group: TaskStatus.IN_PROGRESS },
+  { id: TaskStatus.REVIEW, group: TaskStatus.REVIEW },
+  { id: TaskStatus.DONE, group: TaskStatus.DONE },
+  { id: TaskStatus.CANCELLED, group: TaskStatus.CANCELLED },
+]
+
 /** Seed dates are relative to today so the demo never looks stale. */
 function day(offset: number) {
   const d = new Date()
@@ -27,7 +37,7 @@ type TaskSeed = Omit<WorkTask, "workspaceId" | "createdAt" | "updatedAt" | "orde
 
 const PROJECTS: Record<string, ProjectSeed[]> = {
   ws_atlas: [
-    { id: "prj_orbit", code: "ORB-01", name: "Orbit fleet portal", description: "Customer portal for tracking shipments and invoices.", clientId: "cli_orbit", managerId: "emp_karim", memberIds: ["emp_karim", "emp_lina", "emp_omar", "emp_julia", "emp_noah"], status: WorkProjectStatus.ACTIVE, priority: Priority.HIGH, startDate: day(-45), dueDate: day(30), budgetType: BudgetType.FIXED, budgetAmount: 480000 },
+    { id: "prj_orbit", code: "ORB-01", name: "Orbit fleet portal", description: "Customer portal for tracking shipments and invoices.", clientId: "cli_orbit", managerId: "emp_karim", memberIds: ["emp_karim", "emp_lina", "emp_omar", "emp_julia", "emp_noah"], status: WorkProjectStatus.ACTIVE, priority: Priority.HIGH, startDate: day(-45), dueDate: day(30), budgetType: BudgetType.FIXED, budgetAmount: 480000, taskStates: ORBIT_STATES },
     { id: "prj_helio", code: "HEL-02", name: "Helio energy dashboard", description: "Real-time production dashboard for solar sites.", clientId: "cli_helio", managerId: "emp_karim", memberIds: ["emp_karim", "emp_lina", "emp_amina"], status: WorkProjectStatus.ACTIVE, priority: Priority.MEDIUM, startDate: day(-60), dueDate: day(10), budgetType: BudgetType.HOURLY, budgetAmount: 300000 },
     { id: "prj_medica", code: "MED-01", name: "Medica patient app", description: "Appointment booking app for clinics.", clientId: "cli_medica", managerId: "emp_julia", memberIds: ["emp_julia", "emp_amina", "emp_noah"], status: WorkProjectStatus.PLANNING, priority: Priority.MEDIUM, startDate: day(7), dueDate: day(90), budgetType: BudgetType.FIXED, budgetAmount: 650000 },
     { id: "prj_site", code: "INT-01", name: "Atlas website refresh", description: "Internal: new marketing site.", managerId: "emp_emma", memberIds: ["emp_emma", "emp_julia"], status: WorkProjectStatus.COMPLETED, priority: Priority.LOW, startDate: day(-120), dueDate: day(-20), budgetType: BudgetType.NON_BILLABLE },
@@ -98,6 +108,7 @@ function completedAt(task: TaskSeed) {
 }
 
 /** More on some demo tasks: people, watchers, links, relations and a formatted description (P1) */
+
 const TASK_EXTRAS: Record<string, Partial<WorkTask>> = {
   tsk_3: {
     collaboratorIds: ["emp_lina"],
@@ -106,7 +117,8 @@ const TASK_EXTRAS: Record<string, Partial<WorkTask>> = {
     links: [{ id: "lnk_1", url: "https://developers.example.com/carriers", title: "Carrier API notes" }],
     relations: [{ type: TaskRelationType.RELATES, taskId: "tsk_4" }],
   },
-  tsk_4: { collaboratorIds: ["emp_julia"], watcherIds: ["emp_karim"] },
+  tsk_4: {
+    stateId: "st_orbit_waiting", collaboratorIds: ["emp_julia"], watcherIds: ["emp_karim"] },
   tsk_5: { watcherIds: ["emp_sara"], relations: [{ type: TaskRelationType.RELATES, taskId: "tsk_3" }] },
   tsk_9: { collaboratorIds: ["emp_amina"], watcherIds: ["emp_sara", "emp_karim"] },
 }

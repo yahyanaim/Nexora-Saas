@@ -13,7 +13,7 @@ import { useLeave } from "@/hooks/workforce/use-leave"
 import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso, calendarIso } from "@/lib/workforce/project-metrics"
 import { isWeekend, workingDays } from "@/lib/workforce/planning"
-import { TaskStatus, WorkProjectStatus } from "@/types/work-projects"
+import { WorkProjectStatus, isClosedStatus } from "@/types/work-projects"
 import { LeaveStatus } from "@/types/work-planning"
 
 type Kind = "project" | "milestone" | "task" | "leave"
@@ -62,7 +62,7 @@ export default function CalendarPage() {
       list.push({ id: `m-${m.id}`, kind: "milestone", date: m.dueDate, label: `${projectName(m.projectId)} · ${m.title}`, href: `/dashboard/projects/${m.projectId}` })
     }
     for (const task of tasks) {
-      if (task.dueDate && task.status !== TaskStatus.DONE) {
+      if (task.dueDate && !isClosedStatus(task.status)) {
         list.push({ id: `t-${task.id}`, kind: "task", date: task.dueDate, label: task.title, href: `/dashboard/projects/${task.projectId}` })
       }
     }

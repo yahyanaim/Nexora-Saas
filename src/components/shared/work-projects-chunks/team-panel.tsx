@@ -5,7 +5,7 @@ import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { Badge } from "@/components/ui/badge"
 import { isTaskOverdue, remainingHours } from "@/lib/workforce/project-metrics"
 import type { Employee } from "@/types/workforce"
-import { TaskStatus, type WorkTask } from "@/types/work-projects"
+import { type WorkTask, isClosedStatus } from "@/types/work-projects"
 
 interface Props {
   team: Employee[]
@@ -16,7 +16,7 @@ interface Props {
 /** Who works on the project, with their open work on it. */
 export function TeamPanel({ team, managerId, tasks }: Props) {
   const t = useTranslations()
-  const unassigned = tasks.filter((task) => !task.assigneeId && task.status !== TaskStatus.DONE).length
+  const unassigned = tasks.filter((task) => !task.assigneeId && !isClosedStatus(task.status)).length
 
   return (
     <section className="flex flex-col gap-4 rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
@@ -31,7 +31,7 @@ export function TeamPanel({ team, managerId, tasks }: Props) {
       <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {team.map((person) => {
           const own = tasks.filter((task) => task.assigneeId === person.id)
-          const open = own.filter((task) => task.status !== TaskStatus.DONE)
+          const open = own.filter((task) => !isClosedStatus(task.status))
           const overdue = own.filter((task) => isTaskOverdue(task)).length
           return (
             <li key={person.id} className="flex items-center gap-3 rounded-2xl border border-border p-3.5">

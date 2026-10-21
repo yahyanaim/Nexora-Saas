@@ -16,7 +16,7 @@ import { addDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { leaveDays, loadPercent, plannedHours, weeklyCapacity } from "@/lib/workforce/planning"
 import { EmployeeStatus } from "@/types/workforce"
-import { TaskStatus } from "@/types/work-projects"
+import { isClosedStatus } from "@/types/work-projects"
 
 const WEEKS = 6
 
@@ -58,7 +58,7 @@ export default function WorkloadPage() {
   const thisWeek = grid.map((row) => row.weeks[0]!)
   const overloaded = thisWeek.filter((w) => w.percent > 100).length
   const free = Math.max(0, Math.round(thisWeek.reduce((s, w) => s + Math.max(0, w.capacity - w.planned), 0)))
-  const unplanned = tasks.filter((task) => task.status !== TaskStatus.DONE && (!task.assigneeId || !task.dueDate)).length
+  const unplanned = tasks.filter((task) => !isClosedStatus(task.status) && (!task.assigneeId || !task.dueDate)).length
   const away = thisWeek.filter((w) => w.off > 0).length
 
   const cards: MetricCardItem[] = [

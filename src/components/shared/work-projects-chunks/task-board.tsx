@@ -16,18 +16,21 @@ import { cn } from "@/lib/utils"
 import { isTaskOverdue } from "@/lib/workforce/project-metrics"
 import type { Employee } from "@/types/workforce"
 import type { TaskLabel } from "@/types/work-settings"
-import { TASK_STATUSES, TaskStatus, type Milestone, type WorkTask } from "@/types/work-projects"
-import { PRIORITY_DOT, PRIORITY_LABEL, TASK_STATUS_DOT, TASK_STATUS_LABEL, formatShortDate } from "./project-labels"
+import { isClosedStatus, type Milestone, type TaskState, type WorkTask } from "@/types/work-projects"
+import { isCancelledState, stateOf } from "@/lib/workforce/task-states"
+import { PRIORITY_DOT, PRIORITY_LABEL, TASK_STATUS_DOT, formatShortDate, stateLabel } from "./project-labels"
 
 interface Props {
   tasks: WorkTask[]
   labels: TaskLabel[]
   team: Employee[]
   milestones: Milestone[]
+  /** The project's statuses in board order; one column each (P2) */
+  states: TaskState[]
   canEdit: boolean
   onOpen: (task: WorkTask) => void
-  onAdd: (status: TaskStatus) => void
-  onMove: (taskId: string, status: TaskStatus, index?: number) => void
+  onAdd: (state: TaskState) => void
+  onMove: (taskId: string, state: TaskState, index?: number) => void
   /** Dependency problems per task id, shown as a warning (PRJ-6) */
   warnings?: Record<string, string>
   /** Project code, for the task keys (P1) */
@@ -40,17 +43,22 @@ const DRAG_TYPE = "application/x-nexora-task"
  * Kanban board. Drag a card onto a column (or onto a card to land before it);
  * each card's menu offers the same moves without a mouse.
  */
-export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, onAdd, onMove, warnings = {}, projectCode }: Props) {
+export function TaskBoard({ tasks, labels, team, milestones, states, canEdit, onOpen, onAdd, onMove, warnings = {}, projectCode }: Props) {
   const t = useTranslations()
   const [dragId, setDragId] = useState<string | null>(null)
-  const [over, setOver] = useState<{ status: TaskStatus; index: number } | null>(null)
+  const [over, setOver] = useState<{ status: string; index: number } | null>(null)
+  const [showCancelled, setShowCancelled] = useState(false)
 
-  const columns = TASK_STATUSES.map((status) => ({
-    status,
-    tasks: tasks.filter((task) => task.status === status).sort((a, b) => a.order - b.order),
+  const all = states.map((state) => ({
+    state,
+    status: state.id,
+    tasks: tasks.filter((task) => stateOf(task, states).id === state.id).sort((a, b) => a.order - b.order),
   }))
+  // Cancelled work is folded away until asked for (P2)
+  const cancelledCount = all.filter((c) => isCancelledState(c.state)).reduce((n, c) => n + c.tasks.length, 0)
+  const columns = showCancelled ? all : all.filter((c) => !isCancelledState(c.state))
 
-  const drop = (status: TaskStatus, index: number, e: React.DragEvent) => {
+  const drop = (status: string, index: number, e: React.DragEvent) => {
     e.preventDefault()
     const id = e.dataTransfer.getData(DRAG_TYPE) || dragId
     setOver(null)
@@ -59,19 +67,28 @@ export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, on
     const task = tasks.find((x) => x.id === id)
     if (!task) return
     // Dropping a card further down its own column: account for it leaving its old slot
-    const column = columns.find((c) => c.status === status)!.tasks
-    const from = column.findIndex((x) => x.id === id)
+    const col = columns.find((c) => c.status === status)!
+    const from = col.tasks.findIndex((x) => x.id === id)
     const target = from !== -1 && from < index ? index - 1 : index
-    if (task.status === status && from === target) return
-    onMove(id, status, target)
+    if (stateOf(task, states).id === status && from === target) return
+    onMove(id, col.state, target)
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      {columns.map(({ status, tasks: columnTasks }) => (
+    <div className="flex flex-col gap-3">
+    {cancelledCount > 0 && (
+      <button type="button" aria-pressed={showCancelled} onClick={() => setShowCancelled((v) => !v)} className="self-end rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground">
+        {t(showCancelled ? "stHideCancelled" : "stShowCancelled", { count: cancelledCount })}
+      </button>
+    )}
+    <div
+      className="grid gap-4 md:grid-cols-2 xl:grid-cols-[repeat(var(--board-cols),minmax(15rem,1fr))] xl:overflow-x-auto xl:pb-1"
+      style={{ "--board-cols": columns.length } as React.CSSProperties}
+    >
+      {columns.map(({ state, status, tasks: columnTasks }) => (
         <section
           key={status}
-          aria-label={t(TASK_STATUS_LABEL[status])}
+          aria-label={stateLabel(state, t)}
           onDragOver={(e) => {
             if (!canEdit || !dragId) return
             e.preventDefault()
@@ -88,8 +105,8 @@ export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, on
         >
           <header className="flex items-center justify-between px-1.5 pt-0.5">
             <h2 className="flex items-center gap-2 text-sm font-semibold">
-              <span className={cn("size-2 rounded-full", TASK_STATUS_DOT[status])} aria-hidden />
-              {t(TASK_STATUS_LABEL[status])}
+              <span className={cn("size-2 rounded-full", TASK_STATUS_DOT[state.group])} aria-hidden />
+              {stateLabel(state, t)}
               <span className="rounded-full bg-card px-2 text-xs font-medium text-muted-foreground tabular-nums">
                 {columnTasks.length}
               </span>
@@ -97,8 +114,8 @@ export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, on
             {canEdit && (
               <button
                 type="button"
-                onClick={() => onAdd(status)}
-                aria-label={t("addTaskTo", { column: t(TASK_STATUS_LABEL[status]) })}
+                onClick={() => onAdd(state)}
+                aria-label={t("addTaskTo", { column: stateLabel(state, t) })}
                 className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
               >
                 <Plus className="size-4" />
@@ -121,6 +138,7 @@ export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, on
                 warning={warnings[task.id]}
                 dragging={dragId === task.id}
                 onOpen={() => onOpen(task)}
+                states={states}
                 onMove={(next) => onMove(task.id, next)}
                 onDragStart={(e) => {
                   e.dataTransfer.setData(DRAG_TYPE, task.id)
@@ -154,6 +172,7 @@ export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, on
         </section>
       ))}
     </div>
+    </div>
   )
 }
 
@@ -167,14 +186,15 @@ interface CardProps {
   canEdit: boolean
   warning?: string
   dragging: boolean
+  states: TaskState[]
   onOpen: () => void
-  onMove: (status: TaskStatus) => void
+  onMove: (state: TaskState) => void
   onDragStart: (e: React.DragEvent) => void
   onDragEnd: () => void
   onDragOverCard: (e: React.DragEvent<HTMLElement>) => void
 }
 
-function TaskCard({ task, people, taskKey: key, milestone, labelNames, canEdit, warning, dragging, onOpen, onMove, onDragStart, onDragEnd, onDragOverCard }: CardProps) {
+function TaskCard({ task, people, taskKey: key, milestone, labelNames, canEdit, warning, dragging, states, onOpen, onMove, onDragStart, onDragEnd, onDragOverCard }: CardProps) {
   const t = useTranslations()
   const locale = useLocale()
   const overdue = isTaskOverdue(task)
@@ -198,7 +218,7 @@ function TaskCard({ task, people, taskKey: key, milestone, labelNames, canEdit, 
           onClick={onOpen}
           className={cn(
             "flex-1 text-left text-sm font-medium leading-snug text-foreground rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            task.status === TaskStatus.DONE && "text-muted-foreground line-through"
+            isClosedStatus(task.status) && "text-muted-foreground line-through"
           )}
         >
           {key && <span className="mb-0.5 block font-mono text-[10px] font-normal text-muted-foreground">{key}</span>}
@@ -222,10 +242,10 @@ function TaskCard({ task, people, taskKey: key, milestone, labelNames, canEdit, 
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44 rounded-xl">
               <DropdownMenuLabel className="text-xs text-muted-foreground">{t("moveTo")}</DropdownMenuLabel>
-              {TASK_STATUSES.filter((s) => s !== task.status).map((s) => (
-                <DropdownMenuItem key={s} onClick={() => onMove(s)} className="text-sm">
-                  <span className={cn("size-2 rounded-full", TASK_STATUS_DOT[s])} aria-hidden />
-                  {t(TASK_STATUS_LABEL[s])}
+              {states.filter((s) => s.id !== stateOf(task, states).id).map((s) => (
+                <DropdownMenuItem key={s.id} onClick={() => onMove(s)} className="text-sm">
+                  <span className={cn("size-2 rounded-full", TASK_STATUS_DOT[s.group])} aria-hidden />
+                  {stateLabel(s, t)}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

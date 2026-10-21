@@ -161,13 +161,14 @@ export function useTaskMutations() {
 
   // Board moves update the cached lists first so the card lands instantly
   const move = useMutation({
-    mutationFn: ({ id, status, index }: { id: string; status: TaskStatus; index?: number }) =>
-      moveTaskApi(workspaceId, id, status, index),
-    onMutate: async ({ id, status }) => {
+    // stateId is the project's status (P2); status is its group, set at once for the optimistic card
+    mutationFn: ({ id, stateId, index }: { id: string; stateId: string; status: TaskStatus; index?: number }) =>
+      moveTaskApi(workspaceId, id, stateId, index),
+    onMutate: async ({ id, stateId, status }) => {
       await queryClient.cancelQueries({ queryKey: ["tasks", workspaceId] })
       const snapshots = queryClient.getQueriesData<WorkTask[]>({ queryKey: ["tasks", workspaceId] })
       for (const [key, list] of snapshots) {
-        if (list) queryClient.setQueryData(key, list.map((task) => (task.id === id ? { ...task, status } : task)))
+        if (list) queryClient.setQueryData(key, list.map((task) => (task.id === id ? { ...task, status, stateId } : task)))
       }
       return { snapshots }
     },

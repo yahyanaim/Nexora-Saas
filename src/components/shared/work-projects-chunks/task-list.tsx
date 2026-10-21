@@ -10,9 +10,10 @@ import { DataTableColumnHeader } from "../data-table-chunks/data-table-column-he
 import { cn } from "@/lib/utils"
 import { isTaskOverdue } from "@/lib/workforce/project-metrics"
 import type { Employee } from "@/types/workforce"
-import { Priority, TaskStatus, type Milestone, type WorkTask } from "@/types/work-projects"
+import { Priority, isClosedStatus, type Milestone, type TaskState, type WorkTask } from "@/types/work-projects"
+import { DEFAULT_TASK_STATES, stateOf } from "@/lib/workforce/task-states"
 import { includesFilter } from "../workforce-chunks/workforce-labels"
-import { PRIORITY_DOT, PRIORITY_LABEL, TASK_STATUS_DOT, TASK_STATUS_LABEL, formatShortDate } from "./project-labels"
+import { PRIORITY_DOT, PRIORITY_LABEL, TASK_STATUS_DOT, formatShortDate, stateLabel } from "./project-labels"
 
 const PRIORITY_RANK: Record<Priority, number> = {
   [Priority.LOW]: 0,
@@ -30,10 +31,12 @@ interface Props {
   warnings?: Record<string, string>
   /** Project code, for the task keys (P1) */
   projectCode?: string
+  /** The project's statuses (P2) */
+  states?: TaskState[]
 }
 
 /** All tasks of a project as a sortable, filterable table. */
-export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, projectCode }: Props) {
+export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, projectCode, states = DEFAULT_TASK_STATES }: Props) {
   const t = useTranslations()
   const locale = useLocale()
 
@@ -52,7 +55,7 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, proje
             onClick={() => onOpen(row.original)}
             className={cn(
               "text-left font-medium hover:text-primary",
-              row.original.status === TaskStatus.DONE && "text-muted-foreground line-through"
+              isClosedStatus(row.original.status) && "text-muted-foreground line-through"
             )}
           >
             {projectCode && row.original.number && <span className="me-2 font-mono text-xs font-normal text-muted-foreground">{taskKey(row.original, { code: projectCode })}</span>}
@@ -64,15 +67,21 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, proje
         ),
       },
       {
-        accessorKey: "status",
+        id: "status",
+        // Sorted and filtered by the project's own status, in board order (P2)
+        accessorFn: (task) => stateOf(task, states).id,
+        sortingFn: (a, b) => states.indexOf(stateOf(a.original, states)) - states.indexOf(stateOf(b.original, states)),
         header: ({ column }) => <DataTableColumnHeader column={column} title={t("status")} />,
         filterFn: (row, id, value) => includesFilter(row.getValue(id), value),
-        cell: ({ row }) => (
-          <span className="flex items-center gap-2 text-sm">
-            <span className={cn("size-2 rounded-full", TASK_STATUS_DOT[row.original.status])} aria-hidden />
-            {t(TASK_STATUS_LABEL[row.original.status])}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const state = stateOf(row.original, states)
+          return (
+            <span className="flex items-center gap-2 text-sm">
+              <span className={cn("size-2 rounded-full", TASK_STATUS_DOT[state.group])} aria-hidden />
+              {stateLabel(state, t)}
+            </span>
+          )
+        },
       },
       {
         accessorKey: "priority",
@@ -130,7 +139,7 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, proje
         cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.estimatedHours} h</span>,
       },
     ],
-    [t, locale, team, milestones, onOpen, warnings, projectCode]
+    [t, locale, team, milestones, onOpen, warnings, projectCode, states]
   )
 
   return (
@@ -142,7 +151,7 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, proje
       searchPlaceholder={t("searchTasks")}
       exportFilename="tasks"
       filters={[
-        { columnId: "status", title: t("status"), options: Object.values(TaskStatus).map((s) => ({ label: t(TASK_STATUS_LABEL[s]), value: s })) },
+        { columnId: "status", title: t("status"), options: states.map((s) => ({ label: stateLabel(s, t), value: s.id })) },
         { columnId: "priority", title: t("priority"), options: Object.values(Priority).map((p) => ({ label: t(PRIORITY_LABEL[p]), value: p })) },
         { columnId: "assignee", title: t("assignee"), options: team.map((e) => ({ label: e.name, value: e.id })) },
       ]}

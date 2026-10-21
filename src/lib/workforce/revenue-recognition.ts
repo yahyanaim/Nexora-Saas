@@ -79,7 +79,7 @@ export function percentCompleteAt(project: WorkProject, data: RecognitionData, d
     const logged = data.entries.filter((e) => e.projectId === project.id && e.status !== TimeEntryStatus.REJECTED && e.date <= date).reduce((s, e) => s + e.hours, 0)
     pct = planned > 0 ? (logged / planned) * 100 : 0
   } else if (method === "tasks") {
-    const tasks = data.tasks.filter((t) => t.projectId === project.id)
+    const tasks = data.tasks.filter((t) => t.projectId === project.id && t.status !== TaskStatus.CANCELLED)
     const weight = (t: WorkTask) => Math.max(1, t.estimatedHours)
     const total = tasks.reduce((s, t) => s + weight(t), 0)
     const done = tasks.filter((t) => t.status === TaskStatus.DONE && (!t.completedAt || t.completedAt.slice(0, 10) <= date)).reduce((s, t) => s + weight(t), 0)
