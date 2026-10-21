@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
-import { AlertTriangle, Download, Mail, Pencil, Phone, Plus, Star, Trash2, Users } from "@/components/ui/carbon/icons"
+import { AlertTriangle, Download, Upload, Mail, Pencil, Phone, Plus, Star, Trash2, Users } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { Link } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -37,6 +37,8 @@ export default function ContactsPage() {
   const t = useTranslations()
   const { authedUser } = useAuthGuard()
   const canEdit = can(authedUser, P.CLIENTS_UPDATE)
+  const canExport = can(authedUser, P.CLIENTS_EXPORT)
+  const canImport = can(authedUser, P.CLIENTS_IMPORT)
   const { data: clients = [], isLoading } = useClients()
   const { update } = useClientMutations()
   const rows = React.useMemo(() => allContacts(clients.filter((c) => c.status !== ClientStatus.ARCHIVED)), [clients])
@@ -215,6 +217,7 @@ export default function ContactsPage() {
         actions={
           <>
             <Button variant="outline" onClick={() => void emailRows(rows)} disabled={!rows.length}><Mail className="size-4" />{t("clEmailAll")}</Button>
+            {canImport && <Button variant="outline" asChild><Link href="/dashboard/clients/import?kind=contacts"><Upload className="size-4" />{t("imImport")}</Link></Button>}
             {canEdit && <Button variant="primary" onClick={() => setEditing({ contact: blankContact() })}><Plus className="size-4" />{t("cpAddContact")}</Button>}
           </>
         }
@@ -233,11 +236,12 @@ export default function ContactsPage() {
         numberedPages
         savedViewsKey="erp-contacts"
         emptyMessage={t("noContactsYet")}
+        enableExport={canExport}
         exportOptions={[{ label: t("exportCsv"), icon: Download, onClick: (list) => exportRows(list as ContactRow[]) }]}
         renderBulkActions={(list) => (
           <>
             <Button variant="outline" size="sm" onClick={() => void emailRows(list)}><Mail className="size-4" />{t("clEmailSelected")}</Button>
-            <Button variant="outline" size="sm" onClick={() => exportRows(list)}><Download className="size-4" />{t("export")}</Button>
+            {canExport && <Button variant="outline" size="sm" onClick={() => exportRows(list)}><Download className="size-4" />{t("export")}</Button>}
           </>
         )}
         filters={[

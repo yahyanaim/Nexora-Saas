@@ -11,8 +11,12 @@ import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Funnel, ListChecks, Pencil, Plus, Trash2, TrendingUp, Trophy, Warning, Wallet } from "@/components/ui/carbon/icons"
+import { Funnel, ListChecks, Upload, Pencil, Plus, Trash2, TrendingUp, Trophy, Warning, Wallet } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
+import { Link } from "@/i18n/navigation"
+import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { can } from "@/lib/permissions/can"
+import { AdminPermissionsPlatform } from "@/types/roles"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 import { FollowUpDialog, type FollowUpDefaults } from "../workforce-chunks/follow-up-dialog"
@@ -54,6 +58,7 @@ export default function DealsPage() {
   const [editing, setEditing] = useState<{ id?: string; input: DealInput } | null>(null)
   const [deleting, setDeleting] = useState<Deal | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
+  const canImport = can(useAuthGuard().authedUser, AdminPermissionsPlatform.CLIENTS_IMPORT)
   const [planning, setPlanning] = useState<FollowUpDefaults | null>(null)
   const { data: followUps = [] } = useFollowUps()
   // the next open follow-up of each deal (CRM step 5)
@@ -171,7 +176,14 @@ export default function DealsPage() {
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <PageHeader actions={<Button onClick={() => setEditing({ input: emptyDeal() })}><Plus className="size-4" /> {t("dealNew")}</Button>} />
+      <PageHeader
+        actions={
+          <>
+            {canImport && <Button variant="outline" asChild><Link href="/dashboard/clients/import?kind=deals"><Upload className="size-4" />{t("imImport")}</Link></Button>}
+            <Button onClick={() => setEditing({ input: emptyDeal() })}><Plus className="size-4" /> {t("dealNew")}</Button>
+          </>
+        }
+      />
       <MetricCardGrid cards={cards} isLoading={isLoading} />
 
       <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
