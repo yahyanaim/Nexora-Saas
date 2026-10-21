@@ -174,6 +174,7 @@ import {
   IdCard as LIdCard,
   Link2 as LLink2,
   Paperclip as LPaperclip,
+  Inbox as LInbox,
   BookUser as LBookUser,
   ChartColumnStacked as LChartColumnStacked,
   Truck as LTruck,
@@ -398,6 +399,7 @@ export const FileChartColumn = icon(LFileChartColumn, "FileChartColumn")
 export const IdCard = icon(LIdCard, "IdCard")
 export const LinkIcon = icon(LLink2, "LinkIcon")
 export const Paperclip = icon(LPaperclip, "Paperclip")
+export const InboxIcon = icon(LInbox, "InboxIcon")
 export const BookUser = icon(LBookUser, "BookUser")
 export const ChartColumnStacked = icon(LChartColumnStacked, "ChartColumnStacked")
 export const Truck = icon(LTruck, "Truck")

@@ -11,6 +11,7 @@ import { useSatisfaction } from "@/hooks/workforce/use-satisfaction"
 import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useLeave } from "@/hooks/workforce/use-leave"
 import { useFollowUps } from "@/hooks/workforce/use-crm"
+import { useClientRequests } from "@/hooks/workforce/use-client-requests"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { useDocuments } from "@/hooks/workforce/use-documents"
 import { useCurrentWorkspace } from "@/store/workspace-store"
@@ -53,10 +54,11 @@ function WorkInbox() {
   const { data: feedback = [] } = useSatisfaction()
   const { data: projects = [] } = useProjects()
   const { data: followUps = [] } = useFollowUps()
+  const { data: requests = [] } = useClientRequests()
 
   const isAdmin = can(authedUser, P.ROLES_UPDATE)
-  const rights = { approveTime: can(authedUser, P.TIME_APPROVE), invoices: can(authedUser, P.INVOICES_READ), hr: can(authedUser, P.EMPLOYEES_UPDATE) }
-  const rightsKey = `${rights.approveTime}${rights.invoices}${rights.hr}`
+  const rights = { approveTime: can(authedUser, P.TIME_APPROVE), invoices: can(authedUser, P.INVOICES_READ), hr: can(authedUser, P.EMPLOYEES_UPDATE), projects: can(authedUser, P.PROJECTS_UPDATE) }
+  const rightsKey = `${rights.approveTime}${rights.invoices}${rights.hr}${rights.projects}`
   // The bell is on every page: rebuild the inbox only when its data changes (M3)
   const items = useMemo<NotificationItem[]>(
     () =>
@@ -74,6 +76,7 @@ function WorkInbox() {
         feedback,
         projects,
         followUps,
+        requests,
         today: todayIso(),
       }).map((i) => ({
         id: i.id,
@@ -85,7 +88,7 @@ function WorkInbox() {
         href: i.href,
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- rights is rebuilt each render; rightsKey carries its value
-    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, feedback, projects, followUps, t]
+    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, feedback, projects, followUps, requests, t]
   )
   const labels: NotificationLabels = {
     title: t("notifications"),
