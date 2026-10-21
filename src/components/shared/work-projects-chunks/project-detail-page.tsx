@@ -4,6 +4,7 @@ import { useSupplierBills } from "@/hooks/workforce/use-supplier-bills"
 import { useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Link, useRouter } from "@/i18n/navigation"
+import { useSearchParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -18,6 +19,7 @@ import { can } from "@/lib/permissions/can"
 import { AdminPermissionsPlatform } from "@/types/roles"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClients, useEmployees } from "@/hooks/workforce/use-workforce"
+import { EmployeeStatus } from "@/types/workforce"
 import {
   useMilestoneMutations,
   useMilestones,
@@ -34,6 +36,9 @@ import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-bi
 import { billedAgainstBudget } from "@/lib/workforce/invoice-builders"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { TaskDiscussion } from "./task-discussion"
+import { TaskDetailsPanel } from "./task-details-panel"
+import type { KeyResolver } from "./rich-text"
+import { findByKey, taskKey } from "@/lib/workforce/task-extras"
 import { TaskFilters, NO_FILTERS, applyTaskFilters, type TaskFilterValues } from "./task-filters"
 import { HealthOverrideDialog } from "./health-override-dialog"
 import { cn } from "@/lib/utils"
@@ -75,6 +80,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const { data: project, isLoading } = useProject(projectId)
   const { data: allProjects = [] } = useProjects()
   const { data: tasks = [] } = useTasks(projectId)
+  const { data: allTasks = [] } = useTasks()
   const { data: milestones = [] } = useMilestones(projectId)
   const { data: clients = [] } = useClients()
   const { data: employees = [] } = useEmployees()
@@ -100,6 +106,9 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const [deletingProject, setDeletingProject] = useState(false)
   const [taskSheet, setTaskSheet] = useState<{ task?: WorkTask; defaults?: Partial<WorkTask> } | null>(null)
   const [deletingTask, setDeletingTask] = useState<WorkTask | null>(null)
+  // ?task= in the address opens that task (links from the bell, copied links)
+  const linkedTaskId = useSearchParams().get("task")
+  const [openedLink, setOpenedLink] = useState<string | null>(null)
   const projectFormRef = useRef<ProjectFormHandle>(null)
   const taskFormRef = useRef<TaskFormHandle>(null)
 
@@ -149,7 +158,23 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
     else taskMutations.create.mutate(input, close)
   }
 
-  const openTask = (task: WorkTask) => setTaskSheet({ task })
+  const openTask = (task: WorkTask) => {
+    // a task of another project opens on its own project's page
+    if (task.projectId !== projectId) router.push(`/dashboard/projects/${task.projectId}?task=${task.id}`)
+    else setTaskSheet({ task })
+  }
+  if (linkedTaskId && linkedTaskId !== openedLink) {
+    const linked = tasks.find((x) => x.id === linkedTaskId)
+    if (linked) {
+      setOpenedLink(linkedTaskId)
+      setTaskSheet({ task: linked })
+    }
+  }
+  const liveTask = taskSheet?.task ? (tasks.find((x) => x.id === taskSheet.task!.id) ?? taskSheet.task) : undefined
+  const resolveKey: KeyResolver = (key) => {
+    const found = findByKey(key, allTasks, allProjects)
+    return found ? { onOpen: () => openTask(found), title: found.title } : null
+  }
   // Late or overlapping predecessors, as one sentence per task (PRJ-6)
   const depWarnings = Object.fromEntries(
     tasks
@@ -302,6 +327,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                 onAdd={addTask}
                 onMove={(id, status, index) => taskMutations.move.mutate({ id, status, index })}
                 warnings={depWarnings}
+                projectCode={project.code}
               />
               </>
             ),
@@ -312,7 +338,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             content: (
               <>
                 <TaskFilters userId={authedUser?.id ?? "me"} team={team} labels={labels} value={filters} onChange={setFilters} />
-                <TaskList tasks={visibleTasks} team={team} milestones={milestones} onOpen={openTask} warnings={depWarnings} />
+                <TaskList tasks={visibleTasks} team={team} milestones={milestones} onOpen={openTask} warnings={depWarnings} projectCode={project.code} />
               </>
             ),
           },
@@ -407,7 +433,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
         onOpenChange={(open) => !open && setTaskSheet(null)}
         mode={taskSheet?.task ? "edit" : "create"}
         createTitle={t("addTask")}
-        editTitle={t("editTask")}
+        editTitle={liveTask ? [taskKey(liveTask, project), t("editTask")].filter(Boolean).join(" · ") : t("editTask")}
         description={project.name}
         isSubmitting={taskMutations.create.isPending || taskMutations.update.isPending}
         onSubmit={() => taskFormRef.current?.submit()}
@@ -420,8 +446,10 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
           milestones={milestones}
           labels={labels}
           projectTasks={tasks}
+          resolveKey={resolveKey}
           onValid={saveTask}
         />
+        {liveTask && <TaskDetailsPanel key={`d-${liveTask.id}`} task={liveTask} people={employees.filter((e) => e.status !== EmployeeStatus.INACTIVE)} allTasks={allTasks} projects={allProjects} canEdit={canEdit} onOpenTask={openTask} />}
         {taskSheet?.task && <TaskDiscussion key={taskSheet.task.id} taskId={taskSheet.task.id} team={team} labels={labels} />}
         {taskSheet?.task && canEdit && (
           <Button

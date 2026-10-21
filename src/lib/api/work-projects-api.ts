@@ -13,6 +13,7 @@ import { seedMilestones, seedProjects, seedTasks } from "@/lib/workforce/project
 import { recordTaskChanges } from "./task-collab-api"
 import { getAuditActor, recordAudit } from "@/lib/workforce/audit"
 import { wouldCreateCycle } from "@/lib/workforce/scheduling"
+import { isWebUrl, nextTaskNumber } from "@/lib/workforce/task-extras"
 import { WorkProjectStatus, type CloseSnapshot } from "@/types/work-projects"
 
 /**
@@ -148,13 +149,36 @@ function assertDates(input: Partial<Pick<WorkTask, "startDate" | "dueDate">>) {
   if (input.startDate && input.dueDate && input.startDate > input.dueDate) throw new Error("The start date is after the due date")
 }
 
-export async function createTaskApi(workspaceId: string, input: WorkTaskInput): Promise<WorkTask> {
+/** People on a task are on the project team; links are web addresses; related tasks exist (P1). */
+function assertExtras(workspaceId: string, projectId: string, taskId: string | undefined, input: Partial<WorkTaskInput>) {
+  for (const id of input.collaboratorIds ?? []) assertAssigneeOnTeam(workspaceId, projectId, id)
+  if ((input.links ?? []).some((l) => !isWebUrl(l.url))) throw new Error("A link must start with http:// or https://")
+  for (const r of input.relations ?? []) {
+    if (r.taskId === taskId) throw new Error("A task can't be linked to itself")
+    if (!tasks.get(workspaceId, r.taskId)) throw new Error("Task not found")
+  }
+}
+
+/** Duplicates removed and the main person not repeated among the others. */
+function cleanExtras<T extends Partial<WorkTaskInput>>(input: T): T {
+  const out = { ...input }
+  if (out.collaboratorIds) out.collaboratorIds = [...new Set(out.collaboratorIds)].filter((id) => id !== out.assigneeId)
+  if (out.watcherIds) out.watcherIds = [...new Set(out.watcherIds)]
+  if (out.relations) out.relations = out.relations.filter((r, i, all) => all.findIndex((x) => x.taskId === r.taskId) === i)
+  if (out.links) out.links = out.links.map((l) => ({ ...l, url: l.url.trim(), title: l.title?.trim() || undefined }))
+  return out
+}
+
+export async function createTaskApi(workspaceId: string, raw: WorkTaskInput): Promise<WorkTask> {
+  const input = cleanExtras(raw)
   assertAssigneeOnTeam(workspaceId, input.projectId, input.assigneeId)
   assertDependencies(workspaceId, input.projectId, undefined, input.dependsOn)
+  assertExtras(workspaceId, input.projectId, undefined, input)
   assertDates(input)
   const order = nextOrder(workspaceId, input.projectId, input.status)
   const task = tasks.create(workspaceId, {
     ...input,
+    number: nextTaskNumber(tasks.list(workspaceId), input.projectId),
     order,
     completedAt: input.status === TaskStatus.DONE ? new Date().toISOString() : undefined,
   })
@@ -165,11 +189,14 @@ export async function createTaskApi(workspaceId: string, input: WorkTaskInput): 
 export async function updateTaskApi(
   workspaceId: string,
   id: string,
-  input: Partial<WorkTaskInput>
+  raw: Partial<WorkTaskInput>
 ): Promise<WorkTask> {
   const current = tasks.get(workspaceId, id)
   if (!current) throw new Error("Task not found")
+  const input = cleanExtras({ ...raw, assigneeId: "assigneeId" in raw ? raw.assigneeId : current.assigneeId })
+  if (!("assigneeId" in raw)) delete input.assigneeId
   if ("assigneeId" in input) assertAssigneeOnTeam(workspaceId, current.projectId, input.assigneeId)
+  assertExtras(workspaceId, current.projectId, id, input)
   if ("dependsOn" in input) assertDependencies(workspaceId, current.projectId, id, input.dependsOn)
   assertDates({ startDate: input.startDate ?? current.startDate, dueDate: input.dueDate ?? current.dueDate })
 
@@ -216,9 +243,9 @@ export async function moveTaskApi(
 }
 
 export async function deleteTaskApi(workspaceId: string, id: string): Promise<void> {
-  // Tasks that waited for this one no longer do
-  for (const t of tasks.list(workspaceId).filter((x) => x.dependsOn?.includes(id))) {
-    tasks.update(workspaceId, t.id, { dependsOn: t.dependsOn!.filter((d) => d !== id) })
+  // Tasks that waited for this one, or pointed at it, no longer do
+  for (const t of tasks.list(workspaceId).filter((x) => x.dependsOn?.includes(id) || x.relations?.some((r) => r.taskId === id))) {
+    tasks.update(workspaceId, t.id, { dependsOn: t.dependsOn?.filter((d) => d !== id), relations: t.relations?.filter((r) => r.taskId !== id) })
   }
   tasks.remove(workspaceId, id)
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { taskKey, taskPeople } from "@/lib/workforce/task-extras"
 import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import {
@@ -29,6 +30,8 @@ interface Props {
   onMove: (taskId: string, status: TaskStatus, index?: number) => void
   /** Dependency problems per task id, shown as a warning (PRJ-6) */
   warnings?: Record<string, string>
+  /** Project code, for the task keys (P1) */
+  projectCode?: string
 }
 
 const DRAG_TYPE = "application/x-nexora-task"
@@ -37,7 +40,7 @@ const DRAG_TYPE = "application/x-nexora-task"
  * Kanban board. Drag a card onto a column (or onto a card to land before it);
  * each card's menu offers the same moves without a mouse.
  */
-export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, onAdd, onMove, warnings = {} }: Props) {
+export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, onAdd, onMove, warnings = {}, projectCode }: Props) {
   const t = useTranslations()
   const [dragId, setDragId] = useState<string | null>(null)
   const [over, setOver] = useState<{ status: TaskStatus; index: number } | null>(null)
@@ -110,7 +113,8 @@ export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, on
               )}
               <TaskCard
                 task={task}
-                assignee={team.find((e) => e.id === task.assigneeId)}
+                people={taskPeople(task).map((id) => team.find((e) => e.id === id)).filter((e): e is Employee => !!e)}
+                taskKey={projectCode ? taskKey(task, { code: projectCode }) : ""}
                 milestone={milestones.find((m) => m.id === task.milestoneId)}
                 labelNames={(task.labelIds ?? []).map((id) => labels.find((l) => l.id === id)?.name).filter((n): n is string => !!n)}
                 canEdit={canEdit}
@@ -155,7 +159,9 @@ export function TaskBoard({ tasks, labels, team, milestones, canEdit, onOpen, on
 
 interface CardProps {
   task: WorkTask
-  assignee?: Employee
+  /** Main person first, then the others on the task (P1) */
+  people: Employee[]
+  taskKey: string
   milestone?: Milestone
   labelNames: string[]
   canEdit: boolean
@@ -168,7 +174,7 @@ interface CardProps {
   onDragOverCard: (e: React.DragEvent<HTMLElement>) => void
 }
 
-function TaskCard({ task, assignee, milestone, labelNames, canEdit, warning, dragging, onOpen, onMove, onDragStart, onDragEnd, onDragOverCard }: CardProps) {
+function TaskCard({ task, people, taskKey: key, milestone, labelNames, canEdit, warning, dragging, onOpen, onMove, onDragStart, onDragEnd, onDragOverCard }: CardProps) {
   const t = useTranslations()
   const locale = useLocale()
   const overdue = isTaskOverdue(task)
@@ -195,6 +201,7 @@ function TaskCard({ task, assignee, milestone, labelNames, canEdit, warning, dra
             task.status === TaskStatus.DONE && "text-muted-foreground line-through"
           )}
         >
+          {key && <span className="mb-0.5 block font-mono text-[10px] font-normal text-muted-foreground">{key}</span>}
           {task.title}
         </button>
         {warning && (
@@ -260,10 +267,15 @@ function TaskCard({ task, assignee, milestone, labelNames, canEdit, warning, dra
               {overdue && <span className="sr-only">{t("overdue")}</span>}
             </span>
           )}
-          {assignee ? (
-            <span title={assignee.name}>
-              <SpaceAvatar name={assignee.name} size="xs" />
-              <span className="sr-only">{assignee.name}</span>
+          {people.length > 0 ? (
+            <span className="flex -space-x-1.5 rtl:space-x-reverse" title={people.map((p) => p.name).join(", ")}>
+              {people.slice(0, 3).map((p) => (
+                <span key={p.id} className="rounded-full ring-2 ring-card">
+                  <SpaceAvatar name={p.name} size="xs" />
+                </span>
+              ))}
+              {people.length > 3 && <span className="grid size-5 place-items-center rounded-full bg-muted text-[10px] ring-2 ring-card">+{people.length - 3}</span>}
+              <span className="sr-only">{people.map((p) => p.name).join(", ")}</span>
             </span>
           ) : (
             <span className="text-muted-foreground">{t("unassigned")}</span>

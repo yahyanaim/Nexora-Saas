@@ -21,7 +21,8 @@ import {
   type WorkTask,
   type WorkTaskInput,
 } from "@/types/work-projects"
-import { NumberField, SelectField, TextAreaField, TextField } from "../workforce-chunks/form-fields"
+import { NumberField, SelectField, TextField } from "../workforce-chunks/form-fields"
+import { RichTextEditor, type KeyResolver } from "./rich-text"
 import { NONE } from "../workforce-chunks/workforce-labels"
 import { PRIORITY_LABEL, TASK_STATUS_LABEL } from "./project-labels"
 
@@ -42,6 +43,7 @@ const schema = z.object({
   estimatedHours: z.number({ error: "required" }).min(0).max(1000),
   subtasks: z.array(z.object({ id: z.string(), title: z.string().trim().min(1), done: z.boolean() })),
   labelIds: z.array(z.string()),
+  collaboratorIds: z.array(z.string()),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -60,6 +62,7 @@ function toFormValues(task?: Partial<WorkTask>): FormValues {
     estimatedHours: task?.estimatedHours ?? 4,
     subtasks: task?.subtasks ?? [],
     labelIds: task?.labelIds ?? [],
+    collaboratorIds: task?.collaboratorIds ?? [],
   }
 }
 
@@ -73,11 +76,13 @@ interface Props {
   labels: TaskLabel[]
   /** Other tasks of the project, to choose predecessors from (PRJ-6) */
   projectTasks?: WorkTask[]
+  /** Opens tasks named by their key in the description preview */
+  resolveKey?: KeyResolver
   onValid: (input: WorkTaskInput) => void
 }
 
 export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
-  { projectId, task, team, milestones, labels, projectTasks = [], onValid },
+  { projectId, task, team, milestones, labels, projectTasks = [], resolveKey, onValid },
   ref
 ) {
   const t = useTranslations()
@@ -97,6 +102,7 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
           projectId,
           description: v.description || undefined,
           assigneeId: v.assigneeId === NONE ? undefined : v.assigneeId,
+          collaboratorIds: v.collaboratorIds.filter((id) => id !== v.assigneeId),
           milestoneId: v.milestoneId === NONE ? undefined : v.milestoneId,
           startDate: v.startDate || undefined,
           dueDate: v.dueDate || undefined,
@@ -147,6 +153,14 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
             options={[{ value: NONE, label: t("none") }, ...milestones.map((m) => ({ value: m.id, label: m.title }))]}
           />
         </div>
+
+        <PeopleChips
+          label={t("tkAlsoOn")}
+          hint={t("tkAlsoOnHint")}
+          people={team.filter((e) => e.id !== form.watch("assigneeId"))}
+          value={form.watch("collaboratorIds")}
+          onChange={(ids) => form.setValue("collaboratorIds", ids, { shouldDirty: true })}
+        />
 
         <div className="grid grid-cols-3 gap-4">
           <TextField control={form.control} name="startDate" label={t("startDate")} type="date" />
@@ -207,7 +221,7 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
           </div>
         )}
 
-        <TextAreaField control={form.control} name="description" label={t("description")} />
+        <RichTextEditor id="task-description" label={t("description")} value={form.watch("description") ?? ""} onChange={(v) => form.setValue("description", v, { shouldDirty: true })} resolve={resolveKey} />
 
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 flex w-full items-center justify-between text-sm font-medium">
@@ -263,3 +277,30 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
     </Form>
   )
 })
+
+/** Pick several people as toggles (P1). */
+function PeopleChips({ label, hint, people, value, onChange }: { label: string; hint: string; people: Employee[]; value: string[]; onChange: (ids: string[]) => void }) {
+  if (!people.length) return null
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-sm font-medium">{label}</span>
+      <p className="-mt-1 text-xs text-muted-foreground">{hint}</p>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label={label}>
+        {people.map((e) => {
+          const on = value.includes(e.id)
+          return (
+            <button
+              key={e.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => onChange(on ? value.filter((id) => id !== e.id) : [...value, e.id])}
+              className={cn("h-8 rounded-full border px-3 text-xs font-medium transition-colors", on ? "border-primary bg-info-soft text-info-foreground" : "border-border bg-card text-muted-foreground hover:text-foreground")}
+            >
+              {e.name}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}

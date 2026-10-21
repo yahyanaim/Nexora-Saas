@@ -5,14 +5,17 @@ import { useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import {
+  addTaskAttachmentApi,
   addTaskCommentApi,
   deleteTaskCommentApi,
   listTaskActivityApi,
+  listTaskAttachmentsApi,
   listTaskCommentsApi,
+  removeTaskAttachmentApi,
 } from "@/lib/api/task-collab-api"
 import { setHealthOverrideApi } from "@/lib/api/work-projects-api"
 import type { Employee } from "@/types/workforce"
-import type { ProjectHealth } from "@/types/work-projects"
+import type { ProjectHealth, TaskAttachment } from "@/types/work-projects"
 import { translateError } from "@/lib/errors/translate-error"
 
 export function useTaskComments(taskId: string) {
@@ -23,6 +26,26 @@ export function useTaskComments(taskId: string) {
 export function useTaskActivity(taskId: string) {
   const { id } = useCurrentWorkspace()
   return useQuery({ queryKey: ["task-activity", id, taskId], queryFn: () => listTaskActivityApi(id, taskId) })
+}
+
+export function useTaskAttachments(taskId: string) {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: ["task-attachments", id, taskId], queryFn: () => listTaskAttachmentsApi(id, taskId) })
+}
+
+/** Attach files to a task and remove them (P1). */
+export function useTaskAttachmentMutations(taskId: string) {
+  const { id: workspaceId } = useCurrentWorkspace()
+  const queryClient = useQueryClient()
+  const onError = useOnError()
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["task-attachments", workspaceId, taskId] })
+    queryClient.invalidateQueries({ queryKey: ["task-activity", workspaceId, taskId] })
+  }
+  return {
+    add: useMutation({ mutationFn: (file: Pick<TaskAttachment, "name" | "type" | "size" | "dataUrl">) => addTaskAttachmentApi(workspaceId, taskId, file), onSuccess: refresh, onError }),
+    remove: useMutation({ mutationFn: (id: string) => removeTaskAttachmentApi(workspaceId, id), onSuccess: refresh, onError }),
+  }
 }
 
 function useOnError() {

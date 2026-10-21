@@ -130,16 +130,57 @@ export interface Subtask {
   done: boolean
 }
 
+/** How two tasks relate beside "waits for" (P1); "blocks" is read from the other task's dependsOn. */
+export enum TaskRelationType {
+  DUPLICATE = "duplicate",
+  RELATES = "relates",
+}
+
+export interface TaskRelation {
+  type: TaskRelationType
+  taskId: string
+}
+
+/** A web link kept on a task (P1). */
+export interface TaskLink {
+  id: string
+  url: string
+  title?: string
+}
+
+/** A file attached to a task (P1). Kept in the browser as a data URL until the server stores files. */
+export interface TaskAttachment {
+  id: string
+  workspaceId: string
+  taskId: string
+  name: string
+  type: string
+  size: number
+  dataUrl: string
+  addedBy: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface WorkTask {
   id: string
   workspaceId: string
   projectId: string
+  /** Number inside the project, shown as CODE-12 (P1); given on creation */
+  number?: number
   milestoneId?: string
   title: string
   description?: string
   status: TaskStatus
   priority: Priority
+  /** Main person on the task: their workload and timesheet carry it */
   assigneeId?: string
+  /** Others working on it too (P1) */
+  collaboratorIds?: string[]
+  /** People told about changes without working on it (P1) */
+  watcherIds?: string[]
+  links?: TaskLink[]
+  relations?: TaskRelation[]
   /** First day of work, for the Gantt (PLN-2); defaults from the due date and estimate */
   startDate?: string
   dueDate?: string
@@ -158,7 +199,7 @@ export interface WorkTask {
 
 export type WorkTaskInput = Omit<
   WorkTask,
-  "id" | "workspaceId" | "createdAt" | "updatedAt" | "order" | "completedAt"
+  "id" | "workspaceId" | "createdAt" | "updatedAt" | "order" | "completedAt" | "number"
 >
 
 export interface Milestone {
@@ -207,7 +248,7 @@ export interface TaskActivity {
   taskId: string
   actorName: string
   /** Translation key of what happened */
-  kind: "created" | "status" | "assignee" | "due" | "estimate" | "title" | "labels"
+  kind: "created" | "status" | "assignee" | "collaborators" | "due" | "estimate" | "title" | "labels" | "attachment"
   from?: string
   to?: string
   createdAt: string

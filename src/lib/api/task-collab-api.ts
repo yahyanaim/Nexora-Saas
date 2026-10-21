@@ -1,5 +1,5 @@
 import type { Employee } from "@/types/workforce"
-import type { TaskActivity, TaskComment, WorkTask } from "@/types/work-projects"
+import type { TaskActivity, TaskAttachment, TaskComment, WorkTask } from "@/types/work-projects"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { getAuditActor } from "@/lib/workforce/audit"
 
@@ -9,6 +9,33 @@ import { getAuditActor } from "@/lib/workforce/audit"
  */
 const comments = createCollection<TaskComment>("task-comments", "cmt", () => [])
 const activity = createCollection<TaskActivity>("task-activity", "act", () => [])
+const attachments = createCollection<TaskAttachment>("task-attachments", "att", () => [])
+
+/** Biggest file the browser demo keeps (the server will take larger files). */
+export const MAX_ATTACHMENT_BYTES = 500 * 1024
+export const MAX_ATTACHMENTS = 10
+
+export async function listTaskAttachmentsApi(workspaceId: string, taskId: string): Promise<TaskAttachment[]> {
+  return attachments
+    .list(workspaceId)
+    .filter((a) => a.taskId === taskId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+}
+
+/** Attaches a file to a task (P1); it shows in the task's history. */
+export async function addTaskAttachmentApi(workspaceId: string, taskId: string, file: Pick<TaskAttachment, "name" | "type" | "size" | "dataUrl">): Promise<TaskAttachment> {
+  if (file.size > MAX_ATTACHMENT_BYTES) throw new Error("Files are limited to 500 KB for now")
+  if ((await listTaskAttachmentsApi(workspaceId, taskId)).length >= MAX_ATTACHMENTS) throw new Error("A task can hold 10 files")
+  if (!/^data:[\w.+/-]*;base64,/.test(file.dataUrl)) throw new Error("This file could not be read")
+  const actorName = getAuditActor().name
+  const saved = attachments.create(workspaceId, { taskId, name: file.name.slice(0, 200), type: file.type || "application/octet-stream", size: file.size, dataUrl: file.dataUrl, addedBy: actorName })
+  activity.create(workspaceId, { taskId, actorName, kind: "attachment", to: saved.name })
+  return saved
+}
+
+export async function removeTaskAttachmentApi(workspaceId: string, id: string) {
+  attachments.remove(workspaceId, id)
+}
 
 /** Employee ids mentioned as @First Last (or @First when unique) in a comment. */
 export function findMentions(body: string, people: Pick<Employee, "id" | "name">[]): string[] {
@@ -63,6 +90,7 @@ export function recordTaskChanges(workspaceId: string, before: WorkTask | undefi
   if (!before) return add("created", undefined, after.status)
   if (before.status !== after.status) add("status", before.status, after.status)
   if (before.assigneeId !== after.assigneeId) add("assignee", before.assigneeId, after.assigneeId)
+  if ((before.collaboratorIds ?? []).join() !== (after.collaboratorIds ?? []).join()) add("collaborators", (before.collaboratorIds ?? []).join(","), (after.collaboratorIds ?? []).join(","))
   if (before.dueDate !== after.dueDate) add("due", before.dueDate, after.dueDate)
   if (before.estimatedHours !== after.estimatedHours) add("estimate", String(before.estimatedHours), String(after.estimatedHours))
   if (before.title !== after.title) add("title", before.title, after.title)

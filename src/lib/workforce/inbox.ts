@@ -9,6 +9,7 @@ import type { EmployeeDocument } from "@/types/work-hr"
 import type { PerformanceReview } from "@/types/work-reviews"
 import { EmployeeStatus, type Employee } from "@/types/workforce"
 import { displayStatus } from "./billing"
+import { isOnTask } from "./task-extras"
 import { documentsNeedingAction } from "./documents"
 import { reviewAction, type ReviewViewer } from "./reviews"
 
@@ -97,8 +98,14 @@ export function buildInbox(d: InboxInput): InboxItem[] {
   }
 
   if (me) {
-    const late = d.tasks.filter((t) => t.assigneeId === me && t.status !== TaskStatus.DONE && t.dueDate && t.dueDate < d.today)
+    const late = d.tasks.filter((t) => isOnTask(t, me) && t.status !== TaskStatus.DONE && t.dueDate && t.dueDate < d.today)
     if (late.length) items.push({ id: `tasks:${late.map((t) => t.id).join(",")}`, category: "system", title: "inboxTasks", message: "inboxTasksMessage", values: { count: late.length }, href: "/dashboard/my-work" })
+    // tasks the person watches without working on them (P1)
+    const watched = d.tasks.filter((t) => t.watcherIds?.includes(me) && !isOnTask(t, me) && t.status !== TaskStatus.DONE && t.dueDate && t.dueDate < d.today)
+    if (watched.length) {
+      const first = watched[0]!
+      items.push({ id: `watched:${watched.map((t) => `${t.id}-${t.dueDate}`).join(",")}`, category: "team", title: "inboxWatched", message: "inboxWatchedMessage", values: { count: watched.length, task: first.title }, href: `/dashboard/projects/${first.projectId}?task=${first.id}` })
+    }
     const due = (d.followUps ?? []).filter((f) => f.ownerId === me && !f.doneAt && f.dueDate <= d.today)
     if (due.length) {
       const lateCount = due.filter((f) => f.dueDate < d.today).length
