@@ -5,28 +5,25 @@ import { useLocale, useTranslations } from "next-intl"
 import { Pencil, Plus, Star, Trash2 } from "@/components/ui/carbon/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Link } from "@/i18n/navigation"
 import { displayStatus, invoiceTotals } from "@/lib/workforce/billing"
 import { dealProbability } from "@/lib/workforce/deals"
 import { quoteDisplayStatus, quoteTotals } from "@/lib/workforce/quotes"
 import { todayIso } from "@/lib/workforce/project-metrics"
-import { createId } from "@/lib/workforce/demo-store"
+import { contactEmails, contactPhones } from "@/lib/workforce/leads"
 import { cn } from "@/lib/utils"
 import type { ClientInvoice } from "@/types/work-billing"
 import type { WorkProject } from "@/types/work-projects"
 import type { Quote } from "@/types/work-quotes"
 import type { Deal } from "@/types/work-sales"
-import { ContactRole, type Client, type ClientContact, type Employee } from "@/types/workforce"
+import type { Client, ClientContact, Employee } from "@/types/workforce"
 import { INVOICE_STATUS_CLASS, INVOICE_STATUS_LABEL } from "../work-billing-chunks/billing-labels"
 import { QUOTE_STATUS_CLASS, QUOTE_STATUS_LABEL } from "../work-billing-chunks/quotes-page"
 import { PROJECT_STATUS_CLASS, PROJECT_STATUS_LABEL } from "../work-projects-chunks/project-labels"
 import { formatMoney } from "./workforce-labels"
+import { blankContact, ContactDialog, withContact, withoutContact } from "./contact-edit"
 
 /** A titled card on the client page. */
 export function PageSection({ title, action, children, className }: { title: string; action?: React.ReactNode; children: React.ReactNode; className?: string }) {
@@ -54,11 +51,6 @@ const Empty = ({ children }: { children: React.ReactNode }) => <p className="rou
 
 // ---------- Contacts, edited in place ----------
 
-const blankContact = (): ClientContact => ({ id: "", name: "", email: "", phone: "", position: "", role: undefined, isPrimary: false })
-
-/** There is always one main contact while the client has any. */
-const keepMain = (contacts: ClientContact[]) => (contacts.length && !contacts.some((c) => c.isPrimary) ? contacts.map((c, i) => ({ ...c, isPrimary: i === 0 })) : contacts)
-
 /**
  * The client's contacts with their role, added, changed and removed right
  * here; saving goes through the client's own update, so the rules (one main
@@ -68,12 +60,6 @@ export function ContactsSection({ client, canEdit, onSave, saving }: { client: C
   const t = useTranslations()
   const [editing, setEditing] = React.useState<ClientContact | null>(null)
   const [removing, setRemoving] = React.useState<ClientContact | null>(null)
-  const save = (contact: ClientContact) => {
-    const others = client.contacts.filter((c) => c.id !== contact.id).map((c) => (contact.isPrimary ? { ...c, isPrimary: false } : c))
-    const saved = { ...contact, id: contact.id || createId("con"), phone: contact.phone?.trim() || undefined, position: contact.position?.trim() || undefined }
-    onSave(keepMain(contact.id ? client.contacts.map((c) => (c.id === contact.id ? saved : others.find((o) => o.id === c.id)!)) : [...others, saved]))
-    setEditing(null)
-  }
   return (
     <PageSection
       title={t("contacts")}
@@ -85,18 +71,7 @@ export function ContactsSection({ client, canEdit, onSave, saving }: { client: C
         <ul className="grid gap-3 md:grid-cols-2">
           {client.contacts.map((c) => (
             <li key={c.id} className="flex items-start gap-3 rounded-2xl border border-border p-4">
-              <div className="min-w-0 flex-1 space-y-1">
-                <p className="flex flex-wrap items-center gap-1.5 font-medium">
-                  {c.name}
-                  {c.isPrimary && <Badge variant="outline" className="border-transparent bg-info-soft text-info-foreground"><Star className="size-3" aria-hidden />{t("primaryContact")}</Badge>}
-                  {c.role && <Badge variant="outline" className="border-transparent bg-muted text-muted-foreground">{t(`ctRole_${c.role}`)}</Badge>}
-                </p>
-                {c.position && <p className="text-xs text-muted-foreground">{c.position}</p>}
-                <p className="flex flex-col text-sm">
-                  <a href={`mailto:${c.email}`} className="truncate text-primary hover:underline">{c.email}</a>
-                  {c.phone && <a href={`tel:${c.phone.replace(/\s/g, "")}`} className="tabular-nums text-muted-foreground hover:text-foreground" dir="ltr">{c.phone}</a>}
-                </p>
-              </div>
+              <ContactCard contact={c} />
               {canEdit && (
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" className="size-8" onClick={() => setEditing(c)} aria-label={t("cpEditContact", { name: c.name })}><Pencil className="size-4" /></Button>
@@ -108,7 +83,15 @@ export function ContactsSection({ client, canEdit, onSave, saving }: { client: C
         </ul>
       )}
 
-      <ContactDialog contact={editing} onClose={() => setEditing(null)} onSave={save} saving={saving} />
+      <ContactDialog
+        contact={editing}
+        onClose={() => setEditing(null)}
+        onSave={(contact) => {
+          onSave(withContact(client.contacts, contact))
+          setEditing(null)
+        }}
+        saving={saving}
+      />
 
       <Dialog open={!!removing} onOpenChange={(o) => !o && setRemoving(null)}>
         <DialogContent className="max-w-md">
@@ -121,7 +104,7 @@ export function ContactsSection({ client, canEdit, onSave, saving }: { client: C
             <Button
               variant="destructive"
               onClick={() => {
-                onSave(keepMain(client.contacts.filter((c) => c.id !== removing?.id)))
+                if (removing) onSave(withoutContact(client.contacts, removing.id))
                 setRemoving(null)
               }}
             >
@@ -134,77 +117,29 @@ export function ContactsSection({ client, canEdit, onSave, saving }: { client: C
   )
 }
 
-function ContactDialog({ contact, onClose, onSave, saving }: { contact: ClientContact | null; onClose: () => void; onSave: (c: ClientContact) => void; saving: boolean }) {
+/** Who a contact is and every way to reach them. */
+export function ContactCard({ contact: c, client }: { contact: ClientContact; client?: React.ReactNode }) {
   const t = useTranslations()
-  const [draft, setDraft] = React.useState<ClientContact>(blankContact())
-  const [shown, setShown] = React.useState<ClientContact | null>(null)
-  if (contact !== shown) {
-    setShown(contact)
-    if (contact) setDraft(contact)
-  }
-  const valid = draft.name.trim() && /\S+@\S+\.\S+/.test(draft.email.trim())
-  const set = (patch: Partial<ClientContact>) => setDraft((d) => ({ ...d, ...patch }))
   return (
-    <Dialog open={!!contact} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-md">
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault()
-            if (valid) onSave({ ...draft, name: draft.name.trim(), email: draft.email.trim() })
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>{contact?.id ? t("cpEditContact", { name: contact.name }) : t("cpAddContact")}</DialogTitle>
-            <DialogDescription>{t("cpContactHint")}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-1.5">
-            <Label htmlFor="cp-name">{t("name")}</Label>
-            <Input id="cp-name" value={draft.name} onChange={(e) => set({ name: e.target.value })} autoFocus required />
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="cp-email">{t("email")}</Label>
-              <Input id="cp-email" type="email" value={draft.email} onChange={(e) => set({ email: e.target.value })} required />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cp-phone">{t("phone")}</Label>
-              <Input id="cp-phone" type="tel" dir="ltr" value={draft.phone ?? ""} onChange={(e) => set({ phone: e.target.value })} />
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="cp-position">{t("cpPosition")}</Label>
-              <Input id="cp-position" value={draft.position ?? ""} onChange={(e) => set({ position: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cp-role">{t("cpRole")}</Label>
-              <Select value={draft.role ?? "none"} onValueChange={(v) => set({ role: v === "none" ? undefined : (v as ContactRole) })}>
-                <SelectTrigger id="cp-role"><SelectValue>{draft.role ? t(`ctRole_${draft.role}`) : "—"}</SelectValue></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">—</SelectItem>
-                  {Object.values(ContactRole).map((r) => <SelectItem key={r} value={r}>{t(`ctRole_${r}`)}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox checked={draft.isPrimary} onCheckedChange={(v) => set({ isPrimary: !!v })} />
-            {t("cpMakePrimary")}
-          </label>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>{t("cancel")}</Button>
-            <Button type="submit" disabled={!valid || saving}>{t("save")}</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <div className="min-w-0 flex-1 space-y-1">
+      <p className="flex flex-wrap items-center gap-1.5 font-medium">
+        {c.name}
+        {c.isPrimary && <Badge variant="outline" className="border-transparent bg-info-soft text-info-foreground"><Star className="size-3" aria-hidden />{t("primaryContact")}</Badge>}
+        {c.role && <Badge variant="outline" className="border-transparent bg-muted text-muted-foreground">{t(`ctRole_${c.role}`)}</Badge>}
+      </p>
+      {(c.position || client) && <p className="text-xs text-muted-foreground">{[c.position, client].filter(Boolean).reduce<React.ReactNode[]>((acc, x, i) => (i ? [...acc, " · ", x] : [x]), [])}</p>}
+      <p className="flex flex-col text-sm">
+        {contactEmails(c).map((email) => <a key={email} href={`mailto:${email}`} className="truncate text-primary hover:underline">{email}</a>)}
+        {contactPhones(c).map((phone) => <a key={phone} href={`tel:${phone.replace(/\s/g, "")}`} className="tabular-nums text-muted-foreground hover:text-foreground" dir="ltr">{phone}</a>)}
+        {c.linkedin && <a href={c.linkedin} target="_blank" rel="noopener noreferrer" className="truncate text-muted-foreground hover:text-foreground hover:underline">LinkedIn</a>}
+      </p>
+    </div>
   )
 }
 
 // ---------- Deals ----------
 
-export function DealsSection({ deals, employees, currency }: { deals: Deal[]; employees: Employee[]; currency: string }) {
+export function DealsSection({ deals, employees, currency, contacts = [] }: { deals: Deal[]; employees: Employee[]; currency: string; contacts?: ClientContact[] }) {
   const t = useTranslations()
   const locale = useLocale()
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso}T00:00:00`))
@@ -222,6 +157,7 @@ export function DealsSection({ deals, employees, currency }: { deals: Deal[]; em
                 <span className="block text-xs text-muted-foreground">
                   {t("cpExpectedClose", { date: date(d.expectedClose) })}
                   {d.ownerId && ` · ${employees.find((e) => e.id === d.ownerId)?.name ?? ""}`}
+                  {d.contactId && contacts.find((c) => c.id === d.contactId) && ` · ${t("fuWith", { name: contacts.find((c) => c.id === d.contactId)!.name })}`}
                 </span>
               </span>
               <span className="tabular-nums font-medium">{formatMoney(d.amount, currency, locale)}</span>

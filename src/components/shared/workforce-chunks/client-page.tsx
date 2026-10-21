@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useSearchParams } from "next/navigation"
-import { AlertTriangle, ArrowLeft, CalendarDays, FolderKanban, Globe, Handshake, ListChecks, Mail, MessagesSquare, Pencil, Phone, Plus, Receipt, Wallet } from "@/components/ui/carbon/icons"
+import { AlertTriangle, ArrowLeft, CalendarDays, CheckCircle, XCircle, FolderKanban, Globe, Handshake, ListChecks, Mail, MessagesSquare, Pencil, Phone, Plus, Receipt, Wallet } from "@/components/ui/carbon/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
@@ -26,9 +26,10 @@ import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { fieldsFor } from "@/lib/workforce/custom-fields"
 import { projectStatsById, todayIso } from "@/lib/workforce/project-metrics"
 import { sortFollowUps } from "@/lib/workforce/follow-ups"
+import { isOpenDeal } from "@/lib/workforce/deals"
 import type { ClientFollowUp } from "@/types/work-crm"
 import { cn } from "@/lib/utils"
-import type { Client, ClientInput } from "@/types/workforce"
+import { ClientStatus, type Client, type ClientInput } from "@/types/workforce"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { PortalAccessManager } from "../work-portal-chunks/portal-access-manager"
 import { FeedbackSection } from "../work-portal-chunks/satisfaction"
@@ -41,6 +42,7 @@ import { HEALTH_CLASS, relativeDay } from "./clients-columns"
 import { CustomFieldValuesList } from "./custom-fields"
 import { FollowUpDialog } from "./follow-up-dialog"
 import { FollowUpList } from "./follow-up-list"
+import { ConvertDialog, DropDialog } from "./lead-dialogs"
 import { CLIENT_STATUS_CLASS, CLIENT_STATUS_LABEL, formatMoney } from "./workforce-labels"
 
 /**
@@ -92,6 +94,7 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
   const [formOpen, setFormOpen] = React.useState(false)
   const [logging, setLogging] = React.useState(false)
   const [planning, setPlanning] = React.useState(false)
+  const [deciding, setDeciding] = React.useState<"convert" | "drop" | null>(null)
   const [editingFollowUp, setEditingFollowUp] = React.useState<ClientFollowUp | null>(null)
   const followUps = React.useMemo(() => sortFollowUps(allFollowUps.filter((x) => x.clientId === c.id)), [allFollowUps, c.id])
   const openFollowUps = followUps.filter((x) => !x.doneAt).length
@@ -245,7 +248,7 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
         </PageSection>
       ),
     },
-    { id: "deals", label: t("cpTabDeals", { n: deals.filter((d) => d.clientId === c.id).length }), content: <DealsSection deals={deals.filter((d) => d.clientId === c.id)} employees={employees} currency={currency} /> },
+    { id: "deals", label: t("cpTabDeals", { n: deals.filter((d) => d.clientId === c.id).length }), content: <DealsSection deals={deals.filter((d) => d.clientId === c.id)} employees={employees} currency={currency} contacts={c.contacts} /> },
     ...(canSeeMoney
       ? [
           {
@@ -296,6 +299,8 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
             <Button variant="outline" asChild><Link href="/dashboard/clients"><ArrowLeft className="size-4 rtl:rotate-180" />{t("cpBack")}</Link></Button>
             <Button variant="outline" onClick={() => setLogging(true)}><MessagesSquare className="size-4" />{t("cdLog")}</Button>
             {canEdit && <Button variant="outline" onClick={() => setPlanning(true)}><ListChecks className="size-4" />{t("fuPlan")}</Button>}
+            {canEdit && c.status === ClientStatus.LEAD && <Button variant="outline" onClick={() => setDeciding("drop")}><XCircle className="size-4" />{t("ldDrop")}</Button>}
+            {canEdit && c.status === ClientStatus.LEAD && <Button variant="outline" onClick={() => setDeciding("convert")}><CheckCircle className="size-4" />{t("ldConvert")}</Button>}
             {canEdit && <Button variant="primary" onClick={() => setFormOpen(true)}><Pencil className="size-4" />{t("edit")}</Button>}
           </>
         }
@@ -311,6 +316,8 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
 
       <Tabs defaultTabId={initialTab} onChange={(tab) => keepTab(tab.id)} tabs={tabs} />
 
+      <ConvertDialog lead={deciding === "convert" ? c : null} onClose={() => setDeciding(null)} hasDeal={deals.some((d) => d.clientId === c.id && isOpenDeal(d))} />
+      <DropDialog lead={deciding === "drop" ? c : null} onClose={() => setDeciding(null)} />
       <LogDialog open={logging} onOpenChange={setLogging} client={c} canPlan={canEdit} />
       <FollowUpDialog
         open={planning || !!editingFollowUp}

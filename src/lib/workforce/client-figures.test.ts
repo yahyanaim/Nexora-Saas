@@ -119,7 +119,7 @@ describe("demo clients and follow-ups", () => {
     expect(orbit.leadSource).toBe(LeadSource.REFERRAL)
     expect(orbit.contacts.map((c) => c.role)).toEqual([ContactRole.DECISION_MAKER, ContactRole.FINANCE])
     // used twice each; equal counts sort by name
-    expect(tagsInUse(clients).slice(0, 2)).toEqual(["Casablanca", "Key account"])
+    expect(tagsInUse(clients).slice(0, 3)).toEqual(["Casablanca", "Healthcare", "Key account"])
   })
 
   it("save tags cleaned", async () => {
