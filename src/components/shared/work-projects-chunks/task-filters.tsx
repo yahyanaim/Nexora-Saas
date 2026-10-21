@@ -6,9 +6,11 @@ import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Trash2 } from "@/components/ui/carbon/icons"
+import { Share2, Trash2, Users } from "@/components/ui/carbon/icons"
+import { Checkbox } from "@/components/ui/checkbox"
+import { cn } from "@/lib/utils"
 import type { Employee } from "@/types/workforce"
-import { Priority, type WorkTask } from "@/types/work-projects"
+import { Priority, type TaskView, type WorkTask } from "@/types/work-projects"
 import type { TaskLabel } from "@/types/work-settings"
 import { PRIORITY_LABEL } from "./project-labels"
 
@@ -31,64 +33,39 @@ export function applyTaskFilters(tasks: WorkTask[], f: TaskFilterValues) {
   )
 }
 
-interface SavedView {
-  id: string
-  name: string
-  filters: TaskFilterValues
-}
-
-/** Saved views live per user in this browser (PRJ-5); the backend will store them per account. */
-function storageKey(userId: string) {
-  return `nexora:task-views:${userId}`
-}
-
-function readViews(userId: string): SavedView[] {
-  try {
-    const raw = localStorage.getItem(storageKey(userId))
-    const parsed: unknown = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? (parsed as SavedView[]) : []
-  } catch {
-    return []
-  }
-}
-
-function writeViews(userId: string, views: SavedView[]) {
-  try {
-    localStorage.setItem(storageKey(userId), JSON.stringify(views))
-  } catch {
-    // Saving views is a convenience; ignore blocked storage
-  }
-}
-
 interface Props {
   userId: string
+  /** Project managers can remove views others shared */
+  canManage?: boolean
+  /** Saved views of the project: this person's and the shared ones (P2) */
+  views?: TaskView[]
+  onApplyView?: (view: TaskView) => void
+  onSaveView?: (input: { name: string; shared: boolean }, done: () => void) => void
+  onShareView?: (view: TaskView, shared: boolean) => void
+  onDeleteView?: (view: TaskView) => void
   team: Employee[]
   labels: TaskLabel[]
   value: TaskFilterValues
   onChange: (value: TaskFilterValues) => void
+  /** Buttons shown at the end of the filter row (e.g. the statuses editor) */
+  extra?: React.ReactNode
 }
 
-/** Assignee, label and priority filters for the board and list, with named saved views. */
-export function TaskFilters({ userId, team, labels, value, onChange }: Props) {
+/** Assignee, label and priority filters for the task screens, with saved views that can be shared (P2). */
+export function TaskFilters({ userId, canManage = false, views = [], onApplyView, onSaveView, onShareView, onDeleteView, team, labels, value, onChange, extra }: Props) {
   const t = useTranslations()
-  const [views, setViews] = useState<SavedView[]>(() => (typeof window === "undefined" ? [] : readViews(userId)))
   const [naming, setNaming] = useState(false)
   const [name, setName] = useState("")
+  const [shared, setShared] = useState(false)
   const active = value.assigneeId !== ALL || value.labelId !== ALL || value.priority !== ALL
 
   const save = () => {
-    const clean = name.trim()
-    if (!clean) return
-    const next = [...views.filter((v) => v.name.toLowerCase() !== clean.toLowerCase()), { id: `${Date.now()}`, name: clean, filters: value }]
-    setViews(next)
-    writeViews(userId, next)
-    setNaming(false)
-    setName("")
-  }
-  const removeView = (id: string) => {
-    const next = views.filter((v) => v.id !== id)
-    setViews(next)
-    writeViews(userId, next)
+    if (!name.trim() || !onSaveView) return
+    onSaveView({ name: name.trim(), shared }, () => {
+      setNaming(false)
+      setName("")
+      setShared(false)
+    })
   }
 
   const select = (key: keyof TaskFilterValues, label: string, options: { value: string; label: string }[]) => (
@@ -118,37 +95,67 @@ export function TaskFilters({ userId, team, labels, value, onChange }: Props) {
             {t("clearFilters")}
           </Button>
         )}
-        {active && !naming && (
+        {onSaveView && !naming && (
           <Button variant="outline" size="sm" onClick={() => setNaming(true)}>
             {t("saveView")}
           </Button>
         )}
         {naming && (
           <form
-            className="flex items-center gap-2"
+            className="flex flex-wrap items-center gap-2"
             onSubmit={(e) => {
               e.preventDefault()
               save()
             }}
           >
-            <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t("viewName")} aria-label={t("viewName")} className="h-9 w-40" />
+            <Input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t("viewName")} aria-label={t("viewName")} maxLength={40} className="h-9 w-44" />
+            <label className="flex items-center gap-1.5 text-xs font-medium">
+              <Checkbox checked={shared} onCheckedChange={(v) => setShared(v === true)} />
+              {t("vwShareWithTeam")}
+            </label>
             <Button type="submit" size="sm" disabled={!name.trim()}>{t("save")}</Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setNaming(false)}>{t("cancel")}</Button>
           </form>
         )}
+        {extra && <div className="ms-auto flex items-center gap-2">{extra}</div>}
       </div>
       {views.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-xs text-muted-foreground">{t("savedViews")}</span>
-          {views.map((v) => (
-            <span key={v.id} className="flex items-center rounded-full border border-border bg-card">
-              <button type="button" onClick={() => onChange(v.filters)} className="h-7 px-3 text-xs font-medium hover:text-primary">
-                {v.name}
-              </button>
-              <button type="button" aria-label={t("delete")} onClick={() => removeView(v.id)} className="pe-2 text-muted-foreground hover:text-foreground">
-                <Trash2 className="size-3" />
-              </button>
-            </span>
-          ))}
+          {views.map((v) => {
+            const mine = v.ownerId === userId
+            return (
+              <span key={v.id} className="flex items-center rounded-full border border-border bg-card">
+                <button
+                  type="button"
+                  onClick={() => onApplyView?.(v)}
+                  title={v.shared ? t("vwSharedBy", { name: v.ownerName }) : undefined}
+                  className="flex h-7 items-center gap-1.5 ps-3 pe-2 text-xs font-medium hover:text-primary"
+                >
+                  {v.shared && <Users className="size-3 text-muted-foreground" aria-hidden />}
+                  {v.name}
+                  {v.shared && !mine && <span className="sr-only">{`, ${t("vwSharedBy", { name: v.ownerName })}`}</span>}
+                </button>
+                {mine && onShareView && (
+                  <button
+                    type="button"
+                    aria-pressed={v.shared}
+                    aria-label={t(v.shared ? "vwStopSharing" : "vwShare", { name: v.name })}
+                    title={t(v.shared ? "vwStopSharing" : "vwShare", { name: v.name })}
+                    onClick={() => onShareView(v, !v.shared)}
+                    className={cn("px-1 hover:text-foreground", v.shared ? "text-primary" : "text-muted-foreground")}
+                  >
+                    <Share2 className="size-3" />
+                  </button>
+                )}
+                {(mine || (canManage && v.shared)) && onDeleteView && (
+                  <button type="button" aria-label={t("vwDelete", { name: v.name })} onClick={() => onDeleteView(v)} className="pe-2 ps-1 text-muted-foreground hover:text-foreground">
+                    <Trash2 className="size-3" />
+                  </button>
+                )}
+              </span>
+            )
+          })}
         </div>
       )}
     </div>

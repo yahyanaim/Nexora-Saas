@@ -4,8 +4,7 @@ import {
   WorkProjectStatus,
   type Milestone,
   type WorkProject,
-  type WorkTask,
-} from "@/types/work-projects"
+  type WorkTask, isClosedStatus } from "@/types/work-projects"
 
 let companyTimeZone: string | undefined
 
@@ -45,15 +44,19 @@ export function calendarIso(date: Date) {
   return `${y}-${m}-${d}`
 }
 
-function daysBetween(from: string, to: string) {
+export function daysBetween(from: string, to: string) {
   return Math.round((Date.parse(to) - Date.parse(from)) / 86_400_000)
 }
+
+/** Cancelled tasks are dropped work: they don't count in progress or task totals (P2). */
+export const withoutCancelled = <T extends Pick<WorkTask, "status">>(tasks: T[]) => tasks.filter((t) => t.status !== TaskStatus.CANCELLED)
 
 /**
  * Share of the work done, 0–100. Tasks weigh by their estimate (at least one
  * hour each) so a big task counts more than a small one.
  */
-export function taskProgress(tasks: WorkTask[]): number {
+export function taskProgress(all: WorkTask[]): number {
+  const tasks = withoutCancelled(all)
   if (tasks.length === 0) return 0
   let total = 0
   let done = 0
@@ -66,7 +69,7 @@ export function taskProgress(tasks: WorkTask[]): number {
 }
 
 export function isTaskOverdue(task: WorkTask, today = todayIso()) {
-  return !!task.dueDate && task.status !== TaskStatus.DONE && task.dueDate < today
+  return !!task.dueDate && !isClosedStatus(task.status) && task.dueDate < today
 }
 
 /**
@@ -115,7 +118,7 @@ export enum MilestoneState {
 
 /** A milestone is reached when its tasks are done and, if needed, the client approved it. */
 export function milestoneState(milestone: Milestone, tasks: WorkTask[], today = todayIso()): MilestoneState {
-  const own = tasks.filter((t) => t.milestoneId === milestone.id)
+  const own = withoutCancelled(tasks.filter((t) => t.milestoneId === milestone.id))
   const allDone = own.length > 0 && own.every((t) => t.status === TaskStatus.DONE)
   if (allDone) {
     if (!milestone.requiresApproval || milestone.approvedAt) return MilestoneState.REACHED
@@ -126,7 +129,7 @@ export function milestoneState(milestone: Milestone, tasks: WorkTask[], today = 
 
 /** Estimated hours left on unfinished tasks. */
 export function remainingHours(tasks: WorkTask[]) {
-  return tasks.filter((t) => t.status !== TaskStatus.DONE).reduce((sum, t) => sum + t.estimatedHours, 0)
+  return tasks.filter((t) => !isClosedStatus(t.status)).reduce((sum, t) => sum + t.estimatedHours, 0)
 }
 
 /** Progress, health and task counts for every project, keyed by project id. */
@@ -143,11 +146,12 @@ export function projectStatsById(projects: WorkProject[], tasks: WorkTask[], tod
   >()
   for (const project of projects) {
     const own = byProject.get(project.id) ?? []
+    const counted = withoutCancelled(own)
     stats.set(project.id, {
       progress: taskProgress(own),
       health: projectHealth(project, own, today),
-      total: own.length,
-      done: own.filter((t) => t.status === TaskStatus.DONE).length,
+      total: counted.length,
+      done: counted.filter((t) => t.status === TaskStatus.DONE).length,
       overdue: own.filter((t) => isTaskOverdue(t, today)).length,
     })
   }

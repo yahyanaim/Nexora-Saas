@@ -1,5 +1,5 @@
 import { DEFAULT_WORKING_DAYS, type Employee } from "@/types/workforce"
-import { TaskStatus, type WorkTask } from "@/types/work-projects"
+import { type WorkTask, isClosedStatus } from "@/types/work-projects"
 import { ANNUAL_VACATION_DAYS, LeaveStatus, LeaveType, type LeaveRequest } from "@/types/work-planning"
 import { addDays } from "./billing"
 import { todayIso } from "./project-metrics"
@@ -109,7 +109,7 @@ export function plannedHours(tasks: WorkTask[], employeeId: string, monday: stri
   const weekEnd = addDays(monday, 6)
   let hours = 0
   for (const task of tasks) {
-    if (task.assigneeId !== employeeId || task.status === TaskStatus.DONE || !task.dueDate) continue
+    if (task.assigneeId !== employeeId || isClosedStatus(task.status) || !task.dueDate) continue
     const start = today
     const end = task.dueDate < today ? today : task.dueDate
     let days = workingDays(start, end)

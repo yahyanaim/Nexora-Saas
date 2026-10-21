@@ -31,12 +31,14 @@ export function TaskDiscussion({ taskId, team, labels }: Props) {
   const [body, setBody] = useState("")
   const name = (id?: string) => team.find((e) => e.id === id)?.name ?? (id ? "—" : t("unassigned"))
 
+  // Built-in statuses are stored by group and translated; a project's own ones by name (P2)
+  const statusText = (v?: string) => (v && v in TASK_STATUS_LABEL ? t(TASK_STATUS_LABEL[v as TaskStatus]) : (v ?? "—"))
   const describe = (a: TaskActivity) => {
     switch (a.kind) {
       case "created":
         return t("activityCreated")
       case "status":
-        return t("activityStatus", { from: t(TASK_STATUS_LABEL[a.from as TaskStatus]), to: t(TASK_STATUS_LABEL[a.to as TaskStatus]) })
+        return t("activityStatus", { from: statusText(a.from), to: statusText(a.to) })
       case "assignee":
         return t("activityAssignee", { to: name(a.to) })
       case "collaborators":

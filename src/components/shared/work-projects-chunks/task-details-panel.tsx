@@ -15,10 +15,11 @@ import { createId } from "@/lib/workforce/demo-store"
 import { isWebUrl, taskKey, taskLinks } from "@/lib/workforce/task-extras"
 import { toast } from "@/lib/utils/toast"
 import { cn } from "@/lib/utils"
-import { TaskRelationType, type WorkProject, type WorkTask } from "@/types/work-projects"
+import { TaskRelationType, isClosedStatus, type WorkProject, type WorkTask } from "@/types/work-projects"
 import type { Employee } from "@/types/workforce"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
-import { TASK_STATUS_LABEL } from "./project-labels"
+import { stateLabel } from "./project-labels"
+import { projectStates, stateOf } from "@/lib/workforce/task-states"
 
 interface Props {
   task: WorkTask
@@ -181,9 +182,9 @@ export function TaskDetailsPanel({ task, people, allTasks, projects, canEdit, on
                 <li key={x.id} className="flex items-center gap-2 rounded-xl border border-border px-3 py-1.5 text-sm">
                   <button type="button" onClick={() => onOpenTask(x)} className="flex min-w-0 flex-1 items-center gap-2 text-start hover:text-primary">
                     <span className="shrink-0 font-mono text-xs text-muted-foreground">{keyOf(x)}</span>
-                    <span className={cn("truncate", x.status === "done" && "text-muted-foreground line-through")}>{x.title}</span>
+                    <span className={cn("truncate", isClosedStatus(x.status) && "text-muted-foreground line-through")}>{x.title}</span>
                   </button>
-                  <span className="shrink-0 text-xs text-muted-foreground">{t(TASK_STATUS_LABEL[x.status])}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">{stateLabel(stateOf(x, projectStates(projects.find((p) => p.id === x.projectId))), t)}</span>
                   {canEdit && g.removable && ownRelation(x.id) && (
                     <Button type="button" variant="ghost" size="icon" className="size-7" aria-label={t("tkUnlink", { name: x.title })} onClick={() => save({ relations: (task.relations ?? []).filter((r) => r.taskId !== x.id) })}><Trash2 className="size-3.5" /></Button>
                   )}

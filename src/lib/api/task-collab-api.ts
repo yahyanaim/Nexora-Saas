@@ -1,7 +1,8 @@
 import type { Employee } from "@/types/workforce"
-import type { TaskActivity, TaskAttachment, TaskComment, WorkTask } from "@/types/work-projects"
+import type { TaskActivity, TaskAttachment, TaskComment, TaskState, WorkTask } from "@/types/work-projects"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { getAuditActor } from "@/lib/workforce/audit"
+import { DEFAULT_TASK_STATES, stateOf, stateText } from "@/lib/workforce/task-states"
 
 /**
  * Comments with @mentions and the automatic history of each task (PRJ-7).
@@ -83,12 +84,14 @@ export async function listTaskActivityApi(workspaceId: string, taskId: string): 
 }
 
 /** Writes history rows for the fields that changed between two versions of a task. */
-export function recordTaskChanges(workspaceId: string, before: WorkTask | undefined, after: WorkTask) {
+export function recordTaskChanges(workspaceId: string, before: WorkTask | undefined, after: WorkTask, states: TaskState[] = DEFAULT_TASK_STATES) {
   const actorName = getAuditActor().name
   const add = (kind: TaskActivity["kind"], from?: string, to?: string) =>
     activity.create(workspaceId, { taskId: after.id, actorName, kind, from, to })
-  if (!before) return add("created", undefined, after.status)
-  if (before.status !== after.status) add("status", before.status, after.status)
+  // Statuses are stored by name for the project's own ones, by group for the built-in ones (P2)
+  const status = (task: WorkTask) => stateText(stateOf(task, states))
+  if (!before) return add("created", undefined, status(after))
+  if (status(before) !== status(after)) add("status", status(before), status(after))
   if (before.assigneeId !== after.assigneeId) add("assignee", before.assigneeId, after.assigneeId)
   if ((before.collaboratorIds ?? []).join() !== (after.collaboratorIds ?? []).join()) add("collaborators", (before.collaboratorIds ?? []).join(","), (after.collaboratorIds ?? []).join(","))
   if (before.dueDate !== after.dueDate) add("due", before.dueDate, after.dueDate)

@@ -62,6 +62,8 @@ export interface WorkProject {
   customFields?: Record<string, string>
   /** How a fixed price is recognised as revenue (Phase 6g.5); "hours" when unset */
   recognitionMethod?: RecognitionMethod
+  /** The project's own task statuses, in board order (P2); the default set when unset */
+  taskStates?: TaskState[]
   createdAt: string
   updatedAt: string
 }
@@ -120,9 +122,26 @@ export enum TaskStatus {
   IN_PROGRESS = "in_progress",
   REVIEW = "review",
   DONE = "done",
+  /** Dropped work: closed like done, but left out of progress (P2) */
+  CANCELLED = "cancelled",
 }
 
 export const TASK_STATUSES = Object.values(TaskStatus)
+
+/** Done and cancelled tasks are closed: not open work, never late. */
+export const isClosedStatus = (status: TaskStatus) => status === TaskStatus.DONE || status === TaskStatus.CANCELLED
+
+/**
+ * A status a project defines for its tasks (P2), e.g. "Waiting for client".
+ * Each belongs to a group, and the group is what reports, progress and
+ * billing read; a task keeps its group in `status`.
+ */
+export interface TaskState {
+  id: string
+  /** Empty for the built-in statuses, which show their translated name */
+  name?: string
+  group: TaskStatus
+}
 
 export interface Subtask {
   id: string
@@ -172,6 +191,8 @@ export interface WorkTask {
   title: string
   description?: string
   status: TaskStatus
+  /** The project's status the task sits in (P2); its group always equals `status` */
+  stateId?: string
   priority: Priority
   /** Main person on the task: their workload and timesheet carry it */
   assigneeId?: string
@@ -303,3 +324,29 @@ export type ChangeOrderInput = Pick<ChangeOrder, "projectId" | "title" | "amount
  */
 export type RecognitionMethod = "hours" | "tasks" | "milestones"
 export const RECOGNITION_METHODS: RecognitionMethod[] = ["hours", "tasks", "milestones"]
+
+/** The task screens a saved view can open on (P2). */
+export type TaskViewTab = "board" | "list" | "spreadsheet" | "calendar"
+
+/**
+ * A saved way of looking at a project's tasks (P2): which screen, which
+ * filters and how the spreadsheet is grouped. Personal, or shared with
+ * everyone who can open the project.
+ */
+export interface TaskView {
+  id: string
+  workspaceId: string
+  projectId: string
+  name: string
+  ownerId: string
+  ownerName: string
+  shared: boolean
+  tab: TaskViewTab
+  filters: { assigneeId: string; labelId: string; priority: string }
+  groupBy?: string
+  thenBy?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type TaskViewInput = Pick<TaskView, "projectId" | "name" | "shared" | "tab" | "filters" | "groupBy" | "thenBy">

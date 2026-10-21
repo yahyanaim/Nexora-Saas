@@ -34,7 +34,7 @@ import { addDays, weekDays, weekStart } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { EmployeeStatus } from "@/types/workforce"
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
-import { TaskStatus, WorkProjectStatus } from "@/types/work-projects"
+import { WorkProjectStatus, isClosedStatus } from "@/types/work-projects"
 import { TIME_STATUS_CELL, TIME_STATUS_CLASS, TIME_STATUS_LABEL, formatHours } from "./billing-labels"
 import { useSelfScope } from "@/hooks/workforce/use-current-employee"
 
@@ -108,7 +108,7 @@ export default function TimesheetPage() {
   const myProjects = projects.filter(
     (p) => p.memberIds.includes(employeeId) && p.status !== WorkProjectStatus.CANCELLED && p.status !== WorkProjectStatus.COMPLETED
   )
-  const projectTasks = tasks.filter((task) => task.projectId === newProject && task.status !== TaskStatus.DONE)
+  const projectTasks = tasks.filter((task) => task.projectId === newProject && !isClosedStatus(task.status))
 
   const dayTotal = (date: string) => weekEntries.filter((e) => e.date === date).reduce((s, e) => s + e.hours, 0)
   const weekTotal = weekEntries.reduce((s, e) => s + e.hours, 0)
@@ -199,7 +199,7 @@ export default function TimesheetPage() {
       {employeeId && (
         <div className="flex flex-col gap-3">
           <QuickLog employeeId={employeeId} entries={entries} projects={myProjects} tasks={tasks} />
-          <TimerBar employeeId={employeeId} projects={myProjects} tasks={tasks.filter((x) => x.status !== TaskStatus.DONE)} />
+          <TimerBar employeeId={employeeId} projects={myProjects} tasks={tasks.filter((x) => !isClosedStatus(x.status))} />
         </div>
       )}
 

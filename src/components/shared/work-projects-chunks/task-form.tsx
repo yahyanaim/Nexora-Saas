@@ -18,13 +18,15 @@ import {
   Priority,
   TaskStatus,
   type Milestone,
+  type TaskState,
   type WorkTask,
   type WorkTaskInput,
 } from "@/types/work-projects"
 import { NumberField, SelectField, TextField } from "../workforce-chunks/form-fields"
 import { RichTextEditor, type KeyResolver } from "./rich-text"
 import { NONE } from "../workforce-chunks/workforce-labels"
-import { PRIORITY_LABEL, TASK_STATUS_LABEL } from "./project-labels"
+import { PRIORITY_LABEL, stateLabel } from "./project-labels"
+import { DEFAULT_TASK_STATES, stateOf } from "@/lib/workforce/task-states"
 
 export interface TaskFormHandle {
   submit: () => void
@@ -33,7 +35,8 @@ export interface TaskFormHandle {
 const schema = z.object({
   title: z.string().trim().min(2),
   description: z.string().optional(),
-  status: z.enum(TaskStatus),
+  /** The project status (P2); its group becomes the task status */
+  stateId: z.string().min(1),
   priority: z.enum(Priority),
   assigneeId: z.string(),
   milestoneId: z.string(),
@@ -48,11 +51,11 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-function toFormValues(task?: Partial<WorkTask>): FormValues {
+function toFormValues(task: Partial<WorkTask> | undefined, states: TaskState[]): FormValues {
   return {
     title: task?.title ?? "",
     description: task?.description ?? "",
-    status: task?.status ?? TaskStatus.TODO,
+    stateId: stateOf({ status: task?.status ?? TaskStatus.TODO, stateId: task?.stateId }, states).id,
     priority: task?.priority ?? Priority.MEDIUM,
     assigneeId: task?.assigneeId ?? NONE,
     milestoneId: task?.milestoneId ?? NONE,
@@ -78,27 +81,30 @@ interface Props {
   projectTasks?: WorkTask[]
   /** Opens tasks named by their key in the description preview */
   resolveKey?: KeyResolver
+  /** The project's statuses (P2) */
+  states?: TaskState[]
   onValid: (input: WorkTaskInput) => void
 }
 
 export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
-  { projectId, task, team, milestones, labels, projectTasks = [], resolveKey, onValid },
+  { projectId, task, team, milestones, labels, projectTasks = [], resolveKey, states = DEFAULT_TASK_STATES, onValid },
   ref
 ) {
   const t = useTranslations()
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: toFormValues(task) })
+  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: toFormValues(task, states) })
   const subtasks = useFieldArray({ control: form.control, name: "subtasks", keyName: "key" })
   const [newSubtask, setNewSubtask] = useState("")
 
   useEffect(() => {
-    form.reset(toFormValues(task))
-  }, [task, form])
+    form.reset(toFormValues(task, states))
+  }, [task, form, states])
 
   useImperativeHandle(ref, () => ({
     submit: () =>
       form.handleSubmit((v) =>
         onValid({
           ...v,
+          status: (states.find((s) => s.id === v.stateId) ?? states[0]!).group,
           projectId,
           description: v.description || undefined,
           assigneeId: v.assigneeId === NONE ? undefined : v.assigneeId,
@@ -127,9 +133,9 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
         <div className="grid grid-cols-2 gap-4">
           <SelectField
             control={form.control}
-            name="status"
+            name="stateId"
             label={t("status")}
-            options={Object.values(TaskStatus).map((s) => ({ value: s, label: t(TASK_STATUS_LABEL[s]) }))}
+            options={states.map((s) => ({ value: s.id, label: stateLabel(s, t) }))}
           />
           <SelectField
             control={form.control}
@@ -185,7 +191,7 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
                         onCheckedChange={(v) => form.setValue("dependsOn", v ? [...selected, other.id] : selected.filter((id) => id !== other.id), { shouldDirty: true })}
                       />
                       <span className="min-w-0 flex-1 truncate">{other.title}</span>
-                      <span className="text-xs text-muted-foreground">{t(TASK_STATUS_LABEL[other.status])}</span>
+                      <span className="text-xs text-muted-foreground">{stateLabel(stateOf(other, states), t)}</span>
                     </label>
                   )
                 })}

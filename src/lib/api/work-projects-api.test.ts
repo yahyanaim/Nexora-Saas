@@ -21,6 +21,7 @@ import {
   type WorkProjectInput,
   type WorkTaskInput,
 } from "@/types/work-projects"
+import { deleteTaskViewApi, listTaskViewsApi, saveTaskViewApi, setTaskViewSharedApi } from "./task-views-api"
 import { addTaskAttachmentApi, listTaskAttachmentsApi, removeTaskAttachmentApi } from "./task-collab-api"
 
 const WS = "ws_atlas"
@@ -80,10 +81,11 @@ describe("work projects API", () => {
   })
 
   it("moves a task to a position and renumbers the column", async () => {
+    // tsk_4 sits in Orbit's own "Waiting for client" status, a column of its own (P2)
     await moveTaskApi(WS, "tsk_6", TaskStatus.IN_PROGRESS, 0)
-    const column = (await listTasksApi(WS, "prj_orbit")).filter((t) => t.status === TaskStatus.IN_PROGRESS)
-    expect(column.map((t) => t.id)).toEqual(["tsk_6", "tsk_3", "tsk_4"])
-    expect(column.map((t) => t.order)).toEqual([0, 1, 2])
+    const column = (await listTasksApi(WS, "prj_orbit")).filter((t) => t.status === TaskStatus.IN_PROGRESS && t.stateId !== "st_orbit_waiting")
+    expect(column.map((t) => t.id)).toEqual(["tsk_6", "tsk_3"])
+    expect(column.map((t) => t.order)).toEqual([0, 1])
   })
 
   it("stamps completedAt when a task is done and clears it when reopened", async () => {
@@ -143,5 +145,75 @@ describe("richer tasks API (P1)", () => {
     expect(list).toHaveLength(10)
     await removeTaskAttachmentApi(WS, list[0]!.id)
     expect(await listTaskAttachmentsApi(WS, "tsk_6")).toHaveLength(9)
+  })
+})
+
+describe("project statuses API (P2)", () => {
+  beforeEach(() => localStorage.clear())
+  const get = async (id: string) => (await listTasksApi(WS, "prj_orbit")).find((t) => t.id === id)!
+
+  it("moves a task into the project's own status and keeps its group", async () => {
+    const moved = await moveTaskApi(WS, "tsk_6", "st_orbit_waiting", 0)
+    expect(moved).toMatchObject({ status: TaskStatus.IN_PROGRESS, stateId: "st_orbit_waiting", order: 0 })
+    expect((await get("tsk_4")).order).toBe(1)
+    // a group alone lands in its first status
+    expect(await moveTaskApi(WS, "tsk_6", TaskStatus.DONE)).toMatchObject({ status: TaskStatus.DONE, stateId: TaskStatus.DONE })
+    await expect(moveTaskApi(WS, "tsk_6", "nope")).rejects.toThrow(/isn't part/)
+  })
+
+  it("sets the group from the status on create and update", async () => {
+    const created = await createTaskApi(WS, taskInput({ stateId: "st_orbit_waiting" }))
+    expect(created.status).toBe(TaskStatus.IN_PROGRESS)
+    const updated = await updateTaskApi(WS, created.id, { status: TaskStatus.REVIEW })
+    expect(updated).toMatchObject({ status: TaskStatus.REVIEW, stateId: TaskStatus.REVIEW })
+    const cancelled = await updateTaskApi(WS, created.id, { stateId: TaskStatus.CANCELLED })
+    expect(cancelled.status).toBe(TaskStatus.CANCELLED)
+  })
+
+  it("checks a project's statuses and lets tasks of a removed one fall back", async () => {
+    await expect(updateProjectApi(WS, "prj_orbit", { taskStates: [{ id: "todo", group: TaskStatus.TODO }] })).rejects.toThrow(/at least one/)
+    const saved = await updateProjectApi(WS, "prj_orbit", {
+      taskStates: [
+        { id: "todo", group: TaskStatus.TODO },
+        { id: "in_progress", name: " Doing ", group: TaskStatus.IN_PROGRESS },
+        { id: "review", group: TaskStatus.REVIEW },
+        { id: "done", group: TaskStatus.DONE },
+        { id: "cancelled", group: TaskStatus.CANCELLED },
+      ],
+    })
+    expect(saved.taskStates?.[1]).toEqual({ id: "in_progress", name: "Doing", group: TaskStatus.IN_PROGRESS })
+    // tsk_4 was in "Waiting for client": it now shows in the group's first status
+    const moved = await moveTaskApi(WS, "tsk_6", "in_progress")
+    expect(moved.stateId).toBe("in_progress")
+  })
+})
+
+describe("saved task views (P2)", () => {
+  beforeEach(() => localStorage.clear())
+  const sara = { id: "usr_sara", name: "Sara" }
+  const base = { projectId: "prj_orbit", shared: false, tab: "list" as const, filters: { assigneeId: "__all__", labelId: "__all__", priority: "urgent" } }
+
+  it("shows your own views and the shared ones", async () => {
+    await saveTaskViewApi(WS, { ...base, name: "Mine" }, sara)
+    await saveTaskViewApi(WS, { ...base, name: "Hidden" }, { id: "usr_other", name: "Other" })
+    expect((await listTaskViewsApi(WS, "prj_orbit", sara.id)).map((v) => v.name)).toEqual(["Mine", "Lina's work by priority"])
+    expect(await listTaskViewsApi(WS, "prj_helio", sara.id)).toEqual([])
+  })
+
+  it("replaces your view of the same name and refuses a shared name", async () => {
+    await saveTaskViewApi(WS, { ...base, name: "Urgent" }, sara)
+    const again = await saveTaskViewApi(WS, { ...base, name: " urgent ", tab: "calendar" }, sara)
+    expect((await listTaskViewsApi(WS, "prj_orbit", sara.id)).filter((v) => v.ownerId === sara.id)).toEqual([again])
+    await expect(saveTaskViewApi(WS, { ...base, name: "Lina's work by priority" }, sara)).rejects.toThrow(/shared view/)
+    await expect(saveTaskViewApi(WS, { ...base, name: "  " }, sara)).rejects.toThrow(/name/)
+  })
+
+  it("lets only the owner share, and a manager remove a shared view", async () => {
+    const v = await saveTaskViewApi(WS, { ...base, name: "Mine" }, sara)
+    await expect(setTaskViewSharedApi(WS, v.id, true, "usr_other")).rejects.toThrow(/Only/)
+    expect((await setTaskViewSharedApi(WS, v.id, true, sara.id)).shared).toBe(true)
+    await expect(deleteTaskViewApi(WS, "view_orbit_lina", sara.id, false)).rejects.toThrow(/Only/)
+    await deleteTaskViewApi(WS, "view_orbit_lina", sara.id, true)
+    expect((await listTaskViewsApi(WS, "prj_orbit", sara.id)).map((v) => v.name)).toEqual(["Mine"])
   })
 })

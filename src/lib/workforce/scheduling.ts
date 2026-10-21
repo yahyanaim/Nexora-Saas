@@ -1,5 +1,5 @@
 import { ClientInvoiceStatus, TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/work-billing"
-import { TaskStatus, type Milestone, type ProjectTemplate, type WorkProject, type WorkTask } from "@/types/work-projects"
+import { type Milestone, type ProjectTemplate, type WorkProject, type WorkTask, isClosedStatus } from "@/types/work-projects"
 import { addDays } from "./billing"
 import { MilestoneState, milestoneState } from "./project-metrics"
 
@@ -55,12 +55,12 @@ export type DependencyIssue = { predecessor: WorkTask; kind: "late" | "overlaps"
  * finished yet ("waiting"). Done tasks have no issues.
  */
 export function dependencyIssues(task: WorkTask, tasks: WorkTask[], projectStart: string, today: string): DependencyIssue[] {
-  if (task.status === TaskStatus.DONE) return []
+  if (isClosedStatus(task.status)) return []
   const start = taskSpan(task, projectStart).start
   const out: DependencyIssue[] = []
   for (const id of task.dependsOn ?? []) {
     const p = tasks.find((x) => x.id === id)
-    if (!p || p.status === TaskStatus.DONE) continue
+    if (!p || isClosedStatus(p.status)) continue
     const end = taskSpan(p, projectStart).end
     if (end < today) out.push({ predecessor: p, kind: "late" })
     else if (end >= start) out.push({ predecessor: p, kind: "overlaps" })
@@ -86,7 +86,7 @@ export function closeChecklist(input: {
   const tasks = input.tasks.filter((t) => t.projectId === project.id)
   const entries = input.entries.filter((e) => e.projectId === project.id)
   const items: { key: CloseCheckKey; open: number }[] = [
-    { key: "tasksDone", open: tasks.filter((t) => t.status !== TaskStatus.DONE).length },
+    { key: "tasksDone", open: tasks.filter((t) => !isClosedStatus(t.status)).length },
     {
       key: "milestonesReached",
       open: input.milestones.filter((m) => m.projectId === project.id && milestoneState(m, tasks) !== MilestoneState.REACHED).length,

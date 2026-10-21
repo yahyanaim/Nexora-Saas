@@ -1,7 +1,7 @@
 import { isOnTask } from "./task-extras"
 import type { Client, Employee } from "@/types/workforce"
 import { EmployeeStatus } from "@/types/workforce"
-import { TaskStatus, WorkProjectStatus, type ChangeOrder, type WorkProject, type WorkTask } from "@/types/work-projects"
+import { TaskStatus, WorkProjectStatus, type ChangeOrder, type WorkProject, type WorkTask, isClosedStatus } from "@/types/work-projects"
 import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import { ExpenseStatus, type Expense } from "@/types/work-costs"
 import { LeaveStatus, LeaveType, type LeaveRequest } from "@/types/work-planning"
@@ -38,7 +38,7 @@ export function myDay(
   today = todayIso()
 ): MyDay {
   // tasks the person leads or works on with others (P1)
-  const mine = data.tasks.filter((t) => isOnTask(t, employee.id) && t.status !== TaskStatus.DONE)
+  const mine = data.tasks.filter((t) => isOnTask(t, employee.id) && !isClosedStatus(t.status))
   const soon = addDays(today, 3)
   const ranked = mine
     .map((task) => {

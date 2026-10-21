@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs } from "@/components/ui/tabs"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
-import { ArrowLeft, Copy, FolderKanban, Lock, Pencil, Plus, Trash2 } from "@/components/ui/carbon/icons"
+import { ArrowLeft, Copy, FolderKanban, Lock, Pencil, Plus, SettingsAdjust, Trash2 } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -29,7 +29,7 @@ import {
   useTaskMutations,
   useTasks,
 } from "@/hooks/workforce/use-work-projects"
-import { automaticHealth, projectHealth, remainingHours, taskProgress } from "@/lib/workforce/project-metrics"
+import { automaticHealth, projectHealth, remainingHours, taskProgress, withoutCancelled } from "@/lib/workforce/project-metrics"
 import { budgetUsage } from "@/lib/workforce/profitability"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-billing"
@@ -42,7 +42,9 @@ import { findByKey, taskKey } from "@/lib/workforce/task-extras"
 import { TaskFilters, NO_FILTERS, applyTaskFilters, type TaskFilterValues } from "./task-filters"
 import { HealthOverrideDialog } from "./health-override-dialog"
 import { cn } from "@/lib/utils"
-import { BudgetType, TaskStatus, type WorkTask, type WorkTaskInput } from "@/types/work-projects"
+import { BudgetType, TaskStatus, type TaskState, type TaskView, type TaskViewTab, type WorkTask, type WorkTaskInput } from "@/types/work-projects"
+import { projectStates, stateOf } from "@/lib/workforce/task-states"
+import { TaskStatesDialog } from "./task-states-dialog"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 import { ProjectForm, type ProjectFormHandle } from "./project-form"
 import { TaskForm, type TaskFormHandle } from "./task-form"
@@ -53,6 +55,12 @@ import { dependencyIssues } from "@/lib/workforce/scheduling"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { TaskBoard } from "./task-board"
 import { TaskList } from "./task-list"
+import { TaskSpreadsheet } from "./task-spreadsheet"
+import { TaskCalendar } from "./task-calendar"
+import { GROUP_BYS, type GroupBy } from "@/lib/workforce/task-grouping"
+import { useTaskViewMutations, useTaskViews } from "@/hooks/workforce/use-task-views"
+
+const VIEW_TABS: TaskViewTab[] = ["board", "list", "spreadsheet", "calendar"]
 import { MilestonesPanel } from "./milestones-panel"
 import { BudgetPanel } from "./budget-panel"
 import { RevenueSection } from "./revenue-section"
@@ -94,13 +102,21 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const { data: bills = [] } = useSupplierBills()
   const { data: changeOrders = [] } = useChangeOrders(projectId)
   const labels = settings?.taskLabels ?? []
+  const canEdit = can(authedUser, AdminPermissionsPlatform.PROJECTS_UPDATE)
+  const canDelete = can(authedUser, AdminPermissionsPlatform.PROJECTS_DELETE)
   const [filters, setFilters] = useState<TaskFilterValues>(NO_FILTERS)
   const [healthDialog, setHealthDialog] = useState(false)
   const [closing, setClosing] = useState(false)
   const [savingTemplate, setSavingTemplate] = useState(false)
+  const [editingStates, setEditingStates] = useState(false)
+  const [grouping, setGrouping] = useState<{ groupBy: GroupBy; thenBy: GroupBy }>({ groupBy: "status", thenBy: "none" })
+  // The open tab; a saved view switches it, so the tabs remount with the view's tab (P2)
+  const [tab, setTab] = useState<string>("board")
+  const [tabsKey, setTabsKey] = useState(0)
+  const viewer = { id: authedUser?.id ?? "me", name: authedUser?.name || t("admin") }
+  const { data: views = [] } = useTaskViews(projectId, viewer.id)
+  const viewMutations = useTaskViewMutations(viewer, canEdit)
 
-  const canEdit = can(authedUser, AdminPermissionsPlatform.PROJECTS_UPDATE)
-  const canDelete = can(authedUser, AdminPermissionsPlatform.PROJECTS_DELETE)
 
   const [editingProject, setEditingProject] = useState(false)
   const [deletingProject, setDeletingProject] = useState(false)
@@ -116,6 +132,8 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
     () => employees.filter((e) => project?.memberIds.includes(e.id)),
     [employees, project?.memberIds]
   )
+  // Stable between renders: the task form resets when its statuses change
+  const states = useMemo(() => projectStates(project ?? undefined), [project])
 
   if (isLoading) {
     return (
@@ -148,7 +166,8 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const manager = employees.find((e) => e.id === project.managerId)
   const progress = taskProgress(tasks)
   const health = projectHealth(project, tasks)
-  const done = tasks.filter((task) => task.status === TaskStatus.DONE).length
+  const counted = withoutCancelled(tasks)
+  const done = counted.filter((task) => task.status === TaskStatus.DONE).length
   const budget = budgetUsage(project, { entries, expenses, employees, clients, bills, changeOrders })
   const visibleTasks = applyTaskFilters(tasks, filters)
 
@@ -182,7 +201,45 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
       .filter(([, issues]) => issues.length > 0)
       .map(([id, issues]) => [id, issues.map((i) => t(i.kind === "late" ? "depLate" : "depOverlaps", { task: i.predecessor.title })).join(" ")])
   )
-  const addTask = (status: TaskStatus = TaskStatus.TODO) => setTaskSheet({ defaults: { status } })
+  const applyView = (v: TaskView) => {
+    setFilters(v.filters)
+    setGrouping({
+      groupBy: GROUP_BYS.includes(v.groupBy as GroupBy) ? (v.groupBy as GroupBy) : "status",
+      thenBy: GROUP_BYS.includes(v.thenBy as GroupBy) ? (v.thenBy as GroupBy) : "none",
+    })
+    if (v.tab !== tab) {
+      setTab(v.tab)
+      setTabsKey((k) => k + 1)
+    }
+  }
+  // Filters on the board, list, spreadsheet and calendar; the statuses editor sits with the board (P2)
+  const filterBar = (withStates: boolean) => (
+    <TaskFilters
+      userId={viewer.id}
+      canManage={canEdit}
+      views={views}
+      onApplyView={applyView}
+      onSaveView={({ name, shared }, done) =>
+        viewMutations.save.mutate(
+          { projectId: project.id, name, shared, tab: (VIEW_TABS as string[]).includes(tab) ? (tab as TaskViewTab) : "board", filters, groupBy: grouping.groupBy, thenBy: grouping.thenBy },
+          { onSuccess: done }
+        )
+      }
+      onShareView={(v, shared) => viewMutations.share.mutate({ id: v.id, shared })}
+      onDeleteView={(v) => viewMutations.remove.mutate(v.id)}
+      team={team}
+      labels={labels}
+      value={filters}
+      onChange={setFilters}
+      extra={withStates && canEdit && (
+        <Button variant="outline" size="sm" onClick={() => setEditingStates(true)}>
+          <SettingsAdjust className="size-4" />
+          {t("stEdit")}
+        </Button>
+      )}
+    />
+  )
+  const addTask = (state: TaskState = states[0]!) => setTaskSheet({ defaults: { status: state.group, stateId: state.id } })
 
   const facts: { label: string; value: React.ReactNode }[] = [
     { label: t("client"), value: client?.name ?? t("internalProject") },
@@ -287,7 +344,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             <Progress value={progress} aria-label={t("progress")} className={cn("h-2.5 flex-1", HEALTH_BAR[health])} />
             <span className="text-sm font-semibold tabular-nums">{progress}%</span>
             <span className="hidden text-sm text-muted-foreground sm:inline">
-              {t("tasksDone", { done, total: tasks.length })}
+              {t("tasksDone", { done, total: counted.length })}
             </span>
           </div>
           {project.healthOverride && (
@@ -310,25 +367,29 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
       <ClosedProjectSummary project={project} canEdit={canEdit} />
 
       <Tabs
+        key={tabsKey}
+        defaultTabId={tab}
+        onChange={(x) => setTab(x.id)}
         tabs={[
           {
             id: "board",
             label: t("board"),
             content: (
               <>
-              <TaskFilters userId={authedUser?.id ?? "me"} team={team} labels={labels} value={filters} onChange={setFilters} />
-              <TaskBoard
-                tasks={visibleTasks}
-                labels={labels}
-                team={team}
-                milestones={milestones}
-                canEdit={canEdit}
-                onOpen={openTask}
-                onAdd={addTask}
-                onMove={(id, status, index) => taskMutations.move.mutate({ id, status, index })}
-                warnings={depWarnings}
-                projectCode={project.code}
-              />
+                {filterBar(true)}
+                <TaskBoard
+                  tasks={visibleTasks}
+                  labels={labels}
+                  team={team}
+                  milestones={milestones}
+                  states={states}
+                  canEdit={canEdit}
+                  onOpen={openTask}
+                  onAdd={addTask}
+                  onMove={(id, state, index) => taskMutations.move.mutate({ id, stateId: state.id, status: state.group, index })}
+                  warnings={depWarnings}
+                  projectCode={project.code}
+                />
               </>
             ),
           },
@@ -337,8 +398,48 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             label: t("list"),
             content: (
               <>
-                <TaskFilters userId={authedUser?.id ?? "me"} team={team} labels={labels} value={filters} onChange={setFilters} />
-                <TaskList tasks={visibleTasks} team={team} milestones={milestones} onOpen={openTask} warnings={depWarnings} projectCode={project.code} />
+                {filterBar(false)}
+                <TaskList tasks={visibleTasks} team={team} milestones={milestones} onOpen={openTask} warnings={depWarnings} projectCode={project.code} states={states} />
+              </>
+            ),
+          },
+          {
+            id: "spreadsheet",
+            label: t("ssTab"),
+            content: (
+              <>
+                {filterBar(false)}
+                <TaskSpreadsheet
+                  tasks={visibleTasks}
+                  states={states}
+                  team={team}
+                  milestones={milestones}
+                  labels={labels}
+                  canEdit={canEdit}
+                  projectCode={project.code}
+                  groupBy={grouping.groupBy}
+                  thenBy={grouping.thenBy}
+                  onGroupChange={(groupBy, thenBy) => setGrouping({ groupBy, thenBy })}
+                  onOpen={openTask}
+                  onUpdate={(id, input) => taskMutations.update.mutate({ id, input })}
+                />
+              </>
+            ),
+          },
+          {
+            id: "calendar",
+            label: t("calendar"),
+            content: (
+              <>
+                {filterBar(false)}
+                <TaskCalendar
+                  tasks={visibleTasks}
+                  states={states}
+                  canEdit={canEdit}
+                  projectCode={project.code}
+                  onOpen={openTask}
+                  onReschedule={(id, dates) => taskMutations.update.mutate({ id, input: dates })}
+                />
               </>
             ),
           },
@@ -426,6 +527,16 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
         clients={clients}
         currency={workspace.currency}
       />
+      {editingStates && (
+        <TaskStatesDialog
+          open={editingStates}
+          onOpenChange={setEditingStates}
+          states={states}
+          countOf={(state) => tasks.filter((x) => stateOf(x, states).id === state.id).length}
+          saving={projectMutations.update.isPending}
+          onSave={(taskStates) => projectMutations.update.mutate({ id: project.id, input: { taskStates } }, { onSuccess: () => setEditingStates(false) })}
+        />
+      )}
       {savingTemplate && <SaveTemplateDialog project={project} open={savingTemplate} onOpenChange={setSavingTemplate} />}
 
       <DataTableEntityFormSheet
@@ -447,6 +558,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
           labels={labels}
           projectTasks={tasks}
           resolveKey={resolveKey}
+          states={states}
           onValid={saveTask}
         />
         {liveTask && <TaskDetailsPanel key={`d-${liveTask.id}`} task={liveTask} people={employees.filter((e) => e.status !== EmployeeStatus.INACTIVE)} allTasks={allTasks} projects={allProjects} canEdit={canEdit} onOpenTask={openTask} />}

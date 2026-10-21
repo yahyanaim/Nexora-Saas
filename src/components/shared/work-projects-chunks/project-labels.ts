@@ -4,6 +4,7 @@ import {
   ProjectHealth,
   TaskStatus,
   WorkProjectStatus,
+  type TaskState,
 } from "@/types/work-projects"
 import { MilestoneState } from "@/lib/workforce/project-metrics"
 
@@ -74,6 +75,12 @@ export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
   [TaskStatus.IN_PROGRESS]: "inProgress",
   [TaskStatus.REVIEW]: "inReview",
   [TaskStatus.DONE]: "done",
+  [TaskStatus.CANCELLED]: "cancelled",
+}
+
+/** A project status's name: its own, or the translated group name for the built-in ones (P2). */
+export function stateLabel(state: Pick<TaskState, "name" | "group">, t: (key: string) => string) {
+  return state.name?.trim() || t(TASK_STATUS_LABEL[state.group])
 }
 
 export const TASK_STATUS_DOT: Record<TaskStatus, string> = {
@@ -81,6 +88,7 @@ export const TASK_STATUS_DOT: Record<TaskStatus, string> = {
   [TaskStatus.IN_PROGRESS]: "bg-info-foreground",
   [TaskStatus.REVIEW]: "bg-warning-foreground",
   [TaskStatus.DONE]: "bg-success-foreground",
+  [TaskStatus.CANCELLED]: "bg-destructive/50",
 }
 
 export const MILESTONE_STATE_LABEL: Record<MilestoneState, string> = {

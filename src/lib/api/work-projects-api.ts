@@ -2,6 +2,7 @@ import {
   ProjectHealth,
   TaskStatus,
   type Milestone,
+  type TaskState,
   type MilestoneInput,
   type WorkProject,
   type WorkProjectInput,
@@ -14,6 +15,7 @@ import { recordTaskChanges } from "./task-collab-api"
 import { getAuditActor, recordAudit } from "@/lib/workforce/audit"
 import { wouldCreateCycle } from "@/lib/workforce/scheduling"
 import { isWebUrl, nextTaskNumber } from "@/lib/workforce/task-extras"
+import { cleanTaskStates, projectStates, stateOf, validateTaskStates } from "@/lib/workforce/task-states"
 import { WorkProjectStatus, type CloseSnapshot } from "@/types/work-projects"
 
 /**
@@ -46,6 +48,11 @@ export async function updateProjectApi(
 ): Promise<WorkProject> {
   const current = projects.get(workspaceId, id)
   if (!current) throw new Error("Project not found")
+  if (input.taskStates) {
+    // Tasks in a removed status fall back to the first status of its group (see stateOf)
+    validateTaskStates(input.taskStates)
+    input = { ...input, taskStates: cleanTaskStates(input.taskStates) }
+  }
   const next = withManagerAsMember({ ...current, ...input })
   validateProject(workspaceId, next, id)
 
@@ -175,14 +182,16 @@ export async function createTaskApi(workspaceId: string, raw: WorkTaskInput): Pr
   assertDependencies(workspaceId, input.projectId, undefined, input.dependsOn)
   assertExtras(workspaceId, input.projectId, undefined, input)
   assertDates(input)
-  const order = nextOrder(workspaceId, input.projectId, input.status)
+  const states = statesFor(workspaceId, input.projectId)
+  const placed = { ...input, ...placeIn(states, input.stateId ?? input.status) }
+  const order = nextOrder(workspaceId, states, placed)
   const task = tasks.create(workspaceId, {
-    ...input,
+    ...placed,
     number: nextTaskNumber(tasks.list(workspaceId), input.projectId),
     order,
-    completedAt: input.status === TaskStatus.DONE ? new Date().toISOString() : undefined,
+    completedAt: placed.status === TaskStatus.DONE ? new Date().toISOString() : undefined,
   })
-  recordTaskChanges(workspaceId, undefined, task)
+  recordTaskChanges(workspaceId, undefined, task, states)
   return task
 }
 
@@ -200,32 +209,37 @@ export async function updateTaskApi(
   if ("dependsOn" in input) assertDependencies(workspaceId, current.projectId, id, input.dependsOn)
   assertDates({ startDate: input.startDate ?? current.startDate, dueDate: input.dueDate ?? current.dueDate })
 
+  const states = statesFor(workspaceId, current.projectId)
   const patch: Partial<WorkTask> = { ...input }
-  if (input.status && input.status !== current.status) {
-    patch.order = nextOrder(workspaceId, current.projectId, input.status)
-    patch.completedAt = input.status === TaskStatus.DONE ? new Date().toISOString() : undefined
-  }
+  // A new status (P2) sets its group; a new group alone lands in the group's first status
+  if (input.stateId || (input.status && input.status !== current.status)) Object.assign(patch, placeIn(states, input.stateId ?? input.status!))
+  const next = { ...current, ...patch }
+  if (stateOf(next, states).id !== stateOf(current, states).id) patch.order = nextOrder(workspaceId, states, next)
+  if (next.status !== current.status) patch.completedAt = next.status === TaskStatus.DONE ? new Date().toISOString() : undefined
   const updated = tasks.update(workspaceId, id, patch)
-  recordTaskChanges(workspaceId, current, updated)
+  recordTaskChanges(workspaceId, current, updated, states)
   return updated
 }
 
 /**
  * Moves a task to a column (and position) on the board, renumbering that
- * column so orders stay 0..n-1.
+ * column so orders stay 0..n-1. The column is one of the project's
+ * statuses (P2); a group name lands in that group's first status.
  */
 export async function moveTaskApi(
   workspaceId: string,
   id: string,
-  status: TaskStatus,
+  target: string,
   index?: number
 ): Promise<WorkTask> {
   const task = tasks.get(workspaceId, id)
   if (!task) throw new Error("Task not found")
+  const states = statesFor(workspaceId, task.projectId)
+  const { status, stateId } = placeIn(states, target)
 
   const column = tasks
     .list(workspaceId)
-    .filter((t) => t.projectId === task.projectId && t.status === status && t.id !== id)
+    .filter((t) => t.projectId === task.projectId && stateOf(t, states).id === stateId && t.id !== id)
     .sort((a, b) => a.order - b.order)
   const at = index === undefined ? column.length : Math.max(0, Math.min(index, column.length))
   column.splice(at, 0, task)
@@ -237,8 +251,8 @@ export async function moveTaskApi(
 
   const completedAt =
     status === TaskStatus.DONE ? (task.status === TaskStatus.DONE ? task.completedAt : new Date().toISOString()) : undefined
-  const moved = tasks.update(workspaceId, id, { status, order: at, completedAt })
-  recordTaskChanges(workspaceId, task, moved)
+  const moved = tasks.update(workspaceId, id, { status, stateId, order: at, completedAt })
+  recordTaskChanges(workspaceId, task, moved, states)
   return moved
 }
 
@@ -250,9 +264,21 @@ export async function deleteTaskApi(workspaceId: string, id: string): Promise<vo
   tasks.remove(workspaceId, id)
 }
 
-function nextOrder(workspaceId: string, projectId: string, status: TaskStatus) {
-  const column = tasks.list(workspaceId).filter((t) => t.projectId === projectId && t.status === status)
+function nextOrder(workspaceId: string, states: TaskState[], task: Pick<WorkTask, "projectId" | "status" | "stateId">) {
+  const stateId = stateOf(task, states).id
+  const column = tasks.list(workspaceId).filter((t) => t.projectId === task.projectId && stateOf(t, states).id === stateId)
   return column.reduce((max, t) => Math.max(max, t.order + 1), 0)
+}
+
+function statesFor(workspaceId: string, projectId: string) {
+  return projectStates(projects.get(workspaceId, projectId))
+}
+
+/** The status and group for a status id, or for a group (its first status). */
+function placeIn(states: TaskState[], target: string): { status: TaskStatus; stateId: string } {
+  const state = states.find((s) => s.id === target) ?? states.find((s) => s.group === target)
+  if (!state) throw new Error("This status isn't part of the project")
+  return { status: state.group, stateId: state.id }
 }
 
 function assertAssigneeOnTeam(workspaceId: string, projectId: string, assigneeId?: string) {
