@@ -8,34 +8,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createId } from "@/lib/workforce/demo-store"
+import { withContact, withoutContact } from "@/lib/workforce/contacts"
 import { ContactRole, type Client, type ClientContact } from "@/types/workforce"
 
 export const blankContact = (): ClientContact => ({ id: "", name: "", email: "", phone: "", position: "", role: undefined, isPrimary: false })
 
-/** There is always one main contact while the client has any. */
-const keepMain = (contacts: ClientContact[]) => (contacts.length && !contacts.some((c) => c.isPrimary) ? contacts.map((c, i) => ({ ...c, isPrimary: i === 0 })) : contacts)
-
 const splitList = (text: string) => [...new Set(text.split(/[,;\n]/).map((x) => x.trim()).filter(Boolean))]
 const isEmail = (x: string) => /^\S+@\S+\.\S+$/.test(x)
 
-/** The client's contacts with one added or changed; a new main contact takes over from the old one. */
-export function withContact(contacts: ClientContact[], contact: ClientContact): ClientContact[] {
-  const saved: ClientContact = {
-    ...contact,
-    id: contact.id || createId("con"),
-    phone: contact.phone?.trim() || undefined,
-    position: contact.position?.trim() || undefined,
-    linkedin: contact.linkedin?.trim() || undefined,
-    otherEmails: contact.otherEmails?.length ? contact.otherEmails : undefined,
-    otherPhones: contact.otherPhones?.length ? contact.otherPhones : undefined,
-  }
-  const others = contacts.filter((c) => c.id !== contact.id).map((c) => (contact.isPrimary ? { ...c, isPrimary: false } : c))
-  return keepMain(contact.id ? contacts.map((c) => (c.id === contact.id ? saved : others.find((o) => o.id === c.id)!)) : [...others, saved])
-}
-
-/** The client's contacts without one; the next contact becomes main when the main one goes. */
-export const withoutContact = (contacts: ClientContact[], id: string) => keepMain(contacts.filter((c) => c.id !== id))
+export { withContact, withoutContact }
 
 interface DialogProps {
   /** The contact to change, a blank one to add, or null when closed */

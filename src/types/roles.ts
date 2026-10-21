@@ -127,6 +127,10 @@ export enum AdminPermissionsPlatform {
   CLIENTS_READ = "clients:read",
   CLIENTS_UPDATE = "clients:update",
   CLIENTS_DELETE = "clients:delete",
+  /** Bring clients, contacts and deals in from a CSV or Excel file (CRM step 7) */
+  CLIENTS_IMPORT = "clients:import",
+  /** Download client and contact lists */
+  CLIENTS_EXPORT = "clients:export",
 
   // Time tracking
   TIME_TRACK = "time:track",
@@ -173,6 +177,8 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { value: AdminPermissionsPlatform.CLIENTS_READ, label: "Read" },
       { value: AdminPermissionsPlatform.CLIENTS_UPDATE, label: "Update" },
       { value: AdminPermissionsPlatform.CLIENTS_DELETE, label: "Delete" },
+      { value: AdminPermissionsPlatform.CLIENTS_IMPORT, label: "Import" },
+      { value: AdminPermissionsPlatform.CLIENTS_EXPORT, label: "Export" },
     ],
   },
   {

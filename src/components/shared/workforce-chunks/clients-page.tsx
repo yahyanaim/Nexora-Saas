@@ -4,7 +4,7 @@ import { useMemo, useRef, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useSearchParams } from "next/navigation"
 import { useQueryClient } from "@tanstack/react-query"
-import { AlertTriangle, CheckCircle, Download, Handshake, Mail, Plus, Receipt, Sparkles, Tag, Users } from "@/components/ui/carbon/icons"
+import { AlertTriangle, CheckCircle, Download, Upload, Handshake, Mail, Plus, Receipt, Sparkles, Tag, Users } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils"
 import { CLIENT_FILTER_COLUMNS, getClientsColumns } from "./clients-columns"
 import { ClientForm, type ClientFormHandle } from "./client-form"
 import { clientPageHref } from "./client-page-tabs"
-import { useRouter } from "@/i18n/navigation"
+import { Link, useRouter } from "@/i18n/navigation"
 import { ClientDetailsPanel } from "./client-details-panel"
 import { formatMoney } from "./workforce-labels"
 
@@ -62,6 +62,8 @@ export default function ClientsPage() {
   const canCreate = can(authedUser, AdminPermissionsPlatform.CLIENTS_CREATE)
   const canEdit = can(authedUser, AdminPermissionsPlatform.CLIENTS_UPDATE)
   const canDelete = can(authedUser, AdminPermissionsPlatform.CLIENTS_DELETE)
+  const canExport = can(authedUser, AdminPermissionsPlatform.CLIENTS_EXPORT)
+  const canImport = can(authedUser, AdminPermissionsPlatform.CLIENTS_IMPORT)
   const canSeeMoney = can(authedUser, AdminPermissionsPlatform.INVOICES_READ)
 
   const [pill, setPill] = useState<StatusPill>("all")
@@ -226,6 +228,14 @@ export default function ClientsPage() {
               <Mail className="size-4" />
               {t("clEmailAll")}
             </Button>
+            {canImport && (
+              <Button variant="outline" asChild>
+                <Link href="/dashboard/clients/import">
+                  <Upload className="size-4" />
+                  {t("imImport")}
+                </Link>
+              </Button>
+            )}
             {canCreate && (
               <Button variant="primary" onClick={() => openForm(null)}>
                 <Plus className="size-4" />
@@ -271,6 +281,7 @@ export default function ClientsPage() {
         showRange
         numberedPages
         savedViewsKey="erp-clients"
+        enableExport={canExport}
         exportOptions={[{ label: t("exportCsv"), icon: Download, onClick: (rows) => exportRows(rows as Client[]) }]}
         renderBulkActions={(rows, clear) => (
           <>
@@ -284,10 +295,12 @@ export default function ClientsPage() {
                 {t("clAddTag")}
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => exportRows(rows)}>
-              <Download className="size-4" />
-              {t("export")}
-            </Button>
+            {canExport && (
+              <Button variant="outline" size="sm" onClick={() => exportRows(rows)}>
+                <Download className="size-4" />
+                {t("export")}
+              </Button>
+            )}
           </>
         )}
         filters={[
