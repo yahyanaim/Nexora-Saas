@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { BadgeCheck, CreditCard, DownloadIcon, FileSignature, FileText, Flag, FolderKanban, Receipt, XCircle } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 import { SatisfactionSurveys } from "./satisfaction"
+import { PortalRequests } from "./portal-requests"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClients } from "@/hooks/workforce/use-workforce"
 import { useMilestones, useProjects, useTasks } from "@/hooks/workforce/use-work-projects"
@@ -193,6 +194,8 @@ export function PortalView({ clientId, viewerName, preview }: Props) {
           <p className="mt-4 rounded-2xl bg-info-soft p-3 text-xs text-info-foreground">{t("portalPayReference")}</p>
         </section>
       </div>
+
+      <PortalRequests clientId={clientId} viewerName={viewerName} projects={projects} preview={preview} />
 
       {/* Invoices */}
       <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">

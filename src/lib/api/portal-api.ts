@@ -2,7 +2,8 @@ import { createCollection } from "@/lib/workforce/demo-store"
 import { recordAudit } from "@/lib/workforce/audit"
 import { DEFAULT_PORTAL_INACTIVITY_DAYS, awaitingClient, canSignIn } from "@/lib/workforce/portal"
 import { PortalAccessStatus, type PortalAccess } from "@/types/work-portal"
-import type { Milestone } from "@/types/work-projects"
+import type { ChangeOrder, Milestone } from "@/types/work-projects"
+import { decideChangeOrderApi, listChangeOrdersApi } from "./change-orders-api"
 import { listClientsApi } from "./clients-api"
 import { getSettingsApi } from "./settings-api"
 import { listMilestonesApi, listProjectsApi, listTasksApi, updateMilestoneApi } from "./work-projects-api"
@@ -111,4 +112,22 @@ export async function decideMilestoneApi(
     target: `${project.code} · ${milestone.title}`,
   })
   return saved
+}
+
+/**
+ * The client approves or declines a change order sent for one of its own
+ * projects (P3); declining needs a reason. The change then counts in (or
+ * stays out of) the budget like a decision recorded by the team.
+ */
+export async function decideChangeOrderForClientApi(
+  workspaceId: string,
+  clientId: string,
+  changeOrderId: string,
+  decision: { approved: boolean; reason?: string; by: string }
+): Promise<ChangeOrder> {
+  const order = (await listChangeOrdersApi(workspaceId)).find((o) => o.id === changeOrderId)
+  const project = order && (await listProjectsApi(workspaceId)).find((p) => p.id === order.projectId)
+  if (!order || !project || project.clientId !== clientId) throw new Error("Change order not found")
+  if (!decision.approved && !decision.reason?.trim()) throw new Error("Tell the team what should change")
+  return decideChangeOrderApi(workspaceId, changeOrderId, decision.approved, decision.by, decision.reason)
 }

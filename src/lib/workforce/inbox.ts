@@ -10,6 +10,8 @@ import type { PerformanceReview } from "@/types/work-reviews"
 import { EmployeeStatus, type Employee } from "@/types/workforce"
 import { displayStatus } from "./billing"
 import { isOnTask } from "./task-extras"
+import { waitingRequests } from "./client-requests"
+import type { ClientRequest } from "@/types/work-requests"
 import { documentsNeedingAction } from "./documents"
 import { reviewAction, type ReviewViewer } from "./reviews"
 
@@ -29,7 +31,7 @@ export interface InboxItem {
 
 export interface InboxInput {
   viewer: ReviewViewer
-  rights: { approveTime: boolean; invoices: boolean; hr: boolean }
+  rights: { approveTime: boolean; invoices: boolean; hr: boolean; projects?: boolean }
   employees: Employee[]
   reviews: PerformanceReview[]
   entries: TimeEntry[]
@@ -43,6 +45,8 @@ export interface InboxInput {
   projects?: WorkProject[]
   /** Client follow-ups (CRM step 5) */
   followUps?: ClientFollowUp[]
+  /** Client requests waiting for an answer, for people who manage projects (P3) */
+  requests?: ClientRequest[]
   today: string
 }
 
@@ -110,6 +114,13 @@ export function buildInbox(d: InboxInput): InboxItem[] {
     if (due.length) {
       const lateCount = due.filter((f) => f.dueDate < d.today).length
       items.push({ id: `follow-ups:${due.map((f) => `${f.id}-${f.dueDate}`).join(",")}`, category: "team", title: "inboxFollowUps", message: lateCount ? "inboxFollowUpsLate" : "inboxFollowUpsToday", values: { count: due.length, late: lateCount }, href: "/dashboard/my-work" })
+    }
+  }
+  if (d.rights.projects) {
+    const waiting = waitingRequests(d.requests ?? [], d.today)
+    if (waiting.length) {
+      const urgent = waiting.filter((r) => r.urgent).length
+      items.push({ id: `requests:${waiting.map((r) => r.id).join(",")}`, category: "team", title: "inboxRequests", message: urgent ? "inboxRequestsUrgent" : "inboxRequestsMessage", values: { count: waiting.length, urgent }, href: "/dashboard/requests" })
     }
   }
   return items

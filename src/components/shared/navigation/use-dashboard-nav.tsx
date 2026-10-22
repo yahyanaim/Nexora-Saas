@@ -37,6 +37,7 @@ import {
   Building,
   Briefcase,
   Globe,
+  InboxIcon,
   Handshake,
   Funnel,
   Crown,
@@ -226,6 +227,12 @@ export function useDashboardNav() {
             url: "/dashboard/projects",
             icon: FolderKanban,
             descriptionKey: "pageDescProjects",
+          },
+          {
+            title: t("rqNav"),
+            url: "/dashboard/requests",
+            icon: InboxIcon,
+            descriptionKey: "pageDescRequests",
           },
           {
             title: t("timesheets"),

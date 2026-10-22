@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
 import { useCurrentWorkspace } from "@/store/workspace-store"
-import { decideMilestoneApi, invitePortalContactApi, listPortalAccessApi, portalInactivityDays, revokePortalAccessApi } from "@/lib/api/portal-api"
+import { decideChangeOrderForClientApi, decideMilestoneApi, invitePortalContactApi, listPortalAccessApi, portalInactivityDays, revokePortalAccessApi } from "@/lib/api/portal-api"
 import { translateError } from "@/lib/errors/translate-error"
 
 export function usePortalAccess() {
@@ -37,6 +37,13 @@ export function usePortalMutations() {
       mutationFn: (v: { clientId: string; milestoneId: string; approved: boolean; comment?: string; by: string }) =>
         decideMilestoneApi(ws, v.clientId, v.milestoneId, { approved: v.approved, comment: v.comment, by: v.by }),
       onSuccess: (_d, v) => done(v.approved ? t("portalMilestoneApproved") : t("portalChangesRequested"), ["milestones", "projects"])(),
+      onError,
+    }),
+    // The client's answer to a change order of its project (P3)
+    decideChange: useMutation({
+      mutationFn: (v: { clientId: string; changeOrderId: string; approved: boolean; reason?: string; by: string }) =>
+        decideChangeOrderForClientApi(ws, v.clientId, v.changeOrderId, { approved: v.approved, reason: v.reason, by: v.by }),
+      onSuccess: (_d, v) => done(v.approved ? t("rqChangeApproved") : t("rqChangeDeclined"), ["change-orders", "projects"])(),
       onError,
     }),
   }
