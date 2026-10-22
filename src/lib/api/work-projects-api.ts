@@ -15,6 +15,7 @@ import { recordTaskChanges } from "./task-collab-api"
 import { getAuditActor, recordAudit } from "@/lib/workforce/audit"
 import { wouldCreateCycle } from "@/lib/workforce/scheduling"
 import { isWebUrl, nextTaskNumber } from "@/lib/workforce/task-extras"
+import { cycles } from "./cycle-store"
 import { cleanTaskStates, projectStates, stateOf, validateTaskStates } from "@/lib/workforce/task-states"
 import { WorkProjectStatus, type CloseSnapshot } from "@/types/work-projects"
 
@@ -111,6 +112,7 @@ export async function setHealthOverrideApi(
 
 /** Deletes the project with its tasks and milestones. */
 export async function deleteProjectApi(workspaceId: string, id: string): Promise<void> {
+  for (const c of cycles.list(workspaceId).filter((x) => x.projectId === id)) cycles.remove(workspaceId, c.id)
   for (const task of tasks.list(workspaceId).filter((t) => t.projectId === id)) tasks.remove(workspaceId, task.id)
   for (const m of milestones.list(workspaceId).filter((x) => x.projectId === id)) milestones.remove(workspaceId, m.id)
   projects.remove(workspaceId, id)
@@ -157,7 +159,13 @@ function assertDates(input: Partial<Pick<WorkTask, "startDate" | "dueDate">>) {
 }
 
 /** People on a task are on the project team; links are web addresses; related tasks exist (P1). */
-function assertExtras(workspaceId: string, projectId: string, taskId: string | undefined, input: Partial<WorkTaskInput>) {
+function assertExtras(workspaceId: string, projectId: string, taskId: string | undefined, input: Partial<WorkTaskInput>, currentCycleId?: string) {
+  // A task joins an open cycle of its own project (P4); staying in a closed one is fine
+  if (input.cycleId && input.cycleId !== currentCycleId) {
+    const cycle = cycles.get(workspaceId, input.cycleId)
+    if (!cycle || cycle.projectId !== projectId) throw new Error("Cycle not found")
+    if (cycle.closedAt) throw new Error("This cycle is closed")
+  }
   for (const id of input.collaboratorIds ?? []) assertAssigneeOnTeam(workspaceId, projectId, id)
   if ((input.links ?? []).some((l) => !isWebUrl(l.url))) throw new Error("A link must start with http:// or https://")
   for (const r of input.relations ?? []) {
@@ -205,7 +213,7 @@ export async function updateTaskApi(
   const input = cleanExtras({ ...raw, assigneeId: "assigneeId" in raw ? raw.assigneeId : current.assigneeId })
   if (!("assigneeId" in raw)) delete input.assigneeId
   if ("assigneeId" in input) assertAssigneeOnTeam(workspaceId, current.projectId, input.assigneeId)
-  assertExtras(workspaceId, current.projectId, id, input)
+  assertExtras(workspaceId, current.projectId, id, input, current.cycleId)
   if ("dependsOn" in input) assertDependencies(workspaceId, current.projectId, id, input.dependsOn)
   assertDates({ startDate: input.startDate ?? current.startDate, dueDate: input.dueDate ?? current.dueDate })
 

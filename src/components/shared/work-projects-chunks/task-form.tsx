@@ -18,6 +18,7 @@ import {
   Priority,
   TaskStatus,
   type Milestone,
+  type Cycle,
   type TaskState,
   type WorkTask,
   type WorkTaskInput,
@@ -47,6 +48,7 @@ const schema = z.object({
   subtasks: z.array(z.object({ id: z.string(), title: z.string().trim().min(1), done: z.boolean() })),
   labelIds: z.array(z.string()),
   collaboratorIds: z.array(z.string()),
+  cycleId: z.string(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -66,6 +68,7 @@ function toFormValues(task: Partial<WorkTask> | undefined, states: TaskState[]):
     subtasks: task?.subtasks ?? [],
     labelIds: task?.labelIds ?? [],
     collaboratorIds: task?.collaboratorIds ?? [],
+    cycleId: task?.cycleId ?? NONE,
   }
 }
 
@@ -83,11 +86,13 @@ interface Props {
   resolveKey?: KeyResolver
   /** The project's statuses (P2) */
   states?: TaskState[]
+  /** The project's cycles when it works in cycles (P4) */
+  cycles?: Cycle[]
   onValid: (input: WorkTaskInput) => void
 }
 
 export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
-  { projectId, task, team, milestones, labels, projectTasks = [], resolveKey, states = DEFAULT_TASK_STATES, onValid },
+  { projectId, task, team, milestones, labels, projectTasks = [], resolveKey, states = DEFAULT_TASK_STATES, cycles, onValid },
   ref
 ) {
   const t = useTranslations()
@@ -110,6 +115,7 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
           assigneeId: v.assigneeId === NONE ? undefined : v.assigneeId,
           collaboratorIds: v.collaboratorIds.filter((id) => id !== v.assigneeId),
           milestoneId: v.milestoneId === NONE ? undefined : v.milestoneId,
+          cycleId: v.cycleId === NONE ? undefined : v.cycleId,
           startDate: v.startDate || undefined,
           dueDate: v.dueDate || undefined,
         })
@@ -159,6 +165,19 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
             options={[{ value: NONE, label: t("none") }, ...milestones.map((m) => ({ value: m.id, label: m.title }))]}
           />
         </div>
+
+        {cycles && (
+          <SelectField
+            control={form.control}
+            name="cycleId"
+            label={t("cyField")}
+            options={[
+              { value: NONE, label: t("cyBacklog") },
+              // Open cycles, plus the closed one the task already sits in
+              ...cycles.filter((c) => !c.closedAt || c.id === task?.cycleId).map((c) => ({ value: c.id, label: c.name })),
+            ]}
+          />
+        )}
 
         <PeopleChips
           label={t("tkAlsoOn")}

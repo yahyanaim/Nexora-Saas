@@ -12,7 +12,7 @@ import { taskKey } from "@/lib/workforce/task-extras"
 import { GROUP_BYS, NO_VALUE, groupTasks, type GroupBy, type TaskGroup } from "@/lib/workforce/task-grouping"
 import type { Employee } from "@/types/workforce"
 import type { TaskLabel } from "@/types/work-settings"
-import { Priority, isClosedStatus, type Milestone, type TaskState, type WorkTask, type WorkTaskInput } from "@/types/work-projects"
+import { Priority, isClosedStatus, type Cycle, type Milestone, type TaskState, type WorkTask, type WorkTaskInput } from "@/types/work-projects"
 import { NONE } from "../workforce-chunks/workforce-labels"
 import { PRIORITY_DOT, PRIORITY_LABEL, TASK_STATUS_DOT, stateLabel } from "./project-labels"
 
@@ -22,6 +22,8 @@ interface Props {
   team: Employee[]
   milestones: Milestone[]
   labels: TaskLabel[]
+  /** The project's cycles, when it works in cycles (P4) */
+  cycles?: Cycle[]
   canEdit: boolean
   projectCode: string
   groupBy: GroupBy
@@ -39,10 +41,12 @@ const COLUMNS = 8
  * due date and estimate edited right in the cell, grouped and sub-grouped by
  * a field. Text and numbers save when you leave the cell or press Enter.
  */
-export function TaskSpreadsheet({ tasks, states, team, milestones, labels, canEdit, projectCode, groupBy, thenBy, onGroupChange, onOpen, onUpdate }: Props) {
+export function TaskSpreadsheet({ tasks, states, team, milestones, labels, cycles = [], canEdit, projectCode, groupBy, thenBy, onGroupChange, onOpen, onUpdate }: Props) {
   const t = useTranslations()
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
-  const groups = groupTasks(tasks, groupBy, thenBy, { states, people: team, milestones, labels })
+  const groups = groupTasks(tasks, groupBy, thenBy, { states, people: team, milestones, labels, cycles })
+  // Grouping by cycle only makes sense on a project that uses cycles
+  const options = GROUP_BYS.filter((o) => o !== "cycle" || cycles.length > 0)
 
   const groupName = (by: GroupBy, key: string) => {
     if (by === "status") {
@@ -50,7 +54,8 @@ export function TaskSpreadsheet({ tasks, states, team, milestones, labels, canEd
       return s ? stateLabel(s, t) : key
     }
     if (by === "priority") return t(PRIORITY_LABEL[key as Priority])
-    if (key === NO_VALUE) return t(by === "assignee" ? "unassigned" : by === "milestone" ? "ssNoMilestone" : "ssNoLabel")
+    if (key === NO_VALUE) return t(by === "assignee" ? "unassigned" : by === "milestone" ? "ssNoMilestone" : by === "cycle" ? "cyBacklog" : "ssNoLabel")
+    if (by === "cycle") return cycles.find((c) => c.id === key)?.name ?? "—"
     if (by === "assignee") return team.find((e) => e.id === key)?.name ?? "—"
     if (by === "milestone") return milestones.find((m) => m.id === key)?.title ?? "—"
     return labels.find((l) => l.id === key)?.name ?? "—"
@@ -199,8 +204,8 @@ export function TaskSpreadsheet({ tasks, states, team, milestones, labels, canEd
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        {groupSelect("ss-group", t("ssGroupBy"), groupBy, GROUP_BYS, (v) => onGroupChange(v, v === "none" || v === thenBy ? "none" : thenBy))}
-        {groupSelect("ss-then", t("ssThenBy"), thenBy, GROUP_BYS.filter((o) => o !== groupBy || o === "none"), (v) => onGroupChange(groupBy, v), groupBy === "none")}
+        {groupSelect("ss-group", t("ssGroupBy"), groupBy, options, (v) => onGroupChange(v, v === "none" || v === thenBy ? "none" : thenBy))}
+        {groupSelect("ss-then", t("ssThenBy"), thenBy, options.filter((o) => o !== groupBy || o === "none"), (v) => onGroupChange(groupBy, v), groupBy === "none")}
         {canEdit && <p className="text-xs text-muted-foreground">{t("ssHint")}</p>}
       </div>
       <div className="overflow-x-auto rounded-3xl border border-border bg-card shadow-panel">

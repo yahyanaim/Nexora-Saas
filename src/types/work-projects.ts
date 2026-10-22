@@ -64,6 +64,8 @@ export interface WorkProject {
   recognitionMethod?: RecognitionMethod
   /** The project's own task statuses, in board order (P2); the default set when unset */
   taskStates?: TaskState[]
+  /** The team works in cycles (sprints) on this project (P4) */
+  cyclesEnabled?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -193,6 +195,8 @@ export interface WorkTask {
   status: TaskStatus
   /** The project's status the task sits in (P2); its group always equals `status` */
   stateId?: string
+  /** The cycle (sprint) the task is planned in (P4); in the backlog when unset */
+  cycleId?: string
   priority: Priority
   /** Main person on the task: their workload and timesheet carry it */
   assigneeId?: string
@@ -350,3 +354,39 @@ export interface TaskView {
 }
 
 export type TaskViewInput = Pick<TaskView, "projectId" | "name" | "shared" | "tab" | "filters" | "groupBy" | "thenBy">
+
+/**
+ * A cycle (sprint) of a project (P4): a short, dated period with the tasks
+ * the team commits to. Closing it moves unfinished tasks on and keeps a
+ * summary.
+ */
+export interface Cycle {
+  id: string
+  workspaceId: string
+  projectId: string
+  /** 1, 2, 3… in the project */
+  number: number
+  name: string
+  /** yyyy-mm-dd, inclusive */
+  startDate: string
+  endDate: string
+  goal?: string
+  closedAt?: string
+  closedBy?: string
+  /** Figures frozen when the cycle is closed */
+  summary?: CycleSummary
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CycleSummary {
+  /** Estimated hours of the tasks in the cycle when it closed */
+  committedHours: number
+  doneHours: number
+  doneTasks: number
+  /** Unfinished tasks moved on, and where */
+  carriedTasks: number
+  carriedTo: "next" | "backlog"
+}
+
+export type CycleInput = Pick<Cycle, "projectId" | "name" | "startDate" | "endDate"> & Partial<Pick<Cycle, "goal">>
