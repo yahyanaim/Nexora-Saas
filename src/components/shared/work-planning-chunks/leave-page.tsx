@@ -48,7 +48,9 @@ import { includesFilter } from "../workforce-chunks/workforce-labels"
 import { LEAVE_STATUS_CLASS, LEAVE_STATUS_LABEL, LEAVE_TYPE_LABEL, formatRange } from "./planning-labels"
 import { useSelfScope } from "@/hooks/workforce/use-current-employee"
 import { useApprover } from "@/hooks/workforce/use-current-employee"
-import { approverRef } from "@/lib/workforce/approvals"
+import { approverRef, stepsRequired } from "@/lib/workforce/approvals"
+import { LeaveWay } from "../record-way"
+import { ApprovalSubject } from "@/types/work-settings"
 
 export default function LeavePage() {
   const t = useTranslations()
@@ -58,6 +60,8 @@ export default function LeavePage() {
   const { data: settings } = useWorkspaceSettings()
   const enabledLeaveTypes = settings ? settings.leaveTypes.filter((l) => l.enabled).map((l) => l.type) : Object.values(LeaveType)
   const holidays = useMemo(() => settings?.holidays.map((h) => h.date) ?? [], [settings])
+  // one or two approvals, as the workspace's rules say (drawn as node progress on each request)
+  const leaveSteps = settings ? stepsRequired(settings.approvals, ApprovalSubject.LEAVE) : 1
   const { data: employees = [] } = useEmployees()
   const { request, decide, cancel } = useLeaveMutations()
   const canApprove = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE)
@@ -192,7 +196,7 @@ export default function LeavePage() {
                   </div>
                 </div>
                 {r.note && <p className="rounded-xl bg-muted/50 px-3 py-2 text-sm text-muted-foreground">{r.note}</p>}
-                {r.firstApprovedBy && <span className="w-fit rounded-full bg-info-soft px-2.5 py-0.5 text-xs font-medium text-info-foreground">{t("approvalOneOfTwo")}</span>}
+                <LeaveWay request={r} steps={leaveSteps} className="py-1" />
                 {canApprove && (r.employeeId === approver.employeeId || r.firstApprovedBy === approverRef(approver)) && (
                   <p className="text-end text-sm text-muted-foreground">{t(r.employeeId === approver.employeeId ? "approvalOwnRequest" : "approvalWaitingSecond")}</p>
                 )}

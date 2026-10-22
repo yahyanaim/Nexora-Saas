@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { useDashboardNav } from "./navigation/use-dashboard-nav"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { PageGuide, guideKeyFor } from "./page-guide"
+import { NexusPattern } from "@/components/ui/nexus"
 
 interface PageHeaderProps {
   /** Defaults to the current page's navigation title */
@@ -40,15 +41,19 @@ export function PageHeader({ title, description, badge, actions, children, class
   return (
     <section
       className={cn(
-        "rounded-3xl border border-border bg-card p-5 shadow-panel sm:p-6 md:px-7",
+        "relative isolate overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-panel sm:p-6 md:px-7",
         className
       )}
     >
+      {/* DS-07: the area's node pattern fades in from the end of the panel */}
+      <div aria-hidden className="absolute inset-y-0 end-0 -z-10 hidden w-1/2 max-w-xl sm:block">
+        <NexusPattern className="text-area opacity-[0.16] dark:opacity-25" />
+      </div>
       {activeItem && (
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {showGroupCrumb && (
             <>
-              <span>{activeGroup.title}</span>
+              <span className="font-medium text-area-foreground">{activeGroup.title}</span>
               <ChevronRight className="size-3.5" />
             </>
           )}

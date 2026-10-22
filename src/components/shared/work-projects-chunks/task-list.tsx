@@ -13,7 +13,10 @@ import type { Employee } from "@/types/workforce"
 import { Priority, isClosedStatus, type Milestone, type TaskState, type WorkTask } from "@/types/work-projects"
 import { DEFAULT_TASK_STATES, stateOf } from "@/lib/workforce/task-states"
 import { includesFilter } from "../workforce-chunks/workforce-labels"
-import { PRIORITY_DOT, PRIORITY_LABEL, TASK_STATUS_DOT, formatShortDate, stateLabel } from "./project-labels"
+import { PRIORITY_LABEL, TASK_STATUS_TONE, formatShortDate, stateLabel } from "./project-labels"
+import { StatusPill } from "@/components/ui/status-pill"
+import { PriorityMark, TaskTypeMark } from "./task-visuals"
+import type { TaskLabel } from "@/types/work-settings"
 
 const PRIORITY_RANK: Record<Priority, number> = {
   [Priority.LOW]: 0,
@@ -33,10 +36,12 @@ interface Props {
   projectCode?: string
   /** The project's statuses (P2) */
   states?: TaskState[]
+  /** Workspace labels, for the task type marks */
+  labels?: TaskLabel[]
 }
 
 /** All tasks of a project as a sortable, filterable table. */
-export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, projectCode, states = DEFAULT_TASK_STATES }: Props) {
+export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, projectCode, states = DEFAULT_TASK_STATES, labels = [] }: Props) {
   const t = useTranslations()
   const locale = useLocale()
 
@@ -54,11 +59,12 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, proje
             type="button"
             onClick={() => onOpen(row.original)}
             className={cn(
-              "text-left font-medium hover:text-primary",
+              "flex items-center gap-2 text-start font-medium hover:text-primary",
               isClosedStatus(row.original.status) && "text-muted-foreground line-through"
             )}
           >
-            {projectCode && row.original.number && <span className="me-2 font-mono text-xs font-normal text-muted-foreground">{taskKey(row.original, { code: projectCode })}</span>}
+            <TaskTypeMark task={row.original} labels={labels} />
+            {projectCode && row.original.number && <span className="font-mono text-xs font-normal text-muted-foreground">{taskKey(row.original, { code: projectCode })}</span>}
             {row.original.title}
             {warnings[row.original.id] && (
               <span className="ms-2 inline-flex rounded-full bg-danger-soft px-1.5 py-0.5 align-middle text-[10px] font-medium text-destructive" title={warnings[row.original.id]}>!</span>
@@ -75,12 +81,7 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, proje
         filterFn: (row, id, value) => includesFilter(row.getValue(id), value),
         cell: ({ row }) => {
           const state = stateOf(row.original, states)
-          return (
-            <span className="flex items-center gap-2 text-sm">
-              <span className={cn("size-2 rounded-full", TASK_STATUS_DOT[state.group])} aria-hidden />
-              {stateLabel(state, t)}
-            </span>
-          )
+          return <StatusPill tone={TASK_STATUS_TONE[state.group]}>{stateLabel(state, t)}</StatusPill>
         },
       },
       {
@@ -88,12 +89,7 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, proje
         sortingFn: (a, b) => PRIORITY_RANK[a.original.priority] - PRIORITY_RANK[b.original.priority],
         header: ({ column }) => <DataTableColumnHeader column={column} title={t("priority")} />,
         filterFn: (row, id, value) => includesFilter(row.getValue(id), value),
-        cell: ({ row }) => (
-          <span className="flex items-center gap-2 text-sm">
-            <span className={cn("size-2 rounded-full", PRIORITY_DOT[row.original.priority])} aria-hidden />
-            {t(PRIORITY_LABEL[row.original.priority])}
-          </span>
-        ),
+        cell: ({ row }) => <PriorityMark priority={row.original.priority} label />,
       },
       {
         id: "assignee",
@@ -139,7 +135,7 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, proje
         cell: ({ row }) => <span className="text-sm tabular-nums">{row.original.estimatedHours} h</span>,
       },
     ],
-    [t, locale, team, milestones, onOpen, warnings, projectCode, states]
+    [t, locale, team, milestones, onOpen, warnings, projectCode, states, labels]
   )
 
   return (

@@ -70,6 +70,27 @@
   --series-2: #eb6834;
   --series-3: #1baf7a;
   --series-4: #eda100;
+
+  /* Area accents (DS-07): wayfinding only, never status. Solids keep 3:1
+     against white so white icons on them stay readable. */
+  --nx-blue: #2684ff;
+  --nx-blue-soft: #e6f2ff;
+  --nx-blue-foreground: #0e4fb3;
+  --nx-violet: #7c5cfa;
+  --nx-violet-soft: #f1edff;
+  --nx-violet-foreground: #5b3fd6;
+  --nx-green: #1e9e5a;
+  --nx-green-soft: #e8f8ef;
+  --nx-green-foreground: #17804a;
+  --nx-teal: #0f9b8e;
+  --nx-teal-soft: #e1f5f2;
+  --nx-teal-foreground: #0b6e65;
+  --nx-orange: #e2602b;
+  --nx-orange-soft: #fdeee6;
+  --nx-orange-foreground: #b5441a;
+  --nx-slate: #536174;
+  --nx-slate-soft: #eef2f6;
+  --nx-slate-foreground: #3f4f66;
 }
 
 .dark,
@@ -136,6 +157,59 @@
   --series-2: #d95926;
   --series-3: #199e70;
   --series-4: #c98500;
+
+  --nx-blue: #2684ff;
+  --nx-blue-soft: rgba(38, 132, 255, 0.16);
+  --nx-blue-foreground: #82beff;
+  --nx-violet: #7c5cfa;
+  --nx-violet-soft: rgba(124, 92, 250, 0.18);
+  --nx-violet-foreground: #b7a5ff;
+  --nx-green: #1e9e5a;
+  --nx-green-soft: rgba(58, 209, 131, 0.14);
+  --nx-green-foreground: #5fe0a0;
+  --nx-teal: #0f9b8e;
+  --nx-teal-soft: rgba(15, 155, 142, 0.2);
+  --nx-teal-foreground: #5fd6c8;
+  --nx-orange: #e2602b;
+  --nx-orange-soft: rgba(226, 96, 43, 0.18);
+  --nx-orange-foreground: #ff9c70;
+  --nx-slate: #7d8da0;
+  --nx-slate-soft: rgba(168, 181, 197, 0.14);
+  --nx-slate-foreground: #c3cdd9;
+}
+
+
+/* Each top area has one accent: the rail, the page marker and the active tab use it */
+:root,
+[data-area] {
+  --area: var(--nx-blue);
+  --area-soft: var(--nx-blue-soft);
+  --area-foreground: var(--nx-blue-foreground);
+}
+[data-area="organization"] {
+  --area: var(--nx-violet);
+  --area-soft: var(--nx-violet-soft);
+  --area-foreground: var(--nx-violet-foreground);
+}
+[data-area="finance"] {
+  --area: var(--nx-green);
+  --area-soft: var(--nx-green-soft);
+  --area-foreground: var(--nx-green-foreground);
+}
+[data-area="planning"] {
+  --area: var(--nx-teal);
+  --area-soft: var(--nx-teal-soft);
+  --area-foreground: var(--nx-teal-foreground);
+}
+[data-area="management"] {
+  --area: var(--nx-orange);
+  --area-soft: var(--nx-orange-soft);
+  --area-foreground: var(--nx-orange-foreground);
+}
+[data-area="system"] {
+  --area: var(--nx-slate);
+  --area-soft: var(--nx-slate-soft);
+  --area-foreground: var(--nx-slate-foreground);
 }
 
 .purple {
@@ -349,6 +423,27 @@
   --color-info-soft: var(--info-soft);
   --color-info-foreground: var(--info-foreground);
   --color-border-strong: var(--border-strong);
+  --color-nx-blue: var(--nx-blue);
+  --color-nx-blue-soft: var(--nx-blue-soft);
+  --color-nx-blue-foreground: var(--nx-blue-foreground);
+  --color-nx-violet: var(--nx-violet);
+  --color-nx-violet-soft: var(--nx-violet-soft);
+  --color-nx-violet-foreground: var(--nx-violet-foreground);
+  --color-nx-green: var(--nx-green);
+  --color-nx-green-soft: var(--nx-green-soft);
+  --color-nx-green-foreground: var(--nx-green-foreground);
+  --color-nx-teal: var(--nx-teal);
+  --color-nx-teal-soft: var(--nx-teal-soft);
+  --color-nx-teal-foreground: var(--nx-teal-foreground);
+  --color-nx-orange: var(--nx-orange);
+  --color-nx-orange-soft: var(--nx-orange-soft);
+  --color-nx-orange-foreground: var(--nx-orange-foreground);
+  --color-nx-slate: var(--nx-slate);
+  --color-nx-slate-soft: var(--nx-slate-soft);
+  --color-nx-slate-foreground: var(--nx-slate-foreground);
+  --color-area: var(--area);
+  --color-area-soft: var(--area-soft);
+  --color-area-foreground: var(--area-foreground);
   --color-text-muted: var(--text-muted);
   --color-disabled: var(--disabled);
   /* DS-02 elevation: level 1 / 2 / 3 */
@@ -560,4 +655,20 @@ button,
 }
 .animate-meet-ripple {
   animation: meet-ripple 2s ease-out infinite;
+}
+
+
+/* Node progress: the line fills when it appears, the current node breathes */
+@keyframes nx-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes nx-halo {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+.nx-fill { animation: nx-fill 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.nx-halo { animation: nx-halo 2.2s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .nx-fill, .nx-halo { animation: none; }
 }

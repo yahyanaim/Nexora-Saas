@@ -18,6 +18,7 @@ import { isRouteDenied } from "@/lib/permissions/routes"
 import { isPortalPath } from "@/lib/workforce/portal"
 import { PortalRedirect } from "./portal-redirect"
 import { SkipLink } from "./skip-link"
+import { useDashboardNav } from "./navigation/use-dashboard-nav"
 
 // PERF-01: the banners and the console gate read the platform's billing, support and
 // customer modules; they load after the shell so every page starts lighter
@@ -44,6 +45,8 @@ export const DashboardLayout = ({ children }: Props) => {
   const { isUnlocked } = useLockScreenStore()
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
+  // DS-07: the active top area sets the accent (rail, page marker, empty states)
+  const { activeGroup } = useDashboardNav()
   const blocked = !!authedUser && isPlatformPath(pathname) && !isPlatformOperator(authedUser)
   const onConsole = !!authedUser && isPlatformPath(pathname) && isPlatformOperator(authedUser)
   const viewingWorkspace = !!authedUser && !isPlatformPath(pathname) && isPlatformOperator(authedUser)
@@ -56,7 +59,7 @@ export const DashboardLayout = ({ children }: Props) => {
   if (isPasscodeLocked && !isUnlocked) return <LockScreen />
 
   return (
-    <div className="flex h-dvh w-full flex-col overflow-hidden bg-background">
+    <div data-area={activeGroup?.id} className="flex h-dvh w-full flex-col overflow-hidden bg-background">
       <SkipLink />
       <div className="px-4 pt-3 md:px-6 md:pt-4">
         <DashboardTopbar onOpenMenu={() => setMenuOpen(true)} />

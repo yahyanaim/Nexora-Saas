@@ -48,8 +48,9 @@ export function MobileNavDrawer({
 
           <nav aria-label={t("mainNavigation")} className="flex flex-col gap-5">
             {groups.map((group) => (
-              <div key={group.id} className="flex flex-col gap-1">
-                <p className="px-3 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <div key={group.id} data-area={group.id} className="flex flex-col gap-1">
+                <p className="flex items-center gap-2 px-3 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <span aria-hidden className="size-2 rounded-full bg-area" />
                   {group.title}
                 </p>
                 {group.items.map((item) => {
@@ -63,7 +64,7 @@ export function MobileNavDrawer({
                       className={cn(
                         "flex h-11 items-center gap-3 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         active
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-area-soft text-area-foreground"
                           : "text-foreground/80 hover:bg-muted hover:text-foreground"
                       )}
                     >

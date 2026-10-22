@@ -4,6 +4,7 @@ import { CURRENCIES } from "@/lib/workforce/currency"
 import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { InvoiceWay } from "../record-way"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -136,6 +137,7 @@ export function InvoiceSheet(props: Props) {
             </Button>
           </div>
           <SheetDescription>{client?.name ?? "—"}</SheetDescription>
+          {!isCredit && <InvoiceWay invoice={invoice} className="pt-4" />}
         </SheetHeader>
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
@@ -202,7 +204,7 @@ export function InvoiceSheet(props: Props) {
             </div>
           )}
 
-          <div className="relative overflow-x-auto rounded-2xl border border-border">
+          <div tabIndex={0} className="relative overflow-x-auto rounded-2xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs text-muted-foreground">
                 <tr>
@@ -531,3 +533,4 @@ function CreditNoteDialog({
     </Dialog>
   )
 }
+

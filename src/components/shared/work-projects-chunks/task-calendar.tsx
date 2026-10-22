@@ -11,7 +11,9 @@ import { isWeekend } from "@/lib/workforce/planning"
 import { stateOf } from "@/lib/workforce/task-states"
 import { taskKey } from "@/lib/workforce/task-extras"
 import { isClosedStatus, type TaskState, type WorkTask } from "@/types/work-projects"
-import { TASK_STATUS_DOT, stateLabel } from "./project-labels"
+import { TASK_STATUS_TONE, stateLabel } from "./project-labels"
+import { TONE_BORDER, TONE_SOFT } from "@/components/ui/status-pill"
+import { PriorityMark } from "./task-visuals"
 
 interface Props {
   tasks: WorkTask[]
@@ -82,13 +84,15 @@ export function TaskCalendar({ tasks, states, canEdit, projectCode, onOpen, onRe
         onClick={() => onOpen(task)}
         title={`${key} · ${task.title} · ${stateLabel(state, t)}`}
         className={cn(
-          "flex w-full min-w-0 items-center gap-1.5 rounded-lg bg-muted px-1.5 py-1 text-start text-[11px] font-medium hover:bg-info-soft",
+          "flex w-full min-w-0 items-center gap-1.5 rounded-e-md rounded-s-[2px] border-s-[3px] py-1 pe-1.5 ps-1.5 text-start text-[11px] font-medium leading-none transition-colors hover:brightness-95",
+          TONE_SOFT[TASK_STATUS_TONE[state.group]],
+          TONE_BORDER[TASK_STATUS_TONE[state.group]],
           canEdit && "cursor-grab active:cursor-grabbing",
-          closed && "text-muted-foreground line-through",
-          isTaskOverdue(task) && "bg-danger-soft text-destructive"
+          closed && "line-through opacity-70",
+          isTaskOverdue(task) && "bg-danger-soft text-danger-foreground border-destructive"
         )}
       >
-        <span className={cn("size-1.5 shrink-0 rounded-full", TASK_STATUS_DOT[state.group])} aria-hidden />
+        <PriorityMark priority={task.priority} className="[&_svg]:size-3" />
         <span className="truncate">{task.title}</span>
         <span className="sr-only">{`, ${stateLabel(state, t)}${isTaskOverdue(task) ? `, ${t("overdue")}` : ""}`}</span>
       </button>
@@ -116,7 +120,7 @@ export function TaskCalendar({ tasks, states, canEdit, projectCode, onOpen, onRe
       {/* Month grid (tablet and up) */}
       <section aria-label={monthLabel} className="hidden overflow-hidden rounded-3xl border border-border bg-card shadow-panel md:block">
         <div className="grid grid-cols-7 border-b border-border text-xs font-medium text-muted-foreground" aria-hidden>
-          {weekdayNames.map((name) => <div key={name} className="px-3 py-2.5 capitalize">{name}</div>)}
+          {weekdayNames.map((name) => <div key={name} className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider">{name}</div>)}
         </div>
         <div className="grid grid-cols-7">
           {days.map((d, i) => {
@@ -142,6 +146,7 @@ export function TaskCalendar({ tasks, states, canEdit, projectCode, onOpen, onRe
                   i % 7 !== 6 && "border-e",
                   i < 35 && "border-b",
                   (!inMonth || isWeekend(d)) && "bg-muted/30",
+                  d === today && "bg-info-soft/40",
                   overDay === d && "bg-info-soft/60 ring-2 ring-inset ring-primary/40"
                 )}
               >

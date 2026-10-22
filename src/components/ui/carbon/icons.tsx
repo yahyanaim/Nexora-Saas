@@ -175,6 +175,10 @@ import {
   Link2 as LLink2,
   Paperclip as LPaperclip,
   Inbox as LInbox,
+  ChevronsUp as LChevronsUp,
+  Equal as LEqual,
+  SquareCheckBig as LSquareCheckBig,
+  PenTool as LPenTool,
   BookUser as LBookUser,
   ChartColumnStacked as LChartColumnStacked,
   Truck as LTruck,
@@ -400,6 +404,10 @@ export const IdCard = icon(LIdCard, "IdCard")
 export const LinkIcon = icon(LLink2, "LinkIcon")
 export const Paperclip = icon(LPaperclip, "Paperclip")
 export const InboxIcon = icon(LInbox, "InboxIcon")
+export const ChevronsUp = icon(LChevronsUp, "ChevronsUp")
+export const EqualIcon = icon(LEqual, "EqualIcon")
+export const SquareCheck = icon(LSquareCheckBig, "SquareCheck")
+export const PenTool = icon(LPenTool, "PenTool")
 export const BookUser = icon(LBookUser, "BookUser")
 export const ChartColumnStacked = icon(LChartColumnStacked, "ChartColumnStacked")
 export const Truck = icon(LTruck, "Truck")

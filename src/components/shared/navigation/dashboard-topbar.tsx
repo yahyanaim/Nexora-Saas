@@ -83,14 +83,17 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
               <Link
                 key={group.id}
                 href={group.items[0]!.url}
+                data-area={group.id}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-11 items-center rounded-full px-3 2xl:px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "flex h-11 items-center gap-2 rounded-full px-3 2xl:px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   active
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-foreground/80 hover:bg-muted hover:text-foreground"
                 )}
               >
+                {/* each area keeps its colour: the dot here, the rail and the page marker (DS-07) */}
+                <span aria-hidden className={cn("size-2 rounded-full bg-area", active && "ring-2 ring-white/90")} />
                 {group.title}
               </Link>
             )

@@ -7,6 +7,7 @@ import {
   type TaskState,
 } from "@/types/work-projects"
 import { MilestoneState } from "@/lib/workforce/project-metrics"
+import type { Tone } from "@/components/ui/status-pill"
 
 /** Translation keys and badge styles for project enums, shared by every project screen. */
 
@@ -81,6 +82,15 @@ export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
 /** A project status's name: its own, or the translated group name for the built-in ones (P2). */
 export function stateLabel(state: Pick<TaskState, "name" | "group">, t: (key: string) => string) {
   return state.name?.trim() || t(TASK_STATUS_LABEL[state.group])
+}
+
+/** The tone of each status group, shared by pills, board columns, gantt bars and calendar chips. */
+export const TASK_STATUS_TONE: Record<TaskStatus, Tone> = {
+  [TaskStatus.TODO]: "neutral",
+  [TaskStatus.IN_PROGRESS]: "primary",
+  [TaskStatus.REVIEW]: "warning",
+  [TaskStatus.DONE]: "success",
+  [TaskStatus.CANCELLED]: "danger",
 }
 
 export const TASK_STATUS_DOT: Record<TaskStatus, string> = {
