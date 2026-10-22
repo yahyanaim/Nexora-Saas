@@ -57,6 +57,8 @@ import { TaskBoard } from "./task-board"
 import { TaskList } from "./task-list"
 import { TaskSpreadsheet } from "./task-spreadsheet"
 import { TaskCalendar } from "./task-calendar"
+import { CyclesPanel } from "./cycles-panel"
+import { useCycles } from "@/hooks/workforce/use-cycles"
 import { GROUP_BYS, type GroupBy } from "@/lib/workforce/task-grouping"
 import { useTaskViewMutations, useTaskViews } from "@/hooks/workforce/use-task-views"
 
@@ -101,6 +103,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const { data: expenses = [] } = useExpenses()
   const { data: bills = [] } = useSupplierBills()
   const { data: changeOrders = [] } = useChangeOrders(projectId)
+  const { data: projectCycles = [] } = useCycles(projectId)
   const labels = settings?.taskLabels ?? []
   const canEdit = can(authedUser, AdminPermissionsPlatform.PROJECTS_UPDATE)
   const canDelete = can(authedUser, AdminPermissionsPlatform.PROJECTS_DELETE)
@@ -417,6 +420,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                   labels={labels}
                   canEdit={canEdit}
                   projectCode={project.code}
+                  cycles={project.cyclesEnabled ? projectCycles : []}
                   groupBy={grouping.groupBy}
                   thenBy={grouping.thenBy}
                   onGroupChange={(groupBy, thenBy) => setGrouping({ groupBy, thenBy })}
@@ -441,6 +445,21 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                   onReschedule={(id, dates) => taskMutations.update.mutate({ id, input: dates })}
                 />
               </>
+            ),
+          },
+          {
+            id: "cycles",
+            label: t("cyTab"),
+            content: (
+              <CyclesPanel
+                project={project}
+                tasks={tasks}
+                team={team}
+                canEdit={canEdit}
+                onOpenTask={openTask}
+                onUpdateTask={(id, input) => taskMutations.update.mutate({ id, input })}
+                onSetEnabled={(cyclesEnabled) => projectMutations.update.mutate({ id: project.id, input: { cyclesEnabled } })}
+              />
             ),
           },
           {
@@ -559,6 +578,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
           projectTasks={tasks}
           resolveKey={resolveKey}
           states={states}
+          cycles={project.cyclesEnabled ? projectCycles : undefined}
           onValid={saveTask}
         />
         {liveTask && <TaskDetailsPanel key={`d-${liveTask.id}`} task={liveTask} people={employees.filter((e) => e.status !== EmployeeStatus.INACTIVE)} allTasks={allTasks} projects={allProjects} canEdit={canEdit} onOpenTask={openTask} />}

@@ -6,8 +6,8 @@ import { stateOf } from "./task-states"
  * milestone or label, in a fixed order, then optionally again inside each
  * group. A task with several labels shows under each of them.
  */
-export type GroupBy = "none" | "status" | "priority" | "assignee" | "milestone" | "label"
-export const GROUP_BYS: GroupBy[] = ["none", "status", "priority", "assignee", "milestone", "label"]
+export type GroupBy = "none" | "status" | "priority" | "assignee" | "milestone" | "label" | "cycle"
+export const GROUP_BYS: GroupBy[] = ["none", "status", "priority", "assignee", "milestone", "label", "cycle"]
 
 /** The key used when a task has no value for the field (no assignee, milestone or label). */
 export const NO_VALUE = "__none__"
@@ -18,6 +18,8 @@ export interface GroupContext {
   people: { id: string }[]
   milestones: Pick<Milestone, "id">[]
   labels: { id: string }[]
+  /** The project's cycles in date order, when it uses them (P4) */
+  cycles?: { id: string }[]
 }
 
 export interface TaskGroup {
@@ -42,6 +44,8 @@ export function groupKeys(task: WorkTask, by: GroupBy, ctx: GroupContext): strin
       return [task.milestoneId ?? NO_VALUE]
     case "label":
       return task.labelIds?.length ? task.labelIds : [NO_VALUE]
+    case "cycle":
+      return [task.cycleId ?? NO_VALUE]
     default:
       return ["all"]
   }
@@ -60,6 +64,8 @@ function orderedKeys(by: GroupBy, ctx: GroupContext): string[] {
       return [...ctx.milestones.map((m) => m.id), NO_VALUE]
     case "label":
       return [...ctx.labels.map((l) => l.id), NO_VALUE]
+    case "cycle":
+      return [...(ctx.cycles ?? []).map((c) => c.id), NO_VALUE]
     default:
       return ["all"]
   }

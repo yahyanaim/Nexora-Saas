@@ -37,7 +37,7 @@ type TaskSeed = Omit<WorkTask, "workspaceId" | "createdAt" | "updatedAt" | "orde
 
 const PROJECTS: Record<string, ProjectSeed[]> = {
   ws_atlas: [
-    { id: "prj_orbit", code: "ORB-01", name: "Orbit fleet portal", description: "Customer portal for tracking shipments and invoices.", clientId: "cli_orbit", managerId: "emp_karim", memberIds: ["emp_karim", "emp_lina", "emp_omar", "emp_julia", "emp_noah"], status: WorkProjectStatus.ACTIVE, priority: Priority.HIGH, startDate: day(-45), dueDate: day(30), budgetType: BudgetType.FIXED, budgetAmount: 480000, taskStates: ORBIT_STATES },
+    { id: "prj_orbit", code: "ORB-01", name: "Orbit fleet portal", description: "Customer portal for tracking shipments and invoices.", clientId: "cli_orbit", managerId: "emp_karim", memberIds: ["emp_karim", "emp_lina", "emp_omar", "emp_julia", "emp_noah"], status: WorkProjectStatus.ACTIVE, priority: Priority.HIGH, startDate: day(-45), dueDate: day(30), budgetType: BudgetType.FIXED, budgetAmount: 480000, taskStates: ORBIT_STATES, cyclesEnabled: true },
     { id: "prj_helio", code: "HEL-02", name: "Helio energy dashboard", description: "Real-time production dashboard for solar sites.", clientId: "cli_helio", managerId: "emp_karim", memberIds: ["emp_karim", "emp_lina", "emp_amina"], status: WorkProjectStatus.ACTIVE, priority: Priority.MEDIUM, startDate: day(-60), dueDate: day(10), budgetType: BudgetType.HOURLY, budgetAmount: 300000 },
     { id: "prj_medica", code: "MED-01", name: "Medica patient app", description: "Appointment booking app for clinics.", clientId: "cli_medica", managerId: "emp_julia", memberIds: ["emp_julia", "emp_amina", "emp_noah"], status: WorkProjectStatus.PLANNING, priority: Priority.MEDIUM, startDate: day(7), dueDate: day(90), budgetType: BudgetType.FIXED, budgetAmount: 650000 },
     { id: "prj_site", code: "INT-01", name: "Atlas website refresh", description: "Internal: new marketing site.", managerId: "emp_emma", memberIds: ["emp_emma", "emp_julia"], status: WorkProjectStatus.COMPLETED, priority: Priority.LOW, startDate: day(-120), dueDate: day(-20), budgetType: BudgetType.NON_BILLABLE },
@@ -110,7 +110,11 @@ function completedAt(task: TaskSeed) {
 /** More on some demo tasks: people, watchers, links, relations and a formatted description (P1) */
 
 const TASK_EXTRAS: Record<string, Partial<WorkTask>> = {
+  // Orbit works in cycles (P4): one closed, one running, one coming
+  tsk_2: { cycleId: "cyc_orbit_1" },
+  tsk_6: { cycleId: "cyc_orbit_3" },
   tsk_3: {
+    cycleId: "cyc_orbit_2",
     collaboratorIds: ["emp_lina"],
     watcherIds: ["emp_karim"],
     description: "Expose the **tracking events** coming from the carriers.\n\n- Webhooks from each carrier\n- One _status history_ endpoint per shipment\n- See the [carrier API notes](https://developers.example.com/carriers)\n\nThe page work is in ORB-01#4.",
@@ -118,8 +122,9 @@ const TASK_EXTRAS: Record<string, Partial<WorkTask>> = {
     relations: [{ type: TaskRelationType.RELATES, taskId: "tsk_4" }],
   },
   tsk_4: {
+    cycleId: "cyc_orbit_2",
     stateId: "st_orbit_waiting", collaboratorIds: ["emp_julia"], watcherIds: ["emp_karim"] },
-  tsk_5: { watcherIds: ["emp_sara"], relations: [{ type: TaskRelationType.RELATES, taskId: "tsk_3" }] },
+  tsk_5: { cycleId: "cyc_orbit_2", watcherIds: ["emp_sara"], relations: [{ type: TaskRelationType.RELATES, taskId: "tsk_3" }] },
   tsk_9: { collaboratorIds: ["emp_amina"], watcherIds: ["emp_sara", "emp_karim"] },
 }
 
