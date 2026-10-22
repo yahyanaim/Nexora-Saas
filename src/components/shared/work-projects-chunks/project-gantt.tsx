@@ -9,16 +9,21 @@ import { todayIso } from "@/lib/workforce/project-metrics"
 import { dependencyIssues, shiftedDates, taskSpan } from "@/lib/workforce/scheduling"
 import { TaskStatus, type Milestone, type WorkProject, type WorkTask, isClosedStatus } from "@/types/work-projects"
 import type { Employee } from "@/types/workforce"
-import { TASK_STATUS_LABEL } from "./project-labels"
+import { TASK_STATUS_LABEL, TASK_STATUS_TONE } from "./project-labels"
+import { TONE_BORDER, TONE_SOFT, TONE_SOLID } from "@/components/ui/status-pill"
+import { SpaceAvatar } from "@/components/ui/space-avatar"
+import { taskKey } from "@/lib/workforce/task-extras"
+import type { TaskLabel } from "@/types/work-settings"
+import { TaskTypeMark } from "./task-visuals"
 
 const DAY = 30 // px per day
 const ROW = 44
-const BAR: Record<TaskStatus, string> = {
-  [TaskStatus.TODO]: "bg-muted-foreground/40",
-  [TaskStatus.IN_PROGRESS]: "bg-primary",
-  [TaskStatus.REVIEW]: "bg-warning-foreground",
-  [TaskStatus.DONE]: "bg-success-foreground",
-  [TaskStatus.CANCELLED]: "bg-destructive/40",
+
+/** Share of a task done, shown as the filled part of its bar: done is full, otherwise its subtasks. */
+function doneShare(task: WorkTask) {
+  if (task.status === TaskStatus.DONE) return 100
+  if (!task.subtasks.length) return 0
+  return Math.round((task.subtasks.filter((s) => s.done).length / task.subtasks.length) * 100)
 }
 
 function days(from: string, to: string) {
@@ -31,6 +36,8 @@ interface Props {
   milestones: Milestone[]
   team: Employee[]
   canEdit: boolean
+  /** Workspace labels, for the task type marks */
+  labels?: TaskLabel[]
   onOpen: (task: WorkTask) => void
   onReschedule: (taskId: string, dates: { startDate: string; dueDate: string }) => void
 }
@@ -39,7 +46,7 @@ interface Props {
  * Gantt chart of a project's tasks (PLN-2): bars from start to due date,
  * finish-to-start arrows, milestones and today. Drag a bar to reschedule it.
  */
-export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen, onReschedule }: Props) {
+export function ProjectGantt({ project, tasks, milestones, team, canEdit, labels = [], onOpen, onReschedule }: Props) {
   const t = useTranslations()
   const locale = useLocale()
   const today = todayIso()
@@ -70,6 +77,19 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
   useEffect(() => {
     if (scroller.current) scroller.current.scrollLeft = Math.max(0, todayX - 7 * DAY)
   }, [todayX])
+  // Month bands above the weeks
+  const months = (() => {
+    const out: { key: string; left: number; width: number; label: string }[] = []
+    for (let i = 0; i < total; i++) {
+      const d = addDays(startDay, i)
+      const key = d.slice(0, 7)
+      const last = out[out.length - 1]
+      if (last?.key === key) last.width += DAY
+      else out.push({ key, left: i * DAY, width: DAY, label: new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(new Date(`${d}T00:00:00`)) })
+    }
+    return out
+  })()
+  const milestoneTone = (m: Milestone) => (m.approvedAt ? "bg-success" : m.dueDate < today ? "bg-destructive" : "bg-warning")
   const fmt = (iso: string) => new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" }).format(new Date(`${iso}T00:00:00`))
 
   const onPointerDown = (e: React.PointerEvent, id: string) => {
@@ -98,9 +118,9 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
       <p className="mb-3 text-sm text-muted-foreground">{canEdit ? t("ganttHint") : t("ganttHintReadOnly")}</p>
       <div className="flex overflow-hidden rounded-2xl border border-border">
         {/* Task names */}
-        <div className="w-56 shrink-0 border-e border-border bg-muted/30">
-          <div className="flex h-12 items-end border-b border-border px-3 pb-1.5 text-xs font-medium text-muted-foreground">{t("task")}</div>
-          <div className="h-7 border-b border-border" />
+        <div className="w-60 shrink-0 border-e border-border bg-muted/30 md:w-72">
+          <div className="flex h-12 items-end border-b border-border px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("task")}</div>
+          <div className="flex h-8 items-center border-b border-border px-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{t("milestones")}</div>
           {rows.map(({ task }) => {
             const issues = dependencyIssues(task, tasks, project.startDate, today).filter((i) => i.kind !== "waiting")
             const who = team.find((e) => e.id === task.assigneeId)
@@ -113,9 +133,11 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
                 style={{ height: ROW }}
                 title={issues.map((i) => t(i.kind === "late" ? "depLate" : "depOverlaps", { task: i.predecessor.title })).join("\n") || undefined}
               >
+                <TaskTypeMark task={task} labels={labels} />
+                <span className="hidden shrink-0 font-mono text-[11px] text-muted-foreground md:inline">{taskKey(task, project)}</span>
+                <span className={cn("min-w-0 flex-1 truncate", isClosedStatus(task.status) && "text-muted-foreground")}>{task.title}</span>
                 {issues.length > 0 && <AlertTriangle className="size-3.5 shrink-0 text-destructive" aria-label={t("depIssue")} />}
-                <span className="min-w-0 flex-1 truncate">{task.title}</span>
-                {who && <span className="shrink-0 text-[11px] text-muted-foreground">{who.name.split(" ")[0]}</span>}
+                {who ? <SpaceAvatar name={who.name} size="xs" /> : <span className="size-5 shrink-0 rounded-full border border-dashed border-border-strong" aria-hidden />}
               </button>
             )
           })}
@@ -125,22 +147,30 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
         <div ref={scroller} className="min-w-0 flex-1 overflow-x-auto">
           <div className="relative" style={{ width: total * DAY }}>
             {/* Week header */}
-            <div className="flex h-12 border-b border-border">
+            <div className="relative h-12 border-b border-border">
+              {months.map((m) => (
+                <div key={m.key} className="absolute top-0 flex h-6 items-center truncate border-s border-border px-2 text-[11px] font-semibold capitalize text-foreground" style={{ left: m.left, width: m.width }}>
+                  {m.label}
+                </div>
+              ))}
               {weeks.map((w) => (
-                <div key={w} className="flex shrink-0 items-end border-s border-border px-1.5 pb-1.5 text-[11px] text-muted-foreground" style={{ width: 7 * DAY }}>
+                <div key={w} className="absolute bottom-0 flex h-6 items-center border-s border-border/70 px-1.5 text-[11px] tabular-nums text-muted-foreground" style={{ left: x(w), width: 7 * DAY }}>
                   {fmt(w)}
                 </div>
               ))}
             </div>
             {/* Milestones row */}
-            <div className="relative h-7 border-b border-border">
+            <div className="relative h-8 border-b border-border">
+              {today >= startDay && (
+                <span className="absolute top-1.5 z-20 -translate-x-1/2 rounded-full bg-primary px-1.5 py-px text-[10px] font-semibold text-primary-foreground shadow-sm" style={{ left: x(today) + DAY / 2 }}>
+                  {t("today")}
+                </span>
+              )}
               {milestones.map((m) => (
-                <span
-                  key={m.id}
-                  title={`${m.title} · ${fmt(m.dueDate)}`}
-                  className={cn("absolute top-1.5 size-3.5 -translate-x-1/2 rotate-45 rounded-[3px] border-2 border-card shadow-sm", m.approvedAt ? "bg-success-foreground" : "bg-foreground")}
-                  style={{ left: x(m.dueDate) + DAY / 2 }}
-                />
+                <span key={m.id} className="absolute top-0 flex h-8 items-center gap-1.5" style={{ left: x(m.dueDate) + DAY / 2 - 7 }} title={`${m.title} · ${fmt(m.dueDate)}`}>
+                  <span className={cn("size-3.5 shrink-0 rotate-45 rounded-[3px] ring-2 ring-card", milestoneTone(m))} aria-hidden />
+                  <span className="max-w-40 truncate text-[11px] font-medium text-foreground">{m.title}</span>
+                </span>
               ))}
             </div>
 
@@ -158,7 +188,7 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
               ))}
               {/* Today */}
               {today >= startDay && (
-                <span className="absolute inset-y-0 z-10 border-s-2 border-dashed border-primary" style={{ left: x(today) + DAY / 2 }} aria-hidden />
+                <span className="absolute inset-y-0 z-10 w-0.5 -translate-x-1/2 bg-primary/70" style={{ left: x(today) + DAY / 2 }} aria-hidden />
               )}
 
               {/* Dependency arrows: from the end of the predecessor to the start of the task */}
@@ -199,7 +229,10 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
               {rows.map(({ task, start, end }, i) => {
                 const shift = drag?.id === task.id ? drag.delta : 0
                 const late = !isClosedStatus(task.status) && end < today
-                return (
+                const tone = TASK_STATUS_TONE[task.status]
+                const share = doneShare(task)
+                const width = (days(start, end) + 1) * DAY - 4
+                return [
                   <button
                     key={task.id}
                     type="button"
@@ -209,17 +242,37 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
                     onClick={() => !moved.current && onOpen(task)}
                     title={`${task.title}: ${fmt(addDays(start, shift))} – ${fmt(addDays(end, shift))}`}
                     className={cn(
-                      "absolute z-20 flex items-center overflow-hidden rounded-lg px-2 text-[11px] font-medium text-white shadow-sm transition-shadow hover:shadow-md",
-                      BAR[task.status],
+                      "absolute z-20 flex items-center overflow-hidden rounded-md border text-[11px] font-medium shadow-xs transition-shadow hover:shadow-md",
+                      TONE_SOFT[tone],
+                      TONE_BORDER[tone],
                       late && "ring-2 ring-destructive ring-offset-1 ring-offset-card",
                       canEdit ? "cursor-grab active:cursor-grabbing touch-none" : "cursor-pointer",
                       drag?.id === task.id && "opacity-90 shadow-lg"
                     )}
-                    style={{ left: x(start) + shift * DAY + 2, width: (days(start, end) + 1) * DAY - 4, top: i * ROW + 8, height: ROW - 16 }}
+                    style={{ left: x(start) + shift * DAY + 2, width, top: i * ROW + 9, height: ROW - 18 }}
                   >
-                    {days(start, end) >= 1 && <span className="truncate">{task.estimatedHours ? `${task.estimatedHours} h` : ""}</span>}
-                  </button>
-                )
+                    {/* Done part of the work, as a fill */}
+                    <span className={cn("absolute inset-y-0 start-0", TONE_SOLID[tone], "opacity-25")} style={{ width: `${share}%` }} aria-hidden />
+                    <span className={cn("absolute inset-y-0 start-0 w-1", TONE_SOLID[tone])} aria-hidden />
+                    {width > 90 && (
+                      <span className="relative flex min-w-0 items-center gap-1.5 ps-2.5 pe-2">
+                        <span className="truncate">{task.title}</span>
+                        {share > 0 && share < 100 && <span className="shrink-0 tabular-nums opacity-80">{share}%</span>}
+                      </span>
+                    )}
+                  </button>,
+                  // Short bars carry their title beside them
+                  width <= 90 && (
+                    <span
+                      key={`${task.id}-label`}
+                      className="pointer-events-none absolute z-20 flex items-center truncate text-[11px] font-medium text-muted-foreground"
+                      style={{ left: x(start) + shift * DAY + width + 8, top: i * ROW, height: ROW, maxWidth: 220 }}
+                      aria-hidden
+                    >
+                      {task.title}
+                    </span>
+                  ),
+                ]
               })}
             </div>
           </div>
@@ -228,11 +281,12 @@ export function ProjectGantt({ project, tasks, milestones, team, canEdit, onOpen
       <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         {Object.values(TaskStatus).map((s) => (
           <span key={s} className="flex items-center gap-1.5">
-            <span className={cn("h-2.5 w-5 rounded", BAR[s])} />
+            <span className={cn("h-2.5 w-5 rounded-sm border", TONE_SOFT[TASK_STATUS_TONE[s]], TONE_BORDER[TASK_STATUS_TONE[s]])} />
             {t(TASK_STATUS_LABEL[s])}
           </span>
         ))}
-        <span className="flex items-center gap-1.5"><span className="h-3 border-s-2 border-dashed border-primary" />{t("today")}</span>
+        <span className="flex items-center gap-1.5"><span className="h-3 w-0.5 bg-primary/70" />{t("today")}</span>
+        <span className="flex items-center gap-1.5"><span className="size-2.5 rotate-45 rounded-[2px] bg-warning" />{t("milestones")}</span>
         <span className="flex items-center gap-1.5"><span className="h-0.5 w-5 bg-destructive" />{t("ganttConflict")}</span>
       </div>
     </section>

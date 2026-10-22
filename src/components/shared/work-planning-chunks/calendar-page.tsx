@@ -28,10 +28,18 @@ interface CalendarEvent {
 }
 
 const KIND_STYLE: Record<Kind, string> = {
-  project: "bg-primary/10 text-primary",
+  project: "bg-info-soft text-info-foreground",
   milestone: "bg-warning-soft text-warning-foreground",
   task: "bg-muted text-foreground",
   leave: "bg-success-soft text-success-foreground",
+}
+
+/** The accent bar on each chip: the kind's strong colour (Nexora calendar signature). */
+const KIND_ACCENT: Record<Kind, string> = {
+  project: "border-primary",
+  milestone: "border-warning",
+  task: "border-muted-foreground/50",
+  leave: "border-success",
 }
 
 const KIND_ICON = { project: FolderKanban, milestone: Flag, task: CheckCircle2, leave: TreePalm }
@@ -145,7 +153,7 @@ export default function CalendarPage() {
       <section className="hidden overflow-hidden rounded-3xl border border-border bg-card shadow-panel md:block">
         <div className="grid grid-cols-7 border-b border-border text-xs font-medium text-muted-foreground">
           {weekdayNames.map((name) => (
-            <div key={name} className="px-3 py-2.5 capitalize">{name}</div>
+            <div key={name} className="px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider">{name}</div>
           ))}
         </div>
         <div className="grid grid-cols-7">
@@ -156,7 +164,8 @@ export default function CalendarPage() {
               <div
                 key={d}
                 className={cn(
-                  "flex min-h-28 flex-col gap-1 border-border p-1.5",
+                  "flex min-h-28 flex-col gap-1 border-border p-1.5 transition-colors hover:bg-muted/40",
+                  d === today && "bg-info-soft/40",
                   i % 7 !== 6 && "border-e",
                   i < 35 && "border-b",
                   (!inMonth || isWeekend(d)) && "bg-muted/30"
@@ -164,8 +173,8 @@ export default function CalendarPage() {
               >
                 <span
                   className={cn(
-                    "flex size-6 items-center justify-center self-end rounded-full text-xs tabular-nums",
-                    d === today ? "bg-primary font-semibold text-primary-foreground" : inMonth ? "text-foreground" : "text-muted-foreground/60"
+                    "flex size-6 items-center justify-center self-end rounded-full text-xs font-medium tabular-nums",
+                    d === today ? "bg-primary font-semibold text-primary-foreground shadow-sm" : inMonth ? "text-foreground" : "text-muted-foreground/60"
                   )}
                 >
                   {Number(d.slice(8))}
@@ -210,9 +219,10 @@ function EventChip({ event, pendingLabel }: { event: CalendarEvent; pendingLabel
     </>
   )
   const cls = cn(
-    "relative flex min-w-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium",
+    "relative flex min-w-0 items-center gap-1.5 rounded-e-md rounded-s-[2px] border-s-[3px] py-1 pe-1.5 ps-1.5 text-[11px] font-medium leading-none transition-colors",
     KIND_STYLE[event.kind],
-    event.tentative && "border border-dashed border-current bg-transparent"
+    KIND_ACCENT[event.kind],
+    event.tentative && "bg-transparent outline-1 outline-dashed -outline-offset-1 outline-current"
   )
   return event.href ? (
     <Link href={event.href} title={event.label} className={cn(cls, "hover:opacity-80")}>

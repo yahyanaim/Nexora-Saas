@@ -402,7 +402,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
             content: (
               <>
                 {filterBar(false)}
-                <TaskList tasks={visibleTasks} team={team} milestones={milestones} onOpen={openTask} warnings={depWarnings} projectCode={project.code} states={states} />
+                <TaskList tasks={visibleTasks} team={team} milestones={milestones} onOpen={openTask} warnings={depWarnings} projectCode={project.code} states={states} labels={labels} />
               </>
             ),
           },
@@ -491,6 +491,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
                 milestones={milestones}
                 team={team}
                 canEdit={canEdit}
+                labels={labels}
                 onOpen={openTask}
                 onReschedule={(id, dates) => taskMutations.update.mutate({ id, input: dates })}
               />

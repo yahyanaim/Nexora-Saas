@@ -15,6 +15,7 @@ import type { TaskLabel } from "@/types/work-settings"
 import { Priority, isClosedStatus, type Cycle, type Milestone, type TaskState, type WorkTask, type WorkTaskInput } from "@/types/work-projects"
 import { NONE } from "../workforce-chunks/workforce-labels"
 import { PRIORITY_DOT, PRIORITY_LABEL, TASK_STATUS_DOT, stateLabel } from "./project-labels"
+import { PriorityMark, TaskTypeMark } from "./task-visuals"
 
 interface Props {
   tasks: WorkTask[]
@@ -103,14 +104,14 @@ export function TaskSpreadsheet({ tasks, states, team, milestones, labels, cycle
     const state = stateOf(task, states)
     const closed = isClosedStatus(task.status)
     const key = taskKey(task, { code: projectCode })
-    const pick = <V extends string>(label: string, value: V, options: { value: V; label: string; dot?: string }[], onChange: (v: V) => void) => {
+    const pick = <V extends string>(label: string, value: V, options: { value: V; label: string; dot?: string; icon?: React.ReactNode }[], onChange: (v: V) => void) => {
       const current = options.find((o) => o.value === value)
       return canEdit ? (
         <Select value={value} onValueChange={(v) => v !== value && onChange(v as V)}>
           <SelectTrigger className="h-8 w-full min-w-28 border-transparent bg-transparent px-2 shadow-none hover:border-border" aria-label={`${label} · ${task.title}`}>
             <SelectValue>
               <span className="flex items-center gap-1.5 truncate">
-                {current?.dot && <span className={cn("size-2 shrink-0 rounded-full", current.dot)} aria-hidden />}
+                {current?.icon ?? (current?.dot && <span className={cn("size-2 shrink-0 rounded-full", current.dot)} aria-hidden />)}
                 {current?.label}
               </span>
             </SelectValue>
@@ -118,13 +119,13 @@ export function TaskSpreadsheet({ tasks, states, team, milestones, labels, cycle
           <SelectContent>
             {options.map((o) => (
               <SelectItem key={o.value} value={o.value}>
-                <span className="flex items-center gap-1.5">{o.dot && <span className={cn("size-2 rounded-full", o.dot)} aria-hidden />}{o.label}</span>
+                <span className="flex items-center gap-1.5">{o.icon ?? (o.dot && <span className={cn("size-2 rounded-full", o.dot)} aria-hidden />)}{o.label}</span>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       ) : (
-        <span className="flex items-center gap-1.5 px-2 text-sm">{current?.dot && <span className={cn("size-2 rounded-full", current.dot)} aria-hidden />}{current?.label}</span>
+        <span className="flex items-center gap-1.5 px-2 text-sm">{current?.icon ?? (current?.dot && <span className={cn("size-2 rounded-full", current.dot)} aria-hidden />)}{current?.label}</span>
       )
     }
     // Text and number cells save on leaving the cell; Enter leaves it, Escape puts the value back
@@ -142,7 +143,8 @@ export function TaskSpreadsheet({ tasks, states, team, milestones, labels, cycle
     return (
       <tr key={rowKey} className="hover:bg-muted/30">
         <td className={cn(cell, "w-24 px-3")}>
-          <button type="button" onClick={() => onOpen(task)} className="font-mono text-xs text-muted-foreground hover:text-primary hover:underline" aria-label={t("ssOpen", { task: task.title })}>
+          <button type="button" onClick={() => onOpen(task)} className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground hover:text-primary hover:underline" aria-label={t("ssOpen", { task: task.title })}>
+            <TaskTypeMark task={task} labels={labels} />
             {key || "—"}
           </button>
         </td>
@@ -160,7 +162,7 @@ export function TaskSpreadsheet({ tasks, states, team, milestones, labels, cycle
           )}
         </td>
         <td className={cell}>{pick(t("status"), state.id, states.map((s) => ({ value: s.id, label: stateLabel(s, t), dot: TASK_STATUS_DOT[s.group] })), (id) => onUpdate(task.id, { stateId: id, status: states.find((s) => s.id === id)!.group }))}</td>
-        <td className={cell}>{pick(t("priority"), task.priority, PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL[p]), dot: PRIORITY_DOT[p] })), (p) => onUpdate(task.id, { priority: p }))}</td>
+        <td className={cell}>{pick(t("priority"), task.priority, PRIORITIES.map((p) => ({ value: p, label: t(PRIORITY_LABEL[p]), icon: <PriorityMark priority={p} /> })), (p) => onUpdate(task.id, { priority: p }))}</td>
         <td className={cell}>{pick(t("assignee"), task.assigneeId ?? NONE, [{ value: NONE, label: t("unassigned") }, ...team.map((e) => ({ value: e.id, label: e.name }))], (id) => onUpdate(task.id, { assigneeId: id === NONE ? undefined : id }))}</td>
         <td className={cell}>{pick(t("milestone"), task.milestoneId ?? NONE, [{ value: NONE, label: t("ssNoMilestone") }, ...milestones.map((m) => ({ value: m.id, label: m.title }))], (id) => onUpdate(task.id, { milestoneId: id === NONE ? undefined : id }))}</td>
         <td className={cn(cell, "w-40")}>

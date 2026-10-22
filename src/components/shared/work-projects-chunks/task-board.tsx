@@ -11,14 +11,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
-import { AlertTriangle, Calendar, CheckCircle2, Flag, MoreHorizontal, Plus } from "@/components/ui/carbon/icons"
+import { AlertTriangle, Calendar, CheckCircle2, Flag, ListChecks, MoreHorizontal, Plus } from "@/components/ui/carbon/icons"
+import { TONE_BORDER, TONE_SOFT } from "@/components/ui/status-pill"
+import { PriorityMark, TaskTypeMark } from "./task-visuals"
 import { cn } from "@/lib/utils"
 import { isTaskOverdue } from "@/lib/workforce/project-metrics"
 import type { Employee } from "@/types/workforce"
 import type { TaskLabel } from "@/types/work-settings"
-import { isClosedStatus, type Milestone, type TaskState, type WorkTask } from "@/types/work-projects"
+import { TaskStatus, isClosedStatus, type Milestone, type TaskState, type WorkTask } from "@/types/work-projects"
 import { isCancelledState, stateOf } from "@/lib/workforce/task-states"
-import { PRIORITY_DOT, PRIORITY_LABEL, TASK_STATUS_DOT, formatShortDate, stateLabel } from "./project-labels"
+import { TASK_STATUS_DOT, TASK_STATUS_TONE, formatShortDate, stateLabel } from "./project-labels"
 
 interface Props {
   tasks: WorkTask[]
@@ -99,15 +101,15 @@ export function TaskBoard({ tasks, labels, team, milestones, states, canEdit, on
           }}
           onDrop={(e) => drop(status, over?.status === status ? over.index : columnTasks.length, e)}
           className={cn(
-            "flex min-h-40 flex-col gap-2.5 rounded-3xl border border-border bg-muted/50 p-3 transition-colors",
-            over?.status === status && "border-primary/40 bg-info-soft/40"
+            "flex min-h-40 flex-col gap-2 rounded-2xl border border-border border-t-[3px] bg-muted/50 p-2.5 transition-colors",
+            TONE_BORDER[TASK_STATUS_TONE[state.group]],
+            over?.status === status && "bg-info-soft/40"
           )}
         >
-          <header className="flex items-center justify-between px-1.5 pt-0.5">
-            <h2 className="flex items-center gap-2 text-sm font-semibold">
-              <span className={cn("size-2 rounded-full", TASK_STATUS_DOT[state.group])} aria-hidden />
-              {stateLabel(state, t)}
-              <span className="rounded-full bg-card px-2 text-xs font-medium text-muted-foreground tabular-nums">
+          <header className="flex items-center justify-between px-1 pt-0.5">
+            <h2 className="flex min-w-0 items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <span className="truncate">{stateLabel(state, t)}</span>
+              <span className={cn("rounded-full px-1.5 text-[11px] font-semibold tabular-nums", TONE_SOFT[TASK_STATUS_TONE[state.group]])}>
                 {columnTasks.length}
               </span>
             </h2>
@@ -133,7 +135,7 @@ export function TaskBoard({ tasks, labels, team, milestones, states, canEdit, on
                 people={taskPeople(task).map((id) => team.find((e) => e.id === id)).filter((e): e is Employee => !!e)}
                 taskKey={projectCode ? taskKey(task, { code: projectCode }) : ""}
                 milestone={milestones.find((m) => m.id === task.milestoneId)}
-                labelNames={(task.labelIds ?? []).map((id) => labels.find((l) => l.id === id)?.name).filter((n): n is string => !!n)}
+                labels={labels}
                 canEdit={canEdit}
                 warning={warnings[task.id]}
                 dragging={dragId === task.id}
@@ -182,7 +184,7 @@ interface CardProps {
   people: Employee[]
   taskKey: string
   milestone?: Milestone
-  labelNames: string[]
+  labels: TaskLabel[]
   canEdit: boolean
   warning?: string
   dragging: boolean
@@ -194,11 +196,13 @@ interface CardProps {
   onDragOverCard: (e: React.DragEvent<HTMLElement>) => void
 }
 
-function TaskCard({ task, people, taskKey: key, milestone, labelNames, canEdit, warning, dragging, states, onOpen, onMove, onDragStart, onDragEnd, onDragOverCard }: CardProps) {
+function TaskCard({ task, people, taskKey: key, milestone, labels, canEdit, warning, dragging, states, onOpen, onMove, onDragStart, onDragEnd, onDragOverCard }: CardProps) {
   const t = useTranslations()
   const locale = useLocale()
   const overdue = isTaskOverdue(task)
   const subDone = task.subtasks.filter((s) => s.done).length
+  const labelNames = (task.labelIds ?? []).map((id) => labels.find((l) => l.id === id)?.name).filter((n): n is string => !!n)
+  const closed = isClosedStatus(task.status)
 
   return (
     <article
@@ -207,7 +211,7 @@ function TaskCard({ task, people, taskKey: key, milestone, labelNames, canEdit, 
       onDragEnd={onDragEnd}
       onDragOver={onDragOverCard}
       className={cn(
-        "group relative flex flex-col gap-3 rounded-2xl border border-border bg-card p-3.5 shadow-xs transition-shadow hover:shadow-md",
+        "group relative flex flex-col gap-2.5 rounded-xl border border-border bg-card p-3 shadow-xs transition-[box-shadow,border-color] hover:border-border-strong hover:shadow-md",
         canEdit && "cursor-grab active:cursor-grabbing",
         dragging && "opacity-40"
       )}
@@ -217,11 +221,10 @@ function TaskCard({ task, people, taskKey: key, milestone, labelNames, canEdit, 
           type="button"
           onClick={onOpen}
           className={cn(
-            "flex-1 text-left text-sm font-medium leading-snug text-foreground rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            isClosedStatus(task.status) && "text-muted-foreground line-through"
+            "flex-1 rounded-md text-start text-sm font-medium leading-snug text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            closed && "text-muted-foreground"
           )}
         >
-          {key && <span className="mb-0.5 block font-mono text-[10px] font-normal text-muted-foreground">{key}</span>}
           {task.title}
         </button>
         {warning && (
@@ -256,37 +259,43 @@ function TaskCard({ task, people, taskKey: key, milestone, labelNames, canEdit, 
       {labelNames.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {labelNames.map((name) => (
-            <span key={name} className="rounded-full bg-info-soft px-2 py-0.5 text-[11px] font-medium text-info-foreground">{name}</span>
+            <span key={name} className="rounded-md border border-border bg-muted/60 px-1.5 py-px text-[11px] font-medium text-muted-foreground">{name}</span>
           ))}
         </div>
       )}
 
-      {milestone && (
-        <p className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
-          <Flag className="size-3.5 shrink-0" />
-          {milestone.title}
-        </p>
-      )}
-
-      <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="flex items-center gap-1.5 text-muted-foreground">
-          <span className={cn("size-2 rounded-full", PRIORITY_DOT[task.priority])} aria-hidden />
-          {t(PRIORITY_LABEL[task.priority])}
-        </span>
-        <div className="flex items-center gap-2.5">
-          {task.subtasks.length > 0 && (
-            <span className="flex items-center gap-1 text-muted-foreground tabular-nums" aria-label={t("subtasksDone", { done: subDone, total: task.subtasks.length })}>
-              <CheckCircle2 className="size-3.5" />
-              {subDone}/{task.subtasks.length}
+      {(milestone || task.dueDate || task.subtasks.length > 0) && (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          {milestone && (
+            <span className="flex min-w-0 items-center gap-1.5">
+              <Flag className="size-3.5 shrink-0" />
+              <span className="truncate">{milestone.title}</span>
             </span>
           )}
           {task.dueDate && (
-            <span className={cn("flex items-center gap-1", overdue ? "font-medium text-destructive" : "text-muted-foreground")}>
+            <span className={cn("flex items-center gap-1 rounded-md", overdue && "bg-danger-soft px-1.5 py-0.5 font-medium text-danger-foreground")}>
               <Calendar className="size-3.5" />
               {formatShortDate(task.dueDate, locale)}
               {overdue && <span className="sr-only">{t("overdue")}</span>}
             </span>
           )}
+          {task.subtasks.length > 0 && (
+            <span className="flex items-center gap-1 tabular-nums" aria-label={t("subtasksDone", { done: subDone, total: task.subtasks.length })}>
+              <ListChecks className="size-3.5" />
+              {subDone}/{task.subtasks.length}
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="flex min-w-0 items-center gap-1.5">
+          <TaskTypeMark task={task} labels={labels} />
+          {key && <span className={cn("truncate font-mono text-[11px] font-medium text-muted-foreground", closed && "line-through")}>{key}</span>}
+          {task.status === TaskStatus.DONE && <CheckCircle2 className="size-3.5 shrink-0 text-success-foreground" aria-label={t("done")} />}
+        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <PriorityMark priority={task.priority} />
           {people.length > 0 ? (
             <span className="flex -space-x-1.5 rtl:space-x-reverse" title={people.map((p) => p.name).join(", ")}>
               {people.slice(0, 3).map((p) => (
@@ -298,7 +307,9 @@ function TaskCard({ task, people, taskKey: key, milestone, labelNames, canEdit, 
               <span className="sr-only">{people.map((p) => p.name).join(", ")}</span>
             </span>
           ) : (
-            <span className="text-muted-foreground">{t("unassigned")}</span>
+            <span className="grid size-5 place-items-center rounded-full border border-dashed border-border-strong" title={t("unassigned")}>
+              <span className="sr-only">{t("unassigned")}</span>
+            </span>
           )}
         </div>
       </div>
