@@ -64,6 +64,7 @@ import { useTaskViewMutations, useTaskViews } from "@/hooks/workforce/use-task-v
 
 const VIEW_TABS: TaskViewTab[] = ["board", "list", "spreadsheet", "calendar"]
 import { MilestonesPanel } from "./milestones-panel"
+import { MilestoneWay } from "../record-way"
 import { BudgetPanel } from "./budget-panel"
 import { RevenueSection } from "./revenue-section"
 import { FeedbackSection } from "../work-portal-chunks/satisfaction"
@@ -273,7 +274,6 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   return (
     <div className="p-4 md:p-6 space-y-6">
       <PageHeader
-        object="project"
         title={project.name}
         description={project.description}
         badge={
@@ -351,6 +351,7 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
               {t("tasksDone", { done, total: counted.length })}
             </span>
           </div>
+          <MilestoneWay milestones={milestones} tasks={tasks} />
           {project.healthOverride && (
             <p className="rounded-xl bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
               {t("healthOverrideNote", { name: project.healthOverride.setBy, reason: project.healthOverride.reason })}

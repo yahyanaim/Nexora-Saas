@@ -27,21 +27,8 @@ export function EmptyState({
       )}
     >
       {Icon && (
-        // Nexus line drawing: the icon is the hub, three nodes connect to it
-        <span aria-hidden className="relative mb-2 flex h-16 w-24 items-center justify-center text-area">
-          <svg viewBox="0 0 96 64" className="absolute inset-0 size-full" fill="none">
-            <g stroke="currentColor" strokeOpacity="0.35" strokeWidth="1.25" strokeDasharray="3 3">
-              <path d="M48 32 L12 14 M48 32 L86 18 M48 32 L78 56" />
-            </g>
-            <g fill="currentColor">
-              <circle cx="12" cy="14" r="3.5" fillOpacity="0.45" />
-              <circle cx="86" cy="18" r="2.5" fillOpacity="0.35" />
-              <circle cx="78" cy="56" r="3" fillOpacity="0.5" />
-            </g>
-          </svg>
-          <span className="relative flex size-11 items-center justify-center rounded-2xl bg-area-soft text-area-foreground ring-4 ring-card">
-            <Icon className="size-5" />
-          </span>
+        <span className="mb-1 flex size-10 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <Icon className="size-5" />
         </span>
       )}
       <p className="font-medium text-foreground">{title}</p>

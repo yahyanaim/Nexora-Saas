@@ -7,15 +7,13 @@ import { cn } from "@/lib/utils"
 import { useDashboardNav } from "./navigation/use-dashboard-nav"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { PageGuide, guideKeyFor } from "./page-guide"
-import { NexusPattern, ObjectTile, type ObjectKind } from "@/components/ui/nexus"
+import { NexusPattern } from "@/components/ui/nexus"
 
 interface PageHeaderProps {
   /** Defaults to the current page's navigation title */
   title?: React.ReactNode
   /** Defaults to the current page's description */
   description?: React.ReactNode
-  /** Kind of record this page is about: shows its object tile before the title */
-  object?: ObjectKind
   /** Small status pill next to the title */
   badge?: React.ReactNode
   /** Buttons on the right (stacked under the title on small screens) */
@@ -29,7 +27,7 @@ interface PageHeaderProps {
  * Page hero panel: breadcrumb, large title, one-line description and actions,
  * on a white rounded panel like the rest of the design system.
  */
-export function PageHeader({ title, description, object, badge, actions, children, className }: PageHeaderProps) {
+export function PageHeader({ title, description, badge, actions, children, className }: PageHeaderProps) {
   const t = useTranslations()
   const { activeGroup, activeItem } = useDashboardNav()
   const { authedUser } = useAuthGuard()
@@ -66,8 +64,7 @@ export function PageHeader({ title, description, object, badge, actions, childre
       <div className="mt-2 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            {object && <ObjectTile kind={object} size="md" />}
-            <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-[28px] md:leading-9">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground md:text-[28px] md:leading-9">
               {resolvedTitle}
             </h1>
             {badge}

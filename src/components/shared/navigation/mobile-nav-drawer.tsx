@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -14,7 +15,6 @@ import { WorkspaceSwitcher } from "./workspace-switcher"
 import { useDashboardNav } from "./use-dashboard-nav"
 import { LogoutDialog } from "./user-menu"
 import { navIconButton } from "./nav-styles"
-import { NexusMark } from "@/components/ui/nexus"
 
 /** Full navigation for screens below `lg`: every section and page, labelled. */
 export function MobileNavDrawer({
@@ -38,10 +38,10 @@ export function MobileNavDrawer({
           className="max-w-[320px] gap-5 bg-card p-4 pt-5 backdrop-blur-none"
         >
           <div className="flex items-center gap-2.5 pe-10">
-            <span className="flex size-10 items-center justify-center rounded-full bg-primary">
-              <NexusMark className="size-6 text-white" />
+            <span className="flex size-10 items-center justify-center rounded-full bg-info-soft">
+              <Image src="/app-logo.png" alt="" width={28} height={28} className="size-6 object-contain" />
             </span>
-            <span className="font-display text-base font-bold tracking-tight text-foreground">{t("appName")}</span>
+            <span className="text-[15px] font-semibold tracking-tight text-foreground">{t("appName")}</span>
           </div>
 
           {mode !== "console" && <WorkspaceSwitcher className="w-full justify-start" showName />}

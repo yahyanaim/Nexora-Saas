@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import dynamic from "next/dynamic"
+import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { Menu, Search, LockKeyholeOpen } from "@/components/ui/carbon/icons"
@@ -13,7 +14,6 @@ import { useDashboardNav } from "./use-dashboard-nav"
 import { UserMenu } from "./user-menu"
 import { WorkspaceSwitcher } from "./workspace-switcher"
 import { navIconButton, navSurface } from "./nav-styles"
-import { NexusMark, NexusPattern } from "@/components/ui/nexus"
 
 // PERF-01: search and the bell read many modules; they load after the page, not with it
 const CommandPalette = dynamic(() => import("@/components/shared/command-palette/command-palette").then((m) => m.CommandPalette), { ssr: false })
@@ -23,10 +23,8 @@ const WorkNotificationCenter = dynamic(() => import("@/components/shared/notific
 })
 
 /**
- * Nexus shell bar (DS-07): a navy band in both themes with the node pattern
- * and a glow line, holding the brand, section tabs (desktop), search,
- * notifications, language and the profile pill. Below `xl` the tabs move into
- * the drawer. The band renders its children with the dark tokens.
+ * Floating top bar: brand, section tabs (desktop), search, notifications,
+ * language and the profile pill. Below `xl` the tabs move into the drawer.
  */
 export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations()
@@ -50,9 +48,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
 
   return (
     <>
-      <header className="nx-shell dark relative isolate flex items-center gap-2 overflow-hidden rounded-[26px] p-1.5 text-foreground shadow-lg sm:gap-3">
-        <NexusPattern className="-z-10 text-white/[0.09]" />
-        <span aria-hidden className="absolute inset-x-6 bottom-0 -z-10 h-px [background:var(--shell-line)] opacity-70" />
+      <header className="flex items-center gap-2 sm:gap-3">
         <button
           type="button"
           onClick={onOpenMenu}
@@ -69,10 +65,10 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
             "flex h-12 shrink-0 items-center gap-2.5 py-1.5 pl-1.5 pr-4 lg:h-14 lg:pr-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           )}
         >
-          <span className="flex size-9 items-center justify-center rounded-full bg-primary shadow-[0_0_0_4px_rgb(38_132_255/0.18)] lg:size-10">
-            <NexusMark className="size-6 text-white" />
+          <span className="flex size-9 items-center justify-center overflow-hidden rounded-full bg-info-soft lg:size-10">
+            <Image src="/app-logo.png" alt="" width={28} height={28} className="size-6 object-contain" />
           </span>
-          <span className="font-display hidden text-base font-bold tracking-tight text-white min-[420px]:inline">
+          <span className="hidden text-[15px] font-semibold tracking-tight text-foreground min-[420px]:inline">
             {t("appName")}
           </span>
         </Link>
@@ -92,12 +88,12 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
                 className={cn(
                   "flex h-11 items-center gap-2 rounded-full px-3 2xl:px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   active
-                    ? "bg-white text-[#062455] shadow-sm"
-                    : "text-white/75 hover:bg-white/10 hover:text-white"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-foreground/80 hover:bg-muted hover:text-foreground"
                 )}
               >
-                {/* each area keeps its colour: the dot here, the rail and the page marker */}
-                <span aria-hidden className={cn("size-2 rounded-full bg-area", !active && "opacity-80")} />
+                {/* each area keeps its colour: the dot here, the rail and the page marker (DS-07) */}
+                <span aria-hidden className={cn("size-2 rounded-full bg-area", active && "ring-2 ring-white/90")} />
                 {group.title}
               </Link>
             )

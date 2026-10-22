@@ -58,7 +58,7 @@ export function KpiTile({ title, value, period, change, isPositive = true, spark
 
         <div className="mt-3 flex items-end justify-between gap-2">
           <div className="space-y-1">
-            <div className="font-display text-2xl font-bold tracking-tight text-foreground tabular-nums">{value}</div>
+            <div className="text-2xl font-bold tracking-tight text-foreground tabular-nums">{value}</div>
             {change !== undefined && (
               <div
                 className={cn(

@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { NodeProgress, ObjectTile, type NodeStep } from "@/components/ui/nexus"
+import { QuoteWay } from "../record-way"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { CheckCircle, Clock, Copy, DownloadIcon, FileText, FolderKanban, Pencil, Plus, Receipt, Send, Trash2, TrendingUp, XCircle } from "@/components/ui/carbon/icons"
@@ -383,7 +383,6 @@ export default function QuotesPage() {
                 <SheetHeader className="border-b px-6 py-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <ObjectTile kind="quote" size="sm" />
                       <SheetTitle className="truncate font-mono">{viewing.number || t("draft")}</SheetTitle>
                       <Badge variant="outline" className={cn("shrink-0", QUOTE_STATUS_CLASS[s])}>{t(QUOTE_STATUS_LABEL[s])}</Badge>
                     </div>
@@ -392,7 +391,7 @@ export default function QuotesPage() {
                     </Button>
                   </div>
                   <SheetDescription>{client?.name} · {formatShortDate(viewing.issueDate, locale)} → {formatShortDate(viewing.validUntil, locale)}</SheetDescription>
-                  <NodeProgress label={t("progress")} steps={quoteSteps(s, t)} className="pt-3" />
+                  <QuoteWay quote={viewing} status={s} invoicedAt={invoice?.issuedAt ?? invoice?.issueDate} className="pt-4" />
                 </SheetHeader>
                 <div className="flex flex-1 flex-col gap-5 px-6 py-5">
                   <p className="rounded-2xl bg-muted/50 p-3 text-sm">{viewing.subject}</p>
@@ -526,19 +525,3 @@ export default function QuotesPage() {
   )
 }
 
-/** A quote's way from draft to invoiced as Nexus nodes; refused or expired stops it in red (DS-07). */
-function quoteSteps(status: QuoteDisplayStatus, t: (key: string) => string): NodeStep[] {
-  const order: QuoteDisplayStatus[] = [QuoteStatus.DRAFT, QuoteStatus.SENT, QuoteStatus.ACCEPTED, "invoiced"]
-  if (status === QuoteStatus.DECLINED || status === "expired") {
-    return [
-      { label: t(QUOTE_STATUS_LABEL[QuoteStatus.DRAFT]), state: "done" },
-      { label: t(QUOTE_STATUS_LABEL[QuoteStatus.SENT]), state: "done" },
-      { label: t(QUOTE_STATUS_LABEL[status]), state: "stopped" },
-    ]
-  }
-  const at = order.indexOf(status)
-  return order.map((x, i) => ({
-    label: t(QUOTE_STATUS_LABEL[x]),
-    state: i < at || status === "invoiced" ? "done" : i === at ? "current" : "todo",
-  }))
-}

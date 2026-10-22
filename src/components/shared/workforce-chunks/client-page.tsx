@@ -286,7 +286,6 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
   return (
     <div className="space-y-6 p-4 md:p-6">
       <PageHeader
-        object="client"
         title={c.name}
         badge={
           <span className="flex flex-wrap items-center gap-1.5">

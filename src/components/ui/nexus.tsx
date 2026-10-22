@@ -1,36 +1,14 @@
+"use client"
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import {
-  Briefcase,
-  Building,
-  Clock,
-  FileText,
-  FolderKanban,
-  Handshake,
-  IdCard,
-  Receipt,
-  SquareCheck,
-  User,
-  UserPlus,
-} from "@/components/ui/carbon/icons"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { AlertTriangle, Check, X } from "@/components/ui/carbon/icons"
 
 /*
- * Nexus, Nexora's identity (DS-07): things that connect. Nodes joined by thin
- * lines are the one motif, used for the shell pattern, progress, empty states
- * and loading. Identity hues are for wayfinding; status keeps its own tones.
+ * Nexus (DS-07): things that connect. Nodes joined by thin lines draw the page
+ * header background and the progress of a record through its steps.
  */
-
-export type NexusHue = "blue" | "violet" | "green" | "teal" | "orange" | "slate" | "area"
-
-const HUE_SOLID: Record<NexusHue, string> = {
-  blue: "bg-nx-blue",
-  violet: "bg-nx-violet",
-  green: "bg-nx-green",
-  teal: "bg-nx-teal",
-  orange: "bg-nx-orange",
-  slate: "bg-nx-slate",
-  area: "bg-area",
-}
 
 /**
  * The node-and-line pattern. Decorative only: it tiles behind content in the
@@ -71,134 +49,131 @@ export function NexusPattern({ className, fade = "end" }: { className?: string; 
   )
 }
 
-/** The kinds of record that carry a tile: the same colour and icon everywhere. */
-export type ObjectKind =
-  | "project"
-  | "task"
-  | "client"
-  | "contact"
-  | "lead"
-  | "deal"
-  | "invoice"
-  | "quote"
-  | "employee"
-  | "time"
-  | "supplier"
-
 type IconType = React.ComponentType<{ className?: string }>
 
-export const OBJECT_KINDS: Record<ObjectKind, { hue: NexusHue; icon: IconType }> = {
-  project: { hue: "blue", icon: FolderKanban },
-  task: { hue: "blue", icon: SquareCheck },
-  client: { hue: "violet", icon: Building },
-  contact: { hue: "violet", icon: User },
-  lead: { hue: "orange", icon: UserPlus },
-  deal: { hue: "orange", icon: Handshake },
-  invoice: { hue: "green", icon: Receipt },
-  quote: { hue: "teal", icon: FileText },
-  employee: { hue: "orange", icon: IdCard },
-  time: { hue: "teal", icon: Clock },
-  supplier: { hue: "slate", icon: Briefcase },
+/**
+ * One step of a record's way. `done` steps are filled, `current` is the step the
+ * record waits for, `late` is a current step past its date, `stopped` ends the
+ * way (cancelled, declined, expired) and `todo` is still ahead.
+ */
+export type NodeStep = {
+  label: React.ReactNode
+  state: "done" | "current" | "late" | "todo" | "stopped"
+  /** Short date under the label */
+  date?: React.ReactNode
+  /** Icon inside the node; done shows a check and stopped a cross unless given */
+  icon?: IconType
+  /** One short line under the date, e.g. "12 days late" or "MAD 35,000 of 58,680" */
+  hint?: React.ReactNode
+  /** Shown on hover and keyboard focus: who did it and when */
+  detail?: React.ReactNode
+  /** How far the line leading to this step is filled, 0–1 (default: 1 done, 0.5 current, 0 todo) */
+  reach?: number
 }
 
-const TILE_SIZE = {
-  xs: "size-5 rounded-[5px] [&_svg]:size-3",
-  sm: "size-7 rounded-lg [&_svg]:size-4",
-  md: "size-9 rounded-[10px] [&_svg]:size-[18px]",
-  lg: "size-12 rounded-xl [&_svg]:size-6",
+const NODE: Record<NodeStep["state"], string> = {
+  done: "border-primary bg-primary text-primary-foreground",
+  current: "border-primary bg-card text-primary ring-4 ring-primary/15",
+  late: "border-warning bg-warning-soft text-warning-foreground ring-4 ring-warning/20",
+  todo: "border-dashed border-border-strong bg-card text-muted-foreground",
+  stopped: "border-destructive bg-destructive text-destructive-foreground",
 }
 
-/** A coloured square with a white icon that says what kind of record this is. */
-export function ObjectTile({ kind, size = "sm", className }: { kind: ObjectKind; size?: keyof typeof TILE_SIZE; className?: string }) {
-  const { hue, icon: Icon } = OBJECT_KINDS[kind]
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "relative inline-flex shrink-0 items-center justify-center overflow-hidden text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.18)]",
-        HUE_SOLID[hue],
-        TILE_SIZE[size],
-        className
-      )}
-    >
-      <Icon />
-    </span>
-  )
+const LABEL: Record<NodeStep["state"], string> = {
+  done: "font-medium text-foreground",
+  current: "font-semibold text-foreground",
+  late: "font-semibold text-warning-foreground",
+  todo: "text-muted-foreground",
+  stopped: "font-semibold text-danger-foreground",
 }
 
-export type NodeStep = { label: React.ReactNode; state: "done" | "current" | "todo" | "stopped"; hint?: React.ReactNode }
+function defaultReach(step: NodeStep) {
+  if (step.reach !== undefined) return Math.max(0, Math.min(1, step.reach))
+  if (step.state === "done" || step.state === "stopped") return 1
+  if (step.state === "current" || step.state === "late") return 0.5
+  return 0
+}
 
 /**
- * Steps drawn as nodes joined by a line: done nodes are filled, the current
- * one has a ring, the rest are hollow. A stopped step (cancelled, refused) is red.
+ * A record's way through its steps as nodes on a line: each node carries an
+ * icon, its date and a hint; the line fills up to where the record is, and
+ * part of the way for a partial step (a part payment). Hover or focus a node
+ * for who did it and when.
  */
-export function NodeProgress({ steps, className, label }: { steps: NodeStep[]; className?: string; label?: string }) {
+export function NodeProgress({
+  steps,
+  className,
+  label,
+  stateLabels,
+}: {
+  steps: NodeStep[]
+  className?: string
+  label?: string
+  /** Screen-reader words for each state, e.g. { done: "done", current: "current step" } */
+  stateLabels?: Partial<Record<NodeStep["state"], string>>
+}) {
   return (
     <ol aria-label={label} className={cn("flex w-full items-start", className)}>
       {steps.map((step, i) => {
         const last = i === steps.length - 1
-        const reached = step.state === "done" || step.state === "current"
-        const nextReached = !last && (steps[i + 1]!.state === "done" || steps[i + 1]!.state === "current")
+        const next = steps[i + 1]
+        const reach = next ? defaultReach(next) : 0
+        const Icon = step.icon ?? (step.state === "done" ? Check : step.state === "stopped" ? X : step.state === "late" ? AlertTriangle : undefined)
+        const node = (
+          <span
+            className={cn(
+              "relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              NODE[step.state]
+            )}
+            tabIndex={step.detail ? 0 : undefined}
+          >
+            {step.state === "current" && <span aria-hidden className="nx-halo absolute inset-[-6px] rounded-full border border-primary/40" />}
+            {Icon ? <Icon className="size-3.5" /> : <span aria-hidden className="size-1.5 rounded-full bg-current" />}
+          </span>
+        )
         return (
           <li
             key={i}
-            aria-current={step.state === "current" ? "step" : undefined}
+            aria-current={step.state === "current" || step.state === "late" ? "step" : undefined}
             className="relative flex min-w-0 flex-1 flex-col items-center text-center"
           >
             {!last && (
-              <span
-                aria-hidden
-                className={cn(
-                  "absolute top-[7px] h-0.5 start-[calc(50%+9px)] end-[calc(-50%+9px)] rounded-full",
-                  nextReached ? "bg-primary" : "bg-border"
-                )}
-              />
-            )}
-            <span
-              aria-hidden
-              className={cn(
-                "relative z-10 flex size-4 items-center justify-center rounded-full border-2",
-                step.state === "done" && "border-primary bg-primary",
-                step.state === "current" && "border-primary bg-card ring-4 ring-primary/20",
-                step.state === "todo" && "border-border-strong bg-card",
-                step.state === "stopped" && "border-destructive bg-destructive"
-              )}
-            >
-              {step.state === "current" && <span className="size-1.5 rounded-full bg-primary" />}
-            </span>
-            <span
-              className={cn(
-                "mt-2 max-w-28 px-1 text-xs leading-tight",
-                reached ? "font-medium text-foreground" : step.state === "stopped" ? "font-medium text-danger-foreground" : "text-muted-foreground"
-              )}
-            >
-              {step.label}
-              <span className="sr-only">
-                {" "}
-                ({step.state})
+              <span aria-hidden className="absolute top-[13px] h-[3px] start-[calc(50%+18px)] end-[calc(-50%+18px)] overflow-hidden rounded-full bg-border">
+                <span
+                  className={cn(
+                    "nx-fill block h-full rounded-full ltr:origin-left rtl:origin-right",
+                    next?.state === "late" ? "bg-warning" : next?.state === "stopped" ? "bg-destructive" : "bg-primary"
+                  )}
+                  style={{ width: `${reach * 100}%`, animationDelay: `${i * 120}ms` }}
+                />
               </span>
+            )}
+            {step.detail ? (
+              <Tooltip>
+                <TooltipTrigger asChild>{node}</TooltipTrigger>
+                <TooltipContent className="w-max max-w-64 whitespace-pre-line rounded-lg text-start text-xs leading-relaxed">{step.detail}</TooltipContent>
+              </Tooltip>
+            ) : (
+              node
+            )}
+            <span className={cn("mt-2 max-w-32 px-1 text-xs leading-tight", LABEL[step.state])}>
+              {step.label}
+              {stateLabels?.[step.state] && <span className="sr-only">{` (${stateLabels[step.state]})`}</span>}
             </span>
-            {step.hint && <span className="mt-0.5 text-[11px] text-muted-foreground">{step.hint}</span>}
+            {step.date && <span className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">{step.date}</span>}
+            {step.hint && (
+              <span
+                className={cn(
+                  "mt-1 max-w-32 rounded-full px-1.5 py-px text-[11px] font-medium leading-tight",
+                  step.state === "late" ? "bg-warning-soft text-warning-foreground" : step.state === "stopped" ? "bg-danger-soft text-danger-foreground" : "bg-muted text-muted-foreground"
+                )}
+              >
+                {step.hint}
+              </span>
+            )}
           </li>
         )
       })}
     </ol>
-  )
-}
-
-/** The Nexora mark drawn as three connecting nodes; animated while something loads. */
-export function NexusMark({ className, animated = false }: { className?: string; animated?: boolean }) {
-  return (
-    <svg viewBox="0 0 48 48" aria-hidden focusable="false" className={cn("size-10 text-primary", className)}>
-      <g stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" fill="none">
-        <path d="M12 36 L12 12 L36 36 L36 12" className={animated ? "nx-draw" : undefined} pathLength={1} />
-      </g>
-      <g fill="currentColor">
-        <circle cx="12" cy="36" r="4" className={animated ? "nx-pulse [animation-delay:0ms]" : undefined} />
-        <circle cx="12" cy="12" r="4" className={animated ? "nx-pulse [animation-delay:150ms]" : undefined} />
-        <circle cx="36" cy="36" r="4" className={animated ? "nx-pulse [animation-delay:300ms]" : undefined} />
-        <circle cx="36" cy="12" r="4" className={animated ? "nx-pulse [animation-delay:450ms]" : undefined} />
-      </g>
-    </svg>
   )
 }

@@ -71,11 +71,8 @@
   --series-3: #1baf7a;
   --series-4: #eda100;
 
-  /* Nexus identity (DS-07). Shell navy comes from blue.900; the identity hues are
-     for wayfinding only (area accents, object tiles), never for status. Solids
-     keep 3:1 against white so white icons on them stay readable. */
-  --shell: linear-gradient(120deg, #0a1b3d 0%, #062455 55%, #0b2f6b 100%);
-  --shell-line: linear-gradient(90deg, transparent, #4c9eff 30%, #82beff 50%, #4c9eff 70%, transparent);
+  /* Area accents (DS-07): wayfinding only, never status. Solids keep 3:1
+     against white so white icons on them stay readable. */
   --nx-blue: #2684ff;
   --nx-blue-soft: #e6f2ff;
   --nx-blue-foreground: #0e4fb3;
@@ -161,7 +158,6 @@
   --series-3: #199e70;
   --series-4: #c98500;
 
-  --shell: linear-gradient(120deg, #07142c 0%, #061d45 55%, #0a2858 100%);
   --nx-blue: #2684ff;
   --nx-blue-soft: rgba(38, 132, 255, 0.16);
   --nx-blue-foreground: #82beff;
@@ -214,17 +210,6 @@
   --area: var(--nx-slate);
   --area-soft: var(--nx-slate-soft);
   --area-foreground: var(--nx-slate-foreground);
-}
-
-/* The shell band keeps the dark tokens but lets its pills sit on the navy */
-.nx-shell {
-  background: var(--shell);
-  --card: rgb(255 255 255 / 0.06);
-  --border: rgb(255 255 255 / 0.1);
-  --muted: rgb(255 255 255 / 0.1);
-  --muted-foreground: #c3cdd9;
-  --info-soft: rgb(38 132 255 / 0.28);
-  --info-foreground: #bfdfff;
 }
 
 .purple {
@@ -500,13 +485,6 @@
     /* Inter: open digits, single-storey a off, straight-sided l */
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
-  /* Nexus heading face: titles and headline figures */
-  h1,
-  h2,
-  .font-display {
-    font-family: var(--font-display-face), var(--font-sans);
-    letter-spacing: -0.015em;
-  }
   .tabular-nums,
   [data-numeric] {
     font-variant-numeric: tabular-nums;
@@ -679,17 +657,18 @@ button,
   animation: meet-ripple 2s ease-out infinite;
 }
 
-/* Nexus mark while loading: the N is drawn, then its nodes pulse */
-@keyframes nx-draw {
-  0% { stroke-dasharray: 1; stroke-dashoffset: 1; }
-  60%, 100% { stroke-dasharray: 1; stroke-dashoffset: 0; }
+
+/* Node progress: the line fills when it appears, the current node breathes */
+@keyframes nx-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
 }
-@keyframes nx-pulse {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 1; }
+@keyframes nx-halo {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(1.25); opacity: 0; }
 }
-.nx-draw { animation: nx-draw 1.6s ease-in-out infinite; }
-.nx-pulse { animation: nx-pulse 1.2s ease-in-out infinite; }
+.nx-fill { animation: nx-fill 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.nx-halo { animation: nx-halo 2.2s ease-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .nx-draw, .nx-pulse { animation: none; }
+  .nx-fill, .nx-halo { animation: none; }
 }
