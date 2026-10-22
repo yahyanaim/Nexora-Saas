@@ -49,7 +49,6 @@ export function PageHeader({ title, description, badge, actions, children, class
       <div aria-hidden className="absolute inset-y-0 end-0 -z-10 hidden w-1/2 max-w-xl sm:block">
         <NexusPattern className="text-area opacity-[0.16] dark:opacity-25" />
       </div>
-      <span aria-hidden className="absolute inset-y-6 start-0 w-[3px] rounded-e-full bg-area" />
       {activeItem && (
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {showGroupCrumb && (
