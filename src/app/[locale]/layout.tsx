@@ -2,7 +2,7 @@ import NextTopLoader from "nextjs-toploader"
 import ProviderContexts from "@/contexts/app-provider"
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages, getTranslations } from "next-intl/server"
-import { Inter } from "next/font/google"
+import { Inter, Manrope } from "next/font/google"
 import localFont from "next/font/local"
 import { cn } from "@/lib/utils"
 import { routing } from "@/i18n/routing"
@@ -13,6 +13,14 @@ import { headers } from "next/headers"
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+})
+
+// Nexus heading face (DS-07): page titles and headline figures; Inter stays the text face
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-display-face",
   display: "swap",
 })
 
@@ -73,7 +81,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
 
   return (
     <html
-      className={cn(inter.variable, robotoMono.variable)}
+      className={cn(inter.variable, manrope.variable, robotoMono.variable)}
       suppressHydrationWarning
       lang={locale}
       dir={locale === "ar" || locale === "ur" ? "rtl" : "ltr"}

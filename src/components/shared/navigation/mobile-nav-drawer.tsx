@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { Link } from "@/i18n/navigation"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
@@ -15,6 +14,7 @@ import { WorkspaceSwitcher } from "./workspace-switcher"
 import { useDashboardNav } from "./use-dashboard-nav"
 import { LogoutDialog } from "./user-menu"
 import { navIconButton } from "./nav-styles"
+import { NexusMark } from "@/components/ui/nexus"
 
 /** Full navigation for screens below `lg`: every section and page, labelled. */
 export function MobileNavDrawer({
@@ -38,18 +38,19 @@ export function MobileNavDrawer({
           className="max-w-[320px] gap-5 bg-card p-4 pt-5 backdrop-blur-none"
         >
           <div className="flex items-center gap-2.5 pe-10">
-            <span className="flex size-10 items-center justify-center rounded-full bg-info-soft">
-              <Image src="/app-logo.png" alt="" width={28} height={28} className="size-6 object-contain" />
+            <span className="flex size-10 items-center justify-center rounded-full bg-primary">
+              <NexusMark className="size-6 text-white" />
             </span>
-            <span className="text-[15px] font-semibold tracking-tight text-foreground">{t("appName")}</span>
+            <span className="font-display text-base font-bold tracking-tight text-foreground">{t("appName")}</span>
           </div>
 
           {mode !== "console" && <WorkspaceSwitcher className="w-full justify-start" showName />}
 
           <nav aria-label={t("mainNavigation")} className="flex flex-col gap-5">
             {groups.map((group) => (
-              <div key={group.id} className="flex flex-col gap-1">
-                <p className="px-3 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <div key={group.id} data-area={group.id} className="flex flex-col gap-1">
+                <p className="flex items-center gap-2 px-3 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <span aria-hidden className="size-2 rounded-full bg-area" />
                   {group.title}
                 </p>
                 {group.items.map((item) => {
@@ -63,7 +64,7 @@ export function MobileNavDrawer({
                       className={cn(
                         "flex h-11 items-center gap-3 rounded-full px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         active
-                          ? "bg-primary text-primary-foreground"
+                          ? "bg-area-soft text-area-foreground"
                           : "text-foreground/80 hover:bg-muted hover:text-foreground"
                       )}
                     >

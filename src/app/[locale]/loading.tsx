@@ -1,13 +1,13 @@
-import { Loader2 } from "lucide-react"
+import { getTranslations } from "next-intl/server"
+import { NexusMark } from "@/components/ui/nexus"
 
-export default function Loading() {
+export default async function Loading() {
+  const t = await getTranslations()
   return (
-    <div className="flex min-h-[50vh] w-full items-center justify-center p-6">
+    <div role="status" className="flex min-h-[50vh] w-full items-center justify-center p-6">
       <div className="flex flex-col items-center gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground animate-pulse font-medium">
-          Loading...
-        </p>
+        <NexusMark animated className="size-12" />
+        <p className="text-sm font-medium text-muted-foreground">{t("loading")}</p>
       </div>
     </div>
   )

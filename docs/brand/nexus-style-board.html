@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nexus Style Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f4f8fc; --card: #fff; --fg: #0d131c; --muted: #536174; --border: #d8e0ea; --primary: #2684ff;
+    --blue: #2684ff; --blue-soft: #e6f2ff; --blue-fg: #0e4fb3;
+    --violet: #7c5cfa; --violet-soft: #f1edff; --violet-fg: #5b3fd6;
+    --green: #1e9e5a; --green-soft: #e8f8ef; --green-fg: #17804a;
+    --teal: #0f9b8e; --teal-soft: #e1f5f2; --teal-fg: #0b6e65;
+    --orange: #e2602b; --orange-soft: #fdeee6; --orange-fg: #b5441a;
+    --slate: #536174; --slate-soft: #eef2f6; --slate-fg: #3f4f66;
+    --shell: linear-gradient(120deg, #0a1b3d 0%, #062455 55%, #0b2f6b 100%);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d131c; --card: #172435; --fg: #f4f8fc; --muted: #a8b5c5; --border: #293a52;
+      --blue-soft: rgba(38,132,255,.16); --blue-fg: #82beff; --violet-soft: rgba(124,92,250,.18); --violet-fg: #b7a5ff;
+      --green-soft: rgba(58,209,131,.14); --green-fg: #5fe0a0; --teal-soft: rgba(15,155,142,.2); --teal-fg: #5fd6c8;
+      --orange-soft: rgba(226,96,43,.18); --orange-fg: #ff9c70; --slate: #7d8da0; --slate-soft: rgba(168,181,197,.14); --slate-fg: #c3cdd9;
+      --shell: linear-gradient(120deg, #07142c 0%, #061d45 55%, #0a2858 100%);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d131c; --card: #172435; --fg: #f4f8fc; --muted: #a8b5c5; --border: #293a52;
+    --blue-soft: rgba(38,132,255,.16); --blue-fg: #82beff; --violet-soft: rgba(124,92,250,.18); --violet-fg: #b7a5ff;
+    --green-soft: rgba(58,209,131,.14); --green-fg: #5fe0a0; --teal-soft: rgba(15,155,142,.2); --teal-fg: #5fd6c8;
+    --orange-soft: rgba(226,96,43,.18); --orange-fg: #ff9c70; --slate: #7d8da0; --slate-soft: rgba(168,181,197,.14); --slate-fg: #c3cdd9;
+    --shell: linear-gradient(120deg, #07142c 0%, #061d45 55%, #0a2858 100%);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.55 Inter, system-ui, sans-serif; }
+  h1, h2, .display { font-family: Manrope, Inter, sans-serif; letter-spacing: -.015em; margin: 0; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; }
+  .shell { position: relative; overflow: hidden; border-radius: 26px; background: var(--shell); color: #fff; padding: 28px 28px 32px; }
+  .shell svg.pat { position: absolute; inset: 0; width: 100%; height: 100%; color: rgb(255 255 255 / .12); }
+  .shell::after { content: ""; position: absolute; left: 8%; right: 8%; bottom: 0; height: 1px; background: linear-gradient(90deg, transparent, #4c9eff 30%, #82beff 50%, #4c9eff 70%, transparent); }
+  .brand { position: relative; display: flex; align-items: center; gap: 14px; }
+  .brand .mark { width: 56px; height: 56px; border-radius: 16px; background: var(--primary); display: grid; place-items: center; box-shadow: 0 0 0 6px rgb(38 132 255 / .2); }
+  .brand h1 { font-size: 34px; font-weight: 800; }
+  .brand p { margin: 2px 0 0; color: #c3cdd9; }
+  section { margin-top: 28px; }
+  section > h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  section > p.lead { color: var(--muted); margin: 0 0 14px; max-width: 70ch; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 18px; }
+  .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .sw { border-radius: 16px; overflow: hidden; border: 1px solid var(--border); background: var(--card); }
+  .sw .solid { height: 56px; }
+  .sw .soft { padding: 8px 12px; font-size: 12px; font-weight: 500; }
+  .sw .meta { padding: 8px 12px 12px; font-size: 12px; color: var(--muted); }
+  .sw .meta b { color: var(--fg); display: block; font-size: 13px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; border-radius: 999px; background: var(--shell); width: fit-content; max-width: 100%; }
+  .tab { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: 999px; color: rgb(255 255 255 / .78); font-weight: 500; }
+  .tab.on { background: #fff; color: #062455; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .tiles { display: flex; flex-wrap: wrap; gap: 16px; }
+  .tile { display: flex; align-items: center; gap: 10px; min-width: 150px; }
+  .tile i { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-style: normal; }
+  .tile i svg { width: 18px; height: 18px; }
+  .type { display: grid; gap: 10px; }
+  .type .display { font-size: 40px; font-weight: 800; }
+  .mono { font-family: "Roboto Mono", monospace; font-size: 12px; }
+  ol.nodes { list-style: none; display: flex; padding: 0; margin: 8px 0 0; }
+  ol.nodes li { flex: 1; position: relative; text-align: center; font-size: 12px; color: var(--muted); }
+  ol.nodes li span.n { display: block; width: 16px; height: 16px; margin: 0 auto 8px; border-radius: 50%; border: 2px solid #a8b5c5; background: var(--card); position: relative; z-index: 1; }
+  ol.nodes li:not(:last-child)::after { content: ""; position: absolute; top: 7px; left: calc(50% + 9px); right: calc(-50% + 9px); height: 2px; background: var(--border); }
+  ol.nodes li.done span.n { background: var(--primary); border-color: var(--primary); }
+  ol.nodes li.done, ol.nodes li.cur { color: var(--fg); font-weight: 500; }
+  ol.nodes li.done::after { background: var(--primary) !important; }
+  ol.nodes li.cur span.n { border-color: var(--primary); box-shadow: 0 0 0 4px rgb(38 132 255 / .2); }
+  ol.nodes li.stop span.n { background: #e5484d; border-color: #e5484d; }
+  ol.nodes li.stop { color: #c62a3a; font-weight: 500; }
+  .two { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .header-demo { position: relative; overflow: hidden; }
+  .header-demo .bar { position: absolute; left: 0; top: 18px; bottom: 18px; width: 3px; border-radius: 0 3px 3px 0; background: var(--violet); }
+  .header-demo svg.pat { position: absolute; top: 0; right: 0; height: 100%; width: 55%; color: var(--violet); opacity: .18; -webkit-mask-image: linear-gradient(to left, #000, transparent 80%); mask-image: linear-gradient(to left, #000, transparent 80%); }
+  .crumb { font-size: 12px; color: var(--muted); }
+  .crumb b { color: var(--violet-fg); font-weight: 500; }
+  .rules li { margin: 4px 0; }
+  .empty { text-align: center; border: 1px dashed var(--border); border-radius: 16px; padding: 22px; color: var(--muted); }
+  .toggle { position: fixed; top: 12px; right: 12px; border: 1px solid var(--border); background: var(--card); color: var(--fg); border-radius: 999px; padding: 6px 12px; font: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+<button class="toggle" type="button" onclick="(function(){var r=document.documentElement;var d=r.dataset.theme==='dark'||(!r.dataset.theme&&matchMedia('(prefers-color-scheme: dark)').matches);r.dataset.theme=d?'light':'dark'})()">Light / dark</button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <pattern id="nx" width="72" height="72" patternUnits="userSpaceOnUse">
+      <path d="M0 0 L44 24 L72 0 M44 24 L20 52 L0 72 M20 52 L72 72 M44 24 L72 72" stroke="currentColor" stroke-opacity=".55" fill="none" />
+      <g fill="currentColor"><circle cx="0" cy="0" r="2.5"/><circle cx="72" cy="0" r="2.5"/><circle cx="0" cy="72" r="2.5"/><circle cx="72" cy="72" r="2.5"/><circle cx="44" cy="24" r="3"/><circle cx="20" cy="52" r="2"/></g>
+    </pattern>
+    <g id="mark"><path d="M12 36 L12 12 L36 36 L36 12" stroke="#fff" stroke-width="2.5" stroke-linecap="round" fill="none"/><g fill="#fff"><circle cx="12" cy="36" r="4"/><circle cx="12" cy="12" r="4"/><circle cx="36" cy="36" r="4"/><circle cx="36" cy="12" r="4"/></g></g>
+  </defs>
+</svg>
+<div class="wrap">
+  <header class="shell">
+    <svg class="pat" aria-hidden="true"><rect width="100%" height="100%" fill="url(#nx)"/></svg>
+    <div class="brand">
+      <span class="mark"><svg viewBox="0 0 48 48" width="36" height="36" aria-hidden="true"><use href="#mark"/></svg></span>
+      <div><h1>Nexus</h1><p>Nexora's identity: the place where people, projects, time and money connect.</p></div>
+    </div>
+  </header>
+
+  <section>
+    <h2>1. One motif: nodes joined by lines</h2>
+    <p class="lead">Nexus has one shape: nodes joined by thin lines. It's used in the shell bar, page headers, the login band, progress steps, empty states and the loading mark, and nowhere else, so it stays recognizable.</p>
+    <div class="two">
+      <div class="card" style="position:relative;height:140px;overflow:hidden;color:var(--primary)"><svg aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;opacity:.35"><rect width="100%" height="100%" fill="url(#nx)"/></svg></div>
+      <div class="card empty">
+        <svg viewBox="0 0 96 64" width="96" height="64" aria-hidden="true" style="color:var(--violet)"><path d="M48 32 L12 14 M48 32 L86 18 M48 32 L78 56" stroke="currentColor" stroke-opacity=".35" stroke-dasharray="3 3" fill="none"/><g fill="currentColor"><circle cx="12" cy="14" r="3.5" fill-opacity=".45"/><circle cx="86" cy="18" r="2.5" fill-opacity=".35"/><circle cx="78" cy="56" r="3" fill-opacity=".5"/></g><rect x="36" y="20" width="24" height="24" rx="7" fill="var(--violet-soft)"/></svg>
+        <div style="color:var(--fg);font-weight:500">No clients yet</div><div>Empty states use the same nodes around the icon, in the area's color.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. The navy shell</h2>
+    <p class="lead">The top bar is navy in both themes, made from blue.900 with a glow line under it. Each tab carries its area's dot, and the active tab turns white.</p>
+    <nav class="tabs" aria-label="Example tabs">
+      <span class="tab"><span class="dot" style="background:var(--blue)"></span>Dashboard</span>
+      <span class="tab on"><span class="dot" style="background:var(--violet)"></span>Organization</span>
+      <span class="tab"><span class="dot" style="background:var(--green)"></span>Finance</span>
+      <span class="tab"><span class="dot" style="background:var(--teal)"></span>Planning</span>
+      <span class="tab"><span class="dot" style="background:var(--orange)"></span>Management</span>
+      <span class="tab"><span class="dot" style="background:var(--slate)"></span>System</span>
+    </nav>
+  </section>
+
+  <section>
+    <h2>3. Area colors (wayfinding)</h2>
+    <p class="lead">Each top area has one color, used for the tab dot, the active rail icon, the page header's side bar, the breadcrumb and empty states. These colors only show where you are. They never mean a status; statuses keep gray, blue, amber, green and red.</p>
+    <div class="grid">
+      <div class="sw"><div class="solid" style="background:var(--blue)"></div><div class="soft" style="background:var(--blue-soft);color:var(--blue-fg)">Dashboard</div><div class="meta"><b>Blue</b>#2684FF</div></div>
+      <div class="sw"><div class="solid" style="background:var(--violet)"></div><div class="soft" style="background:var(--violet-soft);color:var(--violet-fg)">Organization</div><div class="meta"><b>Violet</b>#7C5CFA</div></div>
+      <div class="sw"><div class="solid" style="background:var(--green)"></div><div class="soft" style="background:var(--green-soft);color:var(--green-fg)">Finance</div><div class="meta"><b>Green</b>#1E9E5A</div></div>
+      <div class="sw"><div class="solid" style="background:var(--teal)"></div><div class="soft" style="background:var(--teal-soft);color:var(--teal-fg)">Planning</div><div class="meta"><b>Teal</b>#0F9B8E</div></div>
+      <div class="sw"><div class="solid" style="background:var(--orange)"></div><div class="soft" style="background:var(--orange-soft);color:var(--orange-fg)">Management</div><div class="meta"><b>Orange</b>#E2602B</div></div>
+      <div class="sw"><div class="solid" style="background:var(--slate)"></div><div class="soft" style="background:var(--slate-soft);color:var(--slate-fg)">System</div><div class="meta"><b>Slate</b>#536174</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Object tiles</h2>
+    <p class="lead">Each kind of record has one colored square with a white icon, the same on every page, so you know what you're looking at before you read it.</p>
+    <div class="card tiles">
+      <span class="tile"><i style="background:var(--blue)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 10v5M12 10v3M16 10v6"/></svg></i>Project · Task</span>
+      <span class="tile"><i style="background:var(--violet)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M10 21v-4h4v4"/></svg></i>Client · Contact</span>
+      <span class="tile"><i style="background:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg></i>Invoice</span>
+      <span class="tile"><i style="background:var(--teal)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/></svg></i>Quote · Time</span>
+      <span class="tile"><i style="background:var(--orange)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="12" r="2"/><path d="M14 10h4M14 14h3"/></svg></i>Employee · Lead · Deal</span>
+      <span class="tile"><i style="background:var(--slate)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5h6v2"/></svg></i>Supplier</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Type</h2>
+    <p class="lead">Manrope for page titles and headline figures, Inter for everything you read, and Roboto Mono for codes and numbers like ORB-01 or INV-2026-025.</p>
+    <div class="card type">
+      <div class="display">Orbit fleet portal</div>
+      <div class="display" style="font-size:28px">MAD 1,095,475</div>
+      <div>Inter: Customer portal for tracking shipments and invoices.</div>
+      <div class="mono">ORB-01 · INV-2026-025</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>6. Node progress</h2>
+    <p class="lead">Steps are drawn as nodes on a line: filled when done, ringed when current, hollow when ahead, and red when stopped.</p>
+    <div class="two">
+      <div class="card"><b>Invoice</b>
+        <ol class="nodes"><li class="done"><span class="n"></span>Draft</li><li class="done"><span class="n"></span>Issued</li><li class="cur"><span class="n"></span>Sent</li><li><span class="n"></span>Paid</li></ol></div>
+      <div class="card"><b>Quote, declined</b>
+        <ol class="nodes"><li class="done"><span class="n"></span>Draft</li><li class="done"><span class="n"></span>Sent</li><li class="stop"><span class="n"></span>Declined</li></ol></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>7. Page header</h2>
+    <p class="lead">Every page header gets the area's side bar, a colored breadcrumb, the record's tile and the node pattern fading in from the right.</p>
+    <div class="card header-demo">
+      <span class="bar"></span>
+      <svg class="pat" aria-hidden="true"><rect width="100%" height="100%" fill="url(#nx)"/></svg>
+      <div class="crumb"><b>Organization</b> › Projects</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px"><span class="tile" style="min-width:0"><i style="background:var(--blue)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 10v5M12 10v3M16 10v6"/></svg></i></span><h2 style="font-size:28px;font-weight:700">Orbit fleet portal</h2></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Rules</h2>
+    <div class="card"><ul class="rules">
+      <li>Area colors and tile colors show <b>where</b> and <b>what</b>. Status always uses its own tones with a dot or icon.</li>
+      <li>White icons sit only on solid colors that reach at least 3:1 against white. Text on soft backgrounds reaches 4.5:1.</li>
+      <li>The pattern is always faint and decorative; screen readers never see it.</li>
+      <li>Product code uses the tokens <span class="mono">--nx-*</span> and <span class="mono">--area*</span> in <span class="mono">globals.css</span> and the components in <span class="mono">src/components/ui/nexus.tsx</span>, never raw hex values.</li>
+    </ul></div>
+  </section>
+</div>
+</body>
+</html>

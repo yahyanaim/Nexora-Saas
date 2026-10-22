@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress"
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { Calendar, CheckCircle2 } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
+import { ObjectTile } from "@/components/ui/nexus"
 import type { Client, Employee } from "@/types/workforce"
 import { ProjectHealth, type WorkProject } from "@/types/work-projects"
 import {
@@ -45,10 +46,13 @@ export function ProjectCard({ project, stats, client, members }: Props) {
       className="group flex flex-col gap-4 rounded-3xl border border-border bg-card p-5 shadow-panel transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground">{project.code}</p>
+        <div className="flex min-w-0 items-start gap-3">
+          <ObjectTile kind="project" size="md" className="mt-0.5" />
+          <div className="min-w-0">
+          <p className="font-mono text-[11px] font-medium tracking-wide text-muted-foreground">{project.code}</p>
           <h2 className="truncate text-base font-semibold text-foreground group-hover:text-primary">{project.name}</h2>
           <p className="truncate text-sm text-muted-foreground">{client?.name ?? t("internalProject")}</p>
+          </div>
         </div>
         <Badge variant="outline" className={cn("shrink-0", PROJECT_STATUS_CLASS[project.status])}>
           {t(PROJECT_STATUS_LABEL[project.status])}

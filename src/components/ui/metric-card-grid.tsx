@@ -95,7 +95,7 @@ export function MetricCardGrid({
               {/* a value, not a heading: keeps the page's heading order clean */}
               <p
                 className={cn(
-                  "text-2xl sm:text-[28px] sm:leading-9 font-semibold tracking-tight tabular-nums pt-1",
+                  "font-display text-2xl sm:text-[28px] sm:leading-9 font-bold tracking-tight tabular-nums pt-1",
                   card.valueClassName
                 )}
               >

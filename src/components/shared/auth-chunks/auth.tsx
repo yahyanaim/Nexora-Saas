@@ -12,7 +12,7 @@ import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
 import { CitySkyline } from "@/components/shared/auth-chunks/city-skyline"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
-import Image from "next/image"
+import { NexusMark, NexusPattern } from "@/components/ui/nexus"
 import { useTranslations } from "next-intl"
 
 export type AuthSections =
@@ -63,21 +63,26 @@ export const AuthPage = () => {
   }, [])
 
   return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-between overflow-x-hidden bg-background px-4 py-8 md:py-12">
+    <div className="relative isolate flex min-h-dvh flex-col items-center justify-between overflow-x-hidden bg-background px-4 py-8 md:py-12">
+      {/* DS-07: the navy Nexus band behind the card, same as the app's shell bar */}
+      <div aria-hidden className="nx-shell absolute inset-x-0 top-0 -z-10 h-[46vh] min-h-72 overflow-hidden rounded-b-[40px]">
+        <NexusPattern fade="radial" className="text-white/[0.14]" />
+        <span className="absolute inset-x-[15%] bottom-0 h-px [background:var(--shell-line)]" />
+      </div>
       {/* Top right theme toggler */}
-      <div className="fixed top-4 right-4 z-50 md:top-5 md:right-5">
+      <div className="fixed top-4 right-4 z-50 rounded-full bg-card shadow-md md:top-5 md:right-5">
         <AnimatedThemeToggler />
       </div>
 
       {/* Main Centered Auth Card Container */}
       <div className="my-auto flex w-full flex-col items-center justify-center gap-6 py-8">
-        <div className="flex items-center gap-2.5 rounded-full border border-border bg-card py-1.5 pl-1.5 pr-5 shadow-panel">
-          <span className="flex size-9 items-center justify-center rounded-full bg-info-soft">
-            <Image src="/app-logo.png" alt="" width={28} height={28} className="size-6 object-contain" />
+        <div className="flex items-center gap-3">
+          <span className="flex size-12 items-center justify-center rounded-2xl bg-primary shadow-[0_0_0_6px_rgb(38_132_255/0.2)]">
+            <NexusMark className="size-8 text-white" />
           </span>
-          <span className="text-[15px] font-semibold tracking-tight text-foreground">{t("appName")}</span>
+          <span className="font-display text-2xl font-bold tracking-tight text-white">{t("appName")}</span>
         </div>
-        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-panel sm:p-8">
+        <div className="w-full max-w-md rounded-3xl border border-border bg-card p-6 shadow-lg sm:p-8">
           {authSections === "login-by-qrCode" ? (
             <LoginByQrCode setAuthSections={setAuthSections} />
           ) : authSections === "login-by-email" ? (

@@ -4,6 +4,7 @@ import { CURRENCIES } from "@/lib/workforce/currency"
 import { useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { NodeProgress, ObjectTile, type NodeStep } from "@/components/ui/nexus"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -124,6 +125,7 @@ export function InvoiceSheet(props: Props) {
           {/* Number, status and the PDF button on one line */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
+              <ObjectTile kind="invoice" size="sm" />
               <SheetTitle className="truncate font-mono">{invoice.number || t("draftInvoice")}</SheetTitle>
               {isCredit && <Badge variant="outline">{t("creditNote")}</Badge>}
               <Badge variant="outline" className={cn("shrink-0", INVOICE_STATUS_CLASS[status])}>
@@ -136,6 +138,7 @@ export function InvoiceSheet(props: Props) {
             </Button>
           </div>
           <SheetDescription>{client?.name ?? "—"}</SheetDescription>
+          {!isCredit && <NodeProgress label={t("progress")} steps={invoiceSteps(invoice.status, t)} className="pt-3" />}
         </SheetHeader>
 
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
@@ -202,7 +205,7 @@ export function InvoiceSheet(props: Props) {
             </div>
           )}
 
-          <div className="relative overflow-x-auto rounded-2xl border border-border">
+          <div tabIndex={0} className="relative overflow-x-auto rounded-2xl border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs text-muted-foreground">
                 <tr>
@@ -530,4 +533,21 @@ function CreditNoteDialog({
       </DialogContent>
     </Dialog>
   )
+}
+
+/** Where an invoice is on its way from draft to paid, as Nexus nodes (DS-07). */
+function invoiceSteps(status: ClientInvoiceStatus, t: (key: string) => string): NodeStep[] {
+  if (status === ClientInvoiceStatus.VOID) {
+    return [
+      { label: t("draft"), state: "done" },
+      { label: t("issued"), state: "done" },
+      { label: t("cancelled"), state: "stopped" },
+    ]
+  }
+  const order = [ClientInvoiceStatus.DRAFT, ClientInvoiceStatus.ISSUED, ClientInvoiceStatus.SENT, ClientInvoiceStatus.PAID]
+  const at = order.indexOf(status)
+  return order.map((s, i) => ({
+    label: t(INVOICE_STATUS_LABEL[s]),
+    state: i < at || status === ClientInvoiceStatus.PAID ? "done" : i === at ? "current" : "todo",
+  }))
 }

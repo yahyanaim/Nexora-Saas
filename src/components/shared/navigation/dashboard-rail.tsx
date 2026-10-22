@@ -66,7 +66,14 @@ export function DashboardRail({ className }: { className?: string }) {
         </button>
       </div>
 
-      <div className="my-1 h-px w-8 bg-border" />
+      {/* area marker: three nodes in the area's colour */}
+      <div aria-hidden className="my-1 flex items-center gap-1 text-area">
+        <span className="size-1.5 rounded-full bg-current" />
+        <span className="h-px w-3 bg-current opacity-50" />
+        <span className="size-1.5 rounded-full bg-current" />
+        <span className="h-px w-3 bg-current opacity-50" />
+        <span className="size-1.5 rounded-full bg-current" />
+      </div>
 
       <nav className="flex flex-1 flex-col items-center gap-2">
         {activeGroup?.items.map((item) => {
@@ -81,7 +88,7 @@ export function DashboardRail({ className }: { className?: string }) {
                   className={cn(
                     navIconButton,
                     "size-12",
-                    active && "bg-primary text-primary-foreground shadow-md hover:bg-primary hover:text-primary-foreground"
+                    active ? "bg-area text-white shadow-md hover:bg-area hover:text-white" : "hover:bg-area-soft hover:text-area-foreground"
                   )}
                 >
                   <item.icon className="size-5" />
