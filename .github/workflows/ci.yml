@@ -17,10 +17,11 @@ env:
   # Placeholder; the app only needs a syntactically valid URL to build
   NEXT_PUBLIC_API_URL: https://api.example.com/api
 
+# Runners are pinned: ubuntu-latest moved to 26.04, where Playwright 1.56 cannot install Chromium
 jobs:
   checks:
     name: Typecheck, lint, i18n, unit tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,7 +39,7 @@ jobs:
 
   audit:
     name: Dependency audit
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,7 +50,7 @@ jobs:
 
   build:
     name: Production build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -63,7 +64,7 @@ jobs:
 
   a11y:
     name: Accessibility of the console (axe)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       NEXT_PUBLIC_API_URL: http://localhost:59999/api
       NEXT_PUBLIC_DEMO_MODE: "true"
@@ -96,7 +97,7 @@ jobs:
 
   demo-guard:
     name: Demo mode is blocked in production builds
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -117,7 +118,7 @@ jobs:
 
   e2e:
     name: End-to-end (Playwright)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       API_PROXY_TARGET: http://127.0.0.1:4500
       NEXT_PUBLIC_API_URL: http://localhost:3100/api

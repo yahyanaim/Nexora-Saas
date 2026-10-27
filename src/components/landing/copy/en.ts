@@ -22,6 +22,8 @@ export const en = {
     signIn: "Sign in",
     start: "Start for free",
     language: "Change language",
+    toLight: "Switch to light mode",
+    toDark: "Switch to dark mode",
   },
   hero: {
     eyebrow: "Nexora® · The ERP for service companies",

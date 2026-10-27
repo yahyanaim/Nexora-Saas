@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { useLandingDark } from "./theme"
 import s from "./landing.module.css"
 
 /**
@@ -23,6 +24,19 @@ const PALETTE: [number, number, number][] = [
   [0x0e, 0x4f, 0xb3],
   [0x06, 0x24, 0x55],
 ]
+// Dark page: the same ramp read from the dark canvas (gray.900) up to light blue
+const DARK_PALETTE: [number, number, number][] = [
+  [0x0d, 0x13, 0x1c],
+  [0x0f, 0x1d, 0x30],
+  [0x10, 0x2a, 0x4d],
+  [0x0e, 0x3b, 0x75],
+  [0x12, 0x52, 0xa6],
+  [0x1f, 0x6c, 0xd6],
+  [0x26, 0x84, 0xff],
+  [0x4c, 0x9e, 0xff],
+  [0x82, 0xbe, 0xff],
+]
+
 const BAYER = [
   0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54,
   22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47, 7, 39, 13, 45, 5, 37, 63, 31, 55, 23, 61, 29,
@@ -98,6 +112,7 @@ export function PixelGlobe({ className }: { className?: string }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const globeRef = useRef<HTMLCanvasElement>(null)
   const arcsRef = useRef<HTMLCanvasElement>(null)
+  const dark = useLandingDark()
 
   useEffect(() => {
     const wrap = wrapRef.current
@@ -109,6 +124,9 @@ export function PixelGlobe({ className }: { className?: string }) {
     if (!g || !a) return
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    // on the dark page the land glows light blue and the labels sit on dark chips
+    const pal = dark ? DARK_PALETTE : PALETTE
+    const ink = dark ? { hub: "#e6f2ff", city: "#82beff", chip: "rgba(13,19,28,0.88)", arrow: "#82beff" } : { hub: "#062455", city: "#0e4fb3", chip: "rgba(255,255,255,0.88)", arrow: "#0e4fb3" }
     let mask: Uint8Array | null = null
     const MW = 512
     const MH = 256
@@ -170,7 +188,7 @@ export function PixelGlobe({ className }: { className?: string }) {
     const drawGlobe = () => {
       if (!img || !lat || !lon0 || !light || !inside) return
       const d = img.data
-      const n = PALETTE.length - 1
+      const n = pal.length - 1
       for (let k = 0; k < D * D; k++) {
         const o = k * 4
         if (!inside[k]) {
@@ -197,7 +215,7 @@ export function PixelGlobe({ className }: { className?: string }) {
         const v = Math.min(Math.max(level, 0), 1) * n
         const lo2 = Math.floor(v)
         const idx = Math.min(n, lo2 + (v - lo2 > BAYER[(j % 8) * 8 + (i % 8)]! ? 1 : 0))
-        const col = PALETTE[idx]!
+        const col = pal[idx]!
         d[o] = col[0]
         d[o + 1] = col[1]
         d[o + 2] = col[2]
@@ -271,7 +289,7 @@ export function PixelGlobe({ className }: { className?: string }) {
         if (!head.hidden) {
           const ang = Math.atan2(head.y - prev.y, head.x - prev.x)
           const len = 5.5 * unit
-          a.fillStyle = "#0e4fb3"
+          a.fillStyle = ink.arrow
           a.beginPath()
           a.moveTo(head.x + Math.cos(ang) * len * 0.4, head.y + Math.sin(ang) * len * 0.4)
           a.lineTo(head.x - Math.cos(ang - 0.55) * len, head.y - Math.sin(ang - 0.55) * len)
@@ -300,16 +318,16 @@ export function PixelGlobe({ className }: { className?: string }) {
         if (s0.hidden || s0.front < 0.08) continue
         const isHub = name === HUB
         const w = (isHub ? 3.2 : 2.2) * unit
-        a.fillStyle = isHub ? "#062455" : "#0e4fb3"
+        a.fillStyle = isHub ? ink.hub : ink.city
         a.fillRect(Math.round(s0.x - w / 2), Math.round(s0.y - w / 2), w, w)
         if (isHub || landed.has(name)) {
           const label = name.toUpperCase()
           const tw = a.measureText(label).width
           const lx = s0.x + 6 * unit
           a.globalAlpha = Math.min(1, s0.front * 3)
-          a.fillStyle = "rgba(255,255,255,0.88)"
+          a.fillStyle = ink.chip
           a.fillRect(lx - 3, s0.y - 7, tw + 6, 14)
-          a.fillStyle = isHub ? "#062455" : "#0e4fb3"
+          a.fillStyle = isHub ? ink.hub : ink.city
           a.fillText(label, lx, s0.y + 0.5)
           a.globalAlpha = 1
         }
@@ -393,7 +411,7 @@ export function PixelGlobe({ className }: { className?: string }) {
       wrap.removeEventListener("pointerup", onUp)
       wrap.removeEventListener("pointercancel", onUp)
     }
-  }, [])
+  }, [dark])
 
   return (
     <div

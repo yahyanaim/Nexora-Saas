@@ -24,6 +24,8 @@ export const fr: LandingCopy = {
     signIn: "Se connecter",
     start: "Essai gratuit",
     language: "Changer la langue",
+    toLight: "Passer en mode clair",
+    toDark: "Passer en mode sombre",
   },
   hero: {
     eyebrow: "Nexora® · L’ERP des sociétés de services",

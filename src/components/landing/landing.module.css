@@ -1,8 +1,10 @@
 /*
  * Public landing page. Layout language after steel.dev (Geist and Geist Mono,
  * 1px hairlines instead of shadows, mono labels, square buttons, pixel-dither
- * artwork) in light mode with the Nexora design-system colors (DS-01).
- * It sets its own colors so the app theme does not change it.
+ * artwork) with the Nexora design-system colors (DS-01). Light by default;
+ * dark when the app theme is dark (`html.dark`, the same switch as the app,
+ * also offered in the nav). Every color below is a token, so dark mode only
+ * redefines the tokens.
  */
 
 .page {
@@ -20,6 +22,18 @@
   --brand-tint: #e6f2ff; /* blue.100 */
   --app-bg: #f4f8fb; /* background of the app screenshots */
   --live: #1f9d55;
+  /* dark panels that stay dark in both themes (announcement bar, code) */
+  --inverse: #0d131c;
+  --inverse-line: #253244;
+  --ink-hover: #1d2735;
+  --nav-bg: rgb(244 248 252 / 0.86);
+  --track: rgb(13 19 28 / 0.06);
+  --shadow: rgb(13 19 28 / 0.18);
+  --atmosphere: rgb(38 132 255 / 0.16);
+  --atmosphere-2: rgb(38 132 255 / 0.07);
+  --hairline-edge-c: #4a92ff;
+  --hairline-mid-c: #8fbcff;
+  --hairline-lo-c: #d5e6fd;
   --rail: 1280px;
   --sans: var(--font-geist), var(--font-arabic), var(--font-sans), system-ui, sans-serif;
   --mono: var(--font-geist-mono), var(--font-arabic), var(--font-mono), ui-monospace, monospace;
@@ -31,6 +45,41 @@
   font-feature-settings: "ss01";
   -webkit-font-smoothing: antialiased;
   overflow-x: clip;
+}
+
+/* Dark: the same page on the dark canvas (gray.900), surfaces gray.800 */
+:global(html.dark) .page {
+  --canvas: #0d131c;
+  --surface: #131d2b;
+  --surface-2: #1a2738;
+  --line: #233247;
+  --line-strong: #3f4f66;
+  --ink: #f4f8fc;
+  --ink-2: #a8b5c5;
+  --ink-3: #7d8da0;
+  --brand: #2684ff;
+  --brand-hover: #4c9eff;
+  --brand-tint: rgb(38 132 255 / 0.14);
+  --app-bg: #0a0f17;
+  --live: #3ad183;
+  --inverse: #172435;
+  --inverse-line: #2b3c55;
+  --ink-hover: #d8e0ea;
+  --nav-bg: rgb(13 19 28 / 0.82);
+  --track: rgb(244 248 252 / 0.08);
+  --shadow: rgb(0 0 0 / 0.55);
+  --atmosphere: rgb(38 132 255 / 0.22);
+  --atmosphere-2: rgb(38 132 255 / 0.08);
+  --hairline-edge-c: #4c9eff;
+  --hairline-mid-c: #2a5ea8;
+  --hairline-lo-c: #1a3358;
+  color-scheme: dark;
+}
+
+:global(html.dark) .heroArt img,
+:global(html.dark) .ctaArt img {
+  /* the still pictures are the light artwork; the canvases draw the dark one */
+  visibility: hidden;
 }
 
 .page ::selection {
@@ -129,6 +178,16 @@
   text-wrap: pretty;
 }
 
+.lead a {
+  color: var(--brand);
+  /* a link inside a sentence must not rely on color alone */
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lead a:hover {
+  color: var(--brand-hover);
+}
+
 .headRow {
   display: flex;
   align-items: flex-end;
@@ -179,11 +238,11 @@
 }
 .btnDark {
   background: var(--ink);
-  color: #fff;
+  color: var(--canvas);
   border: 1px solid var(--ink);
 }
 .btnDark:hover {
-  background: #1d2735;
+  background: var(--ink-hover);
 }
 .btnSm {
   height: 36px;
@@ -207,7 +266,8 @@
   align-items: center;
   gap: 12px;
   padding: 9px 16px;
-  background: var(--ink);
+  background: var(--inverse);
+  border-bottom: 1px solid var(--inverse-line);
   color: #c9d3df;
   font-family: var(--mono);
   font-size: 12px;
@@ -242,7 +302,7 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgb(244 248 252 / 0.86);
+  background: var(--nav-bg);
   backdrop-filter: saturate(1.4) blur(12px);
   border-bottom: 1px solid var(--line);
 }
@@ -343,7 +403,7 @@
   position: absolute;
   inset: 4%;
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 50%, rgb(38 132 255 / 0.16) 0%, rgb(38 132 255 / 0.07) 48%, transparent 70%);
+  background: radial-gradient(circle at 50% 50%, var(--atmosphere) 0%, var(--atmosphere-2) 48%, transparent 70%);
   pointer-events: none;
 }
 .globeCanvas,
@@ -755,14 +815,15 @@
 
 .code {
   width: 100%;
-  background: var(--ink);
+  background: var(--inverse);
+  border: 1px solid var(--inverse-line);
   border-radius: 8px;
   overflow: hidden;
   color: #d5deea;
 }
 .tabs {
   display: flex;
-  border-bottom: 1px solid #253244;
+  border-bottom: 1px solid var(--inverse-line);
   overflow-x: auto;
 }
 .tab {
@@ -770,7 +831,7 @@
   font-family: var(--mono);
   font-size: 12px;
   color: #7d8da0;
-  border-inline-end: 1px solid #253244;
+  border-inline-end: 1px solid var(--inverse-line);
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   cursor: pointer;
@@ -801,7 +862,7 @@
 }
 .codeCaption {
   padding: 12px 20px;
-  border-top: 1px solid #253244;
+  border-top: 1px solid var(--inverse-line);
   font-family: var(--mono);
   font-size: 11px;
   color: #7d8da0;
@@ -1373,7 +1434,7 @@
   bottom: 6px;
   width: 4px;
   border-radius: 4px;
-  background: rgb(13 19 28 / 0.06);
+  background: var(--track);
 }
 .scrollThumb {
   display: block;
@@ -1671,9 +1732,9 @@
   /* what is lit is the brand blue; edges and the rest recede in lighter blues */
   --hairline-plate: var(--canvas);
   --hairline-hi: var(--brand);
-  --hairline-edge: #4a92ff;
-  --hairline-mid: #8fbcff;
-  --hairline-lo: #d5e6fd;
+  --hairline-edge: var(--hairline-edge-c);
+  --hairline-mid: var(--hairline-mid-c);
+  --hairline-lo: var(--hairline-lo-c);
   --hairline-stroke: 1;
 }
 .figureCaption {
@@ -1756,7 +1817,7 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 2px;
-  box-shadow: 0 12px 32px -12px rgb(13 19 28 / 0.18);
+  box-shadow: 0 12px 32px -12px var(--shadow);
   animation: langIn 0.16s ease-out;
 }
 @keyframes langIn {

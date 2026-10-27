@@ -9,6 +9,7 @@ import { DitherCanvas } from "./dither-canvas"
 import { arabic, geist, geistMono } from "./fonts"
 import { HeroTeaser } from "./hero-teaser"
 import { LanguageMenu } from "./language-menu"
+import { ThemeToggle } from "./theme"
 import { LineFigure, type FigureName } from "./line-figure"
 import { CountUp, RevealObserver, ScrollFX } from "./motion"
 import { PixelGlobe } from "./pixel-globe"
@@ -103,6 +104,7 @@ export function LandingPage({ locale }: { locale: string }) {
             ))}
           </nav>
           <div className={s.navActions}>
+            <ThemeToggle toLight={c.nav.toLight} toDark={c.nav.toDark} />
             <LanguageMenu current={locale} label={c.nav.language} />
             <Link href={SIGN_IN} className={`${s.signIn} ${s.hideSm}`}>
               {c.nav.signIn}

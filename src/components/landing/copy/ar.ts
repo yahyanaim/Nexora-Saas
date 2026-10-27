@@ -24,6 +24,8 @@ export const ar: LandingCopy = {
     signIn: "تسجيل الدخول",
     start: "ابدأ مجاناً",
     language: "تغيير اللغة",
+    toLight: "التبديل إلى الوضع الفاتح",
+    toDark: "التبديل إلى الوضع الداكن",
   },
   hero: {
     eyebrow: "Nexora® · نظام ERP لشركات الخدمات",
