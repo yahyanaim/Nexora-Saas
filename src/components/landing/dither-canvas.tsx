@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { useLandingDark } from "./theme"
 
 /**
  * Animated ordered-dither artwork in the Nexora blues (steel.dev uses the same
@@ -28,6 +29,19 @@ const PALETTE: [number, number, number][] = [
   [0x06, 0x24, 0x55],
 ]
 
+// Dark page: the same ramp read from the dark canvas (gray.900) up to light blue
+const DARK_PALETTE: [number, number, number][] = [
+  [0x0d, 0x13, 0x1c],
+  [0x0f, 0x1d, 0x30],
+  [0x10, 0x2a, 0x4d],
+  [0x0e, 0x3b, 0x75],
+  [0x12, 0x52, 0xa6],
+  [0x1f, 0x6c, 0xd6],
+  [0x26, 0x84, 0xff],
+  [0x4c, 0x9e, 0xff],
+  [0x82, 0xbe, 0xff],
+]
+
 const BAYER = [
   0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54,
   22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47, 7, 39, 13, 45, 5, 37, 63, 31, 55, 23, 61, 29,
@@ -43,6 +57,7 @@ interface Props {
 
 export function DitherCanvas({ variant, cell = 6, className }: Props) {
   const ref = useRef<HTMLCanvasElement>(null)
+  const dark = useLandingDark()
 
   useEffect(() => {
     const canvas = ref.current
@@ -111,7 +126,8 @@ export function DitherCanvas({ variant, cell = 6, className }: Props) {
     const draw = () => {
       if (!image) return
       const d = image.data
-      const n = PALETTE.length - 1
+      const pal = dark ? DARK_PALETTE : PALETTE
+      const n = pal.length - 1
       for (let y = 0; y < rows; y++) {
         const fy = y / rows
         for (let x = 0; x < cols; x++) {
@@ -136,7 +152,7 @@ export function DitherCanvas({ variant, cell = 6, className }: Props) {
           const v = Math.min(Math.max(level, 0), 1) * n
           const lo = Math.floor(v)
           const idx = Math.min(n, lo + (v - lo > BAYER[(y % 8) * 8 + (x % 8)]! ? 1 : 0))
-          const c = PALETTE[idx]!
+          const c = pal[idx]!
           const o = i * 4
           d[o] = c[0]
           d[o + 1] = c[1]
@@ -184,7 +200,7 @@ export function DitherCanvas({ variant, cell = 6, className }: Props) {
       ro.disconnect()
       io.disconnect()
     }
-  }, [variant, cell])
+  }, [variant, cell, dark])
 
   return <canvas ref={ref} className={className} aria-hidden />
 }
