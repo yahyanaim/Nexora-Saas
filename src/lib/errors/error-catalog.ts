@@ -25,6 +25,8 @@ export const ERROR_KEYS: Record<string, string> = {
   "Choose where the deals of a removed stage go": "err_stageMoveTarget",
   "Only a won deal can start a project": "err_dealNotWon",
   "This deal already has a project": "err_dealHasProject",
+  "This client is not in the deleted clients": "err_clientNotDeleted",
+  "Choose two different clients": "err_mergeSameClient",
   "Deal not found": "err_dealNotFound",
   "This phase is not part of the project": "err_phaseNotInProject",
   "Your console role does not allow this": "err_consoleForbidden",

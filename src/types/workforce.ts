@@ -238,8 +238,12 @@ export interface Client {
   convertedAt?: string
   /** Why a lead was dropped, when it was archived as a lead (CRM step 6) */
   lostReason?: string
+  /** Set while the client sits in the deleted clients bin (CRM step 9) */
+  deletedAt?: string
+  /** Who deleted it */
+  deletedBy?: string
   createdAt: string
   updatedAt: string
 }
 
-export type ClientInput = Omit<Client, "id" | "workspaceId" | "createdAt" | "updatedAt">
+export type ClientInput = Omit<Client, "id" | "workspaceId" | "createdAt" | "updatedAt" | "deletedAt" | "deletedBy">
