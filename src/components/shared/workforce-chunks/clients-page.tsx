@@ -22,6 +22,7 @@ import { useCurrentWorkspace } from "@/store/workspace-store"
 import { useClientMutations, useClients, useEmployees } from "@/hooks/workforce/use-workforce"
 import { useClientFigures } from "@/hooks/workforce/use-client-figures"
 import { cleanTags, tagsInUse } from "@/lib/workforce/client-figures"
+import { BIN_DAYS } from "@/lib/workforce/client-history"
 import { updateClientApi } from "@/lib/api/clients-api"
 import { bccMailto, clientRecipients } from "@/lib/ui/mail-list"
 import { exportToCsv } from "@/lib/utils/export-data"
@@ -33,14 +34,18 @@ import { ClientForm, type ClientFormHandle } from "./client-form"
 import { clientPageHref } from "./client-page-tabs"
 import { Link, useRouter } from "@/i18n/navigation"
 import { ClientDetailsPanel } from "./client-details-panel"
+import { DeletedClientsSection } from "./client-safety"
+import { useDeletedClients } from "@/hooks/workforce/use-client-safety"
 import { formatMoney } from "./workforce-labels"
 
-type StatusPill = "all" | ClientStatus
+type StatusPill = "all" | ClientStatus | "deleted"
 const PILLS: { value: StatusPill; label: string }[] = [
   { value: "all", label: "all" },
   { value: ClientStatus.ACTIVE, label: "active" },
   { value: ClientStatus.LEAD, label: "leads" },
   { value: ClientStatus.ARCHIVED, label: "archived" },
+  // the deleted clients bin, for people who may delete (CRM step 9)
+  { value: "deleted", label: "csDeletedPill" },
 ]
 
 /**
@@ -65,6 +70,7 @@ export default function ClientsPage() {
   const canExport = can(authedUser, AdminPermissionsPlatform.CLIENTS_EXPORT)
   const canImport = can(authedUser, AdminPermissionsPlatform.CLIENTS_IMPORT)
   const canSeeMoney = can(authedUser, AdminPermissionsPlatform.INVOICES_READ)
+  const { data: deletedClients = [] } = useDeletedClients(canDelete)
 
   const [pill, setPill] = useState<StatusPill>("all")
   const [formOpen, setFormOpen] = useState(false)
@@ -103,9 +109,10 @@ export default function ClientsPage() {
 
   const counts = useMemo(() => {
     const by = (s: ClientStatus) => clients.filter((c) => c.status === s).length
-    return { all: clients.length, [ClientStatus.ACTIVE]: by(ClientStatus.ACTIVE), [ClientStatus.LEAD]: by(ClientStatus.LEAD), [ClientStatus.ARCHIVED]: by(ClientStatus.ARCHIVED) } as Record<StatusPill, number>
-  }, [clients])
+    return { all: clients.length, [ClientStatus.ACTIVE]: by(ClientStatus.ACTIVE), [ClientStatus.LEAD]: by(ClientStatus.LEAD), [ClientStatus.ARCHIVED]: by(ClientStatus.ARCHIVED), deleted: deletedClients.length } as Record<StatusPill, number>
+  }, [clients, deletedClients.length])
   const shown = useMemo(() => (pill === "all" ? clients : clients.filter((c) => c.status === pill)), [clients, pill])
+  const pills = PILLS.filter((p) => p.value !== "deleted" || canDelete)
 
   const columns = useMemo(
     () =>
@@ -247,7 +254,7 @@ export default function ClientsPage() {
       >
         {/* status pills with live counts, as in the reference */}
         <div className="flex flex-wrap gap-2" role="group" aria-label={t("status")}>
-          {PILLS.map((p) => (
+          {pills.map((p) => (
             <button
               key={p.value}
               type="button"
@@ -269,6 +276,9 @@ export default function ClientsPage() {
       <div className="min-w-0 space-y-6">
       <MetricCardGrid cards={cards} isLoading={isLoading} columnsClassName={cn("grid-cols-1 sm:grid-cols-2", selected ? "2xl:grid-cols-4" : "xl:grid-cols-4")} />
 
+      {pill === "deleted" ? (
+        <DeletedClientsSection canPurge={canDelete} />
+      ) : (
       <DataTable
         title={t("clients")}
         isLoading={isLoading}
@@ -311,6 +321,7 @@ export default function ClientsPage() {
           { columnId: "health", title: t("clHealth"), options: (["good", "watch", "at_risk"] as const).map((h) => ({ label: t(`clHealth_${h}`), value: h })) },
         ].filter((f) => f.options.length > 0)}
       />
+      )}
 
       </div>
 
@@ -365,7 +376,7 @@ export default function ClientsPage() {
         open={!!deleting}
         onOpenChange={(open) => !open && setDeleting(null)}
         title={t("deleteClient")}
-        description={t("deleteClientConfirmation", { name: deleting?.name ?? "" })}
+        description={t("csDeleteConfirm", { name: deleting?.name ?? "", days: BIN_DAYS })}
         confirmLabel={t("delete")}
         destructive
         isLoading={remove.isPending}

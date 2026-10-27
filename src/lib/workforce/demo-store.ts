@@ -23,7 +23,7 @@ function storageKey(collection: string, workspaceId: string) {
  * an older version starts again from fresh demo data instead of mixing old
  * records with new rules (the workspace choice and UI preferences are kept).
  */
-export const DEMO_DATA_VERSION = "2026-11-28"
+export const DEMO_DATA_VERSION = "2026-12-05"
 const VERSION_KEY = `${PREFIX}:data-version`
 const KEEP = new Set([VERSION_KEY, `${PREFIX}:workspace`, `${PREFIX}:guide-open`])
 /** Every collection and its seed, so a tenant export can include collections never opened (AUD-04). */
@@ -111,6 +111,45 @@ export function exportWorkspaceData(workspaceId: string): Record<string, unknown
     // unreadable storage: what was read so far
   }
   return out
+}
+
+/**
+ * Points every record of one workspace that holds `field === from` at `to`
+ * instead (CRM step 9: a merged client's deals, invoices, projects…).
+ * Collections never opened are seeded first, so their seed can't bring the old
+ * id back. Returns how many records moved.
+ */
+export function reassignReference(workspaceId: string, field: string, from: string, to: string, skip: readonly string[] = []) {
+  if (typeof window === "undefined" || isWorkspaceDeleted(workspaceId)) return 0
+  for (const [name, seed] of registry) if (!name.startsWith("platform-")) readCollection(name, workspaceId, () => seed(workspaceId) as Identified[])
+  let moved = 0
+  const keys: string[] = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && key.startsWith(`${PREFIX}:`) && key.endsWith(`:${workspaceId}`)) keys.push(key)
+  }
+  for (const key of keys) {
+    const name = key.slice(PREFIX.length + 1, -(workspaceId.length + 1))
+    if (skip.includes(name) || name.startsWith("platform-")) continue
+    let items: unknown
+    try {
+      items = JSON.parse(localStorage.getItem(key) ?? "null")
+    } catch {
+      continue
+    }
+    if (!Array.isArray(items)) continue
+    let changed = false
+    const next = items.map((item) => {
+      if (item && typeof item === "object" && (item as Record<string, unknown>)[field] === from) {
+        changed = true
+        moved++
+        return { ...item, [field]: to }
+      }
+      return item
+    })
+    if (changed) writeCollection(name, workspaceId, next as Identified[])
+  }
+  return moved
 }
 
 /** AUD-05: removes every record of one workspace and keeps it empty. Returns how many collections were deleted. */

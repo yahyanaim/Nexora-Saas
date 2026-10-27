@@ -49,7 +49,9 @@ export function useCollectionMutations<TInput>(
     update: (workspaceId: string, id: string, input: Partial<TInput>) => Promise<unknown>
     remove: (workspaceId: string, id: string) => Promise<void>
   },
-  labels: { created: string; updated: string; deleted: string }
+  labels: { created: string; updated: string; deleted: string },
+  /** Other lists of the workspace that change with this one */
+  alsoInvalidate: string[] = []
 ) {
   const t = useTranslations()
   const { id: workspaceId } = useCurrentWorkspace()
@@ -57,7 +59,7 @@ export function useCollectionMutations<TInput>(
 
   const onSuccess = (message: string) => () => {
     toast.success(message)
-    queryClient.invalidateQueries({ queryKey: [key, workspaceId] })
+    for (const k of [key, ...alsoInvalidate]) queryClient.invalidateQueries({ queryKey: [k, workspaceId] })
   }
   const onError = (err: unknown) =>
     toast.error(translateError(err, t))
@@ -111,7 +113,9 @@ export function useClientMutations() {
   return useCollectionMutations<ClientInput>(
     "clients",
     { create: createClientApi, update: updateClientApi, remove: deleteClientApi },
-    { created: t("clientCreated"), updated: t("clientUpdated"), deleted: t("clientDeleted") }
+    { created: t("clientCreated"), updated: t("clientUpdated"), deleted: t("clientDeleted") },
+    // a deleted client's deals and follow-ups leave the lists; history follows every change (CRM step 9)
+    ["deals", "client-follow-ups", "clients-deleted", "client-history"]
   )
 }
 

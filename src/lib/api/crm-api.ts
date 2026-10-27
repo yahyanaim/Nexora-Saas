@@ -2,6 +2,7 @@ import { addDays } from "@/lib/workforce/billing"
 import { createCollection } from "@/lib/workforce/demo-store"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { recordAudit } from "@/lib/workforce/audit"
+import { deletedClientIds } from "./clients-api"
 import {
   ClientNoteKind,
   ContractType,
@@ -110,8 +111,12 @@ export async function deleteClientNoteApi(workspaceId: string, id: string) {
 
 // ---------- Follow-ups (CRM step 1) ----------
 
-export async function listFollowUpsApi(workspaceId: string): Promise<ClientFollowUp[]> {
-  return followUps.list(workspaceId)
+/** Follow-ups of clients in the deleted clients bin stay hidden until the client is restored (CRM step 9). */
+export async function listFollowUpsApi(workspaceId: string, opts: { withDeleted?: boolean } = {}): Promise<ClientFollowUp[]> {
+  const all = followUps.list(workspaceId)
+  if (opts.withDeleted) return all
+  const deleted = deletedClientIds(workspaceId)
+  return deleted.size ? all.filter((f) => !deleted.has(f.clientId)) : all
 }
 
 function validateFollowUp(input: FollowUpInput) {

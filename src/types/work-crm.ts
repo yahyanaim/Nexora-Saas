@@ -152,3 +152,28 @@ export interface ClientFollowUp {
 }
 
 export type FollowUpInput = Pick<ClientFollowUp, "clientId" | "title" | "dueDate"> & Partial<Pick<ClientFollowUp, "ownerId" | "contactId" | "dealId" | "status" | "note">>
+
+/** What happened to a client, for its History tab (CRM step 9) */
+export type ClientHistoryKind = "created" | "updated" | "deleted" | "restored" | "merged"
+
+/** One field that changed; values are kept as stored (ids, codes), the page names them */
+export interface ClientFieldChange {
+  /** A client field, `contact` or `custom:<field id>` */
+  field: string
+  before?: string
+  after?: string
+}
+
+export interface ClientHistoryEntry {
+  id: string
+  workspaceId: string
+  clientId: string
+  kind: ClientHistoryKind
+  changes: ClientFieldChange[]
+  actorId: string
+  actorName: string
+  /** For a merge: the name of the client merged in */
+  note?: string
+  createdAt: string
+  updatedAt: string
+}

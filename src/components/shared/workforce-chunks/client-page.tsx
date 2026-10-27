@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { useSearchParams } from "next/navigation"
-import { AlertTriangle, ArrowLeft, CalendarDays, CheckCircle, XCircle, FolderKanban, Globe, Handshake, ListChecks, Mail, MessagesSquare, Pencil, Phone, Plus, Receipt, Wallet } from "@/components/ui/carbon/icons"
+import { AlertTriangle, ArrowLeft, ArrowLeftRight, CalendarDays, CheckCircle, XCircle, FolderKanban, Globe, Handshake, ListChecks, Mail, MessagesSquare, Pencil, Phone, Plus, Receipt, Wallet } from "@/components/ui/carbon/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
@@ -40,6 +40,7 @@ import { CLIENT_PAGE_TABS, tabFromQuery } from "./client-page-tabs"
 import { ContactsSection, DealsSection, PageSection, ProjectsSection, QuotesInvoicesSection, Row } from "./client-page-sections"
 import { HEALTH_CLASS, relativeDay } from "./clients-columns"
 import { CustomFieldValuesList } from "./custom-fields"
+import { ClientHistorySection, DuplicateNotice, MergeClientsDialog } from "./client-safety"
 import { FollowUpDialog } from "./follow-up-dialog"
 import { FollowUpList } from "./follow-up-list"
 import { ConvertDialog, DropDialog } from "./lead-dialogs"
@@ -70,10 +71,10 @@ export default function ClientPage({ clientId }: { clientId: string }) {
       </div>
     )
   }
-  return <ClientPageBody client={client} clients={clients} canSeeMoney={can(authedUser, AdminPermissionsPlatform.INVOICES_READ)} canEdit={can(authedUser, AdminPermissionsPlatform.CLIENTS_UPDATE)} />
+  return <ClientPageBody client={client} clients={clients} canSeeMoney={can(authedUser, AdminPermissionsPlatform.INVOICES_READ)} canEdit={can(authedUser, AdminPermissionsPlatform.CLIENTS_UPDATE)} canMerge={can(authedUser, AdminPermissionsPlatform.CLIENTS_DELETE)} />
 }
 
-function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: Client; clients: Client[]; canSeeMoney: boolean; canEdit: boolean }) {
+function ClientPageBody({ client: c, clients, canSeeMoney, canEdit, canMerge }: { client: Client; clients: Client[]; canSeeMoney: boolean; canEdit: boolean; canMerge: boolean }) {
   const t = useTranslations()
   const locale = useLocale()
   const workspace = useCurrentWorkspace()
@@ -96,6 +97,8 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
   const [planning, setPlanning] = React.useState(false)
   const [deciding, setDeciding] = React.useState<"convert" | "drop" | null>(null)
   const [editingFollowUp, setEditingFollowUp] = React.useState<ClientFollowUp | null>(null)
+  // the merge dialog, with the other client when opened from the duplicate notice (CRM step 9)
+  const [merging, setMerging] = React.useState<{ otherId?: string } | null>(null)
   const followUps = React.useMemo(() => sortFollowUps(allFollowUps.filter((x) => x.clientId === c.id)), [allFollowUps, c.id])
   const openFollowUps = followUps.filter((x) => !x.doneAt).length
   const formRef = React.useRef<ClientFormHandle>(null)
@@ -281,6 +284,15 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
         </div>
       ),
     },
+    {
+      id: "history",
+      label: t("csHistory"),
+      content: (
+        <PageSection title={t("csHistory")}>
+          <ClientHistorySection client={c} employees={employees} currency={currency} />
+        </PageSection>
+      ),
+    },
   ]
 
   return (
@@ -301,6 +313,7 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
             {canEdit && <Button variant="outline" onClick={() => setPlanning(true)}><ListChecks className="size-4" />{t("fuPlan")}</Button>}
             {canEdit && c.status === ClientStatus.LEAD && <Button variant="outline" onClick={() => setDeciding("drop")}><XCircle className="size-4" />{t("ldDrop")}</Button>}
             {canEdit && c.status === ClientStatus.LEAD && <Button variant="outline" onClick={() => setDeciding("convert")}><CheckCircle className="size-4" />{t("ldConvert")}</Button>}
+            {canMerge && <Button variant="outline" onClick={() => setMerging({})}><ArrowLeftRight className="size-4" />{t("csMergeWith")}</Button>}
             {canEdit && <Button variant="primary" onClick={() => setFormOpen(true)}><Pencil className="size-4" />{t("edit")}</Button>}
           </>
         }
@@ -312,12 +325,15 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit }: { client: 
         </div>
       </PageHeader>
 
+      <DuplicateNotice client={c} clients={clients} canMerge={canMerge} onMerge={(otherId) => setMerging({ otherId })} />
+
       <MetricCardGrid cards={cards} columnsClassName="grid-cols-1 sm:grid-cols-2 xl:grid-cols-4" />
 
       <Tabs defaultTabId={initialTab} onChange={(tab) => keepTab(tab.id)} tabs={tabs} />
 
       <ConvertDialog lead={deciding === "convert" ? c : null} onClose={() => setDeciding(null)} hasDeal={deals.some((d) => d.clientId === c.id && isOpenDeal(d))} />
       <DropDialog lead={deciding === "drop" ? c : null} onClose={() => setDeciding(null)} />
+      {merging && <MergeClientsDialog client={c} clients={clients} employees={employees} currency={currency} initialOtherId={merging.otherId} onClose={() => setMerging(null)} />}
       <LogDialog open={logging} onOpenChange={setLogging} client={c} canPlan={canEdit} />
       <FollowUpDialog
         open={planning || !!editingFollowUp}

@@ -7,6 +7,7 @@ import { DealStage, type Deal, type DealInput, type DealStageId, type PipelineSe
 import { BudgetType, Priority, WorkProjectStatus, type WorkProject } from "@/types/work-projects"
 import { getSettingsApi, updatePipelineApi } from "./settings-api"
 import { createProjectApi, listProjectsApi } from "./work-projects-api"
+import { deletedClientIds } from "./clients-api"
 
 /**
  * Sales pipeline (Phase 6g.2). Backed by the browser demo store for now;
@@ -46,8 +47,12 @@ const closedAtFor = (stage: DealStageId, previous?: Deal) => {
   return previous && previous.stage === stage && previous.closedAt ? previous.closedAt : todayIso()
 }
 
-export async function listDealsApi(workspaceId: string): Promise<Deal[]> {
-  return deals.list(workspaceId)
+/** Deals of clients in the deleted clients bin stay hidden until the client is restored (CRM step 9). */
+export async function listDealsApi(workspaceId: string, opts: { withDeleted?: boolean } = {}): Promise<Deal[]> {
+  const all = deals.list(workspaceId)
+  if (opts.withDeleted) return all
+  const deleted = deletedClientIds(workspaceId)
+  return deleted.size ? all.filter((d) => !deleted.has(d.clientId)) : all
 }
 
 export async function saveDealApi(workspaceId: string, input: DealInput, id?: string): Promise<Deal> {
