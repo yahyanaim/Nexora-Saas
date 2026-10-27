@@ -51,11 +51,11 @@ export default function ForecastPage() {
   const rows = useMemo(
     () =>
       revenueForecast(
-        { invoices: invoices.data ?? [], recurring: recurring.data ?? [], bookings: bookings.data ?? [], employees: employees.data ?? [], deals: deals.data ?? [], holidays },
+        { invoices: invoices.data ?? [], recurring: recurring.data ?? [], bookings: bookings.data ?? [], employees: employees.data ?? [], deals: deals.data ?? [], holidays, pipeline: settings?.pipeline },
         today,
         months
       ),
-    [invoices.data, recurring.data, bookings.data, employees.data, deals.data, holidays, today, months]
+    [invoices.data, recurring.data, bookings.data, employees.data, deals.data, holidays, settings?.pipeline, today, months]
   )
   const totals = forecastTotals(rows)
   const next3 = forecastTotals(rows.slice(0, 3))

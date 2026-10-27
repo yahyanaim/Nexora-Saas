@@ -16,7 +16,7 @@ import { addDays } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { cn } from "@/lib/utils"
 import { FollowUpStatus, type ClientFollowUp, type FollowUpInput } from "@/types/work-crm"
-import { OPEN_STAGES } from "@/types/work-sales"
+import { isOpenDeal } from "@/lib/workforce/deals"
 import { ClientStatus, EmployeeStatus } from "@/types/workforce"
 
 const NONE = "none"
@@ -67,7 +67,7 @@ export function FollowUpDialog({ open, onOpenChange, followUp, defaults, lockCli
 
   const client = clients.find((c) => c.id === draft.clientId)
   const clientChoices = clients.filter((c) => c.status !== ClientStatus.ARCHIVED || c.id === draft.clientId)
-  const dealChoices = deals.filter((d) => d.clientId === draft.clientId && ((OPEN_STAGES as readonly string[]).includes(d.stage) || d.id === draft.dealId))
+  const dealChoices = deals.filter((d) => d.clientId === draft.clientId && (isOpenDeal(d) || d.id === draft.dealId))
   const people = employees.filter((e) => e.status !== EmployeeStatus.INACTIVE || e.id === draft.ownerId)
   const valid = !!draft.clientId && !!draft.title.trim() && /^\d{4}-\d{2}-\d{2}$/.test(draft.dueDate)
   const quick = [

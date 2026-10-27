@@ -1,6 +1,8 @@
 import { ACCOUNT_PATTERN, DEFAULT_ACCOUNTS } from "@/lib/workforce/journal"
 import { assertCompanyIds, cleanId, isMoroccan } from "@/lib/workforce/tax-ids"
 import type { ReminderSettings } from "@/types/work-crm"
+import type { PipelineSettings } from "@/types/work-sales"
+import { assertPipeline } from "@/lib/workforce/deals"
 import type { AccountKey, CustomFieldDef, KpiSettings, OverheadItem } from "@/types/work-settings"
 import { validateFieldDefs } from "@/lib/workforce/custom-fields"
 import { ExpenseCategory } from "@/types/work-costs"
@@ -229,6 +231,16 @@ export async function updateListsApi(workspaceId: string, lists: ListsInput): Pr
 }
 
 /** Saves when overdue reminders go out (BIL-15): three increasing day counts. */
+/** Saves the sales pipeline stages and the stale-deal limit (CRM step 8). Deals are moved first by savePipelineApi. */
+export async function updatePipelineApi(workspaceId: string, pipeline: PipelineSettings): Promise<WorkspaceSettings> {
+  assertPipeline(pipeline)
+  const clean: PipelineSettings = { staleDays: pipeline.staleDays, stages: pipeline.stages.map((s) => ({ id: s.id, name: s.name?.trim() || undefined, probability: s.probability })) }
+  recordAudit(workspaceId, { action: "Sales pipeline updated", actionKey: "settings.pipeline", category: "Settings", target: "Workspace settings" })
+  const next = { ...read(workspaceId), pipeline: clean }
+  write(workspaceId, next)
+  return next
+}
+
 export async function updateRemindersApi(workspaceId: string, reminders: ReminderSettings): Promise<WorkspaceSettings> {
   const [a, b, c] = reminders.days
   if (![a, b, c].every((d) => Number.isInteger(d) && d >= 1 && d <= 365) || !(a < b && b < c)) {
