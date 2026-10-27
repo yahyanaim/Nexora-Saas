@@ -9,6 +9,7 @@ import { useProjects } from "./use-work-projects"
 import { useDeals } from "./use-deals"
 import { useSatisfaction } from "./use-satisfaction"
 import { useClientNotes, useContracts, useFollowUps } from "./use-crm"
+import { useWorkspaceSettings } from "./use-settings"
 
 /**
  * The CRM figures of every client of the workspace, by client id (CRM step 1):
@@ -23,11 +24,13 @@ export function useClientFigures(): { figures: Map<string, ClientFigures>; isLoa
   const followUps = useFollowUps()
   const contracts = useContracts()
   const responses = useSatisfaction()
+  const { data: settings } = useWorkspaceSettings()
   const queries = [clients, invoices, projects, deals, notes, followUps, contracts, responses]
   const isLoading = queries.some((q) => q.isLoading)
   const figures = useMemo(() => {
     const today = todayIso()
     const records = {
+      pipeline: settings?.pipeline,
       invoices: invoices.data ?? [],
       projects: projects.data ?? [],
       deals: deals.data ?? [],
@@ -37,6 +40,6 @@ export function useClientFigures(): { figures: Map<string, ClientFigures>; isLoa
       responses: responses.data ?? [],
     }
     return new Map((clients.data ?? []).map((c) => [c.id, clientFigures(c, records, today)]))
-  }, [clients.data, invoices.data, projects.data, deals.data, notes.data, followUps.data, contracts.data, responses.data])
+  }, [clients.data, invoices.data, projects.data, deals.data, notes.data, followUps.data, contracts.data, responses.data, settings?.pipeline])
   return { figures, isLoading }
 }

@@ -2,7 +2,7 @@ import { ClientInvoiceStatus, type ClientInvoice } from "@/types/work-billing"
 import type { ClientContract, ClientFollowUp, ClientNote } from "@/types/work-crm"
 import type { SatisfactionResponse } from "@/types/work-feedback"
 import { WorkProjectStatus, type WorkProject } from "@/types/work-projects"
-import type { Deal } from "@/types/work-sales"
+import type { Deal, PipelineSettings } from "@/types/work-sales"
 import { ClientStatus, type Client } from "@/types/workforce"
 import { invoiceBalance, invoiceTotals, toBase } from "./billing"
 import { clientOutstanding, contractStatus, creditStatus, daysOverdue } from "./client-relations"
@@ -52,6 +52,8 @@ export interface ClientFigures {
 }
 
 export interface ClientRecords {
+  /** The company's stage chances (CRM step 8); the defaults when unset */
+  pipeline?: PipelineSettings
   invoices: ClientInvoice[]
   projects: WorkProject[]
   deals: Deal[]
@@ -111,7 +113,7 @@ export function clientFigures(client: Pick<Client, "id" | "status" | "creditLimi
       completed: projects.filter((p) => p.status === WorkProjectStatus.COMPLETED).length,
       cancelled: projects.filter((p) => p.status === WorkProjectStatus.CANCELLED).length,
     },
-    openDeals: { count: deals.length, amount: roundMoney(deals.reduce((s, d) => s + d.amount, 0)), weighted: roundMoney(deals.reduce((s, d) => s + weightedValue(d), 0)) },
+    openDeals: { count: deals.length, amount: roundMoney(deals.reduce((s, d) => s + d.amount, 0)), weighted: roundMoney(deals.reduce((s, d) => s + weightedValue(d, r.pipeline), 0)) },
     billedThisYear,
     outstanding,
     overdue,

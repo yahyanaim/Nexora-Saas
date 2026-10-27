@@ -2,7 +2,8 @@ import { parseAmount, parseDate } from "./bank-import"
 import { cleanId } from "./tax-ids"
 import { excelSerialToIso } from "@/lib/utils/xlsx-read"
 import { ClientStatus, ContactRole, LeadSource, type Client, type Employee } from "@/types/workforce"
-import { DealStage, type Deal } from "@/types/work-sales"
+import { DealStage, type Deal, type DealStageId, type PipelineSettings } from "@/types/work-sales"
+import { DEFAULT_PIPELINE, isClosedStage } from "./deals"
 
 /**
  * CSV / Excel import of clients, contacts and deals (CRM step 7). Pure rules:
@@ -121,6 +122,20 @@ export interface ImportContext {
   clients: Client[]
   employees: Employee[]
   deals: Deal[]
+  /** The company's stages (CRM step 8): their names are accepted in the stage column */
+  pipeline?: PipelineSettings
+}
+
+/** A stage from a cell: the company's own stage names and ids first, then the usual words for the default stages. */
+function readStage(raw: string, pipeline: PipelineSettings = DEFAULT_PIPELINE): DealStageId | undefined | null {
+  const v = norm(raw)
+  if (!v) return undefined
+  const own = pipeline.stages.find((s) => norm(s.id) === v || (s.name && norm(s.name) === v))
+  if (own) return own.id
+  const word = pick(WORDS.stage, raw)
+  // a default stage the company removed is not accepted
+  if (word && (isClosedStage(word) || pipeline.stages.some((s) => s.id === word))) return word
+  return word === undefined ? undefined : null
 }
 
 const WORDS = {
@@ -255,7 +270,7 @@ function checkRow(line: number, values: Record<string, string>, kind: ImportKind
 
   if (v.amount && !(parseAmount(v.amount) >= 0)) errors.amount = "number"
   if (v.expectedClose && !readDate(v.expectedClose)) errors.expectedClose = "date"
-  if (v.stage && pick(WORDS.stage, v.stage) === null) errors.stage = "stage"
+  if (v.stage && readStage(v.stage, ctx.pipeline) === null) errors.stage = "stage"
   if (v.probability) {
     const p = Number(v.probability.replace("%", "").trim())
     if (!(p >= 0 && p <= 100)) errors.probability = "percent"
@@ -320,7 +335,7 @@ export function dealFields(row: ImportRow, ctx: ImportContext) {
     title: v.title ?? "",
     amount: parseAmount(v.amount ?? ""),
     expectedClose: readDate(v.expectedClose ?? ""),
-    stage: pick(WORDS.stage, v.stage ?? "") ?? undefined,
+    stage: readStage(v.stage ?? "", ctx.pipeline) ?? undefined,
     probability: v.probability ? Number(v.probability.replace("%", "").trim()) : undefined,
     ownerId: v.owner ? findPerson(ctx.employees, v.owner)?.id : undefined,
     contactId: client && v.contact ? contactIn(client, v.contact)?.id : undefined,

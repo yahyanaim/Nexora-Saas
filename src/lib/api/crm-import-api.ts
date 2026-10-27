@@ -1,5 +1,7 @@
 import { createClientApi, listClientsApi, updateClientApi } from "./clients-api"
 import { listDealsApi, saveDealApi } from "./deals-api"
+import { getSettingsApi } from "./settings-api"
+import { pipelineOf } from "@/lib/workforce/deals"
 import { listEmployeesApi } from "./employees-api"
 import { recordAudit } from "@/lib/workforce/audit"
 import { withContact } from "@/lib/workforce/contacts"
@@ -15,8 +17,8 @@ export interface ImportResult {
 }
 
 export async function importContextApi(workspaceId: string): Promise<ImportContext> {
-  const [clients, employees, deals] = await Promise.all([listClientsApi(workspaceId), listEmployeesApi(workspaceId), listDealsApi(workspaceId)])
-  return { clients, employees, deals }
+  const [clients, employees, deals, settings] = await Promise.all([listClientsApi(workspaceId), listEmployeesApi(workspaceId), listDealsApi(workspaceId), getSettingsApi(workspaceId)])
+  return { clients, employees, deals, pipeline: pipelineOf(settings) }
 }
 
 /**

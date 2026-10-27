@@ -1,3 +1,4 @@
+import type { PipelineSettings } from "./work-sales"
 import type { ReminderSettings } from "./work-crm"
 import { ExpenseCategory } from "./work-costs"
 import { LeaveType } from "./work-planning"
@@ -132,6 +133,8 @@ export interface WorkspaceSettings {
   customFields?: CustomFieldDef[]
   /** Account numbers used by the accounting journal export; CGNC defaults (Phase 6e.4) */
   accounts?: Partial<Record<AccountKey, string>>
+  /** Sales pipeline stages and the stale-deal limit (CRM step 8); defaults when unset */
+  pipeline?: PipelineSettings
 }
 
 /** The accounts the journal export posts to. */

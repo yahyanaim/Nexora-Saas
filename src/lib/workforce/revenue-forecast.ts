@@ -2,7 +2,7 @@ import type { Employee } from "@/types/workforce"
 import type { ClientInvoice } from "@/types/work-billing"
 import type { RecurringInvoice } from "@/types/work-crm"
 import type { ResourceBooking } from "@/types/work-planning"
-import type { Deal } from "@/types/work-sales"
+import type { Deal, PipelineSettings } from "@/types/work-sales"
 import { addDays, invoiceBalance, invoiceTotals, toBase, weekStart } from "./billing"
 import { nextRunAfter, recurringAmount, scheduleFinished } from "./client-relations"
 import { isOpenDeal, weightedValue } from "./deals"
@@ -35,6 +35,8 @@ export interface ForecastInput {
   employees: Employee[]
   deals: Deal[]
   holidays?: Iterable<string>
+  /** The company's stage chances (CRM step 8); the defaults when unset */
+  pipeline?: PipelineSettings
 }
 
 /** The month of `today` and the following ones, as yyyy-mm. */
@@ -110,7 +112,7 @@ export function revenueForecast(input: ForecastInput, today: string, months: str
   }
 
   for (const d of input.deals) {
-    if (isOpenDeal(d)) add("pipeline", monthOf(d.expectedClose), weightedValue(d))
+    if (isOpenDeal(d)) add("pipeline", monthOf(d.expectedClose), weightedValue(d, input.pipeline))
   }
 
   return months.map((m) => {

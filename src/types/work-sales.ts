@@ -9,7 +9,28 @@ export enum DealStage {
   LOST = "lost",
 }
 
+/** The default open stages; a company can rename, reorder, add and remove them (CRM step 8) */
 export const OPEN_STAGES = [DealStage.LEAD, DealStage.QUALIFIED, DealStage.PROPOSAL, DealStage.NEGOTIATION] as const
+
+/** Stage id: one of the company's open stages, or the fixed "won" / "lost" */
+export type DealStageId = string
+
+/** An open stage of the pipeline. The default stages have no name and show their translated label. */
+export interface PipelineStage {
+  id: string
+  /** Shown instead of the translated default label */
+  name?: string
+  /** Default chance of winning for deals in this stage, in percent */
+  probability: number
+}
+
+/** The company's sales pipeline (CRM step 8) */
+export interface PipelineSettings {
+  /** Open stages in board order; won and lost always follow */
+  stages: PipelineStage[]
+  /** An open deal that stays this many days in one stage is stale */
+  staleDays: number
+}
 
 export interface Deal {
   id: string
@@ -18,7 +39,9 @@ export interface Deal {
   clientId: string
   /** Expected value, before VAT, in the workspace currency */
   amount: number
-  stage: DealStage
+  stage: DealStageId
+  /** yyyy-mm-dd, when the deal entered its current stage (CRM step 8); createdAt before that */
+  stageSince?: string
   /** Chance of winning in percent; the stage default applies when unset */
   probability?: number
   /** yyyy-mm-dd */
@@ -29,6 +52,8 @@ export interface Deal {
   contactId?: string
   /** Quote sent for this deal */
   quoteId?: string
+  /** Project created from the won deal (CRM step 8) */
+  projectId?: string
   lostReason?: string
   note?: string
   /** yyyy-mm-dd, set when the deal is won or lost */

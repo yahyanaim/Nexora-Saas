@@ -11,7 +11,7 @@ import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card
 import { EmptyState, ListSkeleton } from "@/components/ui/empty-state"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Funnel, ListChecks, Upload, Pencil, Plus, Trash2, TrendingUp, Trophy, Warning, Wallet } from "@/components/ui/carbon/icons"
+import { Clock, FolderKanban, Funnel, ListChecks, SettingsAdjust, Upload, Pencil, Plus, Trash2, TrendingUp, Trophy, Warning, Wallet } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { Link } from "@/i18n/navigation"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -28,12 +28,15 @@ import { useDealMutations, useDeals } from "@/hooks/workforce/use-deals"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { addDays } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
-import { STAGE_PROBABILITY, dealProbability, pipelineByStage, pipelineSummary, weightedValue } from "@/lib/workforce/deals"
+import { daysInStage, dealProbability, isOpenDeal, isStale, pipelineByStage, pipelineSummary, stageOf, weightedValue } from "@/lib/workforce/deals"
+import { usePipeline } from "@/hooks/workforce/use-pipeline"
+import { PipelineStagesDialog } from "./pipeline-stages-dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 import { ClientStatus, EmployeeStatus } from "@/types/workforce"
-import { DealStage, OPEN_STAGES, type Deal, type DealInput } from "@/types/work-sales"
+import { DealStage, type Deal, type DealInput, type DealStageId } from "@/types/work-sales"
 
-const STAGE_DOT: Record<DealStage, string> = {
+const STAGE_DOT: Record<string, string> = {
   [DealStage.LEAD]: "bg-muted-foreground/40",
   [DealStage.QUALIFIED]: "bg-info-foreground",
   [DealStage.PROPOSAL]: "bg-primary",
@@ -42,7 +45,10 @@ const STAGE_DOT: Record<DealStage, string> = {
   [DealStage.LOST]: "bg-destructive",
 }
 
-const emptyDeal = (): DealInput => ({ title: "", clientId: "", amount: 0, stage: DealStage.LEAD, expectedClose: addDays(todayIso(), 30) })
+// added stages have no colour of their own
+const dotOf = (stage: DealStageId) => STAGE_DOT[stage] ?? "bg-primary/60"
+
+const emptyDeal = (stage: DealStageId): DealInput => ({ title: "", clientId: "", amount: 0, stage, expectedClose: addDays(todayIso(), 30) })
 
 /** Deals followed from first contact to signature, with the weighted pipeline (Phase 6g.2). */
 export default function DealsPage() {
@@ -53,12 +59,20 @@ export default function DealsPage() {
   const { data: clients = [] } = useClients()
   const { data: employees = [] } = useEmployees()
   const { data: quotes = [] } = useQuotes()
-  const { save, move, remove } = useDealMutations()
+  const { save, move, remove, savePipeline, createProject } = useDealMutations()
+  const { pipeline, stageLabel } = usePipeline()
+  const user = useAuthGuard().authedUser
+  // the pipeline is part of the workspace settings; projects need their own right
+  const canEditStages = can(user, AdminPermissionsPlatform.ROLES_READ)
+  const canCreateProject = can(user, AdminPermissionsPlatform.PROJECTS_CREATE)
+  const [stagesOpen, setStagesOpen] = useState(false)
+  const [staleOnly, setStaleOnly] = useState(false)
+  const [starting, setStarting] = useState<{ deal: Deal; code: string; managerId?: string } | null>(null)
 
   const [editing, setEditing] = useState<{ id?: string; input: DealInput } | null>(null)
   const [deleting, setDeleting] = useState<Deal | null>(null)
   const [dragId, setDragId] = useState<string | null>(null)
-  const canImport = can(useAuthGuard().authedUser, AdminPermissionsPlatform.CLIENTS_IMPORT)
+  const canImport = can(user, AdminPermissionsPlatform.CLIENTS_IMPORT)
   const [planning, setPlanning] = useState<FollowUpDefaults | null>(null)
   const { data: followUps = [] } = useFollowUps()
   // the next open follow-up of each deal (CRM step 5)
@@ -69,8 +83,10 @@ export default function DealsPage() {
   }, [followUps])
 
   const today = todayIso()
-  const summary = useMemo(() => pipelineSummary(deals, today), [deals, today])
-  const byStage = useMemo(() => pipelineByStage(deals), [deals])
+  const summary = useMemo(() => pipelineSummary(deals, today, pipeline), [deals, today, pipeline])
+  const byStage = useMemo(() => pipelineByStage(deals, pipeline, today), [deals, pipeline, today])
+  const openStages = pipeline.stages.map((st) => st.id)
+  const allStages = [...openStages, DealStage.WON, DealStage.LOST]
   const money = (n: number) => formatMoney(n, currency, locale)
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso}T00:00:00`))
   const clientName = (id: string) => clients.find((c) => c.id === id)?.name ?? "—"
@@ -90,7 +106,7 @@ export default function DealsPage() {
     setEditing({ id: d.id, input: { title: d.title, clientId: d.clientId, amount: d.amount, stage: d.stage, probability: d.probability, expectedClose: d.expectedClose, ownerId: d.ownerId, contactId: d.contactId, quoteId: d.quoteId, lostReason: d.lostReason, note: d.note } })
 
   // A lost deal needs a reason, so that move goes through the form
-  const moveTo = (d: Deal, stage: DealStage) => {
+  const moveTo = (d: Deal, stage: DealStageId) => {
     if (stage === d.stage) return
     if (stage === DealStage.LOST) {
       edit({ ...d, stage })
@@ -100,8 +116,10 @@ export default function DealsPage() {
   }
 
   const renderCard = (d: Deal) => {
-    const open = OPEN_STAGES.includes(d.stage as (typeof OPEN_STAGES)[number])
+    const open = isOpenDeal(d)
     const overdue = open && d.expectedClose < today
+    const stale = isStale(d, today, pipeline)
+    const days = daysInStage(d, today)
     const next = nextStep.get(d.id)
     return (
       <li
@@ -124,10 +142,14 @@ export default function DealsPage() {
         </div>
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-sm font-semibold tabular-nums">{money(d.amount)}</span>
-          <span className="text-xs text-muted-foreground tabular-nums">{t("dealChance", { pct: dealProbability(d) })}</span>
+          <span className="text-xs text-muted-foreground tabular-nums">{t("dealChance", { pct: dealProbability(d, pipeline) })}</span>
         </div>
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           <span className={cn("text-muted-foreground", overdue && "font-medium text-destructive")}>{t("dealCloses", { date: date(d.expectedClose) })}</span>
+          <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-px tabular-nums", stale ? "bg-warning-soft font-medium text-warning-foreground" : "text-muted-foreground")} title={t("dealSinceTitle", { date: date(d.stageSince ?? d.createdAt.slice(0, 10)) })}>
+            <Clock className="size-3" />
+            {stale ? t("dealStale", { days }) : t("dealInStage", { days })}
+          </span>
           {quoteNumber(d.quoteId) && <Badge variant="outline" className="border-transparent bg-muted text-muted-foreground">{quoteNumber(d.quoteId)}</Badge>}
         </div>
         {open && (
@@ -138,18 +160,18 @@ export default function DealsPage() {
         )}
         <div className="flex items-center justify-between gap-2">
           <span className="truncate text-xs text-muted-foreground">{personName(d.ownerId) ?? ""}</span>
-          <Select value={d.stage} onValueChange={(v) => moveTo(d, v as DealStage)}>
-            <SelectTrigger className="h-7 w-36 bg-card text-xs" aria-label={t("dealMoveTo")}><SelectValue>{t(`dealStage_${d.stage}`)}</SelectValue></SelectTrigger>
-            <SelectContent>{Object.values(DealStage).map((s) => <SelectItem key={s} value={s}>{t(`dealStage_${s}`)}</SelectItem>)}</SelectContent>
+          <Select value={d.stage} onValueChange={(v) => moveTo(d, v)}>
+            <SelectTrigger className="h-7 w-36 bg-card text-xs" aria-label={t("dealMoveTo")}><SelectValue>{stageLabel(d.stage)}</SelectValue></SelectTrigger>
+            <SelectContent>{allStages.map((s) => <SelectItem key={s} value={s}>{stageLabel(s)}</SelectItem>)}</SelectContent>
           </Select>
         </div>
       </li>
     )
   }
 
-  const renderColumn = (stage: DealStage) => {
+  const renderColumn = (stage: DealStageId) => {
     const s = byStage.find((r) => r.stage === stage)!
-    const rows = deals.filter((d) => d.stage === stage).sort((a, b) => a.expectedClose.localeCompare(b.expectedClose))
+    const rows = deals.filter((d) => d.stage === stage && (!staleOnly || isStale(d, today, pipeline))).sort((a, b) => a.expectedClose.localeCompare(b.expectedClose))
     return (
       <div
         key={stage}
@@ -161,9 +183,17 @@ export default function DealsPage() {
           setDragId(null)
         }}
       >
-        <div className="flex items-center justify-between gap-2 px-1">
-          <span className="flex items-center gap-2 text-sm font-semibold"><span className={cn("size-2 rounded-full", STAGE_DOT[stage])} />{t(`dealStage_${stage}`)}<span className="text-xs font-normal text-muted-foreground">{s.count}</span></span>
-          <span className="text-xs text-muted-foreground tabular-nums" title={t("dealWeighted")}>{money(s.amount)}</span>
+        <div className="flex flex-col gap-1 px-1">
+          <div className="flex items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-2 text-sm font-semibold"><span className={cn("size-2 shrink-0 rounded-full", dotOf(stage))} /><span className="truncate">{stageLabel(stage)}</span><span className="text-xs font-normal text-muted-foreground">{s.count}</span></span>
+            <span className="shrink-0 text-xs text-muted-foreground tabular-nums">{t("dealChance", { pct: stageOf(stage, pipeline)?.probability ?? 0 })}</span>
+          </div>
+          {/* the column's value and what it is worth at its chance of winning (CRM step 8) */}
+          <div className="flex items-baseline justify-between gap-2 text-xs tabular-nums">
+            <span className="text-muted-foreground">{money(s.amount)}</span>
+            <span className="font-medium text-foreground" title={t("dealWeightedHint")}>{t("dealColumnWeighted", { value: money(s.weighted) })}</span>
+          </div>
+          {s.stale > 0 && <span className="w-fit rounded-full bg-warning-soft px-2 py-px text-[11px] font-medium text-warning-foreground">{t("dealColumnStale", { count: s.stale })}</span>}
         </div>
         <ul className="flex flex-col gap-2">{rows.map(renderCard)}</ul>
       </div>
@@ -180,21 +210,31 @@ export default function DealsPage() {
         actions={
           <>
             {canImport && <Button variant="outline" asChild><Link href="/dashboard/clients/import?kind=deals"><Upload className="size-4" />{t("imImport")}</Link></Button>}
-            <Button onClick={() => setEditing({ input: emptyDeal() })}><Plus className="size-4" /> {t("dealNew")}</Button>
+            {canEditStages && <Button variant="outline" onClick={() => setStagesOpen(true)}><SettingsAdjust className="size-4" />{t("dealStages")}</Button>}
+            <Button onClick={() => setEditing({ input: emptyDeal(openStages[0]!) })}><Plus className="size-4" /> {t("dealNew")}</Button>
           </>
         }
       />
       <MetricCardGrid cards={cards} isLoading={isLoading} />
 
       <section className="rounded-3xl border border-border bg-card p-4 shadow-panel md:p-5">
-        <h2 className="text-base font-semibold">{t("dealBoard")}</h2>
-        <p className="mb-4 text-sm text-muted-foreground">{t("dealBoardHint")}</p>
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold">{t("dealBoard")}</h2>
+            <p className="text-sm text-muted-foreground">{t("dealBoardHint")}</p>
+          </div>
+          {/* deals that have not moved for longer than the company's limit */}
+          <Button variant="outline" size="sm" aria-pressed={staleOnly} disabled={summary.stale.length === 0 && !staleOnly} onClick={() => setStaleOnly((v) => !v)} className={cn(staleOnly && "border-warning bg-warning-soft text-warning-foreground hover:bg-warning-soft")}>
+            <Clock className="size-4" />
+            {staleOnly ? t("dealShowAll") : t("dealStaleFilter", { count: summary.stale.length, days: pipeline.staleDays })}
+          </Button>
+        </div>
         {isLoading ? (
           <ListSkeleton />
         ) : deals.length === 0 ? (
           <EmptyState icon={Funnel} title={t("dealEmpty")} hint={t("dealEmptyHint")} />
         ) : (
-          <div className="flex gap-3 overflow-x-auto pb-1">{OPEN_STAGES.map(renderColumn)}</div>
+          <div className="flex gap-3 overflow-x-auto pb-1">{openStages.map(renderColumn)}</div>
         )}
       </section>
 
@@ -205,16 +245,23 @@ export default function DealsPage() {
           <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border">
             {closed.map((d) => (
               <li key={d.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <span className={cn("size-2 rounded-full", STAGE_DOT[d.stage])} />
+                <span className={cn("size-2 rounded-full", dotOf(d.stage))} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{d.title} · {clientName(d.clientId)}</p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {t(`dealStage_${d.stage}`)}{d.closedAt ? ` · ${date(d.closedAt)}` : ""}{d.lostReason ? ` · ${d.lostReason}` : ""}
+                    {stageLabel(d.stage)}{d.closedAt ? ` · ${date(d.closedAt)}` : ""}{d.lostReason ? ` · ${d.lostReason}` : ""}
                   </p>
                 </div>
                 <span className="text-sm font-semibold tabular-nums">{money(d.amount)}</span>
-                <div className="flex gap-1">
-                  <Button size="sm" variant="outline" onClick={() => move.mutate({ id: d.id, stage: DealStage.NEGOTIATION })}>{t("dealReopen")}</Button>
+                <div className="flex flex-wrap gap-1">
+                  {d.stage === DealStage.WON && d.projectId && (
+                    <Button size="sm" variant="outline" asChild><Link href={`/dashboard/projects/${d.projectId}`}><FolderKanban className="size-4" />{t("dealOpenProject")}</Link></Button>
+                  )}
+                  {d.stage === DealStage.WON && !d.projectId && canCreateProject && (
+                    <Button size="sm" onClick={() => setStarting({ deal: d, code: "", managerId: d.ownerId })}><FolderKanban className="size-4" />{t("dealStartProject")}</Button>
+                  )}
+                  {/* a reopened deal goes back to the last open stage */}
+                  <Button size="sm" variant="outline" onClick={() => move.mutate({ id: d.id, stage: openStages[openStages.length - 1]! })}>{t("dealReopen")}</Button>
                   <Button size="icon-sm" variant="ghost" aria-label={t("edit")} onClick={() => edit(d)}><Pencil className="size-4" /></Button>
                   <Button size="icon-sm" variant="ghost" aria-label={t("delete")} onClick={() => setDeleting(d)}><Trash2 className="size-4" /></Button>
                 </div>
@@ -257,9 +304,9 @@ export default function DealsPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>{t("dealStage")}</Label>
-              <Select value={editing.input.stage} onValueChange={(v) => set({ stage: v as DealStage, probability: undefined })}>
-                <SelectTrigger className="w-full bg-card" aria-label={t("dealStage")}><SelectValue>{t(`dealStage_${editing.input.stage}`)}</SelectValue></SelectTrigger>
-                <SelectContent>{Object.values(DealStage).map((s) => <SelectItem key={s} value={s}>{t(`dealStage_${s}`)}</SelectItem>)}</SelectContent>
+              <Select value={editing.input.stage} onValueChange={(v) => set({ stage: v, probability: undefined })}>
+                <SelectTrigger className="w-full bg-card" aria-label={t("dealStage")}><SelectValue>{stageLabel(editing.input.stage)}</SelectValue></SelectTrigger>
+                <SelectContent>{allStages.map((s) => <SelectItem key={s} value={s}>{stageLabel(s)}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -269,8 +316,8 @@ export default function DealsPage() {
                 type="number"
                 min={0}
                 max={100}
-                disabled={!OPEN_STAGES.includes(editing.input.stage as (typeof OPEN_STAGES)[number])}
-                placeholder={String(STAGE_PROBABILITY[editing.input.stage])}
+                disabled={!isOpenDeal(editing.input)}
+                placeholder={String(dealProbability({ stage: editing.input.stage }, pipeline))}
                 value={editing.input.probability ?? ""}
                 onChange={(e) => set({ probability: e.target.value === "" ? undefined : Number(e.target.value) })}
               />
@@ -310,7 +357,7 @@ export default function DealsPage() {
             </div>
             <p className="col-span-2 flex items-center gap-1.5 text-xs text-muted-foreground">
               <Wallet className="size-3.5" />
-              {t("dealWeightedLine", { value: money(weightedValue(editing.input)) })}
+              {t("dealWeightedLine", { value: money(weightedValue(editing.input, pipeline)) })}
             </p>
             <div className="col-span-2 flex flex-col gap-1.5">
               <Label htmlFor="deal-note">{t("notes")}</Label>
@@ -319,6 +366,48 @@ export default function DealsPage() {
           </div>
         )}
       </DataTableEntityFormSheet>
+
+      {stagesOpen && (
+        <PipelineStagesDialog
+          open
+          onOpenChange={setStagesOpen}
+          pipeline={pipeline}
+          countOf={(stage) => deals.filter((d) => d.stage === stage).length}
+          saving={savePipeline.isPending}
+          onSave={(next, moves) => savePipeline.mutate({ pipeline: next, moves }, { onSuccess: () => setStagesOpen(false) })}
+        />
+      )}
+
+      <Dialog open={!!starting} onOpenChange={(o) => !o && setStarting(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("dealStartProjectTitle")}</DialogTitle>
+            <DialogDescription>{starting ? t("dealStartProjectHint", { deal: starting.deal.title, client: clientName(starting.deal.clientId), amount: money(starting.deal.amount) }) : ""}</DialogDescription>
+          </DialogHeader>
+          {starting && (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="deal-project-code">{t("projectCode")}</Label>
+                <Input id="deal-project-code" autoFocus value={starting.code} maxLength={12} placeholder="ORB-02" onChange={(e) => setStarting({ ...starting, code: e.target.value.toUpperCase() })} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>{t("projectManager")}</Label>
+                <Select value={starting.managerId || undefined} onValueChange={(v) => setStarting({ ...starting, managerId: v })}>
+                  <SelectTrigger className="w-full bg-card" aria-label={t("projectManager")}><SelectValue placeholder={t("dealChooseOwner")}>{personName(starting.managerId)}</SelectValue></SelectTrigger>
+                  <SelectContent>{employees.filter((e) => e.status !== EmployeeStatus.INACTIVE).map((e) => <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={() => setStarting(null)}>{t("cancel")}</Button>
+            <Button disabled={!starting || starting.code.trim().length < 2 || createProject.isPending} onClick={() => starting && createProject.mutate({ id: starting.deal.id, code: starting.code, managerId: starting.managerId }, { onSuccess: () => setStarting(null) })}>
+              <FolderKanban className="size-4" />
+              {t("dealStartProject")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <FollowUpDialog open={!!planning} onOpenChange={(o) => !o && setPlanning(null)} defaults={planning ?? undefined} lockClient />
 

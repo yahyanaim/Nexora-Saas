@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Link } from "@/i18n/navigation"
 import { displayStatus, invoiceTotals } from "@/lib/workforce/billing"
 import { dealProbability } from "@/lib/workforce/deals"
+import { usePipeline } from "@/hooks/workforce/use-pipeline"
 import { quoteDisplayStatus, quoteTotals } from "@/lib/workforce/quotes"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { contactEmails, contactPhones } from "@/lib/workforce/leads"
@@ -140,6 +141,7 @@ export function ContactCard({ contact: c, client }: { contact: ClientContact; cl
 // ---------- Deals ----------
 
 export function DealsSection({ deals, employees, currency, contacts = [] }: { deals: Deal[]; employees: Employee[]; currency: string; contacts?: ClientContact[] }) {
+  const { pipeline, stageLabel } = usePipeline()
   const t = useTranslations()
   const locale = useLocale()
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(`${iso}T00:00:00`))
@@ -161,8 +163,8 @@ export function DealsSection({ deals, employees, currency, contacts = [] }: { de
                 </span>
               </span>
               <span className="tabular-nums font-medium">{formatMoney(d.amount, currency, locale)}</span>
-              <span className="w-12 text-end text-xs tabular-nums text-muted-foreground">{dealProbability(d)}%</span>
-              <Badge variant="outline" className="border-transparent bg-muted text-foreground">{t(`dealStage_${d.stage}`)}</Badge>
+              <span className="w-12 text-end text-xs tabular-nums text-muted-foreground">{dealProbability(d, pipeline)}%</span>
+              <Badge variant="outline" className="border-transparent bg-muted text-foreground">{stageLabel(d.stage)}</Badge>
             </li>
           ))}
         </ul>
