@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,24 +25,15 @@ import { approverRef } from "@/lib/workforce/approvals"
 import { createId } from "@/lib/workforce/demo-store"
 import { addDays } from "@/lib/workforce/billing"
 import { todayIso } from "@/lib/workforce/project-metrics"
-import { billDisplayStatus, billDueDate, billTotals, type BillDisplayStatus } from "@/lib/workforce/supplier-bills"
-import { cn } from "@/lib/utils"
+import { billDueDate, billTotals } from "@/lib/workforce/supplier-bills"
 import { useCurrentWorkspace } from "@/store/workspace-store"
+import { BillWay } from "../record-way"
 import { AdminPermissionsPlatform } from "@/types/roles"
 import { SupplierBillStatus, SupplierStatus, type SupplierBill, type SupplierBillInput, type SupplierBillPayment } from "@/types/work-purchases"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 
 const NONE = "__none__"
 type Filter = "toApprove" | "toPay" | "all"
-
-const STATUS_CLASS: Record<BillDisplayStatus, string> = {
-  submitted: "bg-warning-soft text-warning-foreground",
-  approved: "bg-info-soft text-info-foreground",
-  partially_paid: "bg-info-soft text-info-foreground",
-  overdue: "bg-danger-soft text-destructive",
-  paid: "bg-success-soft text-success-foreground",
-  rejected: "bg-muted text-muted-foreground",
-}
 
 const emptyBill = (): SupplierBillInput => {
   const today = todayIso()
@@ -132,7 +122,6 @@ export default function SupplierBillsPage() {
           <ul className="flex flex-col divide-y divide-border rounded-2xl border border-border">
             {shown.map((b) => {
               const tot = billTotals(b)
-              const status = billDisplayStatus(b, today)
               const editable = b.status === SupplierBillStatus.SUBMITTED || b.status === SupplierBillStatus.REJECTED
               const project = projects.find((p) => p.id === b.projectId)
               return (
@@ -149,8 +138,9 @@ export default function SupplierBillsPage() {
                     <p className="text-sm font-medium tabular-nums">{money(tot.total)}</p>
                     {tot.paid > 0 && tot.balance > 0 && <p className="text-xs text-muted-foreground tabular-nums">{t("billLeft", { amount: money(tot.balance) })}</p>}
                   </div>
-                  <Badge variant="outline" className={cn("w-28 justify-center border-transparent", STATUS_CLASS[status])}>{t(`billStatus_${status}`)}</Badge>
-                  <div className="flex gap-1">
+                  {/* where the bill stands: received → approved → paid (node progress) */}
+                  <BillWay bill={b} currency={currency} compact className="w-full shrink-0 sm:w-60" />
+                  <div className="flex gap-1 sm:w-64 sm:justify-end">
                     {b.status === SupplierBillStatus.SUBMITTED && canApprove && b.submittedBy !== me && (
                       <>
                         <Button size="sm" disabled={review.isPending} onClick={() => review.mutate({ id: b.id, approved: true })}>{t("approve")}</Button>

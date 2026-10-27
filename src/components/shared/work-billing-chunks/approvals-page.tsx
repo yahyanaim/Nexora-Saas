@@ -31,7 +31,10 @@ import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
 import { formatMoney } from "../workforce-chunks/workforce-labels"
 import { formatHours } from "./billing-labels"
 import { useApprover } from "@/hooks/workforce/use-current-employee"
-import { approverRef } from "@/lib/workforce/approvals"
+import { approverRef, stepsRequired } from "@/lib/workforce/approvals"
+import { ApprovalSubject } from "@/types/work-settings"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
+import { TimesheetWay } from "../record-way"
 
 interface Group {
   key: string
@@ -54,6 +57,8 @@ export default function ApprovalsPage() {
   const canReview = can(authedUser, AdminPermissionsPlatform.TIME_APPROVE)
   // Nobody approves their own hours, and a first approver waits for someone else (BR-3)
   const approver = useApprover()
+  const { data: settings } = useWorkspaceSettings()
+  const timesheetSteps = settings ? stepsRequired(settings.approvals, ApprovalSubject.TIMESHEET) : 1
   const myRef = approverRef(approver)
   const blockedFor = (group: Group) =>
     group.employeeId === approver.employeeId ? "approvalOwnRequest" : group.entries.every((e) => e.firstApprovedBy === myRef) ? "approvalWaitingSecond" : null
@@ -151,6 +156,7 @@ export default function ApprovalsPage() {
                     </li>
                   ))}
                 </ul>
+                <TimesheetWay entries={group.entries} steps={timesheetSteps} className="py-1" />
                 <footer className="flex items-center justify-between gap-3">
                   <span className="text-sm text-muted-foreground">
                     {t("billableValueIs", { amount: formatMoney(billableValue(group.entries), workspace.currency, locale) })}

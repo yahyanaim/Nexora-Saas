@@ -2,13 +2,16 @@
 
 import { useLocale, useTranslations } from "next-intl"
 import { NodeProgress, type NodeStep } from "@/components/ui/nexus"
-import { Ban, CheckCircle2, DollarSign, FileText, Flag, Handshake, Pencil, Receipt, Send, User } from "@/components/ui/carbon/icons"
-import { invoiceWay, leaveWay, milestoneWay, quoteWay, type RecordStep } from "@/lib/workforce/record-steps"
+import { Ban, CheckCircle2, Clock, DollarSign, FileText, Flag, HandCoins, Handshake, Pencil, Receipt, Send, Upload, User } from "@/components/ui/carbon/icons"
+import { billWay, expenseWay, invoiceWay, leaveWay, milestoneWay, quoteWay, timesheetWay, type RecordStep } from "@/lib/workforce/record-steps"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import type { ClientInvoice } from "@/types/work-billing"
 import type { Quote, QuoteDisplayStatus } from "@/types/work-quotes"
 import type { Milestone, WorkTask } from "@/types/work-projects"
 import type { LeaveRequest } from "@/types/work-planning"
+import type { Expense } from "@/types/work-costs"
+import type { SupplierBill } from "@/types/work-purchases"
+import type { TimeEntry } from "@/types/work-billing"
 import { formatMoney } from "./workforce-chunks/workforce-labels"
 import { formatShortDate } from "./work-projects-chunks/project-labels"
 
@@ -108,4 +111,53 @@ export function LeaveWay({ request, steps: approvalSteps, className }: { request
     return step
   })
   return <NodeProgress label={t("npLeaveWay")} steps={steps} stateLabels={stateLabels} className={className} />
+}
+
+const EXPENSE_ICONS = { submitted: Upload, firstApproval: CheckCircle2, approved: CheckCircle2, reimbursed: HandCoins, rejected: Ban }
+const EXPENSE_LABELS = { submitted: "submitted", firstApproval: "npFirstApproval", approved: "approved", reimbursed: "reimbursed", rejected: "declined" }
+
+/** Submitted → (first approval) → approved → paid back, or declined. Compact in the expenses table. */
+export function ExpenseWay({ expense, steps: approvalSteps, compact, className }: { expense: Expense; steps: number; compact?: boolean; className?: string }) {
+  const { t, base, stateLabels } = useStepText()
+  const steps = expenseWay(expense, approvalSteps).map((s) => {
+    const step = base(s, t(EXPENSE_LABELS[s.key]))
+    step.icon = s.state === "done" ? undefined : EXPENSE_ICONS[s.key]
+    if (s.key === "rejected" && expense.rejectionReason) step.detail = [step.detail, expense.rejectionReason].filter(Boolean).join("\n")
+    return step
+  })
+  return <NodeProgress label={t("npExpenseWay")} steps={steps} stateLabels={stateLabels} compact={compact} className={className} />
+}
+
+const BILL_ICONS = { entered: FileText, approved: CheckCircle2, paid: DollarSign, rejected: Ban }
+const BILL_LABELS = { entered: "npReceived", approved: "approved", paid: "paid", rejected: "declined" }
+
+/** Received → approved → paid, part payments filling the last line, late past the due date. */
+export function BillWay({ bill, currency, compact, className }: { bill: SupplierBill; currency: string; compact?: boolean; className?: string }) {
+  const { t, locale, base, short, stateLabels } = useStepText()
+  const steps = billWay(bill, todayIso()).map((s) => {
+    const step = base(s, t(BILL_LABELS[s.key]))
+    step.icon = s.state === "done" ? undefined : BILL_ICONS[s.key]
+    if (s.paid !== undefined && s.total !== undefined) {
+      const money = (n: number) => formatMoney(n, currency, locale)
+      step.hint = s.lateDays !== undefined ? step.hint : t("npPaidOf", { paid: money(s.paid), total: money(s.total) })
+      step.detail = bill.payments.map((p) => `${short(p.date)} · ${money(p.amount)}`).join("\n")
+    }
+    if (s.key === "rejected" && bill.rejectionReason) step.detail = [step.detail, bill.rejectionReason].filter(Boolean).join("\n")
+    return step
+  })
+  return <NodeProgress label={t("npBillWay")} steps={steps} stateLabels={stateLabels} compact={compact} className={className} />
+}
+
+const TIMESHEET_ICONS = { submitted: Clock, firstApproval: CheckCircle2, approved: CheckCircle2, invoiced: Receipt }
+const TIMESHEET_LABELS = { submitted: "submitted", firstApproval: "npFirstApproval", approved: "approved", invoiced: "invoiced" }
+
+/** A week of hours: submitted → (first approval) → approved → invoiced. */
+export function TimesheetWay({ entries, steps: approvalSteps, className }: { entries: TimeEntry[]; steps: number; className?: string }) {
+  const { t, base, stateLabels } = useStepText()
+  const steps = timesheetWay(entries, approvalSteps).map((s) => {
+    const step = base(s, t(TIMESHEET_LABELS[s.key]))
+    step.icon = s.state === "done" ? undefined : TIMESHEET_ICONS[s.key]
+    return step
+  })
+  return <NodeProgress label={t("npTimesheetWay")} steps={steps} stateLabels={stateLabels} className={className} />
 }

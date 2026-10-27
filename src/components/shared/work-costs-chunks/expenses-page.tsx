@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation"
 import { receiptPreview } from "@/lib/receipt-photo"
 import type { ColumnDef } from "@tanstack/react-table"
 import { useLocale, useTranslations } from "next-intl"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -50,14 +49,15 @@ import { formatMoney, includesFilter, NONE } from "../workforce-chunks/workforce
 import { formatShortDate } from "../work-projects-chunks/project-labels"
 import {
   EXPENSE_CATEGORY_LABEL,
-  EXPENSE_STATUS_CLASS,
   EXPENSE_STATUS_LABEL,
   RECEIPT_MAX_BYTES,
   RECEIPT_TYPES,
 } from "./cost-labels"
 import { useSelfScope } from "@/hooks/workforce/use-current-employee"
 import { useApprover } from "@/hooks/workforce/use-current-employee"
-import { approverRef } from "@/lib/workforce/approvals"
+import { approverRef, stepsRequired } from "@/lib/workforce/approvals"
+import { ApprovalSubject } from "@/types/work-settings"
+import { ExpenseWay } from "../record-way"
 
 const emptyForm = () => ({
   employeeId: "",
@@ -196,8 +196,8 @@ export default function ExpensesPage() {
         header: ({ column }) => <DataTableColumnHeader column={column} title={t("status")} />,
         filterFn: (row, id, value) => includesFilter(row.getValue(id), value),
         cell: ({ row }) => (
-          <span className="flex flex-col items-start gap-0.5">
-            <Badge variant="outline" className={EXPENSE_STATUS_CLASS[row.original.status]}>{t(EXPENSE_STATUS_LABEL[row.original.status])}</Badge>
+          <span className="flex w-56 flex-col items-start gap-1">
+            <ExpenseWay expense={row.original} steps={settings ? stepsRequired(settings.approvals, ApprovalSubject.EXPENSE, row.original.amount) : 1} compact />
             {row.original.rejectionReason && <span className="text-xs text-muted-foreground">{row.original.rejectionReason}</span>}
           </span>
         ),
@@ -221,7 +221,7 @@ export default function ExpensesPage() {
         },
       },
     ],
-    [t, locale, employees, projects, workspace.currency, canReview, reimburse, remove]
+    [t, locale, employees, projects, workspace.currency, canReview, reimburse, remove, settings]
   )
 
   return (

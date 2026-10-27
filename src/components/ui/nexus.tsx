@@ -105,10 +105,13 @@ export function NodeProgress({
   className,
   label,
   stateLabels,
+  compact,
 }: {
   steps: NodeStep[]
   className?: string
   label?: string
+  /** Small nodes and labels for a table cell; the date and hint move into the hover detail */
+  compact?: boolean
   /** Screen-reader words for each state, e.g. { done: "done", current: "current step" } */
   stateLabels?: Partial<Record<NodeStep["state"], string>>
 }) {
@@ -119,16 +122,21 @@ export function NodeProgress({
         const next = steps[i + 1]
         const reach = next ? defaultReach(next) : 0
         const Icon = step.icon ?? (step.state === "done" ? Check : step.state === "stopped" ? X : step.state === "late" ? AlertTriangle : undefined)
+        // compact: what doesn't fit under the node goes into its hover detail
+        const parts = compact ? [step.date, step.hint, step.detail].filter(Boolean) : [step.detail].filter(Boolean)
+        const hasDetail = parts.length > 0
+        const detail = parts.map((x, j) => <React.Fragment key={j}>{j > 0 && "\n"}{x}</React.Fragment>)
         const node = (
           <span
             className={cn(
-              "relative z-10 flex size-7 shrink-0 items-center justify-center rounded-full border-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "relative z-10 flex shrink-0 items-center justify-center rounded-full border-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              compact ? "size-5" : "size-7",
               NODE[step.state]
             )}
-            tabIndex={step.detail ? 0 : undefined}
+            tabIndex={hasDetail ? 0 : undefined}
           >
-            {step.state === "current" && <span aria-hidden className="nx-halo absolute inset-[-6px] rounded-full border border-primary/40" />}
-            {Icon ? <Icon className="size-3.5" /> : <span aria-hidden className="size-1.5 rounded-full bg-current" />}
+            {step.state === "current" && !compact && <span aria-hidden className="nx-halo absolute inset-[-6px] rounded-full border border-primary/40" />}
+            {Icon ? <Icon className={compact ? "size-3" : "size-3.5"} /> : <span aria-hidden className="size-1.5 rounded-full bg-current" />}
           </span>
         )
         return (
@@ -138,7 +146,7 @@ export function NodeProgress({
             className="relative flex min-w-0 flex-1 flex-col items-center text-center"
           >
             {!last && (
-              <span aria-hidden className="absolute top-[13px] h-[3px] start-[calc(50%+18px)] end-[calc(-50%+18px)] overflow-hidden rounded-full bg-border">
+              <span aria-hidden className={cn("absolute overflow-hidden rounded-full bg-border", compact ? "top-[9px] h-[2px] start-[calc(50%+13px)] end-[calc(-50%+13px)]" : "top-[13px] h-[3px] start-[calc(50%+18px)] end-[calc(-50%+18px)]")}>
                 <span
                   className={cn(
                     "nx-fill block h-full rounded-full ltr:origin-left rtl:origin-right",
@@ -148,20 +156,21 @@ export function NodeProgress({
                 />
               </span>
             )}
-            {step.detail ? (
+            {hasDetail ? (
               <Tooltip>
                 <TooltipTrigger asChild>{node}</TooltipTrigger>
-                <TooltipContent className="w-max max-w-64 whitespace-pre-line rounded-lg text-start text-xs leading-relaxed">{step.detail}</TooltipContent>
+                <TooltipContent className="w-max max-w-64 whitespace-pre-line rounded-lg text-start text-xs leading-relaxed">{detail}</TooltipContent>
               </Tooltip>
             ) : (
               node
             )}
-            <span className={cn("mt-2 max-w-32 px-1 text-xs leading-tight", LABEL[step.state])}>
+            <span className={cn("px-1 leading-tight", compact ? "mt-1 max-w-24 text-[11px]" : "mt-2 max-w-32 text-xs", LABEL[step.state])}>
               {step.label}
               {stateLabels?.[step.state] && <span className="sr-only">{` (${stateLabels[step.state]})`}</span>}
+              {compact && step.hint && <span className="sr-only">{" · "}{step.hint}</span>}
             </span>
-            {step.date && <span className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">{step.date}</span>}
-            {step.hint && (
+            {!compact && step.date && <span className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">{step.date}</span>}
+            {!compact && step.hint && (
               <span
                 className={cn(
                   "mt-1 max-w-32 rounded-full px-1.5 py-px text-[11px] font-medium leading-tight",
