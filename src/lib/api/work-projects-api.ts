@@ -136,7 +136,6 @@ function validateProject(workspaceId: string, input: WorkProjectInput, exceptId?
 
 // ---------- Tasks ----------
 
-/** Tasks in use; deleted ones wait in the project's deleted tasks (Project extras). */
 /** What a task list can be narrowed to; the server takes the same as query parameters. */
 export interface TaskFilter {
   /** Main assignee, collaborator or watcher */
@@ -147,6 +146,7 @@ export interface TaskFilter {
   dueTo?: string
 }
 
+/** Tasks in use; deleted ones wait in the project's deleted tasks (Project extras). */
 export async function listTasksApi(workspaceId: string, projectId?: string, filter: TaskFilter = {}): Promise<WorkTask[]> {
   sweepTaskBin(workspaceId)
   const p = filter.personId
