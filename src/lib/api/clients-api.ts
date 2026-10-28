@@ -133,6 +133,8 @@ async function purge(workspaceId: string, client: Client) {
   const [{ listDealsApi, deleteDealApi }, { listFollowUpsApi, deleteFollowUpApi }] = await Promise.all([import("./deals-api"), import("./crm-api")])
   for (const d of await listDealsApi(workspaceId, { withDeleted: true })) if (d.clientId === client.id) await deleteDealApi(workspaceId, d.id)
   for (const f of await listFollowUpsApi(workspaceId, { withDeleted: true })) if (f.clientId === client.id) await deleteFollowUpApi(workspaceId, f.id)
+  const { removeClientFilesApi } = await import("./client-files-api")
+  await removeClientFilesApi(workspaceId, client.id)
   for (const h of history.list(workspaceId)) if (h.clientId === client.id) history.remove(workspaceId, h.id)
   clients.remove(workspaceId, client.id)
   recordAudit(workspaceId, { action: "Client removed for good", actionKey: "client.purged", category: "Team", target: client.name })
@@ -157,7 +159,7 @@ export async function mergeClientsApi(workspaceId: string, keepId: string, other
   // load every collection that points at clients, so their records move too
   await Promise.all([
     import("./deals-api"), import("./crm-api"), import("./work-projects-api"), import("./work-billing-api"), import("./quotes-api"),
-    import("./recurring-invoices-api"), import("./satisfaction-api"), import("./client-requests-api"), import("./portal-api"), import("./change-orders-api"),
+    import("./recurring-invoices-api"), import("./satisfaction-api"), import("./client-requests-api"), import("./portal-api"), import("./change-orders-api"), import("./client-files-api"),
   ])
   const values = mergeClientValues(keep, other, picks)
   const merged = clients.update(workspaceId, keepId, normalizeContacts(values as Partial<ClientInput>))

@@ -101,8 +101,13 @@ export async function addClientNoteApi(
   workspaceId: string,
   input: Pick<ClientNote, "clientId" | "kind" | "date" | "text" | "authorId">
 ): Promise<ClientNote> {
-  if (!input.text.trim()) throw new Error("Write something first")
-  return notes.create(workspaceId, { ...input, text: input.text.trim() })
+  const text = input.text.trim()
+  if (!text) throw new Error("Write something first")
+  if (text.length > 5000) throw new Error("Notes are limited to 5,000 characters")
+  // people named as @First Last get a bell item (CRM step 10)
+  const [{ listEmployeesApi }, { findMentions }] = await Promise.all([import("./employees-api"), import("./task-collab-api")])
+  const mentionIds = findMentions(text, await listEmployeesApi(workspaceId)).filter((id) => id !== input.authorId)
+  return notes.create(workspaceId, { ...input, text, ...(mentionIds.length ? { mentionIds } : {}) })
 }
 
 export async function deleteClientNoteApi(workspaceId: string, id: string) {
