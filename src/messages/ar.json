@@ -2396,6 +2396,7 @@
   "err_pageTooLong": "الصفحة محدودة بـ 20000 حرف",
   "err_meetingDate": "اختر تاريخ الاجتماع",
   "err_pageGone": "هذه الصفحة لم تعد موجودة",
+  "err_conflict": "قام شخص آخر بالحفظ قبلك. أعد التحميل لرؤية تغييراته",
   "inboxWatched": "مهام تتابعها متأخرة",
   "inboxWatchedMessage": "مهام متابعة متأخرة: {count}، منها «{task}».",
   "activityCollaborators": "حدد المشاركين في المهمة: {to}",

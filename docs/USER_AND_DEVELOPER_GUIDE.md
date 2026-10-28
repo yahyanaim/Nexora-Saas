@@ -229,14 +229,14 @@ In `src/components/shared/sidebar-chunks/dashboard-sidebar.tsx`, add the route u
 ## 5. Connecting a Real Production Backend
 
 To replace the in-memory demo engine with a live microservice:
-1. Deploy your backend service (Node.js, Go, Python, Java) exposing RESTful JSON endpoints (e.g. `/users`, `/invoices`, `/auth/login`).
+1. Deploy your backend service (Node.js, Go, Python, Java) exposing RESTful JSON endpoints (e.g. `/auth/login`, `/me/workspaces`, `/workspaces/:wid/clients`).
 2. Update `.env.local` (or production environment variables):
    ```ini
    API_BACKEND_URL=https://api.yourdomain.com
    NEXT_PUBLIC_API_URL=https://api.yourdomain.com
    NEXT_PUBLIC_DEMO_MODE=false
    ```
-3. The Next.js server catch-all proxy in `src/app/api/[...catchall]/route.ts` will automatically forward requests to your production service with zero changes required to UI components. Setting `NEXT_PUBLIC_DEMO_MODE=false` ensures authentic credential checks and real API responses are enforced.
+3. The browser calls `NEXT_PUBLIC_API_URL` directly with session cookies (`src/lib/myapi/client.ts`); `src/app/api/[...catchall]/route.ts` only answers `410`, there is no proxy. Each API helper tries the server first and keeps its demo path behind `shouldUseDemoFallback`, so modules can go live one by one. The paths, shapes and error codes the server must follow are in `docs/API_AUDIT_2026-10.md`. Setting `NEXT_PUBLIC_DEMO_MODE=false` turns every demo fallback off.
 
 ---
 

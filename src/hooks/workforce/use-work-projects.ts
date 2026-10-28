@@ -22,6 +22,7 @@ import {
   listMilestonesApi,
   listProjectsApi,
   listTasksApi,
+  type TaskFilter,
   moveTaskApi,
   setMilestoneApprovalApi,
   updateMilestoneApi,
@@ -47,12 +48,12 @@ export function useProject(projectId: string) {
   return useQuery({ queryKey: ["projects", id, projectId], queryFn: () => getProjectApi(id, projectId) })
 }
 
-/** All tasks of the workspace, or of one project. */
-export function useTasks(projectId?: string) {
+/** All tasks of the workspace, or of one project, optionally narrowed. */
+export function useTasks(projectId?: string, filter?: TaskFilter) {
   const { id } = useCurrentWorkspace()
   return useQuery({
-    queryKey: ["tasks", id, projectId ?? "all"],
-    queryFn: () => listTasksApi(id, projectId),
+    queryKey: filter ? ["tasks", id, projectId ?? "all", filter] : ["tasks", id, projectId ?? "all"],
+    queryFn: () => listTasksApi(id, projectId, filter),
   })
 }
 

@@ -2396,6 +2396,7 @@
   "err_pageTooLong": "页面最多 20,000 个字符",
   "err_meetingDate": "请选择会议日期",
   "err_pageGone": "此页面已不存在",
+  "err_conflict": "其他人已先保存。请重新加载以查看其更改",
   "inboxWatched": "你关注的任务已逾期",
   "inboxWatchedMessage": "{count, plural, other {你关注的 # 个任务已过截止日期，首个为“{task}”。}}",
   "activityCollaborators": "设置了协作人员：{to}",

@@ -2396,6 +2396,7 @@
   "err_pageTooLong": "Une page est limitée à 20 000 caractères",
   "err_meetingDate": "Choisissez la date de la réunion",
   "err_pageGone": "Cette page n'existe plus",
+  "err_conflict": "Quelqu’un d’autre a enregistré avant vous. Rechargez pour voir ses modifications",
   "inboxWatched": "Des tâches que vous suivez sont en retard",
   "inboxWatchedMessage": "Tâches suivies en retard : {count}, dont « {task} ».",
   "activityCollaborators": "a défini les personnes aussi sur la tâche : {to}",

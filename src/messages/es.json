@@ -2396,6 +2396,7 @@
   "err_pageTooLong": "Una página tiene un máximo de 20.000 caracteres",
   "err_meetingDate": "Elige la fecha de la reunión",
   "err_pageGone": "Esta página ya no existe",
+  "err_conflict": "Otra persona guardó antes. Recarga para ver sus cambios",
   "inboxWatched": "Tareas que sigues están atrasadas",
   "inboxWatchedMessage": "Tareas seguidas atrasadas: {count}, entre ellas «{task}».",
   "activityCollaborators": "definió quién más trabaja en ella: {to}",

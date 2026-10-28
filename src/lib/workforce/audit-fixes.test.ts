@@ -55,7 +55,7 @@ describe("error catalog stays complete", () => {
   it("lists every fixed message the business rules throw", async () => {
     const fs = await import("node:fs")
     const path = await import("node:path")
-    const platform = ["files-api", "transactions-api", "users-apis", "roles-apis", "invoices-api", "billing-apis", "upload-apis", "auth-apis", "subscriptions-api", "plans-apis", "team-apis", "gdpr-apis", "developer-apis", "sessions-apis", "profile-api", "overview-apis", "reports-apis", "usage-metering", "audit-logs-api", "workspace-subscription-api"]
+    const platform = ["files-api", "billing-apis", "upload-apis", "auth-apis", "gdpr-apis", "developer-apis", "profile-api", "usage-metering", "audit-logs-api", "workspace-subscription-api"]
     const dirs = ["src/lib/workforce", "src/lib/api"]
     const missing: string[] = []
     for (const dir of dirs) {

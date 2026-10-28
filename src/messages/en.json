@@ -2396,6 +2396,7 @@
   "err_pageTooLong": "A page is limited to 20,000 characters",
   "err_meetingDate": "Pick the meeting date",
   "err_pageGone": "This page no longer exists",
+  "err_conflict": "Someone else saved this first. Reload to see their changes",
   "inboxWatched": "Tasks you watch are late",
   "inboxWatchedMessage": "{count, plural, one {“{task}” is past its due date.} other {# tasks you watch are past their due date, starting with “{task}”.}}",
   "activityCollaborators": "set the people also on it: {to}",

@@ -375,6 +375,7 @@ export const ERROR_KEYS: Record<string, string> = {
   "A page is limited to 20,000 characters": "err_pageTooLong",
   "Pick the meeting date": "err_meetingDate",
   "This page no longer exists": "err_pageGone",
+  "Someone else saved this first. Reload to see their changes": "err_conflict",
   "A project can have up to 20 statuses": "err_tooManyStates",
   "Each group needs at least one status": "err_stateGroupEmpty",
   "A status name can have up to 40 characters": "err_stateNameLong",

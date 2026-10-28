@@ -137,10 +137,32 @@ function validateProject(workspaceId: string, input: WorkProjectInput, exceptId?
 // ---------- Tasks ----------
 
 /** Tasks in use; deleted ones wait in the project's deleted tasks (Project extras). */
-export async function listTasksApi(workspaceId: string, projectId?: string): Promise<WorkTask[]> {
+/** What a task list can be narrowed to; the server takes the same as query parameters. */
+export interface TaskFilter {
+  /** Main assignee, collaborator or watcher */
+  personId?: string
+  status?: TaskStatus
+  cycleId?: string
+  dueFrom?: string
+  dueTo?: string
+}
+
+export async function listTasksApi(workspaceId: string, projectId?: string, filter: TaskFilter = {}): Promise<WorkTask[]> {
   sweepTaskBin(workspaceId)
-  const all = tasks.list(workspaceId).filter((t) => !t.deletedAt)
-  return (projectId ? all.filter((t) => t.projectId === projectId) : all).sort((a, b) => a.order - b.order)
+  const p = filter.personId
+  return tasks
+    .list(workspaceId)
+    .filter(
+      (t) =>
+        !t.deletedAt &&
+        (!projectId || t.projectId === projectId) &&
+        (!p || t.assigneeId === p || !!t.collaboratorIds?.includes(p) || !!t.watcherIds?.includes(p)) &&
+        (!filter.status || t.status === filter.status) &&
+        (!filter.cycleId || t.cycleId === filter.cycleId) &&
+        (!filter.dueFrom || (!!t.dueDate && t.dueDate >= filter.dueFrom)) &&
+        (!filter.dueTo || (!!t.dueDate && t.dueDate <= filter.dueTo))
+    )
+    .sort((a, b) => a.order - b.order)
 }
 
 /** Predecessors must be tasks of the same project and never form a loop (PRJ-6). */

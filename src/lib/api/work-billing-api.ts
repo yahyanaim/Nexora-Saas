@@ -54,10 +54,14 @@ const MAX_HOURS_PER_DAY = 24
 
 // ---------- Time entries ----------
 
-export async function listTimeEntriesApi(
-  workspaceId: string,
-  filter: { employeeId?: string; from?: string; to?: string; status?: TimeEntryStatus } = {}
-): Promise<TimeEntry[]> {
+export interface TimeEntryFilter {
+  employeeId?: string
+  from?: string
+  to?: string
+  status?: TimeEntryStatus
+}
+
+export async function listTimeEntriesApi(workspaceId: string, filter: TimeEntryFilter = {}): Promise<TimeEntry[]> {
   return entries
     .list(workspaceId)
     .filter(
