@@ -217,14 +217,29 @@ export interface WorkTask {
   subtasks: Subtask[]
   /** Workspace task labels (settings) */
   labelIds?: string[]
+  /** Comes back when done: the next one is created with dates moved on (Project extras) */
+  repeat?: TaskRepeat
+  /** The next task of the repeat, once created, so it is made only once */
+  nextTaskId?: string
   completedAt?: string
+  /** Set while the task waits in the project's deleted tasks for TASK_BIN_DAYS (Project extras) */
+  deletedAt?: string
+  deletedBy?: string
   createdAt: string
   updatedAt: string
 }
 
+/** How often a task comes back: every 1 week, every 2 weeks, every month… */
+export interface TaskRepeat {
+  every: "day" | "week" | "month"
+  interval: number
+  /** yyyy-mm-dd; no more tasks are made after this day */
+  until?: string
+}
+
 export type WorkTaskInput = Omit<
   WorkTask,
-  "id" | "workspaceId" | "createdAt" | "updatedAt" | "order" | "completedAt" | "number"
+  "id" | "workspaceId" | "createdAt" | "updatedAt" | "order" | "completedAt" | "number" | "nextTaskId" | "deletedAt" | "deletedBy"
 >
 
 export interface Milestone {

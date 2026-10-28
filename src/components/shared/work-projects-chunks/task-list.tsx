@@ -15,7 +15,7 @@ import { DEFAULT_TASK_STATES, stateOf } from "@/lib/workforce/task-states"
 import { includesFilter } from "../workforce-chunks/workforce-labels"
 import { PRIORITY_LABEL, TASK_STATUS_TONE, formatShortDate, stateLabel } from "./project-labels"
 import { StatusPill } from "@/components/ui/status-pill"
-import { PriorityMark, TaskTypeMark } from "./task-visuals"
+import { PriorityMark, RepeatMark, TaskTypeMark } from "./task-visuals"
 import type { TaskLabel } from "@/types/work-settings"
 
 const PRIORITY_RANK: Record<Priority, number> = {
@@ -66,6 +66,7 @@ export function TaskList({ tasks, team, milestones, onOpen, warnings = {}, proje
             <TaskTypeMark task={row.original} labels={labels} />
             {projectCode && row.original.number && <span className="font-mono text-xs font-normal text-muted-foreground">{taskKey(row.original, { code: projectCode })}</span>}
             {row.original.title}
+            <RepeatMark task={row.original} />
             {warnings[row.original.id] && (
               <span className="ms-2 inline-flex rounded-full bg-danger-soft px-1.5 py-0.5 align-middle text-[10px] font-medium text-destructive" title={warnings[row.original.id]}>!</span>
             )}

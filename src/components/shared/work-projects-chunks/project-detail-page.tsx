@@ -11,7 +11,7 @@ import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs } from "@/components/ui/tabs"
 import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
-import { ArrowLeft, Copy, FolderKanban, Lock, Pencil, Plus, SettingsAdjust, Trash2 } from "@/components/ui/carbon/icons"
+import { Archive, ArrowLeft, Copy, FolderKanban, Lock, Pencil, Plus, SettingsAdjust, Trash2 } from "@/components/ui/carbon/icons"
 import { PageHeader } from "@/components/shared/page-header"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
@@ -71,6 +71,9 @@ import { FeedbackSection } from "../work-portal-chunks/satisfaction"
 import { useChangeOrders } from "@/hooks/workforce/use-change-orders"
 import { revisedBudget, withChanges } from "@/lib/workforce/phase-budgets"
 import { TeamPanel } from "./team-panel"
+import { DeletedTasksDialog, ShortcutsDialog, useProjectShortcuts } from "./project-extras"
+import { useDeletedTasks } from "@/hooks/workforce/use-work-projects"
+import { isArchived } from "@/lib/workforce/task-repeat"
 import {
   BUDGET_TYPE_LABEL,
   HEALTH_BAR,
@@ -138,6 +141,21 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   )
   // Stable between renders: the task form resets when its statuses change
   const states = useMemo(() => projectStates(project ?? undefined), [project])
+  // Project extras: done tasks leave the board after a while, deleted ones wait in a bin, keys
+  const [showArchived, setShowArchived] = useState(false)
+  const [binOpen, setBinOpen] = useState(false)
+  const [keysOpen, setKeysOpen] = useState(false)
+  const { data: deletedTasks = [] } = useDeletedTasks(projectId)
+  useProjectShortcuts((action) => {
+    if (taskSheet || !project) return
+    if (action === "help") setKeysOpen(true)
+    else if (action === "new") {
+      if (canEdit) setTaskSheet({ defaults: { status: states[0]!.group, stateId: states[0]!.id } })
+    } else {
+      setTab(action)
+      setTabsKey((k) => k + 1)
+    }
+  })
 
   if (isLoading) {
     return (
@@ -173,7 +191,9 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
   const counted = withoutCancelled(tasks)
   const done = counted.filter((task) => task.status === TaskStatus.DONE).length
   const budget = budgetUsage(project, { entries, expenses, employees, clients, bills, changeOrders })
-  const visibleTasks = applyTaskFilters(tasks, filters)
+  const today = todayIso()
+  const archivedCount = tasks.filter((x) => isArchived(x, today)).length
+  const visibleTasks = applyTaskFilters(showArchived ? tasks : tasks.filter((x) => !isArchived(x, today)), filters)
 
   const saveTask = (input: WorkTaskInput) => {
     const close = { onSuccess: () => setTaskSheet(null) }
@@ -235,12 +255,31 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
       labels={labels}
       value={filters}
       onChange={setFilters}
-      extra={withStates && canEdit && (
-        <Button variant="outline" size="sm" onClick={() => setEditingStates(true)}>
-          <SettingsAdjust className="size-4" />
-          {t("stEdit")}
-        </Button>
-      )}
+      extra={
+        <>
+          {archivedCount > 0 && (
+            <Button variant="ghost" size="sm" aria-pressed={showArchived} onClick={() => setShowArchived((v) => !v)}>
+              <Archive className="size-4" />
+              {t(showArchived ? "pxHideArchived" : "pxShowArchived", { count: archivedCount })}
+            </Button>
+          )}
+          {canEdit && (
+            <Button variant="ghost" size="sm" onClick={() => setBinOpen(true)}>
+              <Trash2 className="size-4" />
+              {t("pxBinButton", { count: deletedTasks.length })}
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" className="size-8" aria-label={t("pxKeysTitle")} title={t("pxKeysTitle")} onClick={() => setKeysOpen(true)}>
+            <span aria-hidden className="text-sm font-semibold">?</span>
+          </Button>
+          {withStates && canEdit && (
+            <Button variant="outline" size="sm" onClick={() => setEditingStates(true)}>
+              <SettingsAdjust className="size-4" />
+              {t("stEdit")}
+            </Button>
+          )}
+        </>
+      }
     />
   )
   const addTask = (state: TaskState = states[0]!) => setTaskSheet({ defaults: { status: state.group, stateId: state.id } })
@@ -625,11 +664,13 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
         <HealthOverrideDialog project={project} automatic={automaticHealth(project, tasks)} open={healthDialog} onOpenChange={setHealthDialog} />
       )}
 
+      <DeletedTasksDialog projectId={project.id} projectCode={project.code} open={binOpen} onOpenChange={setBinOpen} />
+      <ShortcutsDialog open={keysOpen} onOpenChange={setKeysOpen} canEdit={canEdit} />
       <ConfirmAlertDialog
         open={!!deletingTask}
         onOpenChange={(open) => !open && setDeletingTask(null)}
         title={t("deleteTask")}
-        description={t("deleteTaskConfirmation", { name: deletingTask?.title ?? "" })}
+        description={t("pxDeleteConfirm", { name: deletingTask?.title ?? "", days: 30 })}
         confirmLabel={t("delete")}
         destructive
         isLoading={taskMutations.remove.isPending}

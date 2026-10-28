@@ -13,7 +13,7 @@ import {
 import { SpaceAvatar } from "@/components/ui/space-avatar"
 import { AlertTriangle, Calendar, CheckCircle2, Flag, ListChecks, MoreHorizontal, Plus } from "@/components/ui/carbon/icons"
 import { TONE_BORDER, TONE_SOFT } from "@/components/ui/status-pill"
-import { PriorityMark, TaskTypeMark } from "./task-visuals"
+import { PriorityMark, RepeatMark, TaskTypeMark } from "./task-visuals"
 import { cn } from "@/lib/utils"
 import { isTaskOverdue } from "@/lib/workforce/project-metrics"
 import type { Employee } from "@/types/workforce"
@@ -264,7 +264,7 @@ function TaskCard({ task, people, taskKey: key, milestone, labels, canEdit, warn
         </div>
       )}
 
-      {(milestone || task.dueDate || task.subtasks.length > 0) && (
+      {(milestone || task.dueDate || task.subtasks.length > 0 || task.repeat) && (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {milestone && (
             <span className="flex min-w-0 items-center gap-1.5">
@@ -285,6 +285,7 @@ function TaskCard({ task, people, taskKey: key, milestone, labels, canEdit, warn
               {subDone}/{task.subtasks.length}
             </span>
           )}
+          <RepeatMark task={task} />
         </div>
       )}
 

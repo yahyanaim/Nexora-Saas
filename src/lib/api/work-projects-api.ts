@@ -18,6 +18,7 @@ import { isWebUrl, nextTaskNumber } from "@/lib/workforce/task-extras"
 import { cycles } from "./cycle-store"
 import { cleanTaskStates, projectStates, stateOf, validateTaskStates } from "@/lib/workforce/task-states"
 import { WorkProjectStatus, type CloseSnapshot } from "@/types/work-projects"
+import { assertRepeat, nextDates, taskBinDaysLeft } from "@/lib/workforce/task-repeat"
 
 /**
  * Projects, their tasks and milestones. Backed by the browser demo store for
@@ -135,15 +136,17 @@ function validateProject(workspaceId: string, input: WorkProjectInput, exceptId?
 
 // ---------- Tasks ----------
 
+/** Tasks in use; deleted ones wait in the project's deleted tasks (Project extras). */
 export async function listTasksApi(workspaceId: string, projectId?: string): Promise<WorkTask[]> {
-  const all = tasks.list(workspaceId)
+  sweepTaskBin(workspaceId)
+  const all = tasks.list(workspaceId).filter((t) => !t.deletedAt)
   return (projectId ? all.filter((t) => t.projectId === projectId) : all).sort((a, b) => a.order - b.order)
 }
 
 /** Predecessors must be tasks of the same project and never form a loop (PRJ-6). */
 function assertDependencies(workspaceId: string, projectId: string, taskId: string | undefined, dependsOn?: string[]) {
   if (!dependsOn?.length) return
-  const all = tasks.list(workspaceId).filter((t) => t.projectId === projectId)
+  const all = tasks.list(workspaceId).filter((t) => t.projectId === projectId && !t.deletedAt)
   const id = taskId ?? "__new__"
   const self = { id, dependsOn: [] as string[] }
   const graph = [...all.filter((t) => t.id !== id), self]
@@ -170,7 +173,7 @@ function assertExtras(workspaceId: string, projectId: string, taskId: string | u
   if ((input.links ?? []).some((l) => !isWebUrl(l.url))) throw new Error("A link must start with http:// or https://")
   for (const r of input.relations ?? []) {
     if (r.taskId === taskId) throw new Error("A task can't be linked to itself")
-    if (!tasks.get(workspaceId, r.taskId)) throw new Error("Task not found")
+    if (!tasks.get(workspaceId, r.taskId) || tasks.get(workspaceId, r.taskId)!.deletedAt) throw new Error("Task not found")
   }
 }
 
@@ -190,6 +193,7 @@ export async function createTaskApi(workspaceId: string, raw: WorkTaskInput): Pr
   assertDependencies(workspaceId, input.projectId, undefined, input.dependsOn)
   assertExtras(workspaceId, input.projectId, undefined, input)
   assertDates(input)
+  assertRepeat(input.repeat)
   const states = statesFor(workspaceId, input.projectId)
   const placed = { ...input, ...placeIn(states, input.stateId ?? input.status) }
   const order = nextOrder(workspaceId, states, placed)
@@ -209,7 +213,8 @@ export async function updateTaskApi(
   raw: Partial<WorkTaskInput>
 ): Promise<WorkTask> {
   const current = tasks.get(workspaceId, id)
-  if (!current) throw new Error("Task not found")
+  if (!current || current.deletedAt) throw new Error("Task not found")
+  assertRepeat(raw.repeat)
   const input = cleanExtras({ ...raw, assigneeId: "assigneeId" in raw ? raw.assigneeId : current.assigneeId })
   if (!("assigneeId" in raw)) delete input.assigneeId
   if ("assigneeId" in input) assertAssigneeOnTeam(workspaceId, current.projectId, input.assigneeId)
@@ -226,7 +231,7 @@ export async function updateTaskApi(
   if (next.status !== current.status) patch.completedAt = next.status === TaskStatus.DONE ? new Date().toISOString() : undefined
   const updated = tasks.update(workspaceId, id, patch)
   recordTaskChanges(workspaceId, current, updated, states)
-  return updated
+  return current.status !== TaskStatus.DONE && updated.status === TaskStatus.DONE ? repeatTask(workspaceId, updated, states) : updated
 }
 
 /**
@@ -261,15 +266,87 @@ export async function moveTaskApi(
     status === TaskStatus.DONE ? (task.status === TaskStatus.DONE ? task.completedAt : new Date().toISOString()) : undefined
   const moved = tasks.update(workspaceId, id, { status, stateId, order: at, completedAt })
   recordTaskChanges(workspaceId, task, moved, states)
-  return moved
+  return task.status !== TaskStatus.DONE && moved.status === TaskStatus.DONE ? repeatTask(workspaceId, moved, states) : moved
 }
 
+/**
+ * A repeating task just done (Project extras): its next one is created once,
+ * to do, with the dates moved on, the same people, labels, phase, estimate
+ * and checklist (unticked), outside any cycle.
+ */
+function repeatTask(workspaceId: string, task: WorkTask, states: TaskState[]): WorkTask {
+  if (!task.repeat || task.nextTaskId) return task
+  const dates = nextDates(task, new Date().toISOString().slice(0, 10))
+  if (!dates) return task
+  const placed = placeIn(states, TaskStatus.TODO)
+  const next = tasks.create(workspaceId, {
+    projectId: task.projectId,
+    milestoneId: task.milestoneId,
+    title: task.title,
+    description: task.description,
+    priority: task.priority,
+    assigneeId: task.assigneeId,
+    collaboratorIds: task.collaboratorIds,
+    watcherIds: task.watcherIds,
+    links: task.links,
+    labelIds: task.labelIds,
+    estimatedHours: task.estimatedHours,
+    subtasks: task.subtasks.map((x) => ({ ...x, done: false })),
+    repeat: task.repeat,
+    ...dates,
+    ...placed,
+    number: nextTaskNumber(tasks.list(workspaceId), task.projectId),
+    order: nextOrder(workspaceId, states, { projectId: task.projectId, ...placed }),
+  })
+  recordTaskChanges(workspaceId, undefined, next, states)
+  return tasks.update(workspaceId, task.id, { nextTaskId: next.id })
+}
+
+/**
+ * Moves a task to the project's deleted tasks for TASK_BIN_DAYS days
+ * (Project extras). Tasks that waited for it, or pointed at it, no longer do.
+ */
 export async function deleteTaskApi(workspaceId: string, id: string): Promise<void> {
-  // Tasks that waited for this one, or pointed at it, no longer do
+  const task = tasks.get(workspaceId, id)
+  if (!task || task.deletedAt) return
   for (const t of tasks.list(workspaceId).filter((x) => x.dependsOn?.includes(id) || x.relations?.some((r) => r.taskId === id))) {
     tasks.update(workspaceId, t.id, { dependsOn: t.dependsOn?.filter((d) => d !== id), relations: t.relations?.filter((r) => r.taskId !== id) })
   }
+  tasks.update(workspaceId, id, { deletedAt: new Date().toISOString(), deletedBy: getAuditActor().name })
+}
+
+/** A project's deleted tasks, most recently deleted first. */
+export async function listDeletedTasksApi(workspaceId: string, projectId: string): Promise<WorkTask[]> {
+  sweepTaskBin(workspaceId)
+  return tasks
+    .list(workspaceId)
+    .filter((t) => t.projectId === projectId && t.deletedAt)
+    .sort((a, b) => b.deletedAt!.localeCompare(a.deletedAt!))
+}
+
+/** Brings a deleted task back where it was; a closed cycle or a person off the team is let go. */
+export async function restoreTaskApi(workspaceId: string, id: string): Promise<WorkTask> {
+  const task = tasks.get(workspaceId, id)
+  if (!task?.deletedAt) throw new Error("This task is not in the deleted tasks")
+  const project = projects.get(workspaceId, task.projectId)
+  if (!project) throw new Error("Project not found")
+  const cycle = task.cycleId ? cycles.get(workspaceId, task.cycleId) : undefined
+  return tasks.update(workspaceId, id, {
+    deletedAt: undefined,
+    deletedBy: undefined,
+    cycleId: cycle && !cycle.closedAt ? task.cycleId : undefined,
+    assigneeId: task.assigneeId && project.memberIds.includes(task.assigneeId) ? task.assigneeId : undefined,
+  })
+}
+
+/** Removes a deleted task for good. */
+export async function purgeTaskApi(workspaceId: string, id: string): Promise<void> {
+  if (!tasks.get(workspaceId, id)?.deletedAt) throw new Error("This task is not in the deleted tasks")
   tasks.remove(workspaceId, id)
+}
+
+function sweepTaskBin(workspaceId: string) {
+  for (const t of tasks.list(workspaceId)) if (t.deletedAt && taskBinDaysLeft(t.deletedAt) === 0) tasks.remove(workspaceId, t.id)
 }
 
 function nextOrder(workspaceId: string, states: TaskState[], task: Pick<WorkTask, "projectId" | "status" | "stateId">) {
