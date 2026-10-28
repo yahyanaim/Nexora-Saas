@@ -9,6 +9,7 @@ import { Menu, Search, LockKeyholeOpen } from "@/components/ui/carbon/icons"
 import { ChangeLanguage } from "@/components/shared/header-chunks/change-language"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
+import { loadMyWorkspaces } from "@/store/workspace-store"
 import { cn } from "@/lib/utils"
 import { useDashboardNav } from "./use-dashboard-nav"
 import { UserMenu } from "./user-menu"
@@ -29,7 +30,12 @@ const WorkNotificationCenter = dynamic(() => import("@/components/shared/notific
 export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const t = useTranslations()
   const { groups, activeGroup, mode } = useDashboardNav()
-  const { isPasscodeLocked } = useAuthGuard()
+  const { isPasscodeLocked, authedUser } = useAuthGuard()
+  const userId = authedUser?.id
+  // the switcher's companies come from the server once someone is signed in
+  useEffect(() => {
+    if (userId) void loadMyWorkspaces()
+  }, [userId])
   const { lock } = useLockScreenStore()
   const [searchOpen, setSearchOpen] = useState(false)
   // the palette is fetched the first time it opens, then stays mounted

@@ -62,7 +62,7 @@ These come from what the client code already does or expects.
 | **Workspace scope** | Every ERP function takes `workspaceId` today. Proposed path prefix: **`/workspaces/:wid/…`**, written as `{ws}` in the tables. The server must check that the session belongs to that workspace. |
 | **Who acts** | Many functions receive `approver`, `actor`, `viewer` or `by` from the screen (see the pre-backend audit, H2). On the server these come **from the session only**. The parameters disappear from the request bodies. |
 | **Lists** | v1: list endpoints return an **array** of the whole workspace's records, because screens filter and sort in the browser. Heavy lists (§9.2) must also accept filters and pagination: `?page=&pageSize=&sortBy=&sortOrder=&search=`, answering `{ data, total }` (`ServerTableParams` in `src/types/tables.ts`). |
-| **Concurrency** | Send back `updatedAt` on every write. Writes may include it (`If-Unmodified-Since` or a body `updatedAt`); a stale write gets `409 { code: "err_conflict" }` (**new code**: add it to the catalog and its 9 translations). This matters for the board (task moves), settings and invoices. |
+| **Concurrency** | Send back `updatedAt` on every write. Writes may include it (`If-Unmodified-Since` or a body `updatedAt`); a stale write gets `409 { code: "err_conflict" }` (in the catalog with its 9 translations). This matters for the board (task moves), settings and invoices. |
 | **Retries** | `POST`s that create money (issue an invoice, record a payment, refund, credit note) should accept an `Idempotency-Key` header so a double click or a retry creates one record. |
 | **Deletes** | `204` with no body. Business rules may refuse with `409` + code (e.g. `err_thisClientHasInvoicesSoIt`). |
 | **Sensitive fields** | Cost rates, salaries and margins must be **left out of the response** for roles that may not see them, not just hidden on screen (pre-backend audit, H3). The rights table is in `src/lib/permissions/can.ts`. |
@@ -108,7 +108,7 @@ These helpers come from the starter template. Their screens were rebuilt on the 
 
 `/users*`, `/sessions*`, `/roles*`, `/report-contents*`, `/report-system-issues*`, `/transactions*`, `/invoices*` (the template's SaaS invoices, not client invoices), `/subscriptions*`, `/overview/*`, `/team/*`, `/billing/checkout`, `/billing/portal`.
 
-**The backend should not build these.** A front-end clean-up PR can delete the files.
+**The backend should not build these.** The front-end files were deleted in the backend-prep PR (October 2026).
 
 ### 3.3 Called but outside this scope
 
@@ -648,12 +648,15 @@ The socket is only used today for the "new login" alert (`socket-provider.tsx`, 
 
 ### 9.5 Things to clean in the front end when wiring (small PRs)
 
-1. Delete the dead template modules (§3.2) and their hooks.
-2. Drop the actor, approver, viewer and by parameters from the API helpers once the server reads the session.
-3. Replace `DEMO_WORKSPACES` with `GET /me/workspaces`.
-4. Move the bell to `GET {ws}/notifications`.
-5. Stop calling the job functions (§8) from hooks.
-6. Add filters to `useTimeEntries` and `useTasks`.
+| # | Item | State |
+|---|---|---|
+| 1 | Delete the dead template modules (§3.2) and their hooks | ✅ Done (backend prep) |
+| 2 | Drop the actor, approver, viewer and by parameters from the API helpers once the server reads the session | Waits for the server |
+| 3 | Replace `DEMO_WORKSPACES` with `GET /me/workspaces` | ✅ Done: `me-api.ts` + `loadMyWorkspaces()` in `workspace-store.ts`, called by the top bar after sign-in; demo companies when the backend is unreachable in demo mode |
+| 4 | Move the bell to `GET {ws}/notifications` | Waits for the server |
+| 5 | Stop calling the job functions (§8) from hooks | Waits for the server |
+| 6 | Add filters to `useTimeEntries` and `useTasks` | ✅ Done: `useTimeEntries({ employeeId, from, to, status })`, `useTasks(projectId, { personId, status, cycleId, dueFrom, dueTo })`; the server takes the same as query parameters |
+| 7 | Read the server's error code (§2 Errors) | ✅ Done: `translateError` reads `response.data.code` (+ `details` as values); a `409` without a code shows `err_conflict` (new, 9 languages) |
 
 ---
 
@@ -680,7 +683,7 @@ Each phase is useful on its own and can go live module by module, because the de
 | File | Section |
 |---|---|
 | `auth-apis.ts`, `profile-api.ts`, `gdpr-apis.ts`, `files-api.ts`, `developer-apis.ts`, `usage-metering.ts`, `billing-apis.ts`, `audit-logs-api.ts` | §3.1 |
-| `users-apis.ts`, `sessions-apis.ts`, `roles-apis.ts`, `reports-apis.ts`, `transactions-api.ts`, `invoices-api.ts`, `subscriptions-api.ts`, `overview-apis.ts`, `team-apis.ts`, `plans-apis.ts` | §3.2 (dead) |
+| `users-apis.ts`, `sessions-apis.ts`, `roles-apis.ts`, `reports-apis.ts`, `transactions-api.ts`, `invoices-api.ts`, `subscriptions-api.ts`, `overview-apis.ts`, `team-apis.ts`, `plans-apis.ts` | §3.2 (deleted) |
 | `upload-apis.ts` | §3.3, §9.3 |
 | `settings-api.ts`, `tenant-modules.ts`, `workspace-subscription-api.ts` | §4 |
 | `employees-api.ts`, `access-api.ts`, `documents-api.ts`, `leave-api.ts`, `reviews-api.ts`, `resource-bookings-api.ts` | §5.1 |

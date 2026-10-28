@@ -2396,6 +2396,7 @@
   "err_pageTooLong": "Eine Seite ist auf 20.000 Zeichen begrenzt",
   "err_meetingDate": "Wählen Sie das Datum der Besprechung",
   "err_pageGone": "Diese Seite gibt es nicht mehr",
+  "err_conflict": "Jemand anderes hat zuerst gespeichert. Laden Sie neu, um die Änderungen zu sehen",
   "inboxWatched": "Beobachtete Aufgaben sind überfällig",
   "inboxWatchedMessage": "Überfällige beobachtete Aufgaben: {count}, darunter „{task}“.",
   "activityCollaborators": "hat die Mitwirkenden festgelegt: {to}",

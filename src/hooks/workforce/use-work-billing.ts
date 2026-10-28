@@ -21,6 +21,7 @@ import {
   deleteInvoiceDraftApi,
   listClientInvoicesApi,
   listTimeEntriesApi,
+  type TimeEntryFilter,
   markInvoicePaidApi,
   markInvoiceSentApi,
   rejectTimeEntriesApi,
@@ -35,9 +36,10 @@ import { discardTimerApi, getTimerApi, startTimerApi, stopTimerApi, type Running
 import { useApprover } from "@/hooks/workforce/use-current-employee"
 import { translateError } from "@/lib/errors/translate-error"
 
-export function useTimeEntries() {
+/** The workspace's hours, optionally of one person, a date range or a status (the server filters the same way). */
+export function useTimeEntries(filter?: TimeEntryFilter) {
   const { id } = useCurrentWorkspace()
-  return useQuery({ queryKey: ["time-entries", id], queryFn: () => listTimeEntriesApi(id) })
+  return useQuery({ queryKey: filter ? ["time-entries", id, filter] : ["time-entries", id], queryFn: () => listTimeEntriesApi(id, filter) })
 }
 
 export function useClientInvoices() {

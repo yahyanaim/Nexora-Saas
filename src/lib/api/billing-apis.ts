@@ -18,10 +18,6 @@ export const DEMO_SUBSCRIPTION_INFO: SubscriptionInfo = {
   hasPaymentMethod: true,
 }
 
-export function updateDemoPlan(newPlan: BillingPlan): void {
-  DEMO_SUBSCRIPTION_INFO.plan = newPlan
-}
-
 /**
  * Pure predicate: is this failure a plan-gate rejection?
  * Used by the global axios interceptor and UI to route to pricing.
@@ -49,50 +45,8 @@ export const billingApi = {
     if (isDemoMode()) return DEMO_SUBSCRIPTION_INFO
     throw new Error("No subscription data received")
   },
-
-  /** Creates a Stripe Checkout Session; caller redirects to the returned URL. */
-  createCheckout: async (
-    plan: "pro" | "enterprise"
-  ): Promise<{ url: string }> => {
-    try {
-      const response = await apiClient.post<{ url: string }>("/billing/checkout", { plan })
-      if (response?.data?.url) return response.data
-    } catch (error) {
-      const message = apiErrorMessage(error, "Failed to create checkout session")
-      if (shouldUseDemoFallback(error)) {
-        updateDemoPlan(plan)
-        return { url: "" }
-      }
-      logger.error("[API Error] createCheckout failed:", message)
-      throw error
-    }
-    if (isDemoMode()) {
-      updateDemoPlan(plan)
-      return { url: "" }
-    }
-    throw new Error("No checkout URL received")
-  },
-
-  /** Creates a Stripe customer-portal session for self-serve management. */
-  createPortal: async (): Promise<{ url: string }> => {
-    try {
-      const response = await apiClient.post<{ url: string }>("/billing/portal")
-      if (response?.data?.url) return response.data
-    } catch (error) {
-      const message = apiErrorMessage(error, "Failed to open billing portal")
-      if (shouldUseDemoFallback(error)) {
-        return { url: "" }
-      }
-      logger.error("[API Error] createPortal failed:", message)
-      throw error
-    }
-    if (isDemoMode()) return { url: "" }
-    throw new Error("No portal URL received")
-  },
 }
 
 export const fetchSubscriptionApi = billingApi.getSubscription
-export const createCheckoutApi = billingApi.createCheckout
-export const createPortalApi = billingApi.createPortal
 
 export default billingApi

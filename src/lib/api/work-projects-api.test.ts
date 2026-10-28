@@ -217,3 +217,22 @@ describe("saved task views (P2)", () => {
     expect((await listTaskViewsApi(WS, "prj_orbit", sara.id)).map((v) => v.name)).toEqual(["Mine"])
   })
 })
+
+describe("listTasksApi filters (backend prep)", () => {
+  beforeEach(() => localStorage.clear())
+
+  it("narrows by person, status and due dates like the server will", async () => {
+    const all = await listTasksApi(WS)
+    const someone = all.find((t) => t.assigneeId)!.assigneeId!
+    const mine = await listTasksApi(WS, undefined, { personId: someone })
+    expect(mine.length).toBeGreaterThan(0)
+    expect(mine.every((t) => t.assigneeId === someone || t.collaboratorIds?.includes(someone) || t.watcherIds?.includes(someone))).toBe(true)
+    const done = await listTasksApi(WS, "prj_orbit", { status: TaskStatus.DONE })
+    expect(done.every((t) => t.status === TaskStatus.DONE && t.projectId === "prj_orbit")).toBe(true)
+    const dated = all.filter((t) => t.dueDate).map((t) => t.dueDate!).sort()
+    const mid = dated[Math.floor(dated.length / 2)]!
+    const later = await listTasksApi(WS, undefined, { dueFrom: mid })
+    expect(later.every((t) => !!t.dueDate && t.dueDate >= mid)).toBe(true)
+    expect(later.length).toBeLessThan(all.length)
+  })
+})
