@@ -12,6 +12,9 @@ import { Progress } from "@/components/ui/progress"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { SpaceAvatar } from "@/components/ui/space-avatar"
+import { RichText, RichTextEditor } from "../work-projects-chunks/rich-text"
 import {
   Calendar,
   CreditCard,
@@ -263,15 +266,18 @@ export function ClientActivitySection({ client, employees }: { client: Client; e
             </button>
           ))}
         </div>
-        <Textarea rows={2} placeholder={t("notePlaceholder")} value={text} onChange={(e) => setText(e.target.value)} aria-label={t("notePlaceholder")} />
-        <Button
-          size="sm"
-          className="self-end"
-          disabled={!text.trim() || addNote.isPending}
-          onClick={() => addNote.mutate({ clientId: client.id, kind, date: todayIso(), text, authorId: me?.id }, { onSuccess: () => setText("") })}
-        >
-          {t("addNote")}
-        </Button>
+        {/* formatting and @mentions (CRM step 10): people named get a bell item */}
+        <RichTextEditor id={`note-${client.id}`} label={t("cnNote")} value={text} onChange={setText} placeholder={t("cnPlaceholder")} hint={t("cnHint")} />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <MentionPicker employees={employees.filter((e) => e.id !== me?.id)} onPick={(name) => setText((v) => `${v}${v && !/\s$/.test(v) ? " " : ""}@${name} `)} />
+          <Button
+            size="sm"
+            disabled={!text.trim() || addNote.isPending}
+            onClick={() => addNote.mutate({ clientId: client.id, kind, date: todayIso(), text, authorId: me?.id }, { onSuccess: () => setText("") })}
+          >
+            {t("addNote")}
+          </Button>
+        </div>
       </div>
       {timeline.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("noActivity")}</p>
@@ -288,7 +294,14 @@ export function ClientActivitySection({ client, employees }: { client: Client; e
                 </span>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className={cn("text-foreground", noteId ? "whitespace-pre-line" : "truncate font-medium")}>{a.title}</p>
+                    {noteId ? <RichText source={a.title} className="text-foreground" /> : <p className="truncate font-medium text-foreground">{a.title}</p>}
+                    {noteId && (notes.find((n) => n.id === noteId)?.mentionIds?.length ?? 0) > 0 && (
+                      <p className="mt-1 flex flex-wrap gap-1">
+                        {notes.find((n) => n.id === noteId)!.mentionIds!.map((id) => (
+                          <span key={id} className="rounded-full bg-info-soft px-2 py-0.5 text-[11px] font-medium text-info-foreground">@{employees.find((e) => e.id === id)?.name ?? "—"}</span>
+                        ))}
+                      </p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {t(`activity_${a.kind}`)} · {date(a.date)}
                       {detail(a) ? ` · ${detail(a)}` : ""}
@@ -315,5 +328,40 @@ export function ClientActivitySection({ client, employees }: { client: Client; e
         </Button>
       )}
     </SectionShell>
+  )
+}
+
+/** Adds @First Last of a teammate to a note; that person gets a bell item (CRM step 10). */
+function MentionPicker({ employees, onPick }: { employees: Employee[]; onPick: (name: string) => void }) {
+  const t = useTranslations()
+  const [open, setOpen] = useState(false)
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button type="button" variant="ghost" size="sm" className="text-muted-foreground">
+          <span aria-hidden className="text-base leading-none">@</span>
+          {t("cnMention")}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-56 p-1">
+        <ul className="max-h-60 overflow-y-auto" aria-label={t("cnMention")}>
+          {employees.map((e) => (
+            <li key={e.id}>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-start text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => {
+                  onPick(e.name)
+                  setOpen(false)
+                }}
+              >
+                <SpaceAvatar name={e.name} size="xs" />
+                <span className="truncate">{e.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
   )
 }

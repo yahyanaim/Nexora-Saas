@@ -3,11 +3,11 @@ import { TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/wor
 import { LeaveStatus, type LeaveRequest } from "@/types/work-planning"
 import { type WorkProject, type WorkTask, isClosedStatus } from "@/types/work-projects"
 import type { SatisfactionResponse } from "@/types/work-feedback"
-import type { ClientFollowUp } from "@/types/work-crm"
+import type { ClientFollowUp, ClientNote } from "@/types/work-crm"
 import { lowRatingsFor } from "./satisfaction"
 import type { EmployeeDocument } from "@/types/work-hr"
 import type { PerformanceReview } from "@/types/work-reviews"
-import { EmployeeStatus, type Employee } from "@/types/workforce"
+import { EmployeeStatus, type Client, type Employee } from "@/types/workforce"
 import { displayStatus } from "./billing"
 import { isOnTask } from "./task-extras"
 import { waitingRequests } from "./client-requests"
@@ -45,6 +45,9 @@ export interface InboxInput {
   projects?: WorkProject[]
   /** Client follow-ups (CRM step 5) */
   followUps?: ClientFollowUp[]
+  /** Client notes, for @mentions of the person in the last 14 days (CRM step 10) */
+  clientNotes?: ClientNote[]
+  clients?: Client[]
   /** Client requests waiting for an answer, for people who manage projects (P3) */
   requests?: ClientRequest[]
   today: string
@@ -114,6 +117,14 @@ export function buildInbox(d: InboxInput): InboxItem[] {
     if (due.length) {
       const lateCount = due.filter((f) => f.dueDate < d.today).length
       items.push({ id: `follow-ups:${due.map((f) => `${f.id}-${f.dueDate}`).join(",")}`, category: "team", title: "inboxFollowUps", message: lateCount ? "inboxFollowUpsLate" : "inboxFollowUpsToday", values: { count: due.length, late: lateCount }, href: "/dashboard/my-work" })
+    }
+    // someone named the person in a client note lately (CRM step 10); one item per note
+    const since = new Date(Date.parse(`${d.today}T00:00:00Z`) - 14 * 86_400_000).toISOString().slice(0, 10)
+    for (const n of d.clientNotes ?? []) {
+      if (!n.mentionIds?.includes(me) || n.authorId === me || n.date < since) continue
+      const client = d.clients?.find((c) => c.id === n.clientId)
+      if (!client) continue
+      items.push({ id: `mention:${n.id}`, category: "team", title: "inboxMention", message: "inboxMentionMessage", values: { name: n.authorId ? name(n.authorId) : "—", client: client.name }, href: `/dashboard/clients/${client.id}?tab=activity` })
     }
   }
   if (d.rights.projects) {

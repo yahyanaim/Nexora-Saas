@@ -71,7 +71,7 @@ const TOOLS = [
 ] as const
 
 /** Textarea with a formatting toolbar and a preview (P1). */
-export function RichTextEditor({ id, value, onChange, resolve, label }: { id: string; value: string; onChange: (v: string) => void; resolve?: KeyResolver; label: string }) {
+export function RichTextEditor({ id, value, onChange, resolve, label, placeholder, hint }: { id: string; value: string; onChange: (v: string) => void; resolve?: KeyResolver; label: string; placeholder?: string; hint?: string }) {
   const t = useTranslations()
   const ref = React.useRef<HTMLTextAreaElement>(null)
   const [preview, setPreview] = React.useState(false)
@@ -123,8 +123,8 @@ export function RichTextEditor({ id, value, onChange, resolve, label }: { id: st
               </button>
             ))}
           </div>
-          <Textarea ref={ref} id={id} rows={5} value={value} onChange={(e) => onChange(e.target.value)} placeholder={t("rtPlaceholder")} />
-          <p className="text-xs text-muted-foreground">{t("rtHint")}</p>
+          <Textarea ref={ref} id={id} rows={5} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? t("rtPlaceholder")} />
+          <p className="text-xs text-muted-foreground">{hint ?? t("rtHint")}</p>
         </>
       )}
     </div>

@@ -47,11 +47,32 @@ export interface ClientNote {
   kind: ClientNoteKind
   /** yyyy-mm-dd */
   date: string
+  /** Light formatting allowed: **bold**, _italic_, lists, links (CRM step 10) */
   text: string
   authorId?: string
+  /** Employees named as @First Last in the note; they get a bell item (CRM step 10) */
+  mentionIds?: string[]
   createdAt: string
   updatedAt: string
 }
+
+/** A file kept on a client: contract scan, proposal, brief… (CRM step 10) */
+export interface ClientFile {
+  id: string
+  workspaceId: string
+  clientId: string
+  name: string
+  type: string
+  size: number
+  dataUrl: string
+  category: ClientFileCategory
+  addedBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type ClientFileCategory = "contract" | "proposal" | "brief" | "invoice" | "other"
+export const CLIENT_FILE_CATEGORIES: readonly ClientFileCategory[] = ["contract", "proposal", "brief", "invoice", "other"]
 
 /** One entry of the client activity timeline, built from every module (CRM-7). */
 export interface ClientActivity {

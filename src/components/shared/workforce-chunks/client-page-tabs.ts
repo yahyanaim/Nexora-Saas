@@ -1,5 +1,5 @@
 /** The tabs of a client's page (CRM step 4), in order; the one shown is kept in ?tab= */
-export const CLIENT_PAGE_TABS = ["overview", "contacts", "followups", "deals", "billing", "projects", "contracts", "activity", "history"] as const
+export const CLIENT_PAGE_TABS = ["overview", "contacts", "followups", "deals", "billing", "projects", "contracts", "files", "activity", "history"] as const
 export type ClientPageTab = (typeof CLIENT_PAGE_TABS)[number]
 
 /** The link to a client's page, on a tab when it isn't the first one. */

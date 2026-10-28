@@ -41,6 +41,8 @@ import { ContactsSection, DealsSection, PageSection, ProjectsSection, QuotesInvo
 import { HEALTH_CLASS, relativeDay } from "./clients-columns"
 import { CustomFieldValuesList } from "./custom-fields"
 import { ClientHistorySection, DuplicateNotice, MergeClientsDialog } from "./client-safety"
+import { ClientFilesSection } from "./client-files"
+import { useClientFiles } from "@/hooks/workforce/use-client-files"
 import { FollowUpDialog } from "./follow-up-dialog"
 import { FollowUpList } from "./follow-up-list"
 import { ConvertDialog, DropDialog } from "./lead-dialogs"
@@ -91,6 +93,7 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit, canMerge }: 
   const { data: allFollowUps = [] } = useFollowUps()
   const { data: settings } = useWorkspaceSettings()
   const { update } = useClientMutations()
+  const { data: files = [] } = useClientFiles(c.id)
 
   const [formOpen, setFormOpen] = React.useState(false)
   const [logging, setLogging] = React.useState(false)
@@ -270,6 +273,7 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit, canMerge }: 
       : []),
     { id: "projects", label: t("cpTabProjects", { n: ownProjects.length }), content: <ProjectsSection projects={ownProjects} stats={stats} /> },
     { id: "contracts", label: t("cdContracts"), content: <PageSection title={t("cdContracts")}><ClientContractsSection client={c} currency={currency} /></PageSection> },
+    { id: "files", label: t("cfTab", { n: files.length }), content: <PageSection title={t("cfTitle")}><ClientFilesSection clientId={c.id} canEdit={canEdit} /></PageSection> },
     {
       id: "activity",
       label: t("cpTabActivity"),
