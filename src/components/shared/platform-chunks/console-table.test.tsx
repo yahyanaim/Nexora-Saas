@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import { act, fireEvent, render, screen, within } from "@testing-library/react"
 import { readTableViews } from "@/lib/ui/saved-views"
 import { NextIntlClientProvider } from "next-intl"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { ColumnDef } from "@tanstack/react-table"
 import messages from "@/messages/en.json"
 import { DataTable } from "@/components/shared/data-table-chunks/data-table"
@@ -27,9 +28,11 @@ const columns: ColumnDef<Row>[] = [
 
 function renderTable(extra: Partial<React.ComponentProps<typeof DataTable<Row, unknown>>> = {}) {
   return render(
-    <NextIntlClientProvider locale="en" messages={messages}>
-      <DataTable title="Companies" columns={columns} data={rows} searchColumnId="name" searchPlaceholder="Search companies" enableExport={false} showRange {...extra} />
-    </NextIntlClientProvider>
+    <QueryClientProvider client={new QueryClient()}>
+      <NextIntlClientProvider locale="en" messages={messages}>
+        <DataTable title="Companies" columns={columns} data={rows} searchColumnId="name" searchPlaceholder="Search companies" enableExport={false} showRange {...extra} />
+      </NextIntlClientProvider>
+    </QueryClientProvider>
   )
 }
 const desktopRows = () => within(screen.getAllByRole("table")[0]!).getAllByRole("row").slice(1)
@@ -120,5 +123,22 @@ describe("filter helpers", () => {
     expect(f(row("Atlas"), "name", "  ", () => {})).toBe(true)
     expect(f(row("Atlas"), "name", "FÈS", () => {})).toBe(true)
     expect(f(row("Atlas"), "name", "tanger", () => {})).toBe(false)
+  })
+})
+
+describe("grouped rows (CRM step 10)", () => {
+  it("shows every row under group headings that fold, without pages", () => {
+    renderTable({ groupBy: { key: (r) => (r.mrr >= 600 ? "big" : ""), label: (k) => (k ? "Big" : "Small") } })
+    expect(screen.queryByText("1–10 of 13")).not.toBeInTheDocument()
+    const table = screen.getAllByRole("table")[0]!
+    const big = within(table).getByRole("button", { name: /^Big/ })
+    const before = within(table).getAllByRole("row").length
+    expect(big).toHaveAttribute("aria-expanded", "true")
+    fireEvent.click(big)
+    expect(big).toHaveAttribute("aria-expanded", "false")
+    expect(within(table).getAllByRole("row").length).toBeLessThan(before)
+    // the empty group comes last
+    const headings = within(table).getAllByRole("button", { name: /^(Big|Small)/ }).map((b) => b.textContent)
+    expect(headings[headings.length - 1]).toMatch(/^Small/)
   })
 })

@@ -371,6 +371,8 @@ export const ERROR_KEYS: Record<string, string> = {
   "Two statuses have the same name": "err_stateSameName",
   "This status isn't part of the project": "err_stateUnknown",
   "Give the view a name": "err_viewName",
+  "A team view already has this name": "err_teamViewName",
+  "Only the person who shared this view can remove it": "err_teamViewOwner",
   "A view name can have up to 40 characters": "err_viewNameLong",
   "A shared view already has this name": "err_viewNameTaken",
   "This view no longer exists": "err_viewGone",

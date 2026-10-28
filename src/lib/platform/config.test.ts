@@ -50,7 +50,7 @@ describe("configuration rules", () => {
         }
       }
     }
-  })
+  }, 20_000) // loads all nine message files; slow under coverage in parallel
 })
 
 describe("configuration", () => {

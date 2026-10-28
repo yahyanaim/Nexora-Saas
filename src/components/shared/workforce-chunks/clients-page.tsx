@@ -35,6 +35,9 @@ import { clientPageHref } from "./client-page-tabs"
 import { Link, useRouter } from "@/i18n/navigation"
 import { ClientDetailsPanel } from "./client-details-panel"
 import { DeletedClientsSection } from "./client-safety"
+import { ClientFilterBar, type ChoiceOptions } from "./client-list-tools"
+import { EMPTY_FILTER, GROUP_FIELDS, groupKey, matchesFilter, readFilter, type AdvancedFilter, type GroupField } from "@/lib/workforce/client-filters"
+import { CLIENT_STATUS_LABEL } from "./workforce-labels"
 import { useDeletedClients } from "@/hooks/workforce/use-client-safety"
 import { formatMoney } from "./workforce-labels"
 
@@ -83,6 +86,9 @@ export default function ClientsPage() {
   const [tagging, setTagging] = useState<{ clients: Client[]; done: () => void } | null>(null)
   const [tag, setTag] = useState("")
   const formRef = useRef<ClientFormHandle>(null)
+  // AND / OR conditions and grouping of the list, kept in saved views (CRM step 10)
+  const [filter, setFilter] = useState<AdvancedFilter>(EMPTY_FILTER)
+  const [groupBy, setGroupBy] = useState<GroupField | "">("")
 
   // ?client=<id> (e.g. from an invoice missing the client's ICE) opens that client's form once
   const linkedId = useSearchParams().get("client")
@@ -111,7 +117,10 @@ export default function ClientsPage() {
     const by = (s: ClientStatus) => clients.filter((c) => c.status === s).length
     return { all: clients.length, [ClientStatus.ACTIVE]: by(ClientStatus.ACTIVE), [ClientStatus.LEAD]: by(ClientStatus.LEAD), [ClientStatus.ARCHIVED]: by(ClientStatus.ARCHIVED), deleted: deletedClients.length } as Record<StatusPill, number>
   }, [clients, deletedClients.length])
-  const shown = useMemo(() => (pill === "all" ? clients : clients.filter((c) => c.status === pill)), [clients, pill])
+  const shown = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    return (pill === "all" ? clients : clients.filter((c) => c.status === pill)).filter((c) => matchesFilter(c, figures.get(c.id), filter, today))
+  }, [clients, pill, filter, figures])
   const pills = PILLS.filter((p) => p.value !== "deleted" || canDelete)
 
   const columns = useMemo(
@@ -130,8 +139,11 @@ export default function ClientsPage() {
         selectedId,
         onEdit: openForm,
         onDelete: setDeleting,
+        onQuickUpdate: (c: Client, input: Partial<ClientInput>) => update.mutate({ id: c.id, input }),
+        allTags: tagsInUse(clients),
       }),
-    [t, locale, employees, workspace.currency, figures, canSeeMoney, canEdit, canDelete, selectedId]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- update.mutate is stable
+    [t, locale, employees, workspace.currency, figures, canSeeMoney, canEdit, canDelete, selectedId, clients]
   )
 
   const cards = useMemo<MetricCardItem[]>(() => {
@@ -222,6 +234,27 @@ export default function ClientsPage() {
     }
   }
 
+  const countryName = (code: string) => {
+    try {
+      return new Intl.DisplayNames([locale], { type: "region" }).of(code) ?? code
+    } catch {
+      return code
+    }
+  }
+  const choiceOptions: ChoiceOptions = {
+    status: Object.values(ClientStatus).map((v) => [v, t(CLIENT_STATUS_LABEL[v])]),
+    manager: employees.map((e) => [e.id, e.name]),
+    industry: [...new Set(clients.map((c) => c.industry).filter((x): x is string => !!x))].sort().map((v) => [v, v]),
+    tag: tagsInUse(clients).map((v) => [v, v]),
+    leadSource: Object.values(LeadSource).map((v) => [v, t(`clSource_${v}`)]),
+    health: (["good", "watch", "at_risk"] as const).map((v) => [v, t(`clHealth_${v}`)]),
+    country: [...new Set(clients.map((c) => c.country).filter((x): x is string => !!x))].sort().map((v) => [v, countryName(v)]),
+  }
+  const groupLabel = (key: string) => {
+    if (!key || !groupBy) return t("clGroupEmpty")
+    return choiceOptions[groupBy].find(([v]) => v === key)?.[1] ?? key
+  }
+
   const managers = employees.filter((e) => clients.some((c) => c.accountManagerId === e.id))
   const industries = [...new Set(clients.map((c) => c.industry).filter((x): x is string => !!x))].sort()
   const tags = tagsInUse(clients)
@@ -291,6 +324,17 @@ export default function ClientsPage() {
         showRange
         numberedPages
         savedViewsKey="erp-clients"
+        viewExtra={{
+          value: { filter, groupBy },
+          apply: (extra) => {
+            setFilter(readFilter(extra?.filter))
+            setGroupBy((GROUP_FIELDS as readonly string[]).includes(String(extra?.groupBy)) ? (extra!.groupBy as GroupField) : "")
+          },
+        }}
+        groupBy={groupBy ? { key: (c: Client) => groupKey(c, figures.get(c.id), groupBy), label: groupLabel } : undefined}
+        renderAfterJsxToolbar={() => (
+          <ClientFilterBar filter={filter} onFilter={setFilter} groupBy={groupBy} onGroupBy={setGroupBy} options={choiceOptions} canSeeMoney={canSeeMoney} newId={() => crypto.randomUUID()} />
+        )}
         enableExport={canExport}
         exportOptions={[{ label: t("exportCsv"), icon: Download, onClick: (rows) => exportRows(rows as Client[]) }]}
         renderBulkActions={(rows, clear) => (

@@ -5,7 +5,7 @@ import { Plus, Search, X, Download, FileSpreadsheet, FileCode } from "@/componen
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DataTableFiltersPopover } from "./data-table-filters-popover"
-import { DataTableSavedViews } from "./data-table-saved-views"
+import { DataTableSavedViews, type ViewExtra } from "./data-table-saved-views"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,6 +67,8 @@ interface DataTableToolbarProps<TData> {
   exportOptions?: ExportOption[]
   /** Shows the Views menu; the list's name keeps its views apart from other lists' */
   savedViewsKey?: string
+  /** A list's own settings kept with its views */
+  viewExtra?: ViewExtra
 }
 
 export function DataTableToolbar<TData>({
@@ -85,6 +87,7 @@ export function DataTableToolbar<TData>({
   enableExport = true,
   exportOptions,
   savedViewsKey,
+  viewExtra,
 }: DataTableToolbarProps<TData>) {
   const t = useTranslations()
   const { dir } = useGetDirection()
@@ -179,7 +182,7 @@ export function DataTableToolbar<TData>({
           </div>
         )}
 
-        {savedViewsKey && <DataTableSavedViews table={table} list={savedViewsKey} />}
+        {savedViewsKey && <DataTableSavedViews table={table} list={savedViewsKey} extra={viewExtra} />}
 
         <DataTableFiltersPopover table={table} filters={filters} />
 
