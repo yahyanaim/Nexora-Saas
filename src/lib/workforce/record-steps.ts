@@ -4,6 +4,10 @@ import { ClientInvoiceStatus, type ClientInvoice } from "@/types/work-billing"
 import { QuoteStatus, type Quote, type QuoteDisplayStatus } from "@/types/work-quotes"
 import type { Milestone, WorkTask } from "@/types/work-projects"
 import { LeaveStatus, type LeaveRequest } from "@/types/work-planning"
+import { ExpenseStatus, type Expense } from "@/types/work-costs"
+import { SupplierBillStatus, type SupplierBill } from "@/types/work-purchases"
+import { TimeEntryStatus, type TimeEntry } from "@/types/work-billing"
+import { billTotals } from "./supplier-bills"
 
 /*
  * The way a record goes through its steps (DS-07 node progress). Pure data:
@@ -144,4 +148,62 @@ export function leaveWay(request: LeaveRequest, steps: number): RecordStep<Leave
   if (request.status === LeaveStatus.APPROVED) return [asked, ...first, { key: "approved", state: "done", at: request.updatedAt }]
   const waitingFinal = !two || !!request.firstApprovedBy
   return [asked, ...first, { key: "approved", state: waitingFinal ? "current" : "todo" }]
+}
+
+export type ExpenseStepKey = "submitted" | "firstApproval" | "approved" | "reimbursed" | "rejected"
+
+/** Submitted → (first approval when two are needed) → approved → paid back; a refusal stops the way. */
+export function expenseWay(expense: Expense, steps: number): RecordStep<ExpenseStepKey>[] {
+  const submitted: RecordStep<ExpenseStepKey> = { key: "submitted", state: "done", at: expense.date }
+  const two = steps >= 2
+  const passed = expense.status === ExpenseStatus.APPROVED || expense.status === ExpenseStatus.REIMBURSED
+  const first: RecordStep<ExpenseStepKey>[] = two
+    ? [{ key: "firstApproval", state: expense.firstApprovedBy || passed ? "done" : expense.status === ExpenseStatus.SUBMITTED ? "current" : "todo" }]
+    : []
+  if (expense.status === ExpenseStatus.REJECTED) return [submitted, ...first, { key: "rejected", state: "stopped", at: expense.updatedAt }]
+  if (expense.status === ExpenseStatus.REIMBURSED) return [submitted, ...first, { key: "approved", state: "done" }, { key: "reimbursed", state: "done", at: expense.updatedAt }]
+  if (expense.status === ExpenseStatus.APPROVED) return [submitted, ...first, { key: "approved", state: "done", at: expense.updatedAt }, { key: "reimbursed", state: "current" }]
+  const waitingFinal = !two || !!expense.firstApprovedBy
+  return [submitted, ...first, { key: "approved", state: waitingFinal ? "current" : "todo" }, { key: "reimbursed", state: "todo" }]
+}
+
+export type BillStepKey = "entered" | "approved" | "paid" | "rejected"
+
+/** Entered → approved → paid; the line into "paid" fills with what is already paid, late past the due date. */
+export function billWay(bill: SupplierBill, today = todayIso()): RecordStep<BillStepKey>[] {
+  const entered: RecordStep<BillStepKey> = { key: "entered", state: "done", at: bill.issueDate }
+  if (bill.status === SupplierBillStatus.REJECTED) return [entered, { key: "rejected", state: "stopped", at: bill.updatedAt }]
+  if (bill.status === SupplierBillStatus.SUBMITTED) return [entered, { key: "approved", state: "current" }, { key: "paid", state: "todo", at: bill.dueDate }]
+  const approved: RecordStep<BillStepKey> = { key: "approved", state: "done" }
+  const lastPayment = bill.payments.map((p) => p.date).sort().at(-1)
+  if (bill.status === SupplierBillStatus.PAID) return [entered, approved, { key: "paid", state: "done", at: lastPayment ?? bill.updatedAt }]
+  const late = bill.dueDate < today
+  const paid: RecordStep<BillStepKey> = { key: "paid", state: late ? "late" : "current", at: bill.dueDate }
+  if (late) paid.lateDays = daysBetween(bill.dueDate, today)
+  else paid.daysLeft = Math.max(0, daysBetween(today, bill.dueDate))
+  if (bill.payments.length > 0) {
+    const { total, paid: sum } = billTotals(bill)
+    paid.paid = sum
+    paid.total = total
+    paid.reach = total > 0 ? Math.min(1, sum / total) : 0.5
+  }
+  return [entered, approved, paid]
+}
+
+export type TimesheetStepKey = "submitted" | "firstApproval" | "approved" | "invoiced"
+
+/** A person's week of hours: submitted → (first approval) → approved → on an invoice, as far as every entry got. */
+export function timesheetWay(entries: TimeEntry[], steps: number): RecordStep<TimesheetStepKey>[] {
+  const all = (ok: (e: TimeEntry) => boolean) => entries.length > 0 && entries.every(ok)
+  const approved = all((e) => e.status === TimeEntryStatus.APPROVED)
+  const invoiced = approved && all((e) => !!e.invoiceId)
+  const submitted = approved || all((e) => e.status === TimeEntryStatus.SUBMITTED || e.status === TimeEntryStatus.APPROVED)
+  const two = steps >= 2
+  const firstDone = approved || all((e) => !!e.firstApprovedBy)
+  const lastApproval = entries.map((e) => e.approvedAt).filter((x): x is string => !!x).sort().at(-1)
+  const out: RecordStep<TimesheetStepKey>[] = [{ key: "submitted", state: submitted ? "done" : "current" }]
+  if (two) out.push({ key: "firstApproval", state: firstDone ? "done" : submitted ? "current" : "todo" })
+  out.push({ key: "approved", state: approved ? "done" : submitted && (!two || firstDone) ? "current" : "todo", at: approved ? lastApproval : undefined })
+  out.push({ key: "invoiced", state: invoiced ? "done" : approved ? "current" : "todo" })
+  return out
 }

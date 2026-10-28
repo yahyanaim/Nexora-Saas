@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
-import { invoiceWay, leaveWay, milestoneWay, quoteWay } from "./record-steps"
-import { ClientInvoiceStatus, PaymentMethod, type ClientInvoice } from "@/types/work-billing"
+import { billWay, expenseWay, invoiceWay, leaveWay, milestoneWay, quoteWay, timesheetWay } from "./record-steps"
+import { ExpenseCategory, ExpenseStatus, type Expense } from "@/types/work-costs"
+import { SupplierBillStatus, type SupplierBill } from "@/types/work-purchases"
+import { ClientInvoiceStatus, PaymentMethod, TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/work-billing"
 import { QuoteStatus, type Quote } from "@/types/work-quotes"
 import { TaskStatus, type Milestone, type WorkTask } from "@/types/work-projects"
 import { LeaveStatus, LeaveType, type LeaveRequest } from "@/types/work-planning"
@@ -114,5 +116,47 @@ describe("leaveWay", () => {
   it("ends done when approved and stopped when declined", () => {
     expect(states(leaveWay(req({ status: LeaveStatus.APPROVED }), 1))).toEqual(["done", "done"])
     expect(leaveWay(req({ status: LeaveStatus.REJECTED }), 1).at(-1)).toMatchObject({ key: "rejected", state: "stopped" })
+  })
+})
+
+describe("expenseWay, billWay and timesheetWay", () => {
+  const expense = (o: Partial<Expense> = {}): Expense => ({
+    id: "x", workspaceId: "w", employeeId: "e", date: "2026-03-02", category: Object.values(ExpenseCategory)[0]!, description: "Taxi",
+    amount: 100, billable: false, status: ExpenseStatus.SUBMITTED, createdAt: "", updatedAt: "2026-03-05T10:00:00Z", ...o,
+  })
+  it("walks an expense through its approvals to the pay-back", () => {
+    expect(expenseWay(expense(), 1).map((s) => `${s.key}:${s.state}`)).toEqual(["submitted:done", "approved:current", "reimbursed:todo"])
+    expect(expenseWay(expense(), 2).map((s) => `${s.key}:${s.state}`)).toEqual(["submitted:done", "firstApproval:current", "approved:todo", "reimbursed:todo"])
+    expect(expenseWay(expense({ firstApprovedBy: "emp_a" }), 2).map((s) => s.state)).toEqual(["done", "done", "current", "todo"])
+    expect(expenseWay(expense({ status: ExpenseStatus.APPROVED }), 1).map((s) => s.state)).toEqual(["done", "done", "current"])
+    expect(expenseWay(expense({ status: ExpenseStatus.REIMBURSED }), 1).at(-1)).toMatchObject({ key: "reimbursed", state: "done" })
+    expect(expenseWay(expense({ status: ExpenseStatus.REJECTED }), 1).map((s) => `${s.key}:${s.state}`)).toEqual(["submitted:done", "rejected:stopped"])
+  })
+
+  const bill = (o: Partial<SupplierBill> = {}): SupplierBill => ({
+    id: "b", workspaceId: "w", supplierId: "s", number: "F-1", issueDate: "2026-03-01", dueDate: "2026-03-31",
+    lines: [{ id: "l", description: "Hosting", quantity: 1, unitPrice: 1000 }], taxRate: 20, status: SupplierBillStatus.SUBMITTED,
+    submittedBy: "admin", payments: [], createdAt: "", updatedAt: "", ...o,
+  } as SupplierBill)
+  it("walks a bill to payment, filling the last line with part payments and counting late days", () => {
+    expect(billWay(bill(), "2026-03-10").map((s) => `${s.key}:${s.state}`)).toEqual(["entered:done", "approved:current", "paid:todo"])
+    const part = billWay(bill({ status: SupplierBillStatus.APPROVED, payments: [{ id: "p", date: "2026-03-15", amount: 600, method: "bank_transfer" }] }), "2026-03-20")
+    expect(part[2]).toMatchObject({ key: "paid", state: "current", paid: 600, total: 1200, reach: 0.5, daysLeft: 11 })
+    expect(billWay(bill({ status: SupplierBillStatus.APPROVED }), "2026-04-05")[2]).toMatchObject({ state: "late", lateDays: 5 })
+    expect(billWay(bill({ status: SupplierBillStatus.PAID, payments: [{ id: "p", date: "2026-03-28", amount: 1200, method: "cash" }] }))[2]).toMatchObject({ state: "done", at: "2026-03-28" })
+    expect(billWay(bill({ status: SupplierBillStatus.REJECTED })).map((s) => s.state)).toEqual(["done", "stopped"])
+  })
+
+  const entry = (o: Partial<TimeEntry> = {}): TimeEntry => ({
+    id: "t", workspaceId: "w", employeeId: "e", projectId: "p", date: "2026-03-02", hours: 8, billable: true,
+    status: TimeEntryStatus.SUBMITTED, createdAt: "", updatedAt: "", ...o,
+  } as TimeEntry)
+  it("shows how far a week of hours got", () => {
+    expect(timesheetWay([entry(), entry()], 1).map((s) => `${s.key}:${s.state}`)).toEqual(["submitted:done", "approved:current", "invoiced:todo"])
+    expect(timesheetWay([entry({ firstApprovedBy: "a" }), entry()], 2).map((s) => s.state)).toEqual(["done", "current", "todo", "todo"])
+    expect(timesheetWay([entry({ firstApprovedBy: "a" }), entry({ firstApprovedBy: "a" })], 2).map((s) => s.state)).toEqual(["done", "done", "current", "todo"])
+    const approved = [entry({ status: TimeEntryStatus.APPROVED, approvedAt: "2026-03-09", invoiceId: "inv" }), entry({ status: TimeEntryStatus.APPROVED, approvedAt: "2026-03-10" })]
+    expect(timesheetWay(approved, 1).map((s) => s.state)).toEqual(["done", "done", "current"])
+    expect(timesheetWay(approved, 1)[1]!.at).toBe("2026-03-10")
   })
 })
