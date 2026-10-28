@@ -9,7 +9,8 @@ import { DataTableColumnHeader } from "../data-table-chunks/data-table-column-he
 import { DataTableRowActions } from "../data-table-chunks/data-table-row-actions"
 import type { ClientFigures, HealthLevel } from "@/lib/workforce/client-figures"
 import { cn } from "@/lib/utils"
-import type { Client, Employee } from "@/types/workforce"
+import type { Client, ClientInput, Employee } from "@/types/workforce"
+import { OwnerCell, StatusCell, TagsCell } from "./client-list-tools"
 import { CLIENT_STATUS_CLASS, CLIENT_STATUS_LABEL, formatMoney, includesFilter } from "./workforce-labels"
 
 export const HEALTH_CLASS: Record<HealthLevel, string> = {
@@ -34,6 +35,10 @@ interface Options {
   selectedId?: string | null
   onEdit: (client: Client) => void
   onDelete: (client: Client) => void
+  /** Saves a change made right in the table: status, account manager, tags (CRM step 10) */
+  onQuickUpdate: (client: Client, input: Partial<ClientInput>) => void
+  /** Every tag in use, offered in the tags editor */
+  allTags: string[]
 }
 
 /** "3 days ago", "last month"… in the reader's language. */
@@ -181,16 +186,33 @@ export function getClientsColumns(o: Options): ColumnDef<Client>[] {
       accessorKey: "status",
       header: ({ column }) => <DataTableColumnHeader column={column} title={t("status")} />,
       filterFn: (row, id, value) => includesFilter(row.getValue(id), value),
-      cell: ({ row }) => (
-        <Badge variant="outline" className={CLIENT_STATUS_CLASS[row.original.status]}>
-          {t(CLIENT_STATUS_LABEL[row.original.status])}
-        </Badge>
-      ),
+      cell: ({ row }) =>
+        o.canEdit ? (
+          <StatusCell client={row.original} onUpdate={o.onQuickUpdate} />
+        ) : (
+          <Badge variant="outline" className={CLIENT_STATUS_CLASS[row.original.status]}>
+            {t(CLIENT_STATUS_LABEL[row.original.status])}
+          </Badge>
+        ),
     },
-    // filters only (hidden): account manager, industry, tags, lead source, health
-    { id: "manager", accessorFn: (c) => c.accountManagerId ?? "", filterFn: (row, id, v) => includesFilter(row.getValue(id), v), enableHiding: false },
+    {
+      id: "manager",
+      accessorFn: (c) => c.accountManagerId ?? "",
+      header: () => <span>{t("accountManager")}</span>,
+      enableSorting: false,
+      filterFn: (row, id, v) => includesFilter(row.getValue(id), v),
+      cell: ({ row }) => <OwnerCell client={row.original} employees={o.employees} canEdit={o.canEdit} onUpdate={o.onQuickUpdate} />,
+    },
+    {
+      id: "tags",
+      accessorFn: (c) => (c.tags ?? []).join(", "),
+      header: () => <span>{t("clTags")}</span>,
+      enableSorting: false,
+      filterFn: (row, _id, v) => anyOf(row.original.tags ?? [], v),
+      cell: ({ row }) => <TagsCell client={row.original} allTags={o.allTags} canEdit={o.canEdit} onUpdate={o.onQuickUpdate} />,
+    },
+    // filters only (hidden): industry, lead source, health
     { id: "industry", accessorFn: (c) => c.industry ?? "", filterFn: (row, id, v) => includesFilter(row.getValue(id), v), enableHiding: false },
-    { id: "tags", accessorFn: (c) => (c.tags ?? []).join(", "), filterFn: (row, _id, v) => anyOf(row.original.tags ?? [], v), enableHiding: false },
     { id: "leadSource", accessorFn: (c) => c.leadSource ?? "", filterFn: (row, id, v) => includesFilter(row.getValue(id), v), enableHiding: false },
     { id: "health", accessorFn: (c) => fig(c)?.health?.level ?? "", filterFn: (row, id, v) => includesFilter(row.getValue(id), v), enableHiding: false },
     {
@@ -212,4 +234,4 @@ export function getClientsColumns(o: Options): ColumnDef<Client>[] {
 }
 
 /** The hidden filter columns, for the table's starting visibility. */
-export const CLIENT_FILTER_COLUMNS = { manager: false, industry: false, tags: false, leadSource: false, health: false }
+export const CLIENT_FILTER_COLUMNS = { email: false, phone: false, industry: false, leadSource: false, health: false }

@@ -11,9 +11,15 @@ export interface TableView {
   sorting: SortingState
   columnFilters: ColumnFiltersState
   pageSize: number
+  /** A list's own settings kept with the view, e.g. the clients' AND/OR filter and grouping (CRM step 10) */
+  extra?: Record<string, unknown>
+  /** Shared with the whole team instead of kept for one person (CRM step 10) */
+  shared?: boolean
+  ownerId?: string
+  ownerName?: string
 }
 
-export type TableViewState = Omit<TableView, "id" | "name">
+export type TableViewState = Pick<TableView, "sorting" | "columnFilters" | "pageSize" | "extra">
 
 /** At most this many views per list and person */
 export const MAX_VIEWS = 20
@@ -33,7 +39,8 @@ function isView(v: unknown): v is TableView {
     Array.isArray(x.columnFilters) &&
     x.columnFilters.every((f) => f && typeof f === "object" && typeof (f as { id?: unknown }).id === "string") &&
     typeof x.pageSize === "number" &&
-    x.pageSize > 0
+    x.pageSize > 0 &&
+    (x.extra === undefined || (typeof x.extra === "object" && x.extra !== null))
   )
 }
 
@@ -68,7 +75,7 @@ function cleanFilters(filters: ColumnFiltersState): ColumnFiltersState {
 export function saveView(views: TableView[], name: string, state: TableViewState, id: string): TableView[] {
   const clean = name.trim()
   if (!clean) return views
-  const view: TableView = { id, name: clean, sorting: state.sorting, columnFilters: cleanFilters(state.columnFilters), pageSize: state.pageSize }
+  const view: TableView = { id, name: clean, sorting: state.sorting, columnFilters: cleanFilters(state.columnFilters), pageSize: state.pageSize, ...(state.extra ? { extra: state.extra } : {}) }
   return [view, ...views.filter((v) => v.name.toLocaleLowerCase() !== clean.toLocaleLowerCase())].slice(0, MAX_VIEWS)
 }
 
@@ -83,6 +90,7 @@ const canonical = (s: TableViewState) =>
       .map((f) => [f.id, Array.isArray(f.value) ? [...(f.value as unknown[])].map(String).sort() : f.value])
       .sort((a, b) => String(a[0]).localeCompare(String(b[0]))),
     pageSize: s.pageSize,
+    extra: s.extra ?? {},
   })
 
 /** True when the list currently shows exactly this view (to tick it in the menu). */
