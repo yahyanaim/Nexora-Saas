@@ -1,7 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { Bug, ChevronDown, ChevronUpIcon, ChevronsUp, EqualIcon, PenTool, Sparkles, SquareCheck } from "@/components/ui/carbon/icons"
+import { Bug, ChevronDown, ChevronUpIcon, ChevronsUp, EqualIcon, PenTool, RotateCw, Sparkles, SquareCheck } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
 import { Priority, type WorkTask } from "@/types/work-projects"
 import type { TaskLabel } from "@/types/work-settings"
@@ -61,6 +61,18 @@ export function TaskTypeMark({ task, labels, className }: { task: Pick<WorkTask,
     <span className={cn("inline-grid size-5 shrink-0 place-items-center rounded-md", tone, className)} title={text}>
       <Icon className="size-3.5" strokeWidth={2} aria-hidden />
       <span className="sr-only">{text}</span>
+    </span>
+  )
+}
+
+/** A small loop on a task that comes back when done (Project extras). */
+export function RepeatMark({ task, className }: { task: Pick<WorkTask, "repeat">; className?: string }) {
+  const t = useTranslations()
+  if (!task.repeat) return null
+  const label = t(`pxRepeats_${task.repeat.every}`, { count: task.repeat.interval })
+  return (
+    <span role="img" aria-label={label} title={label} className={cn("inline-flex shrink-0 text-muted-foreground", className)}>
+      <RotateCw className="size-3.5" />
     </span>
   )
 }

@@ -15,6 +15,9 @@ import {
   deleteMilestoneApi,
   deleteProjectApi,
   deleteTaskApi,
+  listDeletedTasksApi,
+  purgeTaskApi,
+  restoreTaskApi,
   getProjectApi,
   listMilestonesApi,
   listProjectsApi,
@@ -183,11 +186,34 @@ export function useTaskMutations() {
     mutationFn: (id: string) => deleteTaskApi(workspaceId, id),
     onSuccess: () => {
       toast.success(t("taskDeleted"))
-      refresh("tasks", "task-activity")
+      refresh("tasks", "task-activity", "tasks-deleted")
     },
     onError,
   })
-  return { create, update, move, remove }
+  // the deleted tasks bin (Project extras)
+  const restore = useMutation({
+    mutationFn: (id: string) => restoreTaskApi(workspaceId, id),
+    onSuccess: (task) => {
+      toast.success(t("pxRestored", { name: task.title }))
+      refresh("tasks", "tasks-deleted")
+    },
+    onError,
+  })
+  const purge = useMutation({
+    mutationFn: (id: string) => purgeTaskApi(workspaceId, id),
+    onSuccess: () => {
+      toast.success(t("pxPurged"))
+      refresh("tasks-deleted")
+    },
+    onError,
+  })
+  return { create, update, move, remove, restore, purge }
+}
+
+/** A project's deleted tasks (Project extras). */
+export function useDeletedTasks(projectId: string) {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: ["tasks-deleted", id, projectId], queryFn: () => listDeletedTasksApi(id, projectId) })
 }
 
 export function useMilestoneMutations() {

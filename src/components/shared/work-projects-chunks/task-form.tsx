@@ -49,6 +49,9 @@ const schema = z.object({
   labelIds: z.array(z.string()),
   collaboratorIds: z.array(z.string()),
   cycleId: z.string(),
+  /** "none" or every:interval, e.g. "week:2" (Project extras) */
+  repeat: z.string(),
+  repeatUntil: z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -69,7 +72,17 @@ function toFormValues(task: Partial<WorkTask> | undefined, states: TaskState[]):
     labelIds: task?.labelIds ?? [],
     collaboratorIds: task?.collaboratorIds ?? [],
     cycleId: task?.cycleId ?? NONE,
+    repeat: task?.repeat ? `${task.repeat.every}:${task.repeat.interval}` : NONE,
+    repeatUntil: task?.repeat?.until ?? "",
   }
+}
+
+/** Repeat choices offered in the form (Project extras) */
+const REPEATS = ["day:1", "week:1", "week:2", "month:1", "month:3"] as const
+const repeatOf = (value: string, until: string): WorkTask["repeat"] => {
+  if (value === NONE) return undefined
+  const [every, interval] = value.split(":")
+  return { every: every as "day" | "week" | "month", interval: Number(interval), ...(until ? { until } : {}) }
 }
 
 interface Props {
@@ -106,7 +119,7 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
 
   useImperativeHandle(ref, () => ({
     submit: () =>
-      form.handleSubmit((v) =>
+      form.handleSubmit(({ repeat, repeatUntil, ...v }) =>
         onValid({
           ...v,
           status: (states.find((s) => s.id === v.stateId) ?? states[0]!).group,
@@ -118,6 +131,7 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
           cycleId: v.cycleId === NONE ? undefined : v.cycleId,
           startDate: v.startDate || undefined,
           dueDate: v.dueDate || undefined,
+          repeat: repeatOf(repeat, repeatUntil),
         })
       )(),
   }))
@@ -192,6 +206,17 @@ export const TaskForm = forwardRef<TaskFormHandle, Props>(function TaskForm(
           <TextField control={form.control} name="dueDate" label={t("dueDate")} type="date" />
           <NumberField control={form.control} name="estimatedHours" label={t("estimateHours")} />
         </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <SelectField
+            control={form.control}
+            name="repeat"
+            label={t("pxRepeat")}
+            options={[{ value: NONE, label: t("pxRepeatNever") }, ...REPEATS.map((r) => ({ value: r, label: t(`pxRepeat_${r.replace(":", "_")}`) }))]}
+          />
+          {form.watch("repeat") !== NONE && <TextField control={form.control} name="repeatUntil" label={t("pxRepeatUntil")} type="date" />}
+        </div>
+        {form.watch("repeat") !== NONE && <p className="-mt-2 text-xs text-muted-foreground">{t("pxRepeatHint")}</p>}
 
         {projectTasks.filter((x) => x.id !== task?.id).length > 0 && (
           <div className="flex flex-col gap-2">
