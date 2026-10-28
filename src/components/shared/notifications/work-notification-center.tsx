@@ -11,6 +11,7 @@ import { useSatisfaction } from "@/hooks/workforce/use-satisfaction"
 import { useClientInvoices, useTimeEntries } from "@/hooks/workforce/use-work-billing"
 import { useLeave } from "@/hooks/workforce/use-leave"
 import { useClientNotes, useFollowUps } from "@/hooks/workforce/use-crm"
+import { useMyTaskMentions } from "@/hooks/workforce/use-task-collab"
 import { useClientRequests } from "@/hooks/workforce/use-client-requests"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { useDocuments } from "@/hooks/workforce/use-documents"
@@ -57,6 +58,7 @@ function WorkInbox() {
   const { data: requests = [] } = useClientRequests()
   const { data: clientNotes = [] } = useClientNotes()
   const { data: clients = [] } = useClients()
+  const { data: taskMentions = [] } = useMyTaskMentions(me?.id)
 
   const isAdmin = can(authedUser, P.ROLES_UPDATE)
   const rights = { approveTime: can(authedUser, P.TIME_APPROVE), invoices: can(authedUser, P.INVOICES_READ), hr: can(authedUser, P.EMPLOYEES_UPDATE), projects: can(authedUser, P.PROJECTS_UPDATE) }
@@ -80,6 +82,7 @@ function WorkInbox() {
         followUps,
         requests,
         clientNotes,
+        taskMentions,
         clients,
         today: todayIso(),
       }).map((i) => ({
@@ -92,7 +95,7 @@ function WorkInbox() {
         href: i.href,
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- rights is rebuilt each render; rightsKey carries its value
-    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, feedback, projects, followUps, requests, clientNotes, clients, t]
+    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, feedback, projects, followUps, requests, clientNotes, taskMentions, clients, t]
   )
   const labels: NotificationLabels = {
     title: t("notifications"),

@@ -2,6 +2,13 @@
 
 _Follows `docs/AUDIT_PRE_BACKEND_2026-10.md` and `docs/API_AUDIT_2026-10.md`. Written before updating the API contract and starting the backend._
 
+## Status
+
+| Finding | Status |
+|---|---|
+| G-01 project delete, G-02 landing page, G-03 old links, G-04 task mentions, G-05 company export | ✅ Fixed in A1 |
+| Everything else | ⏳ Planned in `docs/PLAN_FIXES_API_SECURITY_2026-10.md` |
+
 ## 1. Summary
 
 The front end is in good shape. Types are strict, lint and tests are clean, the business rules sit in tested functions, and the browser-side security (CSP, headers, redirects, exports) is solid. All the remaining security work belongs to the server, as planned.

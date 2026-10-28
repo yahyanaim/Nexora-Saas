@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
 import { toast } from "@/lib/utils/toast"
@@ -11,6 +12,7 @@ import {
   listTaskActivityApi,
   listTaskAttachmentsApi,
   listTaskCommentsApi,
+  listMentionsForApi,
   removeTaskAttachmentApi,
 } from "@/lib/api/task-collab-api"
 import { setHealthOverrideApi } from "@/lib/api/work-projects-api"
@@ -21,6 +23,14 @@ import { translateError } from "@/lib/errors/translate-error"
 export function useTaskComments(taskId: string) {
   const { id } = useCurrentWorkspace()
   return useQuery({ queryKey: ["task-comments", id, taskId], queryFn: () => listTaskCommentsApi(id, taskId) })
+}
+
+/** Task comments of the last 14 days that @mention the person (for the bell). */
+export function useMyTaskMentions(employeeId: string | undefined) {
+  const { id } = useCurrentWorkspace()
+  // fixed for the life of the bell, so the query key stays the same between renders
+  const [since] = useState(() => new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10))
+  return useQuery({ queryKey: ["task-comments", id, "mentions", employeeId, since], queryFn: () => listMentionsForApi(id, employeeId!, since), enabled: !!employeeId })
 }
 
 export function useTaskActivity(taskId: string) {
@@ -57,7 +67,8 @@ export function useTaskCommentMutations(taskId: string) {
   const { id: workspaceId } = useCurrentWorkspace()
   const queryClient = useQueryClient()
   const onError = useOnError()
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ["task-comments", workspaceId, taskId] })
+  // also refreshes the bell's mentions, which read every task's comments
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ["task-comments", workspaceId] })
   return {
     add: useMutation({
       mutationFn: ({ body, people }: { body: string; people: Pick<Employee, "id" | "name">[] }) =>

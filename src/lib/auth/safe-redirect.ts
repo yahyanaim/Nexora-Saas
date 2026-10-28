@@ -35,8 +35,8 @@ export function getSafeNextPath(raw: string | null | undefined): string | null {
   }
 }
 
-/** Resolves where to send the user after a successful login. */
-export function resolveAfterLoginPath(search: string | null | undefined): string {
+/** Resolves where to send the user after a successful login: the safe `?next=`, else their home page. */
+export function resolveAfterLoginPath(search: string | null | undefined, home: string = DEFAULT_AFTER_LOGIN): string {
   const next = new URLSearchParams(search ?? "").get("next")
-  return getSafeNextPath(next) ?? DEFAULT_AFTER_LOGIN
+  return getSafeNextPath(next) ?? home
 }

@@ -376,6 +376,7 @@ export const ERROR_KEYS: Record<string, string> = {
   "Pick the meeting date": "err_meetingDate",
   "This page no longer exists": "err_pageGone",
   "Someone else saved this first. Reload to see their changes": "err_conflict",
+  "This project has hours, invoices or other history. Close it instead, so its history stays.": "err_projectHasHistory",
   "A project can have up to 20 statuses": "err_tooManyStates",
   "Each group needs at least one status": "err_stateGroupEmpty",
   "A status name can have up to 40 characters": "err_stateNameLong",

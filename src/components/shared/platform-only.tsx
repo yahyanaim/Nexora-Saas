@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
 import { ShieldUser } from "@/components/ui/carbon/icons"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { homePathFor } from "@/lib/permissions/home"
 import { can } from "@/lib/permissions/can"
 import type { AdminPermissionsPlatform } from "@/types/roles"
 
 /** Shown when a company user opens a page of the Nexora platform console directly. */
 export function PlatformOnly() {
   const t = useTranslations()
+  const { authedUser } = useAuthGuard()
   return (
     <div className="p-4 md:p-6">
       <EmptyState
@@ -21,7 +23,7 @@ export function PlatformOnly() {
         className="bg-card py-16"
         action={
           <Button asChild>
-            <Link href="/dashboard/my-work">{t("backToDashboard")}</Link>
+            <Link href={homePathFor(authedUser)}>{t("backToDashboard")}</Link>
           </Button>
         }
       />
@@ -32,6 +34,7 @@ export function PlatformOnly() {
 /** Shown when someone opens a company page their role does not include. */
 export function NoAccess() {
   const t = useTranslations()
+  const { authedUser } = useAuthGuard()
   return (
     <div className="p-4 md:p-6">
       <EmptyState
@@ -41,7 +44,7 @@ export function NoAccess() {
         className="bg-card py-16"
         action={
           <Button asChild>
-            <Link href="/dashboard/my-work">{t("backToDashboard")}</Link>
+            <Link href={homePathFor(authedUser)}>{t("backToDashboard")}</Link>
           </Button>
         }
       />

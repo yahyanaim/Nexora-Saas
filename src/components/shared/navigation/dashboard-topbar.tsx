@@ -10,6 +10,7 @@ import { ChangeLanguage } from "@/components/shared/header-chunks/change-languag
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 import { loadMyWorkspaces } from "@/store/workspace-store"
+import { homePathFor } from "@/lib/permissions/home"
 import { cn } from "@/lib/utils"
 import { useDashboardNav } from "./use-dashboard-nav"
 import { UserMenu } from "./user-menu"
@@ -65,7 +66,7 @@ export function DashboardTopbar({ onOpenMenu }: { onOpenMenu: () => void }) {
         </button>
 
         <Link
-          href={mode === "console" ? "/dashboard/console" : "/dashboard/overview"}
+          href={mode === "console" ? "/dashboard/console" : homePathFor(authedUser)}
           className={cn(
             navSurface,
             "flex h-12 shrink-0 items-center gap-2.5 py-1.5 pl-1.5 pr-4 lg:h-14 lg:pr-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

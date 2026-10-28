@@ -14,6 +14,7 @@ import {
   createTaskApi,
   deleteMilestoneApi,
   deleteProjectApi,
+  projectHistoryApi,
   deleteTaskApi,
   listDeletedTasksApi,
   purgeTaskApi,
@@ -138,6 +139,12 @@ export function useProjectMutations() {
     onError,
   })
   return { create, update, remove, close, reopen, saveTemplate, createFromTemplate }
+}
+
+/** What stops a project from being deleted (D8); read when the delete dialog opens. */
+export function useProjectHistory(projectId: string, enabled: boolean) {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: ["project-history", id, projectId], queryFn: () => projectHistoryApi(id, projectId), enabled, staleTime: 0 })
 }
 
 export function useProjectTemplates() {

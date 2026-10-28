@@ -24,6 +24,7 @@ import {
   useMilestoneMutations,
   useMilestones,
   useProject,
+  useProjectHistory,
   useProjectMutations,
   useProjects,
   useTaskMutations,
@@ -74,6 +75,7 @@ import { TeamPanel } from "./team-panel"
 import { DeletedTasksDialog, ShortcutsDialog, useProjectShortcuts } from "./project-extras"
 import { ProjectPagesPanel } from "./project-pages"
 import { useDeletedTasks } from "@/hooks/workforce/use-work-projects"
+import { hasProjectHistory } from "@/lib/api/work-projects-api"
 import { isArchived } from "@/lib/workforce/task-repeat"
 import {
   BUDGET_TYPE_LABEL,
@@ -128,6 +130,9 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
 
   const [editingProject, setEditingProject] = useState(false)
   const [deletingProject, setDeletingProject] = useState(false)
+  // Hours, invoices and other history keep a project: it is closed instead of deleted (D8)
+  const { data: history } = useProjectHistory(projectId, deletingProject)
+  const blockedDelete = !!history && hasProjectHistory(history)
   const [taskSheet, setTaskSheet] = useState<{ task?: WorkTask; defaults?: Partial<WorkTask> } | null>(null)
   const [deletingTask, setDeletingTask] = useState<WorkTask | null>(null)
   // ?task= in the address opens that task (links from the bell, copied links)
@@ -694,14 +699,22 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
       <ConfirmAlertDialog
         open={deletingProject}
         onOpenChange={setDeletingProject}
-        title={t("deleteProject")}
-        description={t("deleteProjectConfirmation", { name: project.name })}
-        confirmLabel={t("delete")}
-        destructive
-        isLoading={projectMutations.remove.isPending}
-        onConfirm={() =>
-          projectMutations.remove.mutate(project.id, { onSuccess: () => router.push("/dashboard/projects") })
+        title={blockedDelete ? t("pdBlockedTitle") : t("deleteProject")}
+        description={
+          !history
+            ? t("pdChecking")
+            : blockedDelete
+              ? `${t("pdBlockedHint", { name: project.name })} ${t("pdBlockedCounts", { hours: history.hours, invoices: history.invoices, other: history.quotes + history.expenses + history.bills + history.changeOrders + history.feedback })}`
+              : t("deleteProjectConfirmation", { name: project.name })
         }
+        confirmLabel={blockedDelete ? (canEdit && !project.closedAt ? t("closeProject") : t("close")) : t("delete")}
+        destructive={!blockedDelete}
+        isLoading={!history || projectMutations.remove.isPending}
+        onConfirm={() => {
+          if (!blockedDelete) return projectMutations.remove.mutate(project.id, { onSuccess: () => router.push("/dashboard/projects") })
+          setDeletingProject(false)
+          if (canEdit && !project.closedAt) setClosing(true)
+        }}
       />
     </div>
   )

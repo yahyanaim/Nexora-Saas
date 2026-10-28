@@ -9,9 +9,9 @@ _October 2026. Plan only: nothing here is implemented yet. Based on `docs/AUDIT_
 | **A** | Front-end fixes, in 4 small PRs | A1–A2 about 1–2 days each; A3–A4 smaller | Before the backend starts (A1, A2), then alongside it (A3, A4) |
 | **B** | API contract update (`API_AUDIT_2026-10.md`) | One documentation PR | Right after A1, before any backend code |
 | **C** | Security plan for the backend, by OWASP area | Written into the contract (B) and built with each backend phase | During the backend |
-| **D** | Decisions needed from you | 8 questions | Before B is finished |
+| **D** | Decisions | 8 decisions, made 28 October 2026 | Done |
 
-Order: **A1 → A2 → D (your answers) → B → backend phase 0 with C → A3 / A4**.
+Order: **A1 → A2 → B → backend phase 0 with C → A3 / A4**. A1 is in review; the confirm dialogs' Cancel/Confirm buttons were also translated there (found while building it).
 
 Each PR follows the usual routine: tests, `tsc`, lint, build, browser check with screenshots, docs and README row, then a PR that waits for your "merge it".
 
@@ -45,7 +45,7 @@ Each PR follows the usual routine: tests, `tsc`, lint, build, browser check with
 | A3.1 | **C-01** unused code | Remove the unused exports listed by the scan (old demo-data helpers, unused hooks, utils, types, 2 PDF helpers, unused UI-kit parts). Keep whatever decision D6 keeps. |
 | A3.2 | **C-01** unused texts | A script lists the about 460 unused texts. Remove them from the 9 files after a manual check of the texts built dynamically. |
 | A3.3 | **S-09** dev dependencies | `npm audit fix`, then the full check suite. |
-| A3.4 | **C-04** texts | Move the hard-coded English (auth pages, register messages, developer cards, UI-kit screen-reader labels) into the 9 language files. The password minimum follows decision D5. |
+| A3.4 | **C-04** texts | Move the hard-coded English into the 9 language files: auth pages and their toasts ("Welcome back!", "Continue"), register messages, developer cards, UI-kit screen-reader labels, and the dashboard's 404 and error pages (which should also link to `/dashboard`, the person's home). The password minimum follows decision D5. |
 | A3.5 | **C-06** logging | The 19 direct `console.*` calls go through `logger`. |
 
 ### PR A4: smaller gaps (alongside the backend)
@@ -261,17 +261,17 @@ The **webhooks** (developer page) and the DGI e-invoice calls make the server co
 
 ---
 
-## Part D: decisions needed from you
+## Part D: decisions (made 28 October 2026)
 
-| # | Question | My recommendation |
-|---|---|---|
-| D1 | Same origin (API behind `API_PROXY_TARGET`) or API on its own domain? | Same origin, plus the CSRF token |
-| D2 | Who must use 2FA? | Nexora staff and company owners/admins; optional for others; TOTP |
-| D3 | Session timeouts | Console staff: 15 min idle / 8 h maximum. Company users: 60 min idle / 12 h maximum |
-| D4 | What each plan includes (Starter / Business / Enterprise) | Use the existing plan texts as feature keys (B6) |
-| D5 | Minimum password length | 12 (the app asks for 10 today) |
-| D6 | Keep personal data export / account deletion and notification preferences? | Keep the data rights (law 09-08); notification preferences later |
-| D7 | File size limits per kind | 10 MB documents and receipts, 20 MB client and task files, 2 MB logo and avatar |
-| D8 | A project with history: refuse the delete, or archive it automatically? | Refuse and offer **Close project** (same as employees) |
+You asked for the best choices for Nexora, so these are now the decisions. Parts B and C follow them.
 
-When D1 to D8 are answered, Part B can be finished in one PR and the backend can start with phase 0 (sign-in, workspaces, errors, uploads) together with C1–C3.
+| # | Question | Decision | Why |
+|---|---|---|---|
+| D1 | Where the API lives | **Same origin**: the API sits behind `API_PROXY_TARGET`, cookies are `SameSite=Lax`, plus the `X-XSRF-TOKEN` double-submit and an `Origin` check | No CORS, no third-party-cookie problems in browsers, and two layers against CSRF |
+| D2 | Who must use 2FA | **Required** for Nexora staff, company owners and admins, and accountants (they see the money). **Optional** for everyone else. Method: TOTP app plus 10 recovery codes; passkeys (WebAuthn) later | These roles can move money, export data or enter other companies |
+| D3 | Session timeouts | Nexora console: **15 min** idle, **8 h** maximum. Company users: **30 min** idle (the passcode lock screen shows first if a passcode is set), **12 h** maximum | Short for staff who can reach every company; workable for a full working day in the ERP |
+| D4 | What each plan includes | Feature keys from the existing plan texts. **Starter**: projects, time, approvals, quotes, invoices, portal. **Business** adds: DGI e-invoice, VAT return and journal, suppliers and bills, resource planning, deals and forecast. **Enterprise** adds: several workspaces, single sign-on, audit export | Matches what is already sold on the plans page |
+| D5 | Password length | **12 characters minimum**, any characters, checked against breached passwords, no forced periodic change (NIST 2025) | Current guidance; the app's 10 moves to 12 in A3.4 |
+| D6 | Personal data rights and notification preferences | **Keep** personal data export and account deletion (law 09-08, CNDP). Notification preferences come **later**, with the server notifications | Legal requirement in Morocco |
+| D7 | File size limits | Documents and receipts **10 MB**, client and task files **20 MB**, logo and avatar **2 MB**; total storage per plan | Enough for scans and contracts; blocks abuse |
+| D8 | Deleting a project with history | **Refuse**, and offer **Close project** (same rule as employees) | Hours and invoices must never point at a missing project |

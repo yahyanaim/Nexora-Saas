@@ -53,6 +53,14 @@ export function findMentions(body: string, people: Pick<Employee, "id" | "name">
 
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 
+/** Comments since `since` (yyyy-mm-dd) that @mention the person, newest first: the bell's "mentioned in a task". */
+export async function listMentionsForApi(workspaceId: string, employeeId: string, since: string): Promise<TaskComment[]> {
+  return comments
+    .list(workspaceId)
+    .filter((c) => c.mentionIds?.includes(employeeId) && c.createdAt.slice(0, 10) >= since)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
 export async function listTaskCommentsApi(workspaceId: string, taskId: string): Promise<TaskComment[]> {
   return comments
     .list(workspaceId)

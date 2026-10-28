@@ -1,7 +1,7 @@
 import { ExpenseStatus, type Expense } from "@/types/work-costs"
 import { TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/work-billing"
 import { LeaveStatus, type LeaveRequest } from "@/types/work-planning"
-import { type WorkProject, type WorkTask, isClosedStatus } from "@/types/work-projects"
+import { type TaskComment, type WorkProject, type WorkTask, isClosedStatus } from "@/types/work-projects"
 import type { SatisfactionResponse } from "@/types/work-feedback"
 import type { ClientFollowUp, ClientNote } from "@/types/work-crm"
 import { lowRatingsFor } from "./satisfaction"
@@ -48,6 +48,8 @@ export interface InboxInput {
   /** Client notes, for @mentions of the person in the last 14 days (CRM step 10) */
   clientNotes?: ClientNote[]
   clients?: Client[]
+  /** Task comments that @mention the person lately (newest first) */
+  taskMentions?: TaskComment[]
   /** Client requests waiting for an answer, for people who manage projects (P3) */
   requests?: ClientRequest[]
   today: string
@@ -125,6 +127,14 @@ export function buildInbox(d: InboxInput): InboxItem[] {
       const client = d.clients?.find((c) => c.id === n.clientId)
       if (!client) continue
       items.push({ id: `mention:${n.id}`, category: "team", title: "inboxMention", message: "inboxMentionMessage", values: { name: n.authorId ? name(n.authorId) : "—", client: client.name }, href: `/dashboard/clients/${client.id}?tab=activity` })
+    }
+    // someone named the person in a task comment lately; one item per comment
+    const myName = d.employees.find((e) => e.id === me)?.name
+    for (const c of d.taskMentions ?? []) {
+      if (!c.mentionIds?.includes(me) || c.authorName === myName || c.createdAt.slice(0, 10) < since) continue
+      const task = d.tasks.find((x) => x.id === c.taskId)
+      if (!task || task.deletedAt) continue
+      items.push({ id: `task-mention:${c.id}`, category: "team", title: "inboxTaskMention", message: "inboxTaskMentionMessage", values: { name: c.authorName, task: task.title }, href: `/dashboard/projects/${task.projectId}?task=${task.id}` })
     }
   }
   if (d.rights.projects) {
