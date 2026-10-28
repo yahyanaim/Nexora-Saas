@@ -405,3 +405,24 @@ export interface CycleSummary {
 }
 
 export type CycleInput = Pick<Cycle, "projectId" | "name" | "startDate" | "endDate"> & Partial<Pick<Cycle, "goal">>
+
+/** A page of a project's wiki, or the notes of a meeting (P5) */
+export interface ProjectPage {
+  id: string
+  workspaceId: string
+  projectId: string
+  kind: "page" | "meeting"
+  title: string
+  /** Same light formatting as task descriptions; "- [ ] …" lines are action items */
+  body: string
+  /** yyyy-mm-dd, for meeting notes */
+  meetingDate?: string
+  /** Employees at the meeting */
+  attendeeIds?: string[]
+  pinned?: boolean
+  updatedBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type ProjectPageInput = Pick<ProjectPage, "projectId" | "kind" | "title" | "body"> & Partial<Pick<ProjectPage, "meetingDate" | "attendeeIds" | "pinned">>
