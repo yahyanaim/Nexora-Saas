@@ -72,6 +72,7 @@ import { useChangeOrders } from "@/hooks/workforce/use-change-orders"
 import { revisedBudget, withChanges } from "@/lib/workforce/phase-budgets"
 import { TeamPanel } from "./team-panel"
 import { DeletedTasksDialog, ShortcutsDialog, useProjectShortcuts } from "./project-extras"
+import { ProjectPagesPanel } from "./project-pages"
 import { useDeletedTasks } from "@/hooks/workforce/use-work-projects"
 import { isArchived } from "@/lib/workforce/task-repeat"
 import {
@@ -521,6 +522,11 @@ export default function ProjectDetailPage({ projectId }: { projectId: string }) 
               {project.clientId && <FeedbackSection projectId={project.id} />}
               </div>
             ),
+          },
+          {
+            id: "pages",
+            label: t("pgTab"),
+            content: <ProjectPagesPanel projectId={project.id} projectCode={project.code} team={team} canEdit={canEdit} resolveKey={resolveKey} />,
           },
           {
             id: "gantt",
