@@ -11,7 +11,7 @@ _October 2026. Plan only: nothing here is implemented yet. Based on `docs/AUDIT_
 | **C** | Security plan for the backend, by OWASP area | Written into the contract (B) and built with each backend phase | During the backend |
 | **D** | Decisions | 8 decisions, made 28 October 2026 | Done |
 
-Order: **A1 ✅ → B ✅ → A2 → backend phase 0 with C → A3 / A4**. B was moved before A2 (29 October) because it is what the backend team needs; A2 only touches the front end. A1 also translated the confirm dialogs' Cancel/Confirm buttons (found while building it).
+Order: **A1 ✅ → B ✅ → A2 → cahier des charges v2.1 (from `docs/CDC_BACKEND_GAP_REPORT_2026-10.md`) → backend phase 0 with C → A3 / A4**. B was moved before A2 (29 October) because it is what the backend team needs; A2 only touches the front end. A1 also translated the confirm dialogs' Cancel/Confirm buttons (found while building it).
 
 Each PR follows the usual routine: tests, `tsc`, lint, build, browser check with screenshots, docs and README row, then a PR that waits for your "merge it".
 
