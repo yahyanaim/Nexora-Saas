@@ -2,67 +2,99 @@
 
 _This is the only audit file. Each new audit, code review or report **replaces** this file, and its screenshots replace the ones in `docs/screenshots/`. Older versions stay in the git history._
 
-**Last update:** 29 October 2026, after the audit fixes A1–A4. **Scope:** the whole front end on `main` (security in the browser, connections between features, code quality, accessibility, tests). The API contract the server follows is `docs/API_CONTRACT.md`.
+**Last update:** 29 October 2026, on `main` at `9e5ce94` (after audit fixes A1–A4, the docs clean-up and the backend cahier des charges v2.1). **Scope:** front end, API layer and contract, security. The server is specified in `docs/CAHIER_DES_CHARGES.md` of `yahyanaim/Nexora-Backend`; its code does not exist yet.
 
 ## 1. Summary
 
-The October full audit found **2 high, 9 medium and 12 low** items. All the front-end items are now fixed (A1–A4). What is left belongs to the server and is written into the API contract and the backend cahier des charges.
+The front end is finished and clean: every finding of the October full audit that belongs to the front end is fixed. What is left is (a) the server, which is specified but not built, and (b) 12 small front-end items that only make sense once the server exists.
 
 | Area | Grade | In one line |
 |---|---|---|
-| Browser security | 🟢 Good | Nonce CSP, strict headers, safe redirects, http/https-only web addresses, protected exports, idle lock. |
-| Server security (to build) | 🟡 Specified | CSRF, files, 2FA, sessions, plan limits: decided (D1–D8) and in the API contract; built with the backend. |
-| Connections between features | 🟢 Good | Project delete, landing page, old links, mentions, export, search, bell and merge are all connected. |
-| Code quality | 🟢 Good | Lint clean with 0 warnings, no unused texts, unused code and packages removed, logging through `logger`. |
-| Accessibility | 🟢 Good | axe: 0 critical or serious findings on 23 console pages and 21 company pages, in CI. |
-| Tests | 🟢 Good | 143 files, 869 tests; money screens (invoice, payment, credit note) and PDF snapshots now covered. |
+| Code quality | 🟢 Good | Types, lint and translations clean; no `any` or `@ts-ignore` in app code; no unused text |
+| Tests | 🟢 Good | 143 files, 869 tests, all passing; money screens and PDFs covered |
+| Accessibility | 🟢 Good | axe: no critical or serious finding on 23 console and 21 company pages, in CI |
+| Browser security | 🟢 Good | Nonce CSP, strict headers, safe redirects, http/https-only addresses, idle lock, real 404 |
+| API layer and contract | 🟢 Ready | 56 modules, 362 functions, all in `docs/API_CONTRACT.md`, kept in step by a test |
+| Server security | 🟡 Specified, not built | CSRF, files, second factor, sessions, plan limits, isolation: decided and written, waiting for the server |
+| Dependencies | 🟢 Good | Production: 0 vulnerabilities. Development tools: 3 low |
 
-## 2. Status of every finding
+## 2. Checks run today
 
-| # | Level | Finding | Status |
-|---|---|---|---|
-| G-01 | High | A project with hours and invoices could be deleted | ✅ A1: refused with `err_projectHasHistory`, "Close project" offered |
-| G-02 | High | Employees landed on "No access" after signing in | ✅ A1: each role goes to the first page it can open |
-| G-03 | Medium | Old `/billing` links went to a Nexora-only page | ✅ A1 |
-| G-04 | Medium | Task @mentions never reached the bell | ✅ A1 |
-| G-05 | Medium | Company export missed 6 collections | ✅ A1, with a guard test |
-| G-06 | Medium | Plan limits not enforced | ⏳ Server: `403 upgrade_required`, `409 err_seatsFull` (decision D4, contract) |
-| G-07 | Low | Ctrl+K did not cover every record | ✅ A4: 9 more kinds |
-| G-08 | Low | Some events never reached the bell | ✅ A4: stale deals, expiring quotes, bills due, meeting action items |
-| G-09 | Low | Functions with no screen | ✅ A4: delete template, personal data (export and deletion). Notification preferences come with server notifications (D6) |
-| G-10 | Low | Client merge missed bank matches and saved reports | ✅ A4 |
-| S-01 | Medium | Web-address fields accepted any scheme | ✅ A2: http/https only, `err_badUrl` |
-| S-02 | Medium | No CSRF approach | ⏳ Server: same origin, `SameSite=Lax`, `X-XSRF-TOKEN`, `Origin` check (D1) |
-| S-03 | Medium | File uploads had no allow-list | ⏳ Server: one upload contract, type allow-list, size limits (D7), scan, signed links |
-| S-04 | Medium | Sensitive actions missing from the audit log | ✅ A2: 10 new audit entries |
-| S-05 | Low | No idle lock or sign-out | ✅ A2: 30 min (company), 15 min (console) (D3) |
-| S-06 | Low | Two 2FA mechanisms, the real one not wired | ⏳ Server: TOTP + recovery codes, required for staff, owners, admins, accountants (D2) |
-| S-07 | Low | Revoked sessions not pushed to the browser | ⏳ Server: socket event; `useAuthSocket` kept for it |
-| S-08 | Info | Demo mode must stay off in production | ✅ Blocked in production builds by a CI check |
-| S-09 | Info | Dev dependency vulnerabilities | ✅ A3: `npm audit fix` |
-| C-01 | Medium | Unused code and texts | ✅ A3: 47 files, ~85 exports, 3 packages, 454 texts removed |
-| C-02 | Low | Large files | ⏳ Split while wiring each module to the server |
-| C-03 | Low | Settings labels not linked; CI axe only on console | ✅ A2 |
-| C-04 | Low | Hard-coded English | ✅ A3, plus A4: form messages in the app's own words (no "string" in Arabic) |
-| C-05 | Low | Few screen and PDF tests | ✅ A4 |
-| C-06 | Low | Direct `console.*` calls | ✅ A3 |
-| — | — | Unknown address answered 200 | ✅ A4: real 404 in the address's language |
-| H2, H3 | — | Who acts comes from the session; sensitive fields hidden by role | ⏳ Server by design |
-
-## 3. What the server must still do
-
-S-02, S-03, S-06, S-07, G-06, H2, H3, and C-02 while wiring. Each one has its decision (D1–D8), its contract section in `docs/API_CONTRACT.md`, and its requirement in the backend cahier des charges v2.1 (`docs/CAHIER_DES_CHARGES.md` in `yahyanaim/Nexora-Backend`, Annex C maps every finding).
-
-## 4. Screenshots
-
-The latest screenshots are in `docs/screenshots/` (from A4):
-
-| File | Shows |
+| Check | Result |
 |---|---|
-| `1-404-ar.jpg` | Unknown address: real 404, in Arabic |
-| `2-search-contact.jpg`, `3-search-pages.jpg` | Ctrl+K finds contacts and project pages |
-| `4-pages-tab.jpg` | A page result opens the project's Pages tab |
-| `5-template-delete.jpg` | Deleting a project template |
-| `6-personal-data.jpg` | Profile: your personal data, deletion scheduled |
-| `7-zod-ar.jpg` | Form messages in Arabic, in the app's wording |
-| `8-bell-action-item.jpg` | Bell: a meeting action item that mentions you |
+| `tsc --noEmit` | ✅ No error |
+| `eslint` (0 warnings allowed) | ✅ Clean |
+| Translations in 9 languages | ✅ In sync; all 5,587 texts used |
+| Vitest | ✅ 143 files, 869 tests passing |
+| `npm audit --omit=dev` | ✅ 0 vulnerabilities |
+| `npm audit` (with dev tools) | ⚠️ 3 low: `deepmerge` inside the `shadcn` command-line tool (development only, never shipped) |
+| CI on the last pull request | ✅ Build, Playwright, axe, demo-mode guard, dependency audit, type and unit checks |
+| Code scan | `any` in app code: 0 · `@ts-ignore`: 0 (4 `@ts-expect-error`, all in tests) · `dangerouslySetInnerHTML`: 1 (sanitized chart CSS) · lint suppressions: 21, each with a reason |
+
+## 3. Status of every finding of the October full audit
+
+| # | Finding | Status |
+|---|---|---|
+| G-01 | Project with history could be deleted | ✅ Fixed (A1) |
+| G-02 | Employees landed on "No access" | ✅ Fixed (A1) |
+| G-03 | Old `/billing` links | ✅ Fixed (A1) |
+| G-04 | Task mentions never reached the bell | ✅ Fixed (A1) |
+| G-05 | Company export missed 6 collections | ✅ Fixed (A1) |
+| G-06 | Plan limits not enforced | ⏳ Server (WSP-09, WSP-10) |
+| G-07 | Search did not cover everything | ✅ Fixed (A4) |
+| G-08 | Events missing from the bell | ✅ Fixed (A4) |
+| G-09 | Functions with no screen | ✅ Fixed (A4); notification preferences wait for the server (NTF-08) |
+| G-10 | Merge missed bank matches and reports | ✅ Fixed (A4) |
+| S-01 | Any web-address scheme accepted | ✅ Fixed (A2) |
+| S-02 | No CSRF approach | ⏳ Server (SCR-16) + front-end item F11 |
+| S-03 | Uploads without allow-list | ⏳ Server (DOC-02, DOC-03, SCR-17) |
+| S-04 | Sensitive actions not audited | ✅ Fixed (A2) |
+| S-05 | No idle lock | ✅ Fixed (A2) |
+| S-06 | Second factor not really wired | ⏳ Server (IAM-05) |
+| S-07 | Revoked session not pushed to the browser | ⏳ Server (IAM-19) |
+| S-08 | Demo mode must stay off in production | ✅ Blocked by a CI check |
+| S-09 | Dev dependency vulnerabilities | ✅ Fixed (A3); 3 new low ones since, see §4 |
+| C-01 | Unused code and texts | ✅ Fixed (A3) |
+| C-02 | Large files | ⏳ Split while wiring each module to the server |
+| C-03 | Settings labels; axe only on console | ✅ Fixed (A2) |
+| C-04 | Hard-coded English | ✅ Fixed (A3, A4) |
+| C-05 | Few screen and PDF tests | ✅ Fixed (A4) |
+| C-06 | Direct `console` calls | ✅ Fixed (A3) |
+| H2, H3 | Actor and sensitive fields decided by the server | ⏳ Server (IAM-01, AUZ-07) |
+
+**Front end: 19 of 19 front-end findings fixed. Server: 8 items waiting, all specified.**
+
+## 4. What is still not done
+
+### 4.1 Small things found today
+
+| # | Item | Level | Fix |
+|---|---|---|---|
+| N-1 | 3 low vulnerabilities in `deepmerge`, used only by the `shadcn` command-line tool. `npm audit fix --force` would install an old major version of `shadcn` | Low | Wait for a `shadcn` release that updates it; nothing ships to users |
+| N-2 | The Developer page (API keys, webhooks) still shows in production, although decision B9 keeps keys and webhooks out of version 1 | Low | Front-end item F9: hide it in production builds |
+| N-3 | Six files are over 600 lines (`work-billing-api.ts` 808, `platform-billing-api.ts` 772, `project-detail-page.tsx` 723, `settings-page.tsx` 666, `client-form.tsx` 634, `use-dashboard-nav.tsx` 619) | Low | Split each one when its module is wired to the server (C-02) |
+
+### 4.2 Front-end items the server needs (cahier des charges §21.4)
+
+| # | Item | Before phase |
+|---|---|---|
+| F1 | Quotes and invoices follow the approval rule ("pending approval" state) | B1d |
+| F2 | "Bill" as an approval subject in Settings | B1d |
+| F3 | Step-up screen (fresh second factor) before sensitive actions | B1b |
+| F4 | `Idempotency-Key` header on money and number commands | B1d |
+| F5 | Send the record version; reload on conflict | B1c |
+| F6 | Portal "send me a sign-in link" | B1e |
+| F7 | "My devices" list; administrator signs a member out | B1b |
+| F8 | Transfer ownership; clear message for the last owner | B1b |
+| F9 | Hide the Developer page in production | B1a |
+| F10 | Add the 16 missing error keys in 9 languages | B1a |
+| F11 | Send the `X-XSRF-TOKEN` header | B1b |
+| F12 | The bell reads one notice feed | B1e |
+
+### 4.3 The server
+
+Nothing of the server is built yet. It is specified in the cahier des charges v2.1 (337 requirements: 268 Must, 61 Should, 7 Could, 1 Won't) and planned in 8 phases, 27 weeks (about 34 with contingency). The open security items above (S-02, S-03, S-06, S-07, G-06, H2, H3) are built in phases B1a to B1e. Eight open decisions (OD-1 to OD-8: invoice cancellation, employee data retention, hosting region, e-mail provider, malware scanner, managed database, default approval rule, support write access) need an answer before the phases that use them, and the items "to confirm" with the accountant and counsel need written answers before the first paying company.
+
+## 5. Screenshots
+
+The latest screenshots are in `docs/screenshots/` (from A4): real 404 in Arabic, search, project pages tab, template delete, personal data, form messages in Arabic, bell action item.
