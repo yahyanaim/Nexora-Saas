@@ -7,13 +7,13 @@ This document lists **every API the front end needs** so the backend can be conn
 - The database model.
 - External services: payment provider, DGI e-invoicing, e-mail, file storage provider, SMS.
 
-Where the front end touches one of these, this document only names the endpoint the front end calls. The **security rules that change what an endpoint accepts or answers** (CSRF, sessions, 2FA, files, limits, audit) are part of the contract: see §2 and §12. The full security plan is Part C of `docs/PLAN_FIXES_API_SECURITY_2026-10.md`.
+Where the front end touches one of these, this document only names the endpoint the front end calls. The **security rules that change what an endpoint accepts or answers** (CSRF, sessions, 2FA, files, limits, audit) are part of the contract: see §2 and §12. The full security plan is §18.4 of the backend cahier des charges (`docs/CAHIER_DES_CHARGES.md` in `yahyanaim/Nexora-Backend`).
 
 ### Update of 29 October 2026 (contract v2)
 
 The first version (PR #121) was written before CRM 8–10, Project extras and P5. This update adds:
 - everything built since then: §5.2 (sales stages, client history, the deleted-clients bin, merge, client files, note mentions), §5.3 (repeating tasks, the task bin, archive, project pages), §5.8 (shared list views);
-- the audit findings (`docs/AUDIT_FULL_2026-10.md`) and decisions D1–D8 of the plan: §2 (CSRF, cookies, limits, request id, web addresses, deleted-items bins), §4.1 (two-step sign-in, sessions, passwords), §4.4 (plans and seats), §5.6 (notification events, audit events), §9.3 (file uploads), §12 (security rules);
+- the audit findings (`docs/AUDIT.md`) and decisions D1–D8 of the plan: §2 (CSRF, cookies, limits, request id, web addresses, deleted-items bins), §4.1 (two-step sign-in, sessions, passwords), §4.4 (plans and seats), §5.6 (notification events, audit events), §9.3 (file uploads), §12 (security rules);
 - 11 new error codes, already in the catalog with their 9 translations;
 - Appendix B: the exported helpers that need no endpoint, so every function in `src/lib/api` is accounted for.
 
@@ -833,7 +833,7 @@ Each phase is useful on its own and can go live module by module, because the de
 
 ## 12. Security rules on the API
 
-Short version of Part C of `docs/PLAN_FIXES_API_SECURITY_2026-10.md`: the rules that change what endpoints accept or answer.
+Short version of §18.4 of the backend cahier des charges (`yahyanaim/Nexora-Backend`): the rules that change what endpoints accept or answer.
 
 | Area | Rule |
 |---|---|

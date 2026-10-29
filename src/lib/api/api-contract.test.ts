@@ -3,10 +3,10 @@ import { readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
 
 const dir = path.join(process.cwd(), "src/lib/api")
-const contract = readFileSync(path.join(process.cwd(), "docs/API_AUDIT_2026-10.md"), "utf8")
+const contract = readFileSync(path.join(process.cwd(), "docs/API_CONTRACT.md"), "utf8")
 const named = (name: string) => new RegExp(`\\b${name}\\b`).test(contract)
 
-describe("API contract (docs/API_AUDIT_2026-10.md) stays in step with the code", () => {
+describe("API contract (docs/API_CONTRACT.md) stays in step with the code", () => {
   it("names every exported API function, as an endpoint or in Appendix B", () => {
     const missing = readdirSync(dir)
       .filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"))
