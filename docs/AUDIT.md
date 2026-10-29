@@ -2,11 +2,11 @@
 
 _This is the only audit file. Each new audit, code review or report **replaces** this file, and its screenshots replace the ones in `docs/screenshots/`. Older versions stay in the git history._
 
-**Last update:** 29 October 2026, on `main` at `9e5ce94` (after audit fixes A1–A4, the docs clean-up and the backend cahier des charges v2.1). **Scope:** front end, API layer and contract, security. The server is specified in `docs/CAHIER_DES_CHARGES.md` of `yahyanaim/Nexora-Backend`; its code does not exist yet.
+**Last update:** 29 October 2026, after audit fixes A1–A4, the backend cahier des charges v2.1, server prep F9–F10 and the first server step (B1a step 1). **Scope:** front end, API layer and contract, security. The server is specified in `docs/CAHIER_DES_CHARGES.md` of `yahyanaim/Nexora-Backend`; its first step (repository, shared rules, skeleton, CI) is built.
 
 ## 1. Summary
 
-The front end is finished and clean: every finding of the October full audit that belongs to the front end is fixed. What is left is (a) the server, which is specified but not built, and (b) 12 small front-end items that only make sense once the server exists.
+The front end is finished and clean: every finding of the October full audit that belongs to the front end is fixed. What is left is (a) the server, which is specified and has just started (B1a step 1 of 4), and (b) 10 small front-end items that only make sense once the server exists.
 
 | Area | Grade | In one line |
 |---|---|---|
@@ -15,7 +15,7 @@ The front end is finished and clean: every finding of the October full audit tha
 | Accessibility | 🟢 Good | axe: no critical or serious finding on 23 console and 21 company pages, in CI |
 | Browser security | 🟢 Good | Nonce CSP, strict headers, safe redirects, http/https-only addresses, idle lock, real 404 |
 | API layer and contract | 🟢 Ready | 56 modules, 362 functions, all in `docs/API_CONTRACT.md`, kept in step by a test |
-| Server security | 🟡 Specified, not built | CSRF, files, second factor, sessions, plan limits, isolation: decided and written, waiting for the server |
+| Server security | 🟡 Specified, being built | CSRF, files, second factor, sessions, plan limits, isolation: decided and written, waiting for the server |
 | Dependencies | 🟢 Good | Production: 0 vulnerabilities. Development tools: 3 low |
 
 ## 2. Checks run today
@@ -71,7 +71,7 @@ The front end is finished and clean: every finding of the October full audit tha
 | # | Item | Level | Fix |
 |---|---|---|---|
 | N-1 | 3 low vulnerabilities in `deepmerge`, used only by the `shadcn` command-line tool. `npm audit fix --force` would install an old major version of `shadcn` | Low | Wait for a `shadcn` release that updates it; nothing ships to users |
-| N-2 | The Developer page (API keys, webhooks) still shows in production, although decision B9 keeps keys and webhooks out of version 1 | Low | Front-end item F9: hide it in production builds |
+| N-2 | The Developer page (API keys, webhooks) showed in production, although decision B9 keeps keys and webhooks out of version 1 | Low | ✅ Fixed (F9): demo mode only; a real deployment answers 404 |
 | N-3 | Six files are over 600 lines (`work-billing-api.ts` 808, `platform-billing-api.ts` 772, `project-detail-page.tsx` 723, `settings-page.tsx` 666, `client-form.tsx` 634, `use-dashboard-nav.tsx` 619) | Low | Split each one when its module is wired to the server (C-02) |
 
 ### 4.2 Front-end items the server needs (cahier des charges §21.4)
@@ -86,14 +86,14 @@ The front end is finished and clean: every finding of the October full audit tha
 | F6 | Portal "send me a sign-in link" | B1e |
 | F7 | "My devices" list; administrator signs a member out | B1b |
 | F8 | Transfer ownership; clear message for the last owner | B1b |
-| F9 | Hide the Developer page in production | B1a |
-| F10 | Add the 16 missing error keys in 9 languages | B1a |
+| F9 | Hide the Developer page in production | ✅ Done |
+| F10 | Add the 16 missing error keys in 9 languages | ✅ Done (19 keys with the 3 HTTP ones) |
 | F11 | Send the `X-XSRF-TOKEN` header | B1b |
 | F12 | The bell reads one notice feed | B1e |
 
 ### 4.3 The server
 
-Nothing of the server is built yet. It is specified in the cahier des charges v2.1 (337 requirements: 268 Must, 61 Should, 7 Could, 1 Won't) and planned in 8 phases, 27 weeks (about 34 with contingency). The open security items above (S-02, S-03, S-06, S-07, G-06, H2, H3) are built in phases B1a to B1e. Eight open decisions (OD-1 to OD-8: invoice cancellation, employee data retention, hosting region, e-mail provider, malware scanner, managed database, default approval rule, support write access) need an answer before the phases that use them, and the items "to confirm" with the accountant and counsel need written answers before the first paying company.
+Built: phase B1a step 1 — the server repository, `packages/core` generated from this repository's rules (with a CI check that they stay identical), the server skeleton (configuration that refuses weak production secrets, health checks, errors as catalogue codes) and CI. The rest is specified in the cahier des charges v2.1 (337 requirements: 268 Must, 61 Should, 7 Could, 1 Won't) and planned in 8 phases, 27 weeks (about 34 with contingency). The open security items above (S-02, S-03, S-06, S-07, G-06, H2, H3) are built in phases B1a to B1e. Eight open decisions (OD-1 to OD-8: invoice cancellation, employee data retention, hosting region, e-mail provider, malware scanner, managed database, default approval rule, support write access) need an answer before the phases that use them, and the items "to confirm" with the accountant and counsel need written answers before the first paying company.
 
 ## 5. Screenshots
 

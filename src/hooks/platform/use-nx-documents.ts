@@ -5,7 +5,8 @@ import { toast } from "@/lib/utils/toast"
 import { listCreditNotesApi, listInvoicesApi, listPaymentsApi } from "@/lib/api/platform-billing-api"
 import { listCustomersApi } from "@/lib/api/platform-customers-api"
 import { sellerSnapshot } from "@/lib/api/platform-config-api"
-import { downloadText, nxUblXml } from "@/lib/platform/nx-ubl"
+import { nxUblXml } from "@/lib/platform/nx-ubl"
+import { downloadText } from "@/lib/utils/download"
 import type { NxCreditNote, NxInvoice, NxProForma } from "@/types/platform-billing"
 
 /**

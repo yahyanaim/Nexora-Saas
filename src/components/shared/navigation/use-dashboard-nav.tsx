@@ -81,6 +81,7 @@ import { can, isPlatformOperator } from "@/lib/permissions/can"
 import { isPlatformPath } from "@/lib/permissions/platform"
 import { ROUTE_PERMISSIONS } from "@/lib/permissions/routes"
 import { isUnderPath } from "@/lib/auth/safe-redirect"
+import { isDemoMode } from "@/lib/auth/demo-mode"
 
 export interface NavItem {
   title: string
@@ -369,12 +370,10 @@ export function useDashboardNav() {
             icon: Files,
             descriptionKey: "pageDescFiles",
           },
-          {
-            title: t("developer"),
-            url: "/dashboard/developer",
-            icon: Terminal,
-            descriptionKey: "pageDescDeveloper",
-          },
+          // API keys and webhooks come with the public API: demo only (decision B9)
+          ...(isDemoMode()
+            ? [{ title: t("developer"), url: "/dashboard/developer", icon: Terminal, descriptionKey: "pageDescDeveloper" }]
+            : []),
         ],
       },
       {

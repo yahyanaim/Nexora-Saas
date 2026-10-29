@@ -15,7 +15,8 @@ import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { cancelAccountDeletionApi, requestAccountDeletionApi, requestDataExportApi } from "@/lib/api/gdpr-apis"
 import { isDemoMode } from "@/lib/auth/demo-mode"
 import { translateError } from "@/lib/errors/translate-error"
-import { buildPersonalExport, downloadJson } from "@/lib/workforce/personal-data"
+import { buildPersonalExport } from "@/lib/workforce/personal-data"
+import { downloadJson } from "@/lib/utils/download"
 
 const DELETION_KEY = "nexora-account-deletion"
 

@@ -18,7 +18,7 @@ import {
   updateRetentionApi,
 } from "@/lib/api/platform-data-api"
 import type { ConsoleActor } from "@/lib/api/platform-console-api"
-import { downloadText } from "@/lib/platform/nx-ubl"
+import { downloadText } from "@/lib/utils/download"
 import { useConsoleActor } from "./use-platform-console"
 
 const K = ["platform", "data"]

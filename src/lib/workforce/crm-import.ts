@@ -1,6 +1,6 @@
 import { parseAmount, parseDate } from "./bank-import"
 import { cleanId } from "./tax-ids"
-import { excelSerialToIso } from "@/lib/utils/xlsx-read"
+import { excelSerialToIso } from "@/lib/utils/excel-dates"
 import { isWebUrl } from "@/lib/utils/url"
 import { ClientStatus, ContactRole, LeadSource, type Client, type Employee } from "@/types/workforce"
 import { DealStage, type Deal, type DealStageId, type PipelineSettings } from "@/types/work-sales"

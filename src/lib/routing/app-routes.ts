@@ -1,3 +1,5 @@
+import { isDemoMode } from "@/lib/auth/demo-mode"
+
 /**
  * Every page of the app, as its address after the language (`/en`, `/ar`…).
  * The proxy answers 404 for anything else before the page starts streaming,
@@ -83,7 +85,20 @@ export const APP_ROUTES = [
   "/subscriptions",
 ] as const
 
-const PATTERNS = APP_ROUTES.map((route) => new RegExp(`^${route.replace(/\[[^\]/]+\]/g, "[^/]+")}/?$`))
+/**
+ * Pages that exist only in demo mode. The Developer page (API keys and webhooks)
+ * belongs to the public-API phase, so a real deployment answers 404 for it
+ * (backend cahier des charges, decision B9).
+ */
+export const DEMO_ONLY_ROUTES: readonly string[] = ["/dashboard/developer"]
 
-/** True when the address (without its language) is one of the app's pages. */
-export const isKnownRoute = (path: string) => PATTERNS.some((pattern) => pattern.test(path || "/"))
+const toPattern = (route: string) => new RegExp(`^${route.replace(/\[[^\]/]+\]/g, "[^/]+")}/?$`)
+const PATTERNS = APP_ROUTES.map(toPattern)
+const DEMO_ONLY = DEMO_ONLY_ROUTES.map(toPattern)
+
+/** True when the address (without its language) is one of the app's pages; demo-only pages count only in demo mode. */
+export const isKnownRoute = (path: string, demo = isDemoMode()) => {
+  const p = path || "/"
+  if (!demo && DEMO_ONLY.some((pattern) => pattern.test(p))) return false
+  return PATTERNS.some((pattern) => pattern.test(p))
+}

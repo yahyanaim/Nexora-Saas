@@ -27,4 +27,10 @@ describe("app routes (real 404 for unknown addresses)", () => {
     expect(isKnownRoute("/dashboard/clients/a/b")).toBe(false)
     expect(isKnownRoute("/nope")).toBe(false)
   })
+
+  it("keeps the Developer page to demo mode (decision B9)", () => {
+    expect(isKnownRoute("/dashboard/developer", true)).toBe(true)
+    expect(isKnownRoute("/dashboard/developer", false)).toBe(false)
+    expect(isKnownRoute("/dashboard/clients", false)).toBe(true)
+  })
 })
