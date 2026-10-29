@@ -17,8 +17,9 @@ function seedPages(workspaceId: string): ProjectPage[] {
   ]
 }
 
-export async function listProjectPagesApi(workspaceId: string, projectId: string): Promise<ProjectPage[]> {
-  return sortPages(pages.list(workspaceId).filter((p) => p.projectId === projectId))
+/** A project's pages, or every page of the workspace when no project is given (Ctrl+K search). */
+export async function listProjectPagesApi(workspaceId: string, projectId?: string): Promise<ProjectPage[]> {
+  return sortPages(pages.list(workspaceId).filter((p) => !projectId || p.projectId === projectId))
 }
 
 function clean(input: ProjectPageInput): ProjectPageInput {

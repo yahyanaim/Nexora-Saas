@@ -7,13 +7,13 @@ import {
 } from "./gdpr-apis"
 
 describe("gdpr-apis", () => {
-  it("creates a data export request with download details", async () => {
+  it("creates a data export request; the demo has no server file (the profile page builds it)", async () => {
     const res = await requestDataExportApi("json")
     expect(res).toBeDefined()
     expect(res.id).toMatch(/^exp_/)
     expect(res.format).toBe("json")
     expect(res.status).toBe("completed")
-    expect(res.downloadUrl).toBeDefined()
+    expect(res.downloadUrl).toBeUndefined()
   })
 
   it("checks status of existing export request", async () => {

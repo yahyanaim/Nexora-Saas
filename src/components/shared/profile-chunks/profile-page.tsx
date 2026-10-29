@@ -9,6 +9,7 @@ import { Check, RotateCcw } from "@/components/ui/carbon/icons"
 import { Spinner } from "@/components/ui/spinner"
 import { AccountHeader } from "./account-header"
 import { Security } from "./security/security"
+import { PersonalData } from "./personal-data"
 
 export function ProfilePage() {
   const {
@@ -47,6 +48,7 @@ export function ProfilePage() {
 
           <ContactInfo errors={errors} register={register} />
           <Security />
+          <PersonalData />
         </div>
       </form>
 

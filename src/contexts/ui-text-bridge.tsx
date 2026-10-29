@@ -10,8 +10,8 @@ export function UiTextBridge({ children }: { children: React.ReactNode }) {
   const t = useTranslations()
   const locale = useLocale()
   useEffect(() => {
-    void applyZodLocale(locale)
-  }, [locale])
+    void applyZodLocale(locale, t)
+  }, [locale, t])
   const value = useMemo(
     () => ({
       close: t("ui_close"),

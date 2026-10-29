@@ -163,6 +163,8 @@ export async function mergeClientsApi(workspaceId: string, keepId: string, other
   await Promise.all([
     import("./deals-api"), import("./crm-api"), import("./work-projects-api"), import("./work-billing-api"), import("./quotes-api"),
     import("./recurring-invoices-api"), import("./satisfaction-api"), import("./client-requests-api"), import("./portal-api"), import("./change-orders-api"), import("./client-files-api"),
+    // bank lines follow their invoices; saved reports keep the client in their filters (A4.4)
+    import("./bank-import-api"), import("./saved-reports-api"),
   ])
   const values = mergeClientValues(keep, other, picks)
   const merged = clients.update(workspaceId, keepId, normalizeContacts(values as Partial<ClientInput>))
