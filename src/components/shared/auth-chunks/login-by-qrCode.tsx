@@ -22,6 +22,7 @@ import { AuthSections } from "./auth"
 import { Highlighter } from "@/components/ui/highlighter"
 import { FieldDescription } from "@/components/ui/field"
 import { useTranslations } from "next-intl"
+import { logger } from "@/lib/logger"
 
 interface Props {
   setAuthSections: Dispatch<SetStateAction<AuthSections>>
@@ -56,7 +57,7 @@ export const LoginByQrCode = ({ setAuthSections }: Props) => {
         })
         setQrDataUrl(url)
       } catch (err) {
-        console.error("Failed to generate QR code:", err)
+        logger.error("Failed to generate QR code:", err)
       }
     }
 

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Close } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
+import { useUiText } from "@/components/ui/ui-text"
 
 interface DialogContextType {
   open: boolean
@@ -132,6 +133,7 @@ export function DialogContent({
   containerClassName?: string
   showCloseButton?: boolean
 }) {
+  const ui = useUiText()
   const context = React.useContext(DialogContext)
   if (!context?.open) return null
 
@@ -161,7 +163,7 @@ export function DialogContent({
             className="absolute end-4 top-4 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted/80 hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
           >
             <Close className="size-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{ui.close}</span>
           </button>
         )}
       </div>

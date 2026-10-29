@@ -17,16 +17,6 @@ export enum InvoiceMethod {
   CARD = "card",
 }
 
-export interface InvoicesSummary {
-  totalRevenue: number
-  paid: number
-  pending: number
-  overdue: number
-  cancelled: number
-  totalInvoices: number
-  paidPercentage: number
-}
-
 export interface InvoiceItem {
   id: string
   description: string
@@ -52,18 +42,4 @@ export interface Invoice {
   notes?: string
   createdAt: string
   updatedAt?: string
-}
-
-export interface CreateInvoicePayload {
-  user: string
-  items: Omit<InvoiceItem, "id" | "total">[]
-  status?: InvoiceStatus
-  method?: InvoiceMethod
-  taxRate?: number
-  dueDate?: string
-  notes?: string
-}
-
-export interface UpdateInvoicePayload extends Partial<CreateInvoicePayload> {
-  status?: InvoiceStatus
 }

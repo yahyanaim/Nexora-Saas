@@ -1,6 +1,7 @@
 import { io, Socket, type SocketOptions, type ManagerOptions } from "socket.io-client"
 import axios from "axios"
 import { isDemoMode } from "@/lib/auth/demo-mode"
+import { logger } from "@/lib/logger"
 
 let socket: Socket | null = null
 
@@ -121,7 +122,7 @@ export function createSocketAuth(getToken: SocketTokenProvider) {
           break
         } catch (error: unknown) {
           if (isUnauthorizedError(error)) {
-            console.warn("[SOCKET AUTH ERROR] Socket token request was unauthorized. Disconnecting.")
+            logger.warn("[SOCKET AUTH ERROR] Socket token request was unauthorized. Disconnecting.")
             clearAuthReconnect()
             socket?.disconnect()
             return
@@ -213,7 +214,7 @@ export const connectSocket = (auth?: SocketTokenProvider | string): Socket => {
       return
     }
 
-    console.warn(
+    logger.warn(
       `[SOCKET AUTH ERROR] Connection rejected by server (${err.message}). Disconnecting.`
     )
     clearAuthReconnect()

@@ -78,9 +78,6 @@ export function applyPlanContent(list: PlanContent[]) {
   }
 }
 
-/** Plans a company can move to (PLA-07). */
-export const plansForSale = () => NEXORA_PLANS.filter((p) => !p.retired)
-
 export type CustomerStatus = "trial" | "active" | "past_due" | "cancelled"
 
 export interface NexoraCustomer {
@@ -178,31 +175,6 @@ export const NEXORA_TEAM = [
   { name: "Liam O'Connor", email: "liam@nexora.io", role: "Customer success", avatar: "/avatars/liam-oconnor.jpg" },
   { name: "Amine Lahlou", email: "amine@nexora.io", role: "Support engineer", avatar: "/avatars/david-kim.jpg" },
 ]
-
-/** Monthly recurring revenue of a customer before VAT (yearly plans get two months free). */
-export function customerMrr(c: Pick<NexoraCustomer, "plan" | "billing" | "status">) {
-  if (c.status === "trial" || c.status === "cancelled") return 0
-  const monthly = planById(c.plan).monthly
-  return c.billing === "yearly" ? Math.round((monthly * 10) / 12) : monthly
-}
-
-/** Amount billed per invoice before VAT. */
-export const invoiceAmount = (c: Pick<NexoraCustomer, "plan" | "billing">) => (c.billing === "yearly" ? planById(c.plan).monthly * 10 : planById(c.plan).monthly)
-
-export function platformSummary(customers: NexoraCustomer[] = NEXORA_CUSTOMERS) {
-  const mrr = customers.reduce((s, c) => s + customerMrr(c), 0)
-  const paying = customers.filter((c) => c.status === "active" || c.status === "past_due")
-  return {
-    customers: customers.filter((c) => c.status !== "cancelled").length,
-    paying: paying.length,
-    trials: customers.filter((c) => c.status === "trial").length,
-    pastDue: customers.filter((c) => c.status === "past_due").length,
-    cancelled: customers.filter((c) => c.status === "cancelled").length,
-    mrr,
-    arr: mrr * 12,
-    seats: customers.filter((c) => c.status !== "cancelled").reduce((s, c) => s + c.seatsUsed, 0),
-  }
-}
 
 /** Formats an amount in MAD for the console pages. */
 export function formatMad(n: number, locale = "fr-MA") {

@@ -1,7 +1,6 @@
 import { getMoroccanFiscalConfig } from "@/lib/demo-data/taxes"
 import { clean, DEFAULT_BRAND, loadLogo } from "./pdf-kit"
 import { nexoraLogoSrc } from "@/lib/api/platform-config-api"
-import type { InvoiceDocument } from "./invoice-template"
 
 /**
  * Identity of the platform operator (the company selling Nexora subscriptions),
@@ -31,5 +30,3 @@ export function printPdf(doc: { output: (type: "bloburl") => URL | string }) {
   if (!win) return
   win.addEventListener("load", () => setTimeout(() => win.print(), 300))
 }
-
-export type PlatformDoc = Pick<InvoiceDocument, "brand" | "logo" | "seller">

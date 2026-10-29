@@ -2,7 +2,7 @@ import { InvoiceStatus, type Invoice } from "@/types/invoices"
 import type { Tone } from "./pdf-kit"
 import { renderInvoiceDocument, type InvoiceDocument } from "./invoice-template"
 import { getPdfTranslator } from "./pdf-i18n"
-import { platformSeller, printPdf } from "./platform-docs"
+import { platformSeller } from "./platform-docs"
 
 const STATUS: Record<InvoiceStatus, { key: string; tone: Tone }> = {
   [InvoiceStatus.DRAFT]: { key: "draft", tone: "neutral" },
@@ -53,8 +53,4 @@ export async function buildSubscriptionInvoiceDocument(invoice: Invoice, locale 
 
 export async function generateInvoicePdf(invoice: Invoice, locale?: string): Promise<void> {
   await renderInvoiceDocument(await buildSubscriptionInvoiceDocument(invoice, locale))
-}
-
-export async function printInvoice(invoice: Invoice, locale?: string): Promise<void> {
-  printPdf(await renderInvoiceDocument(await buildSubscriptionInvoiceDocument(invoice, locale), { save: false }))
 }

@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { AuthGuardProvider } from "./auth-provider"
 import { ErrorBoundary } from "@/components/shared/error-boundary"
+import { UiTextBridge } from "./ui-text-bridge"
 
 const ProviderContexts = ({
   children,
@@ -22,13 +23,15 @@ const ProviderContexts = ({
     <QueryClientProvider client={queryClient}>
       <ThemeProvider nonce={nonce}>
         <TooltipProvider>
-          <AuthGuardProvider>
-            <ErrorBoundary>
-              {children}
-            </ErrorBoundary>
-            <Toaster position="top-center" />
-            <ServiceWorkerRegistration />
-          </AuthGuardProvider>
+          <UiTextBridge>
+            <AuthGuardProvider>
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
+              <Toaster position="top-center" />
+              <ServiceWorkerRegistration />
+            </AuthGuardProvider>
+          </UiTextBridge>
         </TooltipProvider>
       </ThemeProvider>
       {process.env.NEXT_PUBLIC_SHOW_DEVTOOLS === "true" && (

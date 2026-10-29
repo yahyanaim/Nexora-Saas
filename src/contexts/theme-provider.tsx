@@ -18,47 +18,6 @@ export const WALLPAPER_NAMES = [
   // "love",
 ] as const
 
-export const PREVIEW_GRADIENTS: Record<
-  WallpaperName,
-  { light: string; dark: string }
-> = {
-  purple: {
-    light: `linear-gradient(135deg, lab(65 29.35 -53.15) 0%, lab(71 35.38 -47.46) 45%, lab(77 23.96 -31.26) 100%)`,
-    dark: `linear-gradient(135deg, lab(29% 26.64 -45.47) 0%, lab(19 25.53 -35.65) 45%, lab(28% 55 -67.98) 100%)`,
-  },
-  animals: {
-    light: "linear-gradient(135deg, #A8D5AA 0%, #7DBF80 100%)",
-    dark: "linear-gradient(135deg, #1B3A1E 0%, #0F2A12 100%)",
-  },
-  game: {
-    light: "linear-gradient(135deg, #E8C070 0%, #D0A040 100%)",
-    dark: "linear-gradient(135deg, #4A2E0F 0%, #3A220A 100%)",
-  },
-  ice: {
-    light: "linear-gradient(135deg, #B0D8E8 0%, #80C0D8 100%)",
-    dark: "linear-gradient(135deg, #1A3A4D 0%, #0F2A3A 100%)",
-  },
-  occasions: {
-    light: "linear-gradient(135deg, #E8C880 0%, #D0A850 100%)",
-    dark: "linear-gradient(135deg, #4A3A0F 0%, #3A2E0A 100%)",
-  },
-  rose: {
-    light: "linear-gradient(135deg, #E8B0B8 0%, #C88088 100%)",
-    dark: "linear-gradient(135deg, #4A1E33 0%, #3A1528 100%)",
-  },
-  study: {
-    light: "linear-gradient(135deg, #A8B8D8 0%, #8098C0 100%)",
-    dark: "linear-gradient(135deg, #1E1E3A 0%, #151528 100%)",
-  },
-  substantial: {
-    light: "linear-gradient(135deg, #C8C0B8 0%, #A8A090 100%)",
-    dark: "linear-gradient(135deg, #3A3630 0%, #2A2620 100%)",
-  },
-  // love: {
-  //   light: "linear-gradient(135deg, #E8A0A0 0%, #C87070 100%)",
-  //   dark: "linear-gradient(135deg, #4A1E1E 0%, #3A1515 100%)",
-  // },
-}
 export type WallpaperName = (typeof WALLPAPER_NAMES)[number]
 
 type ThemeContextValue = {

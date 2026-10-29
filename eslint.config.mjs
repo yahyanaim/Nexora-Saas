@@ -46,6 +46,13 @@ const eslintConfig = defineConfig([
       ],
     },
   },
+  {
+    // Logs go through logger, which strips request data in production (audit C-06).
+    // env.ts runs inside next.config, before the app's aliases exist.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/lib/logger.ts", "src/env.ts", "src/**/*.test.{ts,tsx}"],
+    rules: { "no-console": "error" },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

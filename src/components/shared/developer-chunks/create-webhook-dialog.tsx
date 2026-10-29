@@ -16,6 +16,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { AVAILABLE_WEBHOOK_EVENTS, WebhookEndpoint } from "@/lib/demo-data/developer"
 import { createWebhookApi } from "@/lib/api/developer-apis"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
+import { isWebUrl } from "@/lib/utils/url"
 
 interface CreateWebhookDialogProps {
   open: boolean
@@ -28,6 +30,7 @@ export function CreateWebhookDialog({
   onOpenChange,
   onWebhookCreated,
 }: CreateWebhookDialogProps) {
+  const t = useTranslations()
   const [url, setUrl] = useState("")
   const [selectedEvents, setSelectedEvents] = useState<string[]>([
     "invoice.paid",
@@ -45,12 +48,12 @@ export function CreateWebhookDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!url.trim().startsWith("http://") && !url.trim().startsWith("https://")) {
-      toast.error("Webhook destination must be a valid HTTP or HTTPS URL")
+    if (!isWebUrl(url)) {
+      toast.error(t("dv_webhookUrlInvalid"))
       return
     }
     if (selectedEvents.length === 0) {
-      toast.error("Please subscribe to at least one webhook event")
+      toast.error(t("dv_eventRequired"))
       return
     }
 
@@ -58,12 +61,12 @@ export function CreateWebhookDialog({
     try {
       const webhook = await createWebhookApi(url.trim(), selectedEvents)
       onWebhookCreated(webhook)
-      toast.success("Webhook endpoint registered")
+      toast.success(t("dv_webhookCreated"))
       setUrl("")
       setSelectedEvents(["invoice.paid", "subscription.updated"])
       onOpenChange(false)
     } catch {
-      toast.error("Failed to register webhook endpoint")
+      toast.error(t("dv_webhookFailed"))
     } finally {
       setIsSubmitting(false)
     }
@@ -74,17 +77,19 @@ export function CreateWebhookDialog({
       <DialogContent className="max-w-md sm:max-w-lg">
         <form onSubmit={handleSubmit} className="space-y-4">
           <DialogHeader>
-            <DialogTitle>Register Webhook Endpoint</DialogTitle>
+            <DialogTitle>{t("dv_webhookTitle")}</DialogTitle>
             <DialogDescription>
-              Receive real-time HTTP POST notifications when events occur within your Nexora account.
+              {t("dv_webhookHint")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
-            <Label htmlFor="webhook-url">Endpoint URL</Label>
+            <Label htmlFor="webhook-url">{t("dv_endpointUrl")}</Label>
             <Input
               id="webhook-url"
               placeholder="https://api.yourdomain.com/webhooks/nexora"
+              dir="ltr"
+              type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               autoFocus
@@ -92,8 +97,8 @@ export function CreateWebhookDialog({
           </div>
 
           <div className="space-y-2.5">
-            <Label>Subscribed Topics</Label>
-            <div className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-2 max-h-56 overflow-y-auto">
+            <Label id="webhook-topics">{t("dv_topics")}</Label>
+            <div role="group" aria-labelledby="webhook-topics" className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-2 max-h-56 overflow-y-auto">
               {AVAILABLE_WEBHOOK_EVENTS.map((event) => {
                 const isChecked = selectedEvents.includes(event.id)
                 return (
@@ -129,10 +134,10 @@ export function CreateWebhookDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" variant="primary" disabled={isSubmitting}>
-              {isSubmitting ? "Registering..." : "Add Endpoint"}
+              {isSubmitting ? t("dv_registering") : t("dv_addEndpoint")}
             </Button>
           </DialogFooter>
         </form>

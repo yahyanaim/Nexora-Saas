@@ -3,7 +3,8 @@
 import { AuthSections } from "./auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { forgotPasswordApi } from "@/lib/api/auth-apis"
+import { forgotPasswordApi, isDemoMode } from "@/lib/api/auth-apis"
+import { apiErrorMessage } from "@/lib/myapi/client"
 import { useMutation } from "@tanstack/react-query"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "@/components/ui/carbon/icons"
@@ -46,14 +47,16 @@ export function ForgotPassword({ setAuthSections, setEmailForReset }: Props) {
     onSuccess: (data, variables) => {
       const email = typeof variables === "string" ? variables : variables.email
       setEmailForReset?.(email)
-      toast.success(
-        data?.message || "If an account exists, a 6-digit reset code has been sent."
-      )
+      toast.success(data?.message || t("au_resetSent"))
       setAuthSections("very-forgot-password")
     },
-    onError: (_error: unknown) => {
-      // In demo mode, still allow seamless verification
-      toast.info("Demo mode: verification code sent (code: 123456)")
+    onError: (error: unknown) => {
+      // Only the demo carries on without a server; a real failure says so
+      if (!isDemoMode()) {
+        toast.error(apiErrorMessage(error, t("au_resetSendFailed")))
+        return
+      }
+      toast.info(t("au_demoCodeSent"))
       setAuthSections("very-forgot-password")
     },
   })
@@ -71,10 +74,10 @@ export function ForgotPassword({ setAuthSections, setEmailForReset }: Props) {
       {/* Header matching Register and Login */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Reset password
+          {t("au_resetTitle")}
         </h1>
         <p className="text-xs text-muted-foreground mt-1">
-          Enter your work email to receive password reset instructions
+          {t("au_resetHint")}
         </p>
       </div>
 
@@ -82,7 +85,7 @@ export function ForgotPassword({ setAuthSections, setEmailForReset }: Props) {
         {/* Work Email Field */}
         <div className="space-y-1.5">
           <label htmlFor="email" className="text-xs font-medium text-foreground/80">
-            Work email
+            {t("au_workEmail")}
           </label>
           <Input
             id="email"
@@ -108,23 +111,25 @@ export function ForgotPassword({ setAuthSections, setEmailForReset }: Props) {
           {sendResetMutation.isPending && (
             <Loader2 className="size-4 animate-spin text-current" />
           )}
-          <span>{sendResetMutation.isPending ? "Sending..." : "Continue"}</span>
+          <span>{sendResetMutation.isPending ? t("sending") : t("au_continue")}</span>
         </Button>
       </form>
 
       {/* Demo Account Quick-Fill */}
-      <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 text-center">
-        <p className="text-xs text-muted-foreground">
-          Demo environment active.
-          <button
-            type="button"
-            onClick={fillDemoEmail}
-            className="ml-1 font-medium text-primary hover:underline cursor-pointer"
-          >
-            Fill demo email
-          </button>
-        </p>
-      </div>
+      {isDemoMode() && (
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 text-center">
+          <p className="text-xs text-muted-foreground">
+            {t("au_demoActive")}
+            <button
+              type="button"
+              onClick={fillDemoEmail}
+              className="ms-1 font-medium text-primary hover:underline cursor-pointer"
+            >
+              {t("au_fillDemoEmail")}
+            </button>
+          </p>
+        </div>
+      )}
 
       {/* Back to Login Link */}
       <div className="text-center">
@@ -133,8 +138,8 @@ export function ForgotPassword({ setAuthSections, setEmailForReset }: Props) {
           onClick={() => setAuthSections("login-by-email")}
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
-          <ArrowLeft className="size-3" />
-          <span>Remember your password? <strong className="text-primary font-semibold">Login</strong></span>
+          <ArrowLeft className="size-3 rtl:rotate-180" />
+          <span>{t.rich("au_rememberLogin", { b: (chunks) => <strong className="text-primary font-semibold">{chunks}</strong> })}</span>
         </button>
       </div>
     </div>

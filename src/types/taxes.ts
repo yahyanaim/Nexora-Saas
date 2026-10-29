@@ -26,10 +26,3 @@ export interface MoroccanFiscalConfig {
   country: string
   defaultCurrency: string
 }
-
-export interface TaxCalculationResult {
-  subtotalHt: number
-  taxRate: TaxRate
-  taxAmount: number
-  totalTtc: number
-}

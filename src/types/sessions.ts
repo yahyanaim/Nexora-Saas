@@ -7,14 +7,6 @@ export interface SessionLocation {
   lon?: number
 }
 
-export interface SessionUser {
-  id: string
-  name: string
-  username?: string
-  email?: string
-  avatar?: string
-  profileColor: string
-}
 export enum SessionStatus {
   ACTIVE = "active",
   EXPIRED = "expired",

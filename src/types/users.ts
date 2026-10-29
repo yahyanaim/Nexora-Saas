@@ -1,4 +1,3 @@
-import { FilterItem, PaginatedResponse } from "@/types/tables"
 import { AdminPermissionsPlatform } from "./roles"
 
 export type UserRole = "admin" | "user"
@@ -72,14 +71,3 @@ export interface User {
     invite?: string
   }
 }
-
-export interface FetchUsersParams {
-  page?: number
-  pageSize?: number
-  search?: string
-  filter?: FilterItem[]
-  sortBy?: string
-  sortOrder?: "asc" | "desc"
-}
-
-export type ResponseUserApi = PaginatedResponse<User>

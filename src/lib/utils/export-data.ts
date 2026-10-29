@@ -1,4 +1,5 @@
 import { toast } from "sonner"
+import { logger } from "@/lib/logger"
 
 export interface ExportColumn<T = Record<string, unknown>> {
   key: keyof T | string
@@ -95,7 +96,7 @@ export function exportToCsv<T extends Record<string, unknown>>(
     toast.success(`Exported ${data.length} records to ${finalFilename}`)
     return true
   } catch (err) {
-    console.error("CSV Export error:", err)
+    logger.error("CSV Export error:", err)
     toast.error("Failed to generate CSV export")
     return false
   }
@@ -130,7 +131,7 @@ export function exportToJson<T>(data: T[], filename: string): boolean {
     toast.success(`Exported ${data.length} records to ${finalFilename}`)
     return true
   } catch (err) {
-    console.error("JSON Export error:", err)
+    logger.error("JSON Export error:", err)
     toast.error("Failed to generate JSON export")
     return false
   }

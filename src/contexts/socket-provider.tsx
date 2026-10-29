@@ -16,6 +16,7 @@ import {
   useContext,
 } from "react"
 import { Socket } from "socket.io-client"
+import { logger } from "@/lib/logger"
 
 interface SocketContextValue {
   socket: Socket | null
@@ -89,7 +90,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         message.includes("auth")
 
       if (isAuthError) {
-        console.warn(
+        logger.warn(
           "[Socket Auth] Handshake rejected by server:",
           err?.message || err
         )

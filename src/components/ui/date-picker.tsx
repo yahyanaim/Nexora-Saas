@@ -16,6 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { useUiText } from "@/components/ui/ui-text"
 
 // Helper functions moved outside component for better performance
 function formatDate(date: Date | undefined): string {
@@ -73,6 +74,7 @@ export function DatePicker({
   maxDate,
 }: DatePickerInputProps) {
   // State management
+  const ui = useUiText()
   const [open, setOpen] = React.useState(false)
   const [date, setDate] = React.useState<Date | undefined>(defaultValue)
   const [month, setMonth] = React.useState<Date | undefined>(defaultValue)
@@ -155,12 +157,12 @@ export function DatePicker({
             <InputGroupButton
               variant="ghost"
               size="icon-xs"
-              aria-label="Select date"
+              aria-label={ui.selectDate}
               disabled={disabled}
               type="button"
             >
               <CalendarIcon />
-              <span className="sr-only">Select date</span>
+              <span className="sr-only">{ui.selectDate}</span>
             </InputGroupButton>
           </PopoverTrigger>
           <PopoverContent

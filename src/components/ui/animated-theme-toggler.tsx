@@ -6,6 +6,7 @@ import { flushSync } from "react-dom"
 
 import { cn } from "@/lib/utils"
 import { useTheme } from "next-themes"
+import { useUiText } from "@/components/ui/ui-text"
 
 export type TransitionVariant =
   | "circle"
@@ -143,6 +144,7 @@ export const AnimatedThemeToggler = ({
     queueMicrotask(() => setMounted(true))
   }, [])
 
+  const ui = useUiText()
   const isDark = resolvedTheme === "dark"
 
   const toggleTheme = useCallback(() => {
@@ -239,7 +241,7 @@ export const AnimatedThemeToggler = ({
         disabled
         {...props}
       >
-        <span className="sr-only">Toggle theme</span>
+        <span className="sr-only">{ui.toggleTheme}</span>
       </button>
     )
   }
@@ -257,7 +259,7 @@ export const AnimatedThemeToggler = ({
       ) : (
         <Moon className={cn("size-7", iconClassName)} />
       )}
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">{ui.toggleTheme}</span>
     </button>
   )
 }

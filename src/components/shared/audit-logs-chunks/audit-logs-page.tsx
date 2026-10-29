@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { FacetedFilterConfig } from "../data-table-chunks/data-table-toolbar"
 import { PageHeader } from "@/components/shared/page-header"
 import { useCurrentWorkspace } from "@/store/workspace-store"
+import { logger } from "@/lib/logger"
 
 export default function AuditLogsPage() {
   const t = useTranslations()
@@ -29,7 +30,7 @@ export default function AuditLogsPage() {
           setLogs(res.logs)
         }
       } catch (err) {
-        console.error("Failed to load audit logs:", err)
+        logger.error("Failed to load audit logs:", err)
       } finally {
         if (mounted) setIsLoading(false)
       }

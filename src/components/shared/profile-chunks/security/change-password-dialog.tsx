@@ -38,6 +38,7 @@ import {
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
 import { toast } from "@/lib/utils/toast"
 import { apiErrorMessage } from "@/lib/myapi/client"
+import { PASSWORD_MIN } from "@/lib/auth/password"
 
 const OTP_LENGTH = 6
 
@@ -135,8 +136,8 @@ export function ChangePasswordDialog({
   const validateChange = () => {
     const errs: Record<string, string> = {}
     if (!currentPassword) errs.currentPassword = t("passwordRequired")
-    if (!newPassword || newPassword.length < 10)
-      errs.newPassword = t("passwordMin10")
+    if (!newPassword || newPassword.length < PASSWORD_MIN)
+      errs.newPassword = t("err_passwordTooShort", { min: PASSWORD_MIN })
     if (newPassword !== confirmPassword)
       errs.confirmPassword = t("passwordsDoNotMatch")
     setErrors(errs)
@@ -153,8 +154,8 @@ export function ChangePasswordDialog({
 
   const validateReset = () => {
     const errs: Record<string, string> = {}
-    if (!newPassword || newPassword.length < 10)
-      errs.newPassword = t("passwordMin10")
+    if (!newPassword || newPassword.length < PASSWORD_MIN)
+      errs.newPassword = t("err_passwordTooShort", { min: PASSWORD_MIN })
     if (newPassword !== confirmPassword)
       errs.confirmPassword = t("passwordsDoNotMatch")
     setErrors(errs)

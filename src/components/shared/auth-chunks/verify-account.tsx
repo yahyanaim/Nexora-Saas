@@ -65,11 +65,11 @@ export function VerifyAccount({ setAuthSections, mfaToken = "", email = "" }: Pr
   const verify2FaMutation = useMutation({
     mutationFn: verify2FaApi,
     onSuccess: () => {
-      toast.success("Verification successful!")
+      toast.success(t("au_verifyOk"))
       initializeAuth(true)
     },
     onError: (error: unknown) => {
-      toast.error(apiErrorMessage(error, "Invalid verification code"))
+      toast.error(apiErrorMessage(error, t("au_invalidCode")))
     },
   })
 
@@ -80,22 +80,22 @@ export function VerifyAccount({ setAuthSections, mfaToken = "", email = "" }: Pr
         code: values.otp,
       })
     } else {
-      toast.info("Verifying code...")
+      toast.info(t("au_verifyingCode"))
       initializeAuth(true)
     }
   }
 
   const handleResend = async () => {
     if (!email) {
-      toast.error("No email specified")
+      toast.error(t("au_noEmail"))
       return
     }
     setResending(true)
     try {
       await requestVerificationApi(email)
-      toast.success("Verification code resent to your email")
+      toast.success(t("au_codeResent"))
     } catch (err: unknown) {
-      toast.error(apiErrorMessage(err, "Could not resend code"))
+      toast.error(apiErrorMessage(err, t("au_resendFailed")))
     } finally {
       setResending(false)
     }
@@ -114,12 +114,12 @@ export function VerifyAccount({ setAuthSections, mfaToken = "", email = "" }: Pr
           <h1 className="text-3xl font-bold md:min-h-[3.5rem] md:text-5xl">
             {t("verify")}{" "}
             <Highlighter action="highlight" className="text-white">
-              {mfaToken ? "2FA Code" : t("account")}
+              {mfaToken ? t("au_2faCode") : t("account")}
             </Highlighter>
           </h1>
           <FieldDescription className="font-bold">
             {mfaToken
-              ? "Enter the 6-digit code from your authenticator app"
+              ? t("au_2faHint")
               : t("enterOtpCode")}
           </FieldDescription>
         </div>
@@ -172,14 +172,14 @@ export function VerifyAccount({ setAuthSections, mfaToken = "", email = "" }: Pr
 
         {email && (
           <div className="text-center text-sm font-medium">
-            Didn&apos;t receive a code?{" "}
+            {t("au_noCode")}{" "}
             <button
               type="button"
               onClick={handleResend}
               disabled={isPending}
               className="cursor-pointer font-bold text-primary underline-offset-4 hover:underline"
             >
-              Resend
+              {t("au_resend")}
             </button>
           </div>
         )}

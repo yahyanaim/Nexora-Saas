@@ -17,9 +17,6 @@ import {
   type Bucket,
 } from "@/lib/workforce/analytics"
 
-export type DateRangeOption = AnalyticsRange
-export type CompareModeOption = AnalyticsCompare
-
 export const DATE_RANGES: AnalyticsRange[] = ["7d", "30d", "90d", "1y", "ytd"]
 export const COMPARE_MODES: AnalyticsCompare[] = ["previous", "lastYear", "none"]
 

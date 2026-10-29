@@ -6,6 +6,7 @@ import { Tabs, TabItem } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Terminal, Copy, Check, Code } from "@/components/ui/carbon/icons"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 const SNIPPETS = {
   curl: `curl -X GET "https://api.nexora.io/v1/users" \\
@@ -39,12 +40,13 @@ print("Active users:", response.json())`,
 }
 
 export function QuickDocsCard() {
+  const t = useTranslations()
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
 
   const handleCopy = (key: keyof typeof SNIPPETS) => {
     navigator.clipboard.writeText(SNIPPETS[key])
     setCopiedKey(key)
-    toast.success(`Copied ${key.toUpperCase()} snippet to clipboard`)
+    toast.success(t("dv_snippetCopied", { lang: key.toUpperCase() }))
     setTimeout(() => setCopiedKey(null), 2000)
   }
 
@@ -62,7 +64,7 @@ export function QuickDocsCard() {
           className="h-7 px-2 text-xs text-neutral-300 hover:text-white hover:bg-neutral-800 gap-1"
         >
           {copiedKey === lang ? <Check className="size-3 text-success-foreground" /> : <Copy className="size-3" />}
-          <span>{copiedKey === lang ? "Copied" : "Copy"}</span>
+          <span>{copiedKey === lang ? t("dv_copied") : t("dv_copy")}</span>
         </Button>
       </div>
       <pre className="text-xs leading-relaxed select-all">
@@ -75,7 +77,7 @@ export function QuickDocsCard() {
     {
       id: "curl",
       label: "cURL",
-      content: renderSnippet("curl", "Shell Command"),
+      content: renderSnippet("curl", t("dv_shell")),
     },
     {
       id: "typescript",
@@ -95,10 +97,10 @@ export function QuickDocsCard() {
         <div>
           <CardTitle className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
             <Terminal className="size-4 text-primary" />
-            <span>API Quickstart & SDK Reference</span>
+            <span>{t("dv_quickstart")}</span>
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Integrate Nexora endpoints into backend services, microservices, or workflow automations.
+            {t("dv_quickstartHint")}
           </CardDescription>
         </div>
       </CardHeader>
@@ -107,7 +109,7 @@ export function QuickDocsCard() {
         <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-foreground uppercase tracking-wider">
-              Base URL
+              {t("dv_baseUrl")}
             </span>
             <span className="text-xs font-mono text-success-foreground">
               HTTPS TLS 1.3

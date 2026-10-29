@@ -16,7 +16,7 @@ import { AuthSections } from "./auth"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
 import { useMutation } from "@tanstack/react-query"
-import { verifyForgotPasswordApi } from "@/lib/api/auth-apis"
+import { isDemoMode, verifyForgotPasswordApi } from "@/lib/api/auth-apis"
 import { apiErrorMessage } from "@/lib/myapi/client"
 
 interface Props {
@@ -25,12 +25,12 @@ interface Props {
   setResetToken?: (token: string) => void
 }
 
-const verifyOtpSchema = (_t: (key: string) => string) =>
+const verifyOtpSchema = (t: (key: string) => string) =>
   z.object({
     otp: z
       .string()
-      .length(6, "Code must be exactly 6 digits")
-      .regex(/^\d+$/, "Code must only contain numbers"),
+      .length(6, t("au_codeLength"))
+      .regex(/^\d+$/, t("au_codeDigits")),
   })
 
 type VerifyOtpFormValues = z.infer<ReturnType<typeof verifyOtpSchema>>
@@ -56,11 +56,11 @@ export function VerifyForgotPassword({ setAuthSections, email, setResetToken }: 
       if (data?.resetToken) {
         setResetToken?.(data.resetToken)
       }
-      toast.success("Security code verified")
+      toast.success(t("au_codeVerified"))
       setAuthSections("reset-password")
     },
     onError: (err: unknown) => {
-      toast.error(apiErrorMessage(err, "Invalid or expired verification code"))
+      toast.error(apiErrorMessage(err, t("au_codeInvalidExpired")))
     },
   })
 
@@ -82,10 +82,10 @@ export function VerifyForgotPassword({ setAuthSections, email, setResetToken }: 
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Enter verification code
+          {t("au_enterCodeTitle")}
         </h1>
         <p className="text-xs text-muted-foreground mt-1">
-          Enter the 6-digit security code sent to {email || "your work email"}
+          {t("au_enterCodeHint", { email: email || t("au_yourWorkEmail") })}
         </p>
       </div>
 
@@ -93,7 +93,7 @@ export function VerifyForgotPassword({ setAuthSections, email, setResetToken }: 
         {/* OTP Input Field */}
         <div className="space-y-2">
           <label htmlFor="otp" className="text-xs font-medium text-foreground/80 block text-center">
-            6-digit security code
+            {t("au_codeLabel")}
           </label>
           <div className="flex justify-center py-1">
             <Controller
@@ -131,23 +131,25 @@ export function VerifyForgotPassword({ setAuthSections, email, setResetToken }: 
           className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 cursor-pointer"
         >
           {isVerifying && <Loader2 className="size-4 animate-spin text-current" />}
-          <span>{isVerifying ? "Verifying..." : "Continue"}</span>
+          <span>{isVerifying ? t("verifying") : t("au_continue")}</span>
         </Button>
       </form>
 
       {/* Demo Code Helper */}
-      <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 text-center">
-        <p className="text-xs text-muted-foreground">
-          Testing locally?
-          <button
-            type="button"
-            onClick={fillDemoCode}
-            className="ml-1 font-medium text-primary hover:underline cursor-pointer"
-          >
-            Auto-fill demo code (123456)
-          </button>
-        </p>
-      </div>
+      {isDemoMode() && (
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 text-center">
+          <p className="text-xs text-muted-foreground">
+            {t("au_testingLocally")}
+            <button
+              type="button"
+              onClick={fillDemoCode}
+              className="ms-1 font-medium text-primary hover:underline cursor-pointer"
+            >
+              {t("au_fillDemoCode")}
+            </button>
+          </p>
+        </div>
+      )}
 
       {/* Back to Login */}
       <div className="text-center">
@@ -156,8 +158,8 @@ export function VerifyForgotPassword({ setAuthSections, email, setResetToken }: 
           onClick={() => setAuthSections("login-by-email")}
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
-          <ArrowLeft className="size-3" />
-          <span>Return to <strong className="text-primary font-semibold">Login</strong></span>
+          <ArrowLeft className="size-3 rtl:rotate-180" />
+          <span>{t.rich("au_backToLogin", { b: (chunks) => <strong className="text-primary font-semibold">{chunks}</strong> })}</span>
         </button>
       </div>
     </div>
