@@ -5,10 +5,12 @@ import {
   deleteTaskApi,
   deleteMilestoneApi,
   deleteProjectApi,
+  hasProjectHistory,
   listMilestonesApi,
   listProjectsApi,
   listTasksApi,
   moveTaskApi,
+  projectHistoryApi,
   updateProjectApi,
   updateTaskApi,
 } from "./work-projects-api"
@@ -22,7 +24,8 @@ import {
   type WorkTaskInput,
 } from "@/types/work-projects"
 import { deleteTaskViewApi, listTaskViewsApi, saveTaskViewApi, setTaskViewSharedApi } from "./task-views-api"
-import { addTaskAttachmentApi, listTaskAttachmentsApi, removeTaskAttachmentApi } from "./task-collab-api"
+import { addTaskAttachmentApi, addTaskCommentApi, listTaskAttachmentsApi, listTaskCommentsApi, removeTaskAttachmentApi } from "./task-collab-api"
+import { listProjectPagesApi, saveProjectPageApi } from "./project-pages-api"
 
 const WS = "ws_atlas"
 
@@ -61,11 +64,28 @@ describe("work projects API", () => {
     await expect(createProjectApi(WS, { ...projectInput, dueDate: "2025-12-01" })).rejects.toThrow(/due date/)
   })
 
-  it("deletes a project with its tasks and milestones", async () => {
-    await deleteProjectApi(WS, "prj_orbit")
-    expect((await listProjectsApi(WS)).some((p) => p.id === "prj_orbit")).toBe(false)
-    expect(await listTasksApi(WS, "prj_orbit")).toEqual([])
-    expect(await listMilestonesApi(WS, "prj_orbit")).toEqual([])
+  it("refuses to delete a project with hours or invoices, and changes nothing (D8)", async () => {
+    const history = await projectHistoryApi(WS, "prj_orbit")
+    expect(history.hours).toBeGreaterThan(0)
+    expect(history.invoices).toBeGreaterThan(0)
+    const tasksBefore = (await listTasksApi(WS, "prj_orbit")).length
+    await expect(deleteProjectApi(WS, "prj_orbit")).rejects.toThrow(/history/)
+    expect((await listProjectsApi(WS)).some((p) => p.id === "prj_orbit")).toBe(true)
+    expect(await listTasksApi(WS, "prj_orbit")).toHaveLength(tasksBefore)
+  })
+
+  it("deletes a project without history with everything that only exists for it", async () => {
+    const project = await createProjectApi(WS, projectInput)
+    expect(hasProjectHistory(await projectHistoryApi(WS, project.id))).toBe(false)
+    const task = await createTaskApi(WS, taskInput({ projectId: project.id }))
+    await addTaskCommentApi(WS, task.id, "Ping @Lina Moreau", [{ id: "emp_lina", name: "Lina Moreau" }])
+    await saveProjectPageApi(WS, { projectId: project.id, kind: "page", title: "Notes", body: "" })
+    await deleteProjectApi(WS, project.id)
+    expect((await listProjectsApi(WS)).some((p) => p.id === project.id)).toBe(false)
+    expect(await listTasksApi(WS, project.id)).toEqual([])
+    expect(await listMilestonesApi(WS, project.id)).toEqual([])
+    expect(await listTaskCommentsApi(WS, task.id)).toEqual([])
+    expect(await listProjectPagesApi(WS, project.id)).toEqual([])
   })
 
   it("only assigns tasks to team members", async () => {

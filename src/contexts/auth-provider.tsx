@@ -16,6 +16,7 @@ import { tokenStorage } from "@/lib/myapi/token-storage"
 import { toast } from "sonner"
 import { useLockScreenStore } from "@/store/auth/lock-screen-store"
 import { isUnderPath, resolveAfterLoginPath } from "@/lib/auth/safe-redirect"
+import { homePathFor } from "@/lib/permissions/home"
 
 /**
  * Context value exposed by {@link AuthGuardProvider}.
@@ -132,7 +133,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
     const isDashboardPage = isUnderPath(pathname, "/dashboard")
 
     if (isAuthenticated && isAuthPage) {
-      router.replace(resolveAfterLoginPath(window.location.search))
+      router.replace(resolveAfterLoginPath(window.location.search, homePathFor(user)))
     } else if (!isAuthenticated && isDashboardPage) {
       const next = encodeURIComponent(`${pathname}${window.location.search}`)
       // Full page load: a client navigation can stay stuck behind the dashboard's
@@ -140,7 +141,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
       const locale = window.location.pathname.split("/")[1]
       window.location.replace(`/${locale}/auth?next=${next}`)
     }
-  }, [isAuthenticated, isLoading, pathname, router])
+  }, [isAuthenticated, isLoading, pathname, router, user])
 
   // 3. Email verification / Account Lock error handling
   useEffect(() => {
@@ -158,7 +159,7 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
       await queryClient.invalidateQueries({ queryKey: ["myAccount"] })
       const res = await refetch()
       if (enableRouter && res.data) {
-        router.replace(resolveAfterLoginPath(window.location.search))
+        router.replace(resolveAfterLoginPath(window.location.search, homePathFor(mapAuthUserToUser(res.data))))
       }
     },
     [queryClient, refetch, router]

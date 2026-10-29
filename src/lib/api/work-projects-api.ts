@@ -9,7 +9,7 @@ import {
   type WorkTask,
   type WorkTaskInput,
 } from "@/types/work-projects"
-import { createCollection } from "@/lib/workforce/demo-store"
+import { clearReference, createCollection, removeByReference } from "@/lib/workforce/demo-store"
 import { seedMilestones, seedProjects, seedTasks } from "@/lib/workforce/project-seed"
 import { recordTaskChanges } from "./task-collab-api"
 import { getAuditActor, recordAudit } from "@/lib/workforce/audit"
@@ -112,11 +112,64 @@ export async function setHealthOverrideApi(
 }
 
 /** Deletes the project with its tasks and milestones. */
+/** The records that keep a project's history, counted by kind. */
+export interface ProjectHistory {
+  hours: number
+  invoices: number
+  quotes: number
+  expenses: number
+  bills: number
+  changeOrders: number
+  feedback: number
+}
+
+export const hasProjectHistory = (h: ProjectHistory) => Object.values(h).some((n) => n > 0)
+
+/** What ties a project to the books; while any of it exists the project is closed, not deleted (D8). */
+export async function projectHistoryApi(workspaceId: string, id: string): Promise<ProjectHistory> {
+  const [billing, quotes, expenses, bills, orders, feedback] = await Promise.all([
+    import("./work-billing-api"),
+    import("./quotes-api"),
+    import("./expenses-api"),
+    import("./supplier-bills-api"),
+    import("./change-orders-api"),
+    import("./satisfaction-api"),
+  ])
+  return {
+    hours: (await billing.listTimeEntriesApi(workspaceId)).filter((e) => e.projectId === id).length,
+    invoices: (await billing.listClientInvoicesApi(workspaceId)).filter((i) => i.lines.some((l) => l.projectId === id)).length,
+    quotes: (await quotes.listQuotesApi(workspaceId)).filter((q) => q.projectId === id).length,
+    expenses: (await expenses.listExpensesApi(workspaceId)).filter((x) => x.projectId === id).length,
+    bills: (await bills.listSupplierBillsApi(workspaceId)).filter((b) => b.projectId === id).length,
+    changeOrders: (await orders.listChangeOrdersApi(workspaceId, id)).length,
+    feedback: (await feedback.listSatisfactionApi(workspaceId)).filter((r) => r.projectId === id).length,
+  }
+}
+
+/**
+ * Deletes a project that has no history, with everything that only exists for
+ * it (tasks and their comments, activity and files, milestones, cycles, pages,
+ * views, bookings). Requests and deals that pointed at it keep their record
+ * and lose the link.
+ */
 export async function deleteProjectApi(workspaceId: string, id: string): Promise<void> {
+  const project = projects.get(workspaceId, id)
+  if (!project) return
+  if (hasProjectHistory(await projectHistoryApi(workspaceId, id))) {
+    throw new Error("This project has hours, invoices or other history. Close it instead, so its history stays.")
+  }
+  // The collections below register when their modules load
+  await Promise.all([import("./project-pages-api"), import("./task-views-api"), import("./resource-bookings-api"), import("./client-requests-api"), import("./deals-api")])
+  const taskIds = tasks.list(workspaceId).filter((t) => t.projectId === id).map((t) => t.id)
+  removeByReference(workspaceId, ["task-comments", "task-activity", "task-attachments"], "taskId", taskIds)
+  removeByReference(workspaceId, ["project-pages", "task-views", "resource-bookings"], "projectId", [id])
+  clearReference(workspaceId, ["client-requests"], "projectId", id, ["taskId"])
+  clearReference(workspaceId, ["deals"], "projectId", id)
   for (const c of cycles.list(workspaceId).filter((x) => x.projectId === id)) cycles.remove(workspaceId, c.id)
   for (const task of tasks.list(workspaceId).filter((t) => t.projectId === id)) tasks.remove(workspaceId, task.id)
   for (const m of milestones.list(workspaceId).filter((x) => x.projectId === id)) milestones.remove(workspaceId, m.id)
   projects.remove(workspaceId, id)
+  recordAudit(workspaceId, { action: "Project deleted", actionKey: "project.deleted", category: "Settings", target: `${project.code} ${project.name}` })
 }
 
 function withManagerAsMember<T extends Pick<WorkProjectInput, "managerId" | "memberIds">>(input: T): T {

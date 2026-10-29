@@ -152,6 +152,48 @@ export function reassignReference(workspaceId: string, field: string, from: stri
   return moved
 }
 
+function eachRegistered(workspaceId: string, names: readonly string[], change: (items: Identified[]) => Identified[] | null) {
+  for (const name of names) {
+    const seed = registry.get(name)
+    if (!seed) continue
+    const next = change(readCollection(name, workspaceId, () => seed(workspaceId) as Identified[]))
+    if (next) writeCollection(name, workspaceId, next)
+  }
+}
+
+/** Removes, in the named collections, the records whose `field` is one of `values` (they only exist for a deleted parent). Returns how many went. */
+export function removeByReference(workspaceId: string, names: readonly string[], field: string, values: readonly string[]) {
+  if (typeof window === "undefined" || !values.length) return 0
+  const gone = new Set(values)
+  let removed = 0
+  eachRegistered(workspaceId, names, (items) => {
+    const keep = items.filter((item) => !gone.has((item as unknown as Record<string, string>)[field]!))
+    removed += items.length - keep.length
+    return keep.length === items.length ? null : keep
+  })
+  return removed
+}
+
+/** Drops the link to a deleted parent in the named collections: `field` (and `alsoClear`) are removed where `field` equals `value`. */
+export function clearReference(workspaceId: string, names: readonly string[], field: string, value: string, alsoClear: readonly string[] = []) {
+  if (typeof window === "undefined") return 0
+  let cleared = 0
+  eachRegistered(workspaceId, names, (items) => {
+    let changed = false
+    const next = items.map((item) => {
+      const record = item as unknown as Record<string, unknown>
+      if (record[field] !== value) return item
+      changed = true
+      cleared++
+      const copy = { ...record }
+      for (const key of [field, ...alsoClear]) delete copy[key]
+      return copy as unknown as Identified
+    })
+    return changed ? next : null
+  })
+  return cleared
+}
+
 /** AUD-05: removes every record of one workspace and keeps it empty. Returns how many collections were deleted. */
 export function deleteWorkspaceData(workspaceId: string) {
   if (typeof window === "undefined") return 0

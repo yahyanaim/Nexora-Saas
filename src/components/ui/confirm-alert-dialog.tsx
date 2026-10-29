@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import { Renew } from "@/components/ui/carbon/icons"
 import { Button } from "@/components/ui/button"
 import {
@@ -28,12 +29,13 @@ export function ConfirmAlertDialog({
   onOpenChange,
   title,
   description,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   destructive = false,
   isLoading = false,
   onConfirm,
 }: ConfirmAlertDialogProps) {
+  const t = useTranslations()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -49,7 +51,7 @@ export function ConfirmAlertDialog({
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
-            {cancelLabel}
+            {cancelLabel ?? t("cancel")}
           </Button>
           <Button
             variant={destructive ? "destructive" : "primary"}
@@ -57,7 +59,7 @@ export function ConfirmAlertDialog({
             disabled={isLoading}
           >
             {isLoading && <Renew className="mr-2 size-4 animate-spin" />}
-            {confirmLabel}
+            {confirmLabel ?? t("confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>
