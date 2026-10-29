@@ -236,7 +236,7 @@ To replace the in-memory demo engine with a live microservice:
    NEXT_PUBLIC_API_URL=https://api.yourdomain.com
    NEXT_PUBLIC_DEMO_MODE=false
    ```
-3. The browser calls `NEXT_PUBLIC_API_URL` directly with session cookies (`src/lib/myapi/client.ts`); `src/app/api/[...catchall]/route.ts` answers `410`. When the API lives on another domain, set `API_PROXY_TARGET` at build time and `/api/*` is forwarded to it from the same origin (`src/lib/api-proxy.ts`), so the session cookies belong to the app's domain. Each API helper tries the server first and keeps its demo path behind `shouldUseDemoFallback`, so modules can go live one by one. The paths, shapes and error codes the server must follow are in `docs/API_AUDIT_2026-10.md`. Setting `NEXT_PUBLIC_DEMO_MODE=false` turns every demo fallback off.
+3. The browser calls `NEXT_PUBLIC_API_URL` directly with session cookies (`src/lib/myapi/client.ts`); `src/app/api/[...catchall]/route.ts` answers `410`. When the API lives on another domain, set `API_PROXY_TARGET` at build time and `/api/*` is forwarded to it from the same origin (`src/lib/api-proxy.ts`), so the session cookies belong to the app's domain. Each API helper tries the server first and keeps its demo path behind `shouldUseDemoFallback`, so modules can go live one by one. The paths, shapes and error codes the server must follow are in `docs/API_CONTRACT.md`. Setting `NEXT_PUBLIC_DEMO_MODE=false` turns every demo fallback off.
 
 ---
 

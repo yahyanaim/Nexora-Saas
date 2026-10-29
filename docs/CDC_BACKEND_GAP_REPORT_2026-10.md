@@ -1,6 +1,6 @@
 # Backend cahier des charges v2.0: gap report and v2.1 change list
 
-_29 October 2026. Compares **"Nexora ERP — Cahier des charges, Server, Data and Security Platform", version 2.0 of 16 October 2026** (84 pages, 305 requirements) with the front end as it is today on `main`, the API contract v2 (`docs/API_AUDIT_2026-10.md`) and the decisions D1–D8 (`docs/PLAN_FIXES_API_SECURITY_2026-10.md`). This is a report only: the cahier des charges is updated to v2.1 in a later step, after the front-end fixes A2._
+_29 October 2026. Compares **"Nexora ERP — Cahier des charges, Server, Data and Security Platform", version 2.0 of 16 October 2026** (84 pages, 305 requirements) with the front end as it is today on `main`, the API contract v2 (`docs/API_CONTRACT.md`) and the decisions D1–D8 (`docs/PLAN_FIXES_API_SECURITY_2026-10.md`). This is a report only: the cahier des charges is updated to v2.1 in a later step, after the front-end fixes A2._
 
 ## 1. Summary
 
@@ -114,7 +114,7 @@ These are front-end tasks, found by reading the cahier des charges against the c
 | D2 | §1.1 | 105 test files, about 670 tests | **133** files, **832** tests |
 | D3 | Table 9 | About 200 error keys | **432** error keys in 9 languages |
 | D4 | Table 9 | The reused rule files | Add `client-history.ts`, `client-filters.ts`, `follow-ups.ts`, `leads.ts`, `crm-import.ts`, `contacts.ts`, `deals.ts`, `task-states.ts`, `task-extras.ts`, `task-repeat.ts`, `task-grouping.ts`, `cycles.ts`, `client-requests.ts`, `project-pages.ts`, `inbox.ts` |
-| D5 | Annex C | Traceability to the pre-backend audit and Lot B | Add the full audit (`AUDIT_FULL_2026-10.md`: G-01…G-10, S-01…S-09) and the API contract v2 |
+| D5 | Annex C | Traceability to the pre-backend audit and Lot B | Add the full audit (`AUDIT.md`: G-01…G-10, S-01…S-09) and the API contract v2 |
 | D6 | Baseline (cover page) | Front end at Lot A11 | Front end after audit fixes A1 and contract v2 (29 October 2026) |
 
 ## 7. Part E: effect on the delivery plan (§21.2)

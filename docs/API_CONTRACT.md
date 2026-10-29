@@ -13,7 +13,7 @@ Where the front end touches one of these, this document only names the endpoint 
 
 The first version (PR #121) was written before CRM 8–10, Project extras and P5. This update adds:
 - everything built since then: §5.2 (sales stages, client history, the deleted-clients bin, merge, client files, note mentions), §5.3 (repeating tasks, the task bin, archive, project pages), §5.8 (shared list views);
-- the audit findings (`docs/AUDIT_FULL_2026-10.md`) and decisions D1–D8 of the plan: §2 (CSRF, cookies, limits, request id, web addresses, deleted-items bins), §4.1 (two-step sign-in, sessions, passwords), §4.4 (plans and seats), §5.6 (notification events, audit events), §9.3 (file uploads), §12 (security rules);
+- the audit findings (`docs/AUDIT.md`) and decisions D1–D8 of the plan: §2 (CSRF, cookies, limits, request id, web addresses, deleted-items bins), §4.1 (two-step sign-in, sessions, passwords), §4.4 (plans and seats), §5.6 (notification events, audit events), §9.3 (file uploads), §12 (security rules);
 - 11 new error codes, already in the catalog with their 9 translations;
 - Appendix B: the exported helpers that need no endpoint, so every function in `src/lib/api` is accounted for.
 

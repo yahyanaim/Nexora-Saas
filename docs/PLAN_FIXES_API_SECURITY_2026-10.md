@@ -1,13 +1,13 @@
 # Nexora: plan to fix the audit findings, update the API contract and secure the platform
 
-_October 2026. Plan only: nothing here is implemented yet. Based on `docs/AUDIT_FULL_2026-10.md` (finding numbers S-, G-, C-) and `docs/API_AUDIT_2026-10.md`. The security part follows OWASP Top 10 (2025) and current practice for authentication, sessions and files._
+_October 2026. Plan only: nothing here is implemented yet. Based on `docs/AUDIT.md` (finding numbers S-, G-, C-) and `docs/API_CONTRACT.md`. The security part follows OWASP Top 10 (2025) and current practice for authentication, sessions and files._
 
 ## Overview
 
 | Part | What | Size | When |
 |---|---|---|---|
 | **A** | Front-end fixes, in 4 small PRs | A1–A2 about 1–2 days each; A3–A4 smaller | Before the backend starts (A1, A2), then alongside it (A3, A4) |
-| **B** | API contract update (`API_AUDIT_2026-10.md`) | One documentation PR | ✅ Done: contract v2, 362 of 362 API functions mapped, guard test `api-contract.test.ts` |
+| **B** | API contract update (`API_CONTRACT.md`) | One documentation PR | ✅ Done: contract v2, 362 of 362 API functions mapped, guard test `api-contract.test.ts` |
 | **C** | Security plan for the backend, by OWASP area | Written into the contract (B) and built with each backend phase | During the backend |
 | **D** | Decisions | 8 decisions, made 28 October 2026 | Done |
 
@@ -66,7 +66,7 @@ Left for the backend (no front-end PR): **S-02, S-03, S-06, S-07, G-06, C-02**. 
 
 ---
 
-## Part B: API contract update (`docs/API_AUDIT_2026-10.md`)
+## Part B: API contract update (`docs/API_CONTRACT.md`)
 
 The contract was written in PR #121. **Everything built after it is missing:** CRM 8, 9 and 10, Project extras and P5. The audit also adds new rules. One documentation PR, organised by the contract's own sections.
 
