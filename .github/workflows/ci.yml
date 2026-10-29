@@ -32,6 +32,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run i18n:check
+      # C-01: no text without a use
+      - run: npm run i18n:unused
       # PERF-03, PERF-04
       - run: npm run check:images
       - run: npm run check:build-scripts

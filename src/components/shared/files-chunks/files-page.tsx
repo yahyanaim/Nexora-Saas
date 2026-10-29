@@ -23,6 +23,7 @@ import { getFilesColumns } from "./files-columns"
 import { FilesSummaryCards } from "./files-summary-cards"
 import { FileDialog } from "./file-dialog"
 import { PageHeader } from "@/components/shared/page-header"
+import { logger } from "@/lib/logger"
 
 type PendingAction = { type: "delete"; file: FileItem } | null
 
@@ -215,7 +216,7 @@ export default function FilesPage() {
 
       toast.success(t("downloadStarted"))
     } catch (error) {
-      console.error("Download error:", error)
+      logger.error("Download error:", error)
       toast.error(t("downloadFailed"))
     }
   }, [t])

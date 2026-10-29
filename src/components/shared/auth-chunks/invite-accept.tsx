@@ -21,32 +21,31 @@ import { acceptInviteApi } from "@/lib/api/auth-apis"
 import { toast } from "sonner"
 import { apiErrorMessage } from "@/lib/myapi/client"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { useTranslations } from "next-intl"
+import { newPasswordField } from "@/lib/auth/password"
 
 interface Props {
   setAuthSections: Dispatch<SetStateAction<AuthSections>>
   token?: string
 }
 
-const inviteSchema = z
-  .object({
-    token: z.string().min(1, "Invite token is required"),
-    name: z.string().optional(),
-    password: z
-      .string()
-      .min(10, "Password must be at least 10 characters")
-      .regex(/[A-Z]/, "Must contain an uppercase letter")
-      .regex(/[a-z]/, "Must contain a lowercase letter")
-      .regex(/[0-9]/, "Must contain a number"),
-    confirmPassword: z.string().min(1, "Please confirm your password"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  })
+const inviteSchema = (t: (key: string, values?: Record<string, string | number>) => string) =>
+  z
+    .object({
+      token: z.string().min(1, t("au_tokenRequired")),
+      name: z.string().optional(),
+      password: newPasswordField(t),
+      confirmPassword: z.string().min(1, t("confirmPasswordRequired")),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("passwordsDoNotMatch"),
+      path: ["confirmPassword"],
+    })
 
-type InviteFormValues = z.infer<typeof inviteSchema>
+type InviteFormValues = z.infer<ReturnType<typeof inviteSchema>>
 
 export function InviteAcceptForm({ setAuthSections, token = "" }: Props) {
+  const t = useTranslations()
   const { initializeAuth } = useAuthGuard()
 
   const {
@@ -54,7 +53,7 @@ export function InviteAcceptForm({ setAuthSections, token = "" }: Props) {
     handleSubmit,
     formState: { errors },
   } = useForm<InviteFormValues>({
-    resolver: zodResolver(inviteSchema),
+    resolver: zodResolver(inviteSchema(t)),
     defaultValues: {
       token,
       name: "",
@@ -66,11 +65,11 @@ export function InviteAcceptForm({ setAuthSections, token = "" }: Props) {
   const { mutate, isPending } = useMutation({
     mutationFn: acceptInviteApi,
     onSuccess: () => {
-      toast.success("Welcome aboard! Workspace joined.")
+      toast.success(t("au_welcomeAboard"))
       initializeAuth(true)
     },
     onError: (error: unknown) => {
-      toast.error(apiErrorMessage(error, "Could not accept invite"))
+      toast.error(apiErrorMessage(error, t("au_inviteFailed")))
     },
   })
 
@@ -92,25 +91,28 @@ export function InviteAcceptForm({ setAuthSections, token = "" }: Props) {
         <div className="flex flex-col items-center gap-2 text-center">
           <MailCheck className="size-20 text-primary md:size-24" />
           <h1 className="text-3xl font-bold md:min-h-[3.5rem] md:text-5xl">
-            Accept{" "}
-            <Highlighter action="highlight" className="text-white">
-              Invitation
-            </Highlighter>
+            {t.rich("au_acceptInvitation", {
+              hl: (chunks) => (
+                <Highlighter action="highlight" className="text-white">
+                  {chunks}
+                </Highlighter>
+              ),
+            })}
           </h1>
           <FieldDescription className="font-bold">
-            Set your name and password to join the workspace
+            {t("au_inviteHint")}
           </FieldDescription>
         </div>
 
         {!token && (
           <Field data-invalid={!!errors.token}>
             <FieldLabel className="font-bold" htmlFor="token">
-              Invitation Token
+              {t("au_inviteToken")}
             </FieldLabel>
             <Input
               id="token"
               type="text"
-              placeholder="Paste invite token"
+              placeholder={t("au_inviteTokenPlaceholder")}
               disabled={isPending}
               {...register("token")}
             />
@@ -124,7 +126,7 @@ export function InviteAcceptForm({ setAuthSections, token = "" }: Props) {
 
         <Field data-invalid={!!errors.name}>
           <FieldLabel className="font-bold" htmlFor="name">
-            Full Name <span className="text-muted-foreground font-normal">(optional)</span>
+            {t("au_fullName")} <span className="text-muted-foreground font-normal">{t("au_optional")}</span>
           </FieldLabel>
           <Input
             id="name"
@@ -137,7 +139,7 @@ export function InviteAcceptForm({ setAuthSections, token = "" }: Props) {
 
         <Field data-invalid={!!errors.password}>
           <FieldLabel className="font-bold" htmlFor="password">
-            Password
+            {t("password")}
           </FieldLabel>
           <Input
             id="password"
@@ -155,7 +157,7 @@ export function InviteAcceptForm({ setAuthSections, token = "" }: Props) {
 
         <Field data-invalid={!!errors.confirmPassword}>
           <FieldLabel className="font-bold" htmlFor="confirmPassword">
-            Confirm Password
+            {t("confirmPassword")}
           </FieldLabel>
           <Input
             id="confirmPassword"
@@ -179,18 +181,18 @@ export function InviteAcceptForm({ setAuthSections, token = "" }: Props) {
             className="w-full"
           >
             {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-            {isPending ? "Joining..." : "Join Workspace"}
+            {isPending ? t("au_joining") : t("au_joinWorkspace")}
           </Button>
         </Field>
 
         <div className="text-center text-sm font-medium">
-          Already have an account?{" "}
+          {t("au_haveAccount")}{" "}
           <button
             type="button"
             onClick={() => setAuthSections("login-by-email")}
             className="cursor-pointer font-bold text-primary underline-offset-4 hover:underline"
           >
-            Sign in
+            {t("au_signInLink")}
           </button>
         </div>
       </FieldGroup>

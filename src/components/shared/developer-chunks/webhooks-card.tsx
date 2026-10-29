@@ -11,12 +11,14 @@ import { Plus, Webhook, Eye, EyeOff, Copy, Send, CheckCircle } from "@/component
 import { formatDate } from "@/lib/utils/format-date"
 import { useHasMounted } from "@/hooks/use-has-mounted"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 interface WebhooksCardProps {
   initialWebhooks: WebhookEndpoint[]
 }
 
 export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
+  const t = useTranslations()
   const hasMounted = useHasMounted()
   const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>(initialWebhooks)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -29,7 +31,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
 
   const handleCopySecret = (secret: string) => {
     navigator.clipboard.writeText(secret)
-    toast.success("Signing secret copied to clipboard")
+    toast.success(t("dv_secretCopied"))
   }
 
   const handlePingTest = async (id: string, url: string) => {
@@ -37,10 +39,10 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
     try {
       const res = await testWebhookPingApi(id)
       if (res.success) {
-        toast.success(`Ping dispatched to ${url}! Response: ${res.statusCode} OK (${res.latencyMs}ms)`)
+        toast.success(t("dv_pingOk", { url, status: res.statusCode, ms: res.latencyMs }))
       }
     } catch {
-      toast.error(`Ping failed for ${url}`)
+      toast.error(t("dv_pingFailed", { url }))
     } finally {
       setPingingId(null)
     }
@@ -57,13 +59,13 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
           <div>
             <CardTitle className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
               <Webhook className="size-4 text-success-foreground" />
-              <span>Webhook Endpoints</span>
+              <span>{t("dv_webhooks")}</span>
               <Badge variant="outline" className="text-xs font-normal">
-                {webhooks.length} Active
+                {t("dv_activeCount", { count: webhooks.length })}
               </Badge>
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Deliver outbound HTTP events to your servers, Slack channels, or workflow automation tools.
+              {t("dv_webhooksHint")}
             </CardDescription>
           </div>
           <Button
@@ -73,7 +75,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
             className="gap-1.5 shrink-0 self-start sm:self-auto"
           >
             <Plus className="size-4" />
-            <span>Add Endpoint</span>
+            <span>{t("dv_addEndpoint")}</span>
           </Button>
         </div>
       </CardHeader>
@@ -84,9 +86,9 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
             <div className="flex size-12 items-center justify-center rounded-full bg-muted/60 text-muted-foreground mb-3">
               <Webhook className="size-6" />
             </div>
-            <h4 className="text-sm font-semibold text-foreground">No webhook endpoints configured</h4>
+            <h4 className="text-sm font-semibold text-foreground">{t("dv_noWebhooks")}</h4>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-              Add a webhook URL to receive real-time HTTP event notifications when data changes in your workspace.
+              {t("dv_noWebhooksHint")}
             </p>
             <Button
               variant="primary"
@@ -95,7 +97,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
               className="mt-4 gap-1.5"
             >
               <Plus className="size-4" />
-              <span>Add Endpoint</span>
+              <span>{t("dv_addEndpoint")}</span>
             </Button>
           </div>
         ) : (
@@ -125,7 +127,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
 
                     {/* Signing secret */}
                     <div className="flex items-center gap-2 text-xs">
-                      <span className="text-muted-foreground">Signing Secret:</span>
+                      <span className="text-muted-foreground">{t("dv_signingSecret")}</span>
                       <code className="rounded bg-muted/60 px-2 py-0.5 font-mono text-xs text-foreground/80 border border-border/50">
                         {isRevealed ? endpoint.secretKey : "••••••••••••••••••••••••"}
                       </code>
@@ -133,7 +135,9 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
                         type="button"
                         onClick={() => toggleSecret(endpoint.id)}
                         className="text-muted-foreground hover:text-foreground p-1 transition-colors"
-                        title={isRevealed ? "Hide secret" : "Reveal secret"}
+                        title={isRevealed ? t("dv_hideSecret") : t("dv_revealSecret")}
+                        aria-label={isRevealed ? t("dv_hideSecret") : t("dv_revealSecret")}
+                        aria-pressed={isRevealed}
                       >
                         {isRevealed ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                       </button>
@@ -142,7 +146,8 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
                           type="button"
                           onClick={() => handleCopySecret(endpoint.secretKey)}
                           className="text-muted-foreground hover:text-foreground p-1 transition-colors"
-                          title="Copy secret"
+                          title={t("dv_copySecret")}
+                          aria-label={t("dv_copySecret")}
                         >
                           <Copy className="size-3.5" />
                         </button>
@@ -165,7 +170,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
 
                   <div className="flex items-center justify-between md:justify-end gap-4 text-xs text-muted-foreground shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-border/40">
                     <span className="hidden lg:inline text-xs">
-                      Added {hasMounted ? formatDate(endpoint.createdAt) : "…"}
+                      {t("dv_added", { date: hasMounted ? formatDate(endpoint.createdAt) : "…" })}
                     </span>
                     <Button
                       variant="outline"
@@ -175,7 +180,7 @@ export function WebhooksCard({ initialWebhooks }: WebhooksCardProps) {
                       className="gap-1.5 h-8 text-xs border-border/60 hover:bg-muted/60"
                     >
                       <Send className="size-3" />
-                      <span>{isPinging ? "Testing..." : "Test Ping"}</span>
+                      <span>{isPinging ? t("dv_testing") : t("dv_testPing")}</span>
                     </Button>
                   </div>
                 </div>

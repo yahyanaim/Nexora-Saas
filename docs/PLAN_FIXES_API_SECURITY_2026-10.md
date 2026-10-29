@@ -48,6 +48,8 @@ Each PR follows the usual routine: tests, `tsc`, lint, build, browser check with
 | A3.4 | **C-04** texts | Move the hard-coded English into the 9 language files: auth pages and their toasts ("Welcome back!", "Continue"), register messages, developer cards, UI-kit screen-reader labels, and the dashboard's 404 and error pages (which should also link to `/dashboard`, the person's home). The password minimum follows decision D5. |
 | A3.5 | **C-06** logging | The 19 direct `console.*` calls go through `logger`. |
 
+**Status (A3 done):** 47 unused files (20 of them the unused Carbon UI kit), about 85 unused exports in the files that stay, and 3 unused packages (`@carbon/react`, `embla-carousel-react`, `canvas-confetti`) removed; kept for the backend: `useAuthSocket` (S-07), `useUsage` (G-06), `useTerminateSession` (my devices, C7), `useNotificationSettings` (D6). 454 unused texts removed and `npm run i18n:unused` keeps it at zero in CI. Dev-tool vulnerabilities 20 → 3 low (inside the `shadcn` CLI, where npm's only fix is a downgrade); production 0. Auth pages, developer page, error and 404 pages, UI-kit screen-reader words and Zod's own messages follow the reader's language; any unknown address now shows the translated 404 (`[...rest]` routes). Passwords: 12 characters, no forced character mix (`lib/auth/password.ts`). `console.*` is blocked by lint outside `logger`. Found and fixed on the way: forgot-password and reset-password reported success on any server error and always showed the demo helpers; they now do so only in demo mode. The error pages no longer show the error message and stack trace in production.
+
 ### PR A4: smaller gaps (alongside the backend)
 
 | # | Finding | Change |

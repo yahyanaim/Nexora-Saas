@@ -43,12 +43,6 @@ export interface ServerTableParams {
   sortOrder?: "asc" | "desc"
 }
 
-export interface EntityApi<T, TCreateInput, TUpdateInput> {
-  create: (input: TCreateInput) => Promise<T>
-  update: (id: string, input: TUpdateInput) => Promise<T>
-  remove?: (id: string) => Promise<void>
-}
-
 export function toTableResponse<T>(
   response: ApiPaginatedResponse<T>
 ): PaginatedResponse<T> {

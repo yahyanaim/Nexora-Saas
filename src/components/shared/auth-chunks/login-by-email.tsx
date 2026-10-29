@@ -61,9 +61,9 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
       if (data?.mfaRequired && data?.mfaToken) {
         setMfaToken?.(data.mfaToken)
         setAuthSections("very-account")
-        toast.info("Two-factor authentication required. Enter your 6-digit code.")
+        toast.info(t("au_mfaRequired"))
       } else {
-        toast.success("Welcome back!")
+        toast.success(t("au_welcomeToast"))
         // Navigates to the safe ?next path (or the overview)
         await initializeAuth(true)
       }
@@ -85,10 +85,10 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
     >
       <div className="flex flex-col gap-1 text-left">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Welcome back
+          {t("au_welcomeBack")}
         </h1>
         <p className="text-xs text-muted-foreground">
-          Enter your credentials to access your account
+          {t("au_signInHint")}
         </p>
       </div>
 
@@ -98,7 +98,7 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
             htmlFor="email"
             className="block text-xs font-medium text-foreground"
           >
-            Work email
+            {t("au_workEmail")}
           </label>
           <Input
             id="email"
@@ -119,20 +119,20 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
               htmlFor="password"
               className="block text-xs font-medium text-foreground"
             >
-              Password
+              {t("password")}
             </label>
             <button
               type="button"
               onClick={() => setAuthSections("forgot-password")}
               className="text-xs text-muted-foreground hover:text-foreground cursor-pointer"
             >
-              Forgot?
+              {t("au_forgotShort")}
             </button>
           </div>
           <Input
             id="password"
             type="password"
-            placeholder="Enter your password"
+            placeholder={t("enterPassword")}
             className="h-10 rounded-md border-border/50 bg-muted/40 px-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background"
             disabled={isPending}
             {...register("password")}
@@ -148,15 +148,15 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
           className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 cursor-pointer mt-2"
         >
           {isPending && <Loader2 className="mr-2 size-3.5 animate-spin" />}
-          Continue
+          {t("au_continue")}
         </button>
 
         {isDemoMode() && (
           <div className="flex flex-col gap-1">
             {(
               [
-                { label: "Or continue with Instant Demo Preview →", user: null, welcome: "Welcome! Exploring Nexora as the company administrator." },
-                { label: "Platform console demo (Nexora team) →", user: DEMO_USERS["sophia.v@nexora.io"], welcome: "Welcome! Exploring the Nexora platform console." },
+                { label: t("au_demoCompany"), user: null, welcome: t("au_demoCompanyWelcome") },
+                { label: t("au_demoConsole"), user: DEMO_USERS["sophia.v@nexora.io"], welcome: t("au_demoConsoleWelcome") },
               ] as const
             ).map((demo) => (
               <button
@@ -184,19 +184,19 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
               </button>
             ))}
             <p className="text-center text-[11px] text-muted-foreground">
-              Employees can also sign in with their work email (e.g. lina@atlas.example), and clients with portal access with theirs (e.g. claire@orbit.example).
+              {t("au_demoAccountsHint", { employee: "lina@atlas.example", client: "claire@orbit.example" })}
             </p>
           </div>
         )}
 
         <p className="pt-1 text-center text-xs text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          {t("au_noAccount")}{" "}
           <button
             type="button"
             onClick={() => setAuthSections("register")}
             className="font-medium text-info-foreground hover:underline cursor-pointer"
           >
-            Sign up
+            {t("au_signUp")}
           </button>
         </p>
       </div>

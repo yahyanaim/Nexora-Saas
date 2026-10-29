@@ -13,16 +13,17 @@ import { registerApi } from "@/lib/api/auth-apis"
 import { toast } from "sonner"
 import { apiErrorMessage } from "@/lib/myapi/client"
 import { useAuthGuard } from "@/hooks/auth/use-auth-guard"
+import { newPasswordField } from "@/lib/auth/password"
 
 interface Props {
   setAuthSections: Dispatch<SetStateAction<AuthSections>>
 }
 
-const registerSchema = (t: (key: string) => string) =>
+const registerSchema = (t: (key: string, values?: Record<string, string | number>) => string) =>
   z.object({
-    name: z.string().min(2, "Username must be at least 2 characters"),
+    name: z.string().min(2, t("au_usernameMin")),
     email: z.string().min(1, t("emailRequired")).email(t("validEmail")),
-    password: z.string().min(10, "Password must be at least 10 characters"),
+    password: newPasswordField(t),
   })
 
 type RegisterFormValues = z.infer<ReturnType<typeof registerSchema>>
@@ -47,11 +48,11 @@ export function RegisterForm({ setAuthSections }: Props) {
   const { mutate, isPending } = useMutation({
     mutationFn: registerApi,
     onSuccess: () => {
-      toast.success("Account created successfully!")
+      toast.success(t("au_accountCreated"))
       initializeAuth(true)
     },
     onError: (error: unknown) => {
-      toast.error(apiErrorMessage(error, "Registration failed"))
+      toast.error(apiErrorMessage(error, t("au_registerFailed")))
     },
   })
 
@@ -70,10 +71,10 @@ export function RegisterForm({ setAuthSections }: Props) {
     >
       <div className="flex flex-col gap-1 text-left">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Get started
+          {t("au_getStarted")}
         </h1>
         <p className="text-xs text-muted-foreground">
-          Create an account to get started
+          {t("au_createAccountHint")}
         </p>
       </div>
 
@@ -83,12 +84,12 @@ export function RegisterForm({ setAuthSections }: Props) {
             htmlFor="username"
             className="block text-xs font-medium text-foreground"
           >
-            Username
+            {t("au_username")}
           </label>
           <Input
             id="username"
             type="text"
-            placeholder="Enter your username"
+            placeholder={t("au_usernamePlaceholder")}
             className="h-10 rounded-md border-border/50 bg-muted/40 px-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background"
             disabled={isPending}
             {...register("name")}
@@ -103,7 +104,7 @@ export function RegisterForm({ setAuthSections }: Props) {
             htmlFor="email"
             className="block text-xs font-medium text-foreground"
           >
-            Work email
+            {t("au_workEmail")}
           </label>
           <Input
             id="email"
@@ -123,12 +124,12 @@ export function RegisterForm({ setAuthSections }: Props) {
             htmlFor="password"
             className="block text-xs font-medium text-foreground"
           >
-            Password
+            {t("password")}
           </label>
           <Input
             id="password"
             type="password"
-            placeholder="Enter your password"
+            placeholder={t("enterPassword")}
             className="h-10 rounded-md border-border/50 bg-muted/40 px-3.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:bg-background"
             disabled={isPending}
             {...register("password")}
@@ -144,17 +145,17 @@ export function RegisterForm({ setAuthSections }: Props) {
           className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 cursor-pointer mt-2"
         >
           {isPending && <Loader2 className="mr-2 size-3.5 animate-spin" />}
-          Continue
+          {t("au_continue")}
         </button>
 
         <p className="pt-1 text-center text-xs text-muted-foreground">
-          Already have account?{" "}
+          {t("au_haveAccount")}{" "}
           <button
             type="button"
             onClick={() => setAuthSections("login-by-email")}
             className="font-medium text-info-foreground hover:underline cursor-pointer"
           >
-            Login
+            {t("au_login")}
           </button>
         </p>
       </div>

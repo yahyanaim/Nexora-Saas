@@ -3,6 +3,7 @@
 import * as React from "react"
 import { X as Close } from "@/components/ui/carbon/icons"
 import { cn } from "@/lib/utils"
+import { useUiText } from "@/components/ui/ui-text"
 
 interface SheetContextType {
   open: boolean
@@ -97,6 +98,7 @@ export function SheetContent({
   showCloseButton?: boolean
   children: React.ReactNode
 }) {
+  const ui = useUiText()
   const context = React.useContext(SheetContext)
   if (!context || !context.open) return null
 
@@ -136,7 +138,7 @@ export function SheetContent({
             type="button"
             onClick={() => context.setOpen(false)}
             className="absolute top-6 end-6 rounded-full p-2 text-foreground/70 hover:bg-muted/70 hover:text-foreground transition-colors sm:top-8 sm:end-8"
-            aria-label="Close panel"
+            aria-label={ui.closePanel}
           >
             <Close className="size-4" />
           </button>

@@ -11,12 +11,14 @@ import { Plus, Key, Copy, Check, Trash2, Clock } from "@/components/ui/carbon/ic
 import { formatDate } from "@/lib/utils/format-date"
 import { useHasMounted } from "@/hooks/use-has-mounted"
 import { toast } from "sonner"
+import { useTranslations } from "next-intl"
 
 interface ApiKeysCardProps {
   initialKeys: ApiKey[]
 }
 
 export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
+  const t = useTranslations()
   const hasMounted = useHasMounted()
   const [keys, setKeys] = useState<ApiKey[]>(initialKeys)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -25,12 +27,12 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
   const handleCopy = (key: ApiKey) => {
     navigator.clipboard.writeText(key.tokenPrefix)
     setCopiedId(key.id)
-    toast.success(`Copied token prefix for "${key.name}"`)
+    toast.success(t("dv_prefixCopied", { name: key.name }))
     setTimeout(() => setCopiedId(null), 2000)
   }
 
   const handleRevoke = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to revoke "${name}"? Any service using this key will immediately lose access.`)) {
+    if (!confirm(t("dv_revokeConfirm", { name }))) {
       return
     }
     try {
@@ -38,9 +40,9 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
       setKeys((prev) =>
         prev.map((k) => (k.id === id ? { ...k, status: "revoked" as const } : k))
       )
-      toast.success(`Revoked API key "${name}"`)
+      toast.success(t("dv_revoked", { name }))
     } catch {
-      toast.error("Failed to revoke API key")
+      toast.error(t("dv_revokeFailed"))
     }
   }
 
@@ -55,13 +57,13 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
           <div>
             <CardTitle className="text-lg font-semibold tracking-tight text-foreground flex items-center gap-2">
               <Key className="size-4 text-primary" />
-              <span>API Keys</span>
+              <span>{t("dv_apiKeys")}</span>
               <Badge variant="outline" className="text-xs font-normal">
-                {keys.filter((k) => k.status === "active").length} Active
+                {t("dv_activeCount", { count: keys.filter((k) => k.status === "active").length })}
               </Badge>
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Manage personal and service credentials to authenticate programmatic requests.
+              {t("dv_apiKeysHint")}
             </CardDescription>
           </div>
           <Button
@@ -71,7 +73,7 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
             className="gap-1.5 shrink-0 self-start sm:self-auto"
           >
             <Plus className="size-4" />
-            <span>Generate New Key</span>
+            <span>{t("dv_newKey")}</span>
           </Button>
         </div>
       </CardHeader>
@@ -82,9 +84,9 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
             <div className="flex size-12 items-center justify-center rounded-full bg-muted/60 text-muted-foreground mb-3">
               <Key className="size-6" />
             </div>
-            <h4 className="text-sm font-semibold text-foreground">No API keys generated</h4>
+            <h4 className="text-sm font-semibold text-foreground">{t("dv_noKeys")}</h4>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-              Generate an API key to allow external tools and workflows to integrate with your workspace.
+              {t("dv_noKeysHint")}
             </p>
             <Button
               variant="primary"
@@ -93,7 +95,7 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
               className="mt-4 gap-1.5"
             >
               <Plus className="size-4" />
-              <span>Generate New Key</span>
+              <span>{t("dv_newKey")}</span>
             </Button>
           </div>
         ) : (
@@ -120,7 +122,7 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
                             : "bg-success-soft text-success-foreground border-success/20"
                         }`}
                       >
-                        {key.status}
+                        {t(`dv_status_${key.status}`)}
                       </Badge>
                     </div>
 
@@ -133,7 +135,8 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
                           type="button"
                           onClick={() => handleCopy(key)}
                           className="text-muted-foreground hover:text-foreground p-1 transition-colors"
-                          title="Copy token prefix"
+                          title={t("dv_copyPrefix")}
+                          aria-label={t("dv_copyPrefix")}
                         >
                           {isCopied ? (
                             <Check className="size-3.5 text-success-foreground" />
@@ -159,10 +162,10 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
 
                   <div className="flex items-center justify-between md:justify-end gap-6 text-xs text-muted-foreground shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-border/40">
                     <div className="flex flex-col items-start md:items-end">
-                      <span>Created: {hasMounted ? formatDate(key.createdAt) : "…"}</span>
+                      <span>{t("dv_created", { date: hasMounted ? formatDate(key.createdAt) : "…" })}</span>
                       <span className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Clock className="size-3" />
-                        {key.lastUsedAt ? `Last used: ${hasMounted ? formatDate(key.lastUsedAt) : "…"}` : "Never used"}
+                        {key.lastUsedAt ? t("dv_lastUsed", { date: hasMounted ? formatDate(key.lastUsedAt) : "…" }) : t("dv_neverUsed")}
                       </span>
                     </div>
 
@@ -174,7 +177,7 @@ export function ApiKeysCard({ initialKeys }: ApiKeysCardProps) {
                         className="text-destructive hover:bg-destructive/10 hover:text-destructive gap-1 px-2.5 h-8 text-xs"
                       >
                         <Trash2 className="size-3.5" />
-                        <span>Revoke</span>
+                        <span>{t("dv_revoke")}</span>
                       </Button>
                     )}
                   </div>

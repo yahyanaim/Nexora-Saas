@@ -1,5 +1,8 @@
+"use client"
+
 import * as React from "react"
 import { cn } from "@/lib/utils"
+import { useUiText } from "@/components/ui/ui-text"
 
 export interface SpinnerProps extends React.SVGAttributes<SVGSVGElement> {
   size?: "sm" | "md" | "lg"
@@ -7,10 +10,11 @@ export interface SpinnerProps extends React.SVGAttributes<SVGSVGElement> {
 }
 
 export function Spinner({ size = "md", className, ...props }: SpinnerProps) {
+  const ui = useUiText()
   return (
     <div
       role="status"
-      aria-label="Loading"
+      aria-label={ui.loading}
       className={cn("inline-flex items-center justify-center", className)}
     >
       <svg
@@ -39,7 +43,7 @@ export function Spinner({ size = "md", className, ...props }: SpinnerProps) {
           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
         />
       </svg>
-      <span className="sr-only">Loading...</span>
+      <span className="sr-only">{ui.loading}</span>
     </div>
   )
 }

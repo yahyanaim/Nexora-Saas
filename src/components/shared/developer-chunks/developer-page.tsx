@@ -11,8 +11,11 @@ import { ApiKey, WebhookEndpoint, initialApiKeys, initialWebhooks } from "@/lib/
 import { Terminal, Key, Webhook, Code, Activity, ShieldCheck } from "@/components/ui/carbon/icons"
 import { MetricCardGrid, MetricCardItem } from "@/components/ui/metric-card-grid"
 import { PageHeader } from "@/components/shared/page-header"
+import { logger } from "@/lib/logger"
+import { useTranslations } from "next-intl"
 
 export default function DeveloperPage() {
+  const t = useTranslations()
   const [keys, setKeys] = useState<ApiKey[]>(initialApiKeys)
   const [webhooks, setWebhooks] = useState<WebhookEndpoint[]>(initialWebhooks)
   const [isLoading, setIsLoading] = useState(true)
@@ -30,7 +33,7 @@ export default function DeveloperPage() {
           setWebhooks(loadedWebhooks)
         }
       } catch (err) {
-        console.error("Failed to load developer data:", err)
+        logger.error("Failed to load developer data:", err)
       } finally {
         if (mounted) setIsLoading(false)
       }
@@ -47,25 +50,25 @@ export default function DeveloperPage() {
     () => [
       {
         key: "activeKeys",
-        title: "Active API Keys",
+        title: t("dv_kpiKeys"),
         value: activeKeysCount,
         badge: {
-          label: "Active",
+          label: t("dv_active"),
           icon: Key,
           variant: "outline",
           className: "gap-1 border-primary/20 bg-primary/10 text-primary",
         },
         footer: {
           icon: Key,
-          text: "Programmatic access credentials",
+          text: t("dv_kpiKeysFoot"),
         },
       },
       {
         key: "webhooks",
-        title: "Webhook Endpoints",
+        title: t("dv_webhooks"),
         value: webhooks.length,
         badge: {
-          label: "Live",
+          label: t("dv_live"),
           icon: Webhook,
           variant: "outline",
           className:
@@ -73,16 +76,16 @@ export default function DeveloperPage() {
         },
         footer: {
           icon: Webhook,
-          text: "Outbound event subscribers",
+          text: t("dv_kpiHooksFoot"),
         },
       },
       {
         key: "gatewayStatus",
-        title: "API Gateway Status",
+        title: t("dv_gateway"),
         value: "99.98%",
         valueClassName: "text-success-foreground",
         badge: {
-          label: "Operational",
+          label: t("dv_operational"),
           icon: Activity,
           variant: "outline",
           className:
@@ -90,15 +93,15 @@ export default function DeveloperPage() {
         },
         footer: {
           icon: Activity,
-          text: "Global edge latency: ~24ms",
+          text: t("dv_latency", { ms: 24 }),
         },
       },
       {
         key: "monthlyQuota",
-        title: "Monthly Gateway Limit",
-        value: "100k req",
+        title: t("dv_quota"),
+        value: t("dv_quotaValue", { count: 100 }),
         badge: {
-          label: "84.2% used",
+          label: t("dv_quotaUsed", { pct: 84.2 }),
           icon: Terminal,
           variant: "outline",
           className:
@@ -106,35 +109,35 @@ export default function DeveloperPage() {
         },
         footer: {
           icon: Terminal,
-          text: "Resets automatically each month",
+          text: t("dv_quotaFoot"),
         },
       },
     ],
-    [activeKeysCount, webhooks.length]
+    [activeKeysCount, webhooks.length, t]
   )
 
   const tabs: TabItem[] = useMemo(
     () => [
       {
         id: "api-keys",
-        label: "API Keys",
+        label: t("dv_apiKeys"),
         icon: <Key className="size-3.5" />,
         content: <ApiKeysCard initialKeys={keys} />,
       },
       {
         id: "webhooks",
-        label: "Webhooks",
+        label: t("dv_tabWebhooks"),
         icon: <Webhook className="size-3.5" />,
         content: <WebhooksCard initialWebhooks={webhooks} />,
       },
       {
         id: "docs",
-        label: "Quickstart & Docs",
+        label: t("dv_tabDocs"),
         icon: <Code className="size-3.5" />,
         content: <QuickDocsCard />,
       },
     ],
-    [keys, webhooks]
+    [keys, webhooks, t]
   )
 
   return (
@@ -146,7 +149,7 @@ export default function DeveloperPage() {
             REST API v1
           </Badge>
         }
-        description="Generate scoped personal access tokens, configure webhook subscribers, and inspect integration documentation."
+        description={t("dv_pageHint")}
       />
 
       {/* KPI Metric Summary Cards */}

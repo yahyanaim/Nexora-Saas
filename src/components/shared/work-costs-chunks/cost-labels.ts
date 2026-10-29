@@ -18,13 +18,6 @@ export const EXPENSE_STATUS_LABEL: Record<ExpenseStatus, string> = {
   [ExpenseStatus.REIMBURSED]: "reimbursed",
 }
 
-export const EXPENSE_STATUS_CLASS: Record<ExpenseStatus, string> = {
-  [ExpenseStatus.SUBMITTED]: "bg-info-soft text-info-foreground border-transparent",
-  [ExpenseStatus.APPROVED]: "bg-warning-soft text-warning-foreground border-transparent",
-  [ExpenseStatus.REJECTED]: "bg-danger-soft text-destructive border-transparent",
-  [ExpenseStatus.REIMBURSED]: "bg-success-soft text-success-foreground border-transparent",
-}
-
 /** Receipts we accept: images and PDFs up to 10 MB. */
 export const RECEIPT_TYPES = ["image/png", "image/jpeg", "image/webp", "application/pdf"]
 export const RECEIPT_MAX_BYTES = 10 * 1024 * 1024

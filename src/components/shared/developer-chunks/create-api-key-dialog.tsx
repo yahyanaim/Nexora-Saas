@@ -18,6 +18,8 @@ import { createApiKeyApi } from "@/lib/api/developer-apis"
 import { ApiKey } from "@/lib/demo-data/developer"
 import { Copy, Check, Warning, Key } from "@/components/ui/carbon/icons"
 import { toast } from "sonner"
+import { logger } from "@/lib/logger"
+import { useTranslations } from "next-intl"
 
 interface CreateApiKeyDialogProps {
   open: boolean
@@ -30,6 +32,7 @@ export function CreateApiKeyDialog({
   onOpenChange,
   onKeyCreated,
 }: CreateApiKeyDialogProps) {
+  const t = useTranslations()
   const [name, setName] = useState("")
   const [selectedScopes, setSelectedScopes] = useState<string[]>(["read:users"])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -47,11 +50,11 @@ export function CreateApiKeyDialog({
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim()) {
-      toast.error("Please provide a name for this API key")
+      toast.error(t("dv_nameRequired"))
       return
     }
     if (selectedScopes.length === 0) {
-      toast.error("Select at least one permission scope")
+      toast.error(t("dv_scopeRequired"))
       return
     }
 
@@ -60,10 +63,10 @@ export function CreateApiKeyDialog({
       const { apiKey, fullToken } = await createApiKeyApi(name.trim(), selectedScopes)
       setRevealedToken(fullToken)
       onKeyCreated(apiKey)
-      toast.success("API key generated successfully")
+      toast.success(t("dv_keyCreated"))
     } catch (err) {
-      console.error(err)
-      toast.error("Failed to generate API key")
+      logger.error(err)
+      toast.error(t("dv_keyFailed"))
     } finally {
       setIsSubmitting(false)
     }
@@ -73,7 +76,7 @@ export function CreateApiKeyDialog({
     if (!revealedToken) return
     navigator.clipboard.writeText(revealedToken)
     setHasCopied(true)
-    toast.success("Copied API key to clipboard")
+    toast.success(t("dv_keyCopied"))
     setTimeout(() => setHasCopied(false), 2500)
   }
 
@@ -92,24 +95,25 @@ export function CreateApiKeyDialog({
             <DialogHeader>
               <div className="flex items-center gap-2 text-success-foreground">
                 <Key className="size-5" />
-                <DialogTitle>API Key Generated</DialogTitle>
+                <DialogTitle>{t("dv_keyGenerated")}</DialogTitle>
               </div>
               <DialogDescription>
-                Copy your secret key now. For your security, this key cannot be viewed again once you close this modal.
+                {t("dv_copyNow")}
               </DialogDescription>
             </DialogHeader>
 
             <div className="rounded-xl border border-warning/20 bg-warning-soft p-3.5 flex items-start gap-3">
               <Warning className="size-4.5 text-warning-foreground shrink-0 mt-0.5" />
               <p className="text-xs text-warning-foreground leading-relaxed">
-                Treat this key like a password. Do not commit it to public repositories or expose it in client-side code.
+                {t("dv_treatLikePassword")}
               </p>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-medium">Your API Secret Token</Label>
+              <Label htmlFor="api-key-token" className="text-xs font-medium">{t("dv_secretToken")}</Label>
               <div className="flex items-center gap-2">
                 <Input
+                  id="api-key-token"
                   readOnly
                   value={revealedToken}
                   className="font-mono text-xs bg-muted/60 border-border select-all"
@@ -122,31 +126,31 @@ export function CreateApiKeyDialog({
                   className="gap-1.5 shrink-0"
                 >
                   {hasCopied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-                  <span>{hasCopied ? "Copied" : "Copy"}</span>
+                  <span>{hasCopied ? t("dv_copied") : t("dv_copy")}</span>
                 </Button>
               </div>
             </div>
 
             <DialogFooter>
               <Button variant="default" onClick={handleClose} className="w-full">
-                Done & Close
+                {t("dv_doneClose")}
               </Button>
             </DialogFooter>
           </div>
         ) : (
           <form onSubmit={handleGenerate} className="space-y-4">
             <DialogHeader>
-              <DialogTitle>Generate New API Key</DialogTitle>
+              <DialogTitle>{t("dv_newKeyTitle")}</DialogTitle>
               <DialogDescription>
-                Create programmatic credentials to securely interact with the Nexora REST API.
+                {t("dv_newKeyHint")}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-2">
-              <Label htmlFor="key-name">Key Name</Label>
+              <Label htmlFor="key-name">{t("dv_keyName")}</Label>
               <Input
                 id="key-name"
-                placeholder="e.g. Production Backend Worker, Zapier Sync"
+                placeholder={t("dv_keyNamePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 autoFocus
@@ -154,8 +158,8 @@ export function CreateApiKeyDialog({
             </div>
 
             <div className="space-y-2.5">
-              <Label>Permission Scopes</Label>
-              <div className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-2 max-h-56 overflow-y-auto">
+              <Label id="api-key-scopes">{t("dv_scopes")}</Label>
+              <div role="group" aria-labelledby="api-key-scopes" className="rounded-xl border border-border/60 bg-muted/20 p-3 space-y-2 max-h-56 overflow-y-auto">
                 {AVAILABLE_SCOPES.map((scope) => {
                   const isChecked = selectedScopes.includes(scope.id)
                   return (
@@ -187,10 +191,10 @@ export function CreateApiKeyDialog({
 
             <DialogFooter className="gap-2 sm:gap-0">
               <Button type="button" variant="outline" onClick={handleClose}>
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" variant="primary" disabled={isSubmitting}>
-                {isSubmitting ? "Generating..." : "Generate Key"}
+                {isSubmitting ? t("dv_generating") : t("dv_generate")}
               </Button>
             </DialogFooter>
           </form>

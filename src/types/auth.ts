@@ -58,17 +58,6 @@ export interface RegisterPayload {
   confirmPassword?: string
 }
 
-export interface VerifyOtpPayload {
-  token: string
-}
-
-export type VerifyAccountPayload = VerifyOtpPayload
-
-export interface SendOtpPayload {
-  email: string
-  typeSend?: "account-verification" | "password-recovery"
-}
-
 export interface ForgotPasswordPayload {
   email: string
 }
@@ -133,26 +122,4 @@ export interface RegisterResponse {
   message?: string
   success?: boolean
   user?: User | AuthUser
-}
-
-export interface SendOtpResponse {
-  message?: string
-}
-
-export interface LogoutResponse {
-  message?: string
-}
-
-export interface AuthMeResponse {
-  id: string
-  name: string
-  email: string
-  role: UserRole
-  emailVerified?: boolean
-  orgId?: string
-}
-
-export enum OtpPurpose {
-  ACCOUNT_VERIFICATION = "account-verification",
-  PASSWORD_RECOVERY = "password-recovery",
 }

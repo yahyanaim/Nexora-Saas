@@ -43,16 +43,6 @@ export interface FileItem {
   children?: FileItem[]
 }
 
-export interface CreateFilePayload {
-  file: File
-  project?: string
-  folderId?: string
-}
-
-export interface RenameFilePayload {
-  name: string
-}
-
 export interface FileSummary {
   totalFiles: number
   totalSize: number

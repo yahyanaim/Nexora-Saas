@@ -126,8 +126,6 @@ export function matchTransfer<T extends { id: string; number: string; balance: n
 /** INV-08 (D-04): card invoices are due on issue, bank transfers after 15 days, or 30 under an Enterprise contract. */
 export const dueDate = (issued: string, method: "card" | "transfer", termsDays = 15) => (method === "card" ? issued : addDays(issued, termsDays))
 
-/** D-04: transfer terms a customer can have; 30 days only for Enterprise. */
-export const PAYMENT_TERMS = [15, 30] as const
 export const termsFor = (c: { plan: string; paymentTermsDays?: number }) => (c.plan === "enterprise" && c.paymentTermsDays === 30 ? 30 : 15)
 
 /** D-03: an operator can pause dunning once per invoice, for up to 15 days. */

@@ -3,7 +3,9 @@
 import { AuthSections } from "./auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { resetPasswordApi } from "@/lib/api/auth-apis"
+import { isDemoMode, resetPasswordApi } from "@/lib/api/auth-apis"
+import { apiErrorMessage } from "@/lib/myapi/client"
+import { newPasswordField, PASSWORD_MIN } from "@/lib/auth/password"
 import { useMutation } from "@tanstack/react-query"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "@/components/ui/carbon/icons"
@@ -19,19 +21,15 @@ interface Props {
   token?: string
 }
 
-const resetSchema = (_t: (key: string) => string) =>
+const resetSchema = (t: (key: string, values?: Record<string, string | number>) => string) =>
   z
     .object({
       token: z.string(),
-      password: z
-        .string()
-        .min(10, "Password must be at least 10 characters")
-        .regex(/[A-Z]/, "Must contain at least one uppercase letter")
-        .regex(/[0-9]/, "Must contain at least one number"),
-      confirmPassword: z.string().min(1, "Please confirm your password"),
+      password: newPasswordField(t),
+      confirmPassword: z.string().min(1, t("confirmPasswordRequired")),
     })
     .refine((data) => data.password === data.confirmPassword, {
-      message: "Passwords do not match",
+      message: t("passwordsDoNotMatch"),
       path: ["confirmPassword"],
     })
 
@@ -59,12 +57,16 @@ export function ResetPassword({ setAuthSections, token = "valid-reset-token" }: 
   const resetMutation = useMutation({
     mutationFn: resetPasswordApi,
     onSuccess: () => {
-      toast.success("Password reset successfully! Please sign in with your new password.")
+      toast.success(t("au_resetDone"))
       setAuthSections("login-by-email")
     },
-    onError: (_error: unknown) => {
-      // In demo mode, gracefully succeed
-      toast.success("Demo: password updated! Redirecting to login.")
+    onError: (error: unknown) => {
+      // Only the demo carries on without a server; a real failure says so
+      if (!isDemoMode()) {
+        toast.error(apiErrorMessage(error, t("au_resetFailed")))
+        return
+      }
+      toast.success(t("au_demoResetDone"))
       setAuthSections("login-by-email")
     },
   })
@@ -87,10 +89,10 @@ export function ResetPassword({ setAuthSections, token = "valid-reset-token" }: 
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Set new password
+          {t("au_setNewPassword")}
         </h1>
         <p className="text-xs text-muted-foreground mt-1">
-          Create a strong password to protect your enterprise workspace
+          {t("au_setNewPasswordHint", { min: PASSWORD_MIN })}
         </p>
       </div>
 
@@ -101,13 +103,13 @@ export function ResetPassword({ setAuthSections, token = "valid-reset-token" }: 
             htmlFor="password"
             className="text-xs font-medium text-foreground/80"
           >
-            New password
+            {t("au_newPassword")}
           </label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Enter new password"
+              placeholder={t("au_newPasswordPlaceholder")}
               disabled={resetMutation.isPending}
               className="h-10 rounded-lg border-border/60 bg-muted/40 px-3.5 pr-9 text-xs focus:bg-background focus:ring-1 focus:ring-primary/40 transition-colors"
               {...register("password")}
@@ -115,6 +117,8 @@ export function ResetPassword({ setAuthSections, token = "valid-reset-token" }: 
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? t("au_hidePassword") : t("au_showPassword")}
+              aria-pressed={showPassword}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -133,13 +137,13 @@ export function ResetPassword({ setAuthSections, token = "valid-reset-token" }: 
             htmlFor="confirmPassword"
             className="text-xs font-medium text-foreground/80"
           >
-            Confirm password
+            {t("au_confirmPassword")}
           </label>
           <div className="relative">
             <Input
               id="confirmPassword"
               type={showConfirm ? "text" : "password"}
-              placeholder="Re-enter new password"
+              placeholder={t("au_reenterPlaceholder")}
               disabled={resetMutation.isPending}
               className="h-10 rounded-lg border-border/60 bg-muted/40 px-3.5 pr-9 text-xs focus:bg-background focus:ring-1 focus:ring-primary/40 transition-colors"
               {...register("confirmPassword")}
@@ -147,6 +151,8 @@ export function ResetPassword({ setAuthSections, token = "valid-reset-token" }: 
             <button
               type="button"
               onClick={() => setShowConfirm(!showConfirm)}
+              aria-label={showConfirm ? t("au_hidePassword") : t("au_showPassword")}
+              aria-pressed={showConfirm}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               {showConfirm ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
@@ -168,23 +174,25 @@ export function ResetPassword({ setAuthSections, token = "valid-reset-token" }: 
           {resetMutation.isPending && (
             <Loader2 className="size-4 animate-spin text-current" />
           )}
-          <span>{resetMutation.isPending ? "Updating..." : "Reset password"}</span>
+          <span>{resetMutation.isPending ? t("au_updating") : t("au_resetTitle")}</span>
         </Button>
       </form>
 
       {/* Demo Account Helper */}
-      <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 text-center">
-        <p className="text-xs text-muted-foreground">
-          Need a quick password?
-          <button
-            type="button"
-            onClick={fillDemoPassword}
-            className="ml-1 font-medium text-primary hover:underline cursor-pointer"
-          >
-            Fill compliant password
-          </button>
-        </p>
-      </div>
+      {isDemoMode() && (
+        <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 text-center">
+          <p className="text-xs text-muted-foreground">
+            {t("au_quickPassword")}
+            <button
+              type="button"
+              onClick={fillDemoPassword}
+              className="ms-1 font-medium text-primary hover:underline cursor-pointer"
+            >
+              {t("au_fillPassword")}
+            </button>
+          </p>
+        </div>
+      )}
 
       {/* Back to Login */}
       <div className="text-center">
@@ -193,8 +201,8 @@ export function ResetPassword({ setAuthSections, token = "valid-reset-token" }: 
           onClick={() => setAuthSections("login-by-email")}
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
-          <ArrowLeft className="size-3" />
-          <span>Back to <strong className="text-primary font-semibold">Login</strong></span>
+          <ArrowLeft className="size-3 rtl:rotate-180" />
+          <span>{t.rich("au_backToLogin", { b: (chunks) => <strong className="text-primary font-semibold">{chunks}</strong> })}</span>
         </button>
       </div>
     </div>

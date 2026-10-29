@@ -23,6 +23,7 @@ import { PageHeader } from "@/components/shared/page-header"
 import { Badge } from "@/components/ui/badge"
 import { FilterPill } from "./filter-pill"
 import { COMPARE_LABEL, COMPARE_MODES, DATE_RANGES, RANGE_LABEL, useAnalyticsFilter } from "./analytics-filter-context"
+import { logger } from "@/lib/logger"
 
 export function AnalyticsToolbar() {
   const t = useTranslations()
@@ -87,7 +88,7 @@ export function AnalyticsToolbar() {
       await downloadAnalyticsPdf(report, `analytics-${analytics.windows.current.from}-${analytics.windows.current.to}.pdf`)
       toast.success(t("anReportDownloaded"))
     } catch (err) {
-      console.error(err)
+      logger.error(err)
       toast.error(t("anReportFailed"))
     }
   }

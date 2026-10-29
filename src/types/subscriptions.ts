@@ -50,34 +50,3 @@ export interface Subscription {
   createdAt: string
   updatedAt?: string
 }
-
-export interface SubscriptionsSummary {
-  totalRevenue: number
-  totalSubscriptions: number
-  active: number
-  inactive: number
-  pending: number
-  expired: number
-  canceled: number
-  activePercentage: number
-  revenueGrowth: number
-}
-
-export interface CreateSubscriptionPayload {
-  name: string
-  description?: string
-  price: string
-  period?: string | null
-  status?: SubscriptionStatus
-  features: string[]
-  user?: string
-  plan?: string
-}
-
-export type UpdateSubscriptionPayload = Partial<CreateSubscriptionPayload>
-
-export interface SubscriptionFilters {
-  status?: SubscriptionStatus[]
-  planName?: string[]
-  billingCycle?: string[]
-}
