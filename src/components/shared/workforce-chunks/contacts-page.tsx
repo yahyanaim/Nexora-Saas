@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
+import { safeHref } from "@/lib/utils/url"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -183,7 +184,7 @@ export default function ContactsPage() {
         enableSorting: false,
         header: () => <span>LinkedIn</span>,
         cell: ({ row }) => {
-          const url = row.original.contact.linkedin
+          const url = safeHref(row.original.contact.linkedin)
           return url ? <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline" aria-label={t("ctLinkedinOf", { name: row.original.contact.name })}>{t("ctProfile")}</a> : <span className="text-sm text-muted-foreground">—</span>
         },
       },

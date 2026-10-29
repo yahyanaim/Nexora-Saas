@@ -11,7 +11,10 @@ import {
   type FieldValues,
 } from "react-hook-form"
 
+import { useTranslations } from "next-intl"
+
 import { cn } from "@/lib/utils"
+import { errorKey } from "@/lib/errors/translate-error"
 import { Label } from "@/components/ui/label"
 
 const Form = FormProvider
@@ -135,7 +138,11 @@ function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
 
 function FormMessage({ className, ...props }: React.ComponentProps<"p">) {
   const { error, formMessageId } = useFormField()
-  const body = error ? String(error?.message ?? "") : props.children
+  const t = useTranslations()
+  const message = error ? String(error?.message ?? "") : ""
+  // A known rule message ("A web address must start with…") shows in the user's language.
+  const hit = message ? errorKey(message) : null
+  const body = error ? (hit && t.has(hit.key) ? t(hit.key, hit.values) : message) : props.children
 
   if (!body) {
     return null

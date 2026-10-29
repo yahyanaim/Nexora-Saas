@@ -29,6 +29,7 @@ import { sortFollowUps } from "@/lib/workforce/follow-ups"
 import { isOpenDeal } from "@/lib/workforce/deals"
 import type { ClientFollowUp } from "@/types/work-crm"
 import { cn } from "@/lib/utils"
+import { safeHref } from "@/lib/utils/url"
 import { ClientStatus, type Client, type ClientInput } from "@/types/workforce"
 import { DataTableEntityFormSheet } from "../data-table-chunks/data-table-entity-form-sheet"
 import { PortalAccessManager } from "../work-portal-chunks/portal-access-manager"
@@ -325,7 +326,7 @@ function ClientPageBody({ client: c, clients, canSeeMoney, canEdit, canMerge }: 
         <div className="flex gap-2">
           <QuickAction label={phone ? t("cdCall", { phone }) : t("cdNoPhone")} href={phone ? `tel:${phone.replace(/\s/g, "")}` : undefined} icon={Phone} />
           <QuickAction label={email ? t("cdEmail", { email }) : t("clNoEmail")} href={email ? `mailto:${email}` : undefined} icon={Mail} />
-          <QuickAction label={c.website ? t("cdWebsite") : t("cdNoWebsite")} href={c.website} icon={Globe} external />
+          <QuickAction label={safeHref(c.website) ? t("cdWebsite") : t("cdNoWebsite")} href={safeHref(c.website)} icon={Globe} external />
         </div>
       </PageHeader>
 

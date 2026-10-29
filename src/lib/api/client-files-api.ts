@@ -1,6 +1,6 @@
 import type { ClientFile, ClientFileCategory } from "@/types/work-crm"
 import { createCollection } from "@/lib/workforce/demo-store"
-import { getAuditActor } from "@/lib/workforce/audit"
+import { getAuditActor, recordAudit } from "@/lib/workforce/audit"
 
 /**
  * Files kept on a client (CRM step 10). The browser demo keeps small files as
@@ -29,7 +29,9 @@ export async function addClientFileApi(
   if (file.size > MAX_CLIENT_FILE_BYTES) throw new Error("Files are limited to 500 KB for now")
   if ((await listClientFilesApi(workspaceId, clientId)).length >= MAX_CLIENT_FILES) throw new Error("A client can hold 20 files")
   if (!/^data:[\w.+/-]*;base64,/.test(file.dataUrl)) throw new Error("This file could not be read")
-  return files.create(workspaceId, { clientId, name: file.name.slice(0, 200), type: file.type || "application/octet-stream", size: file.size, dataUrl: file.dataUrl, category, addedBy: getAuditActor().name })
+  const saved = files.create(workspaceId, { clientId, name: file.name.slice(0, 200), type: file.type || "application/octet-stream", size: file.size, dataUrl: file.dataUrl, category, addedBy: getAuditActor().name })
+  recordAudit(workspaceId, { action: "Client file added", actionKey: "client.file_added", category: "Team", target: saved.name })
+  return saved
 }
 
 export async function setClientFileCategoryApi(workspaceId: string, id: string, category: ClientFileCategory): Promise<ClientFile> {
@@ -38,7 +40,10 @@ export async function setClientFileCategoryApi(workspaceId: string, id: string, 
 }
 
 export async function removeClientFileApi(workspaceId: string, id: string) {
+  const file = files.get(workspaceId, id)
+  if (!file) return
   files.remove(workspaceId, id)
+  recordAudit(workspaceId, { action: "Client file removed", actionKey: "client.file_removed", category: "Team", target: file.name })
 }
 
 /** Removes every file of a client, when it is deleted for good. */

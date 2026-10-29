@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
+import { safeHref } from "@/lib/utils/url"
 import { Pencil, Plus, Star, Trash2 } from "@/components/ui/carbon/icons"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -132,7 +133,7 @@ export function ContactCard({ contact: c, client }: { contact: ClientContact; cl
       <p className="flex flex-col text-sm">
         {contactEmails(c).map((email) => <a key={email} href={`mailto:${email}`} className="truncate text-primary hover:underline">{email}</a>)}
         {contactPhones(c).map((phone) => <a key={phone} href={`tel:${phone.replace(/\s/g, "")}`} className="tabular-nums text-muted-foreground hover:text-foreground" dir="ltr">{phone}</a>)}
-        {c.linkedin && <a href={c.linkedin} target="_blank" rel="noopener noreferrer" className="truncate text-muted-foreground hover:text-foreground hover:underline">LinkedIn</a>}
+        {safeHref(c.linkedin) && <a href={safeHref(c.linkedin)} target="_blank" rel="noopener noreferrer" className="truncate text-muted-foreground hover:text-foreground hover:underline">LinkedIn</a>}
       </p>
     </div>
   )

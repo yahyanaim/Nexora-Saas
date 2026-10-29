@@ -19,6 +19,7 @@ import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
 import type { ClientFigures } from "@/lib/workforce/client-figures"
 import { todayIso } from "@/lib/workforce/project-metrics"
 import { cn } from "@/lib/utils"
+import { safeHref } from "@/lib/utils/url"
 import { ClientNoteKind } from "@/types/work-crm"
 import type { Client, Employee } from "@/types/workforce"
 import { HEALTH_CLASS, relativeDay } from "./clients-columns"
@@ -127,7 +128,7 @@ function Details({ client: c, figures: f, employees, currency, canSeeMoney, canE
           <div className="flex gap-2 pt-1.5">
             <QuickAction label={phone ? t("cdCall", { phone }) : t("cdNoPhone")} href={phone ? `tel:${phone.replace(/\s/g, "")}` : undefined} icon={Phone} />
             <QuickAction label={email ? t("cdEmail", { email }) : t("clNoEmail")} href={email ? `mailto:${email}` : undefined} icon={Mail} />
-            <QuickAction label={c.website ? t("cdWebsite") : t("cdNoWebsite")} href={c.website} icon={Globe} external />
+            <QuickAction label={safeHref(c.website) ? t("cdWebsite") : t("cdNoWebsite")} href={safeHref(c.website)} icon={Globe} external />
             {(canEdit || canDelete) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

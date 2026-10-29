@@ -74,6 +74,8 @@ Each line names the front-end source (the reference behaviour, with its tests), 
 
 The cahier des charges was approved on 16 October; decisions D1–D8 were made on 28 October. Where they disagree, one side must change. The recommendation is given for each item; your choice is recorded in v2.1 §1.2.
 
+> **Decision, 29 October 2026:** all twelve recommendations B1–B12 below are **approved as written**. They are recorded in v2.1 §1.2 and applied in the sections listed in §8.
+
 | # | Topic | Cahier des charges v2.0 | API contract v2 / D1–D8 | Recommendation |
 |---|---|---|---|---|
 | B1 | Session limits | Members 12 h idle / 30 days; portal 2 h / 7 days; staff 30 min / 12 h (Table 6) | Members 30 min / 12 h; staff 15 min / 8 h (D3) | **D3 for members and staff, keep the portal values.** The lock screen (A3.6) keeps short idle limits convenient. Update Table 6 and IAM-07. |
@@ -141,4 +143,4 @@ v2.1 keeps the same structure, style and identifiers, and touches:
 | §21.2, Annex D | New plan and requirement counts |
 | New Annex F | Error codes → catalogue keys (B5) |
 
-**Order:** A2 (front-end fixes) → your choices on B1–B12 → cahier des charges v2.1 → backend phase B1a.
+**Order:** A2 (front-end fixes) → ~~your choices on B1–B12~~ approved 29 October → cahier des charges v2.1 → backend phase B1a.

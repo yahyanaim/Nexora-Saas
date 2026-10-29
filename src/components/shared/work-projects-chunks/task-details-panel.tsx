@@ -13,6 +13,7 @@ import { useTaskMutations } from "@/hooks/workforce/use-work-projects"
 import { useCurrentEmployee } from "@/hooks/workforce/use-current-employee"
 import { createId } from "@/lib/workforce/demo-store"
 import { isWebUrl, taskKey, taskLinks } from "@/lib/workforce/task-extras"
+import { safeHref } from "@/lib/utils/url"
 import { toast } from "@/lib/utils/toast"
 import { cn } from "@/lib/utils"
 import { TaskRelationType, isClosedStatus, type WorkProject, type WorkTask } from "@/types/work-projects"
@@ -141,7 +142,7 @@ export function TaskDetailsPanel({ task, people, allTasks, projects, canEdit, on
           {(task.links ?? []).map((l) => (
             <li key={l.id} className="flex items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm">
               <LinkIcon className="size-4 shrink-0 text-muted-foreground" />
-              <a href={l.url} target="_blank" rel="noopener noreferrer nofollow" className="min-w-0 flex-1 truncate text-primary hover:underline">{l.title || l.url}</a>
+              <a href={safeHref(l.url)} target="_blank" rel="noopener noreferrer nofollow" className="min-w-0 flex-1 truncate text-primary hover:underline">{l.title || l.url}</a>
               {canEdit && <Button type="button" variant="ghost" size="icon" className="size-7" aria-label={t("tkRemoveLink", { name: l.title || l.url })} onClick={() => save({ links: (task.links ?? []).filter((x) => x.id !== l.id) })}><Trash2 className="size-3.5" /></Button>}
             </li>
           ))}

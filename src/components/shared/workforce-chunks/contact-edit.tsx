@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { withContact, withoutContact } from "@/lib/workforce/contacts"
+import { isWebUrl } from "@/lib/utils/url"
 import { ContactRole, type Client, type ClientContact } from "@/types/workforce"
 
 export const blankContact = (): ClientContact => ({ id: "", name: "", email: "", phone: "", position: "", role: undefined, isPrimary: false })
@@ -50,7 +51,8 @@ export function ContactDialog({ contact, onClose, onSave, saving, clients }: Dia
   }
   const extraEmails = splitList(otherEmails)
   const pickClient = !!clients && !contact?.id
-  const valid = !!draft.name.trim() && isEmail(draft.email.trim()) && extraEmails.every(isEmail) && (!pickClient || !!clientId)
+  const linkedinOk = !draft.linkedin?.trim() || isWebUrl(draft.linkedin)
+  const valid = !!draft.name.trim() && isEmail(draft.email.trim()) && extraEmails.every(isEmail) && linkedinOk && (!pickClient || !!clientId)
   const set = (patch: Partial<ClientContact>) => setDraft((d) => ({ ...d, ...patch }))
   const pickedClient = clients?.find((c) => c.id === clientId)
 
@@ -117,7 +119,8 @@ export function ContactDialog({ contact, onClose, onSave, saving, clients }: Dia
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="cp-linkedin">LinkedIn</Label>
-            <Input id="cp-linkedin" type="url" dir="ltr" value={draft.linkedin ?? ""} onChange={(e) => set({ linkedin: e.target.value })} placeholder="https://www.linkedin.com/in/…" />
+            <Input id="cp-linkedin" type="url" dir="ltr" value={draft.linkedin ?? ""} onChange={(e) => set({ linkedin: e.target.value })} placeholder="https://www.linkedin.com/in/…" aria-invalid={!linkedinOk} aria-describedby={linkedinOk ? undefined : "cp-linkedin-error"} />
+            {!linkedinOk && <p id="cp-linkedin-error" className="text-sm text-destructive">{t("err_badUrl")}</p>}
           </div>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox checked={draft.isPrimary} onCheckedChange={(v) => set({ isPrimary: !!v })} />

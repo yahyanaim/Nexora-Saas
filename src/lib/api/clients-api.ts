@@ -5,6 +5,7 @@ import { seedClients } from "@/lib/workforce/demo-seed"
 import { assertClientIds, cleanId } from "@/lib/workforce/tax-ids"
 import { cleanTags } from "@/lib/workforce/client-figures"
 import { getAuditActor, recordAudit } from "@/lib/workforce/audit"
+import { BAD_URL_MESSAGE, isWebUrl } from "@/lib/utils/url"
 import { binDaysLeft, diffClient, mergeClientValues, type MergePicks } from "@/lib/workforce/client-history"
 
 /**
@@ -56,6 +57,8 @@ async function validate(workspaceId: string, input: Partial<ClientInput>) {
   const { getSettingsApi } = await import("./settings-api")
   const { company } = await getSettingsApi(workspaceId)
   assertClientIds(input, company.country)
+  const links = [input.website, ...(input.contacts ?? []).map((c) => c.linkedin)].map((u) => u?.trim()).filter(Boolean) as string[]
+  if (links.some((u) => !isWebUrl(u))) throw new Error(BAD_URL_MESSAGE)
   const card = input.rateCard ?? []
   if (card.some((r) => !(r.rate >= 0) || (!r.employeeId && !r.jobTitle?.trim()))) {
     throw new Error("Each rate card line needs a person or a job title, and a rate")
