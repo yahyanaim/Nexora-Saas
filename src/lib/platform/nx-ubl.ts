@@ -63,13 +63,3 @@ export function nxUblXml(doc: { kind: "invoice"; invoice: NxInvoice } | { kind: 
     `</${root}>`,
   ].join("")
 }
-
-/** Starts a download of a text file in the browser. */
-export function downloadText(content: string, filename: string, type = "application/xml") {
-  const url = URL.createObjectURL(new Blob([content], { type }))
-  const a = document.createElement("a")
-  a.href = url
-  a.download = filename
-  a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
