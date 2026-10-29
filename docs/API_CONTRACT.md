@@ -7,7 +7,7 @@ This document lists **every API the front end needs** so the backend can be conn
 - The database model.
 - External services: payment provider, DGI e-invoicing, e-mail, file storage provider, SMS.
 
-Where the front end touches one of these, this document only names the endpoint the front end calls. The **security rules that change what an endpoint accepts or answers** (CSRF, sessions, 2FA, files, limits, audit) are part of the contract: see §2 and §12. The full security plan is Part C of `docs/PLAN_FIXES_API_SECURITY_2026-10.md`.
+Where the front end touches one of these, this document only names the endpoint the front end calls. The **security rules that change what an endpoint accepts or answers** (CSRF, sessions, 2FA, files, limits, audit) are part of the contract: see §2 and §12. The full security plan is §18.4 of the backend cahier des charges (`docs/CAHIER_DES_CHARGES.md` in `yahyanaim/Nexora-Backend`).
 
 ### Update of 29 October 2026 (contract v2)
 
@@ -833,7 +833,7 @@ Each phase is useful on its own and can go live module by module, because the de
 
 ## 12. Security rules on the API
 
-Short version of Part C of `docs/PLAN_FIXES_API_SECURITY_2026-10.md`: the rules that change what endpoints accept or answer.
+Short version of §18.4 of the backend cahier des charges (`yahyanaim/Nexora-Backend`): the rules that change what endpoints accept or answer.
 
 | Area | Rule |
 |---|---|

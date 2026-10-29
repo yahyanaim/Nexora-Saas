@@ -51,7 +51,7 @@ The October full audit found **2 high, 9 medium and 12 low** items. All the fron
 
 ## 3. What the server must still do
 
-S-02, S-03, S-06, S-07, G-06, H2, H3, and C-02 while wiring. Each one has its decision (D1–D8), its contract section in `docs/API_CONTRACT.md`, and its requirement in the backend cahier des charges (repository `yahyanaim/Nexora-Backend`).
+S-02, S-03, S-06, S-07, G-06, H2, H3, and C-02 while wiring. Each one has its decision (D1–D8), its contract section in `docs/API_CONTRACT.md`, and its requirement in the backend cahier des charges v2.1 (`docs/CAHIER_DES_CHARGES.md` in `yahyanaim/Nexora-Backend`, Annex C maps every finding).
 
 ## 4. Screenshots
 
