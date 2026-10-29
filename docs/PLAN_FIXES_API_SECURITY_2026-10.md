@@ -7,11 +7,11 @@ _October 2026. Plan only: nothing here is implemented yet. Based on `docs/AUDIT_
 | Part | What | Size | When |
 |---|---|---|---|
 | **A** | Front-end fixes, in 4 small PRs | A1–A2 about 1–2 days each; A3–A4 smaller | Before the backend starts (A1, A2), then alongside it (A3, A4) |
-| **B** | API contract update (`API_AUDIT_2026-10.md`) | One documentation PR | Right after A1, before any backend code |
+| **B** | API contract update (`API_AUDIT_2026-10.md`) | One documentation PR | ✅ Done: contract v2, 362 of 362 API functions mapped, guard test `api-contract.test.ts` |
 | **C** | Security plan for the backend, by OWASP area | Written into the contract (B) and built with each backend phase | During the backend |
 | **D** | Decisions | 8 decisions, made 28 October 2026 | Done |
 
-Order: **A1 → A2 → B → backend phase 0 with C → A3 / A4**. A1 is in review; the confirm dialogs' Cancel/Confirm buttons were also translated there (found while building it).
+Order: **A1 ✅ → B ✅ → A2 → backend phase 0 with C → A3 / A4**. B was moved before A2 (29 October) because it is what the backend team needs; A2 only touches the front end. A1 also translated the confirm dialogs' Cancel/Confirm buttons (found while building it).
 
 Each PR follows the usual routine: tests, `tsc`, lint, build, browser check with screenshots, docs and README row, then a PR that waits for your "merge it".
 

@@ -7,6 +7,7 @@ _Follows `docs/AUDIT_PRE_BACKEND_2026-10.md` and `docs/API_AUDIT_2026-10.md`. Wr
 | Finding | Status |
 |---|---|
 | G-01 project delete, G-02 landing page, G-03 old links, G-04 task mentions, G-05 company export | ✅ Fixed in A1 |
+| S-02, S-03, S-05, S-06, S-07, G-06: what the server must do | ✅ Written into the API contract v2 (`docs/API_AUDIT_2026-10.md`, Part B of the plan) |
 | Everything else | ⏳ Planned in `docs/PLAN_FIXES_API_SECURITY_2026-10.md` |
 
 ## 1. Summary
@@ -15,7 +16,7 @@ The front end is in good shape. Types are strict, lint and tests are clean, the 
 
 This audit found **2 high**, **9 medium** and **12 low** items. The two high items are about **connections between features**, not about security:
 
-1. A project that has hours and invoices can be deleted. Its records are then left pointing at nothing (verified: 92 hours, 9 invoices, 2 pages).
+1. A project that has hours and invoices can be deleted. Its records are then left pointing at nothing (verified: 92 hours, 1 invoice, 2 pages).
 2. An employee who signs in lands on "You don't have access to this page" (verified in the browser).
 
 | Area | Grade | In one line |
@@ -67,7 +68,7 @@ Still open from the previous audit, server-side by design: **H2** (who acts come
 
 | # | Level | Finding | Fix |
 |---|---|---|---|
-| G-01 | **High** | **A project with hours and invoices can be deleted (verified).** Deleting *Orbit* left **92 time entries, 9 invoices and 2 project pages** pointing at a project that no longer exists. Task comments, attachments, saved views and client requests are left behind too. By contrast, deleting an *employee* is correctly refused when they have history (`employees-api.ts:94`). (`work-projects-api.ts:115`) | Refuse the delete when the project has hours, invoices, quotes or expenses, with a new error code, and suggest *Close project* instead. When the delete is allowed, also remove its pages, comments, attachments, views and requests. |
+| G-01 | **High** | **A project with hours and invoices can be deleted (verified).** Deleting *Orbit* left **92 time entries, 1 invoice and 2 project pages** pointing at a project that no longer exists (corrected 29 October: the first count matched the similar id `prj_orbit_mvp` too and said 9 invoices). Task comments, attachments, saved views and client requests are left behind too. By contrast, deleting an *employee* is correctly refused when they have history (`employees-api.ts:94`). (`work-projects-api.ts:115`) | Refuse the delete when the project has hours, invoices, quotes or expenses, with a new error code, and suggest *Close project* instead. When the delete is allowed, also remove its pages, comments, attachments, views and requests. |
 | G-02 | **High** | **Employees land on "No access" after signing in (verified, screenshot below).** Everyone is sent to `/dashboard/overview`, which needs *View analytics*. (`safe-redirect.ts:8`) | Send each person to the first page their role can open (`/dashboard/my-work` for employees). |
 | G-03 | Medium | **Old `/billing` and `/subscriptions` links send company users to a page reserved for the Nexora team (verified).** (`app/[locale]/billing/page.tsx`, `subscriptions/page.tsx`) | Send company users to `/dashboard/subscription` (their own subscription) and the Nexora team to the console page. |
 | G-04 | Medium | **@mentions in task comments are saved but never shown.** `findMentions` stores `mentionIds` on the comment, but no bell item, list or badge reads them. @mentions in client notes do reach the bell. (`task-collab-api.ts:72`, `inbox.ts`) | Add a "mentioned in a task" item to the bell, like the client-note one. |
