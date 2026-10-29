@@ -58,6 +58,18 @@ describe("CSV / Excel import (CRM step 7)", () => {
     expect(deals[0]).toMatchObject({ clientId: "cli_orbit", action: "update", target: "deal_orbit_old", errors: { contact: "unknownContact" } })
   })
 
+  it("refuses web addresses that are not http or https (A2.1)", async () => {
+    const clients = checkRows([{ line: 2, values: { name: "Bad Site", email: "a@bad.example", website: "javascript:alert(1)" } }, { line: 3, values: { name: "Good Site", email: "a@good.example", website: "https://good.example" } }], "clients", ctx)
+    expect(clients[0]!.errors).toEqual({ website: "url" })
+    expect(clients[1]!.errors).toEqual({})
+    const contacts = checkRows([{ line: 2, values: { client: "Orbit Logistics", name: "X", email: "x@orbit.example", linkedin: "data:text/html,x" } }], "contacts", ctx)
+    expect(contacts[0]!.errors).toEqual({ linkedin: "url" })
+    const { updateClientApi } = await import("@/lib/api/clients-api")
+    const existing = (await listClientsApi("ws_atlas"))[0]!
+    await expect(updateClientApi("ws_atlas", existing.id, { website: "javascript:alert(1)" })).rejects.toThrow("A web address must start with http:// or https://")
+    await expect(updateClientApi("ws_atlas", existing.id, { contacts: [{ ...existing.contacts[0]!, linkedin: "javascript:x" }] })).rejects.toThrow("A web address")
+  })
+
   it("reads dates written by people and by Excel", () => {
     expect(readDate("2026-12-31")).toBe("2026-12-31")
     expect(readDate("31/12/2026")).toBe("2026-12-31")

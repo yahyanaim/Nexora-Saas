@@ -63,7 +63,7 @@ jobs:
       - run: npm run check:js-budget
 
   a11y:
-    name: Accessibility of the console (axe)
+    name: Accessibility of the console and company pages (axe)
     runs-on: ubuntu-24.04
     env:
       NEXT_PUBLIC_API_URL: http://localhost:59999/api
@@ -87,6 +87,8 @@ jobs:
           cat start.log; exit 1
       # A11Y-03 to A11Y-05: every console page, critical and serious findings block
       - run: npm run a11y:console
+      # A2.3: the main company (ERP) pages, same rules
+      - run: npm run a11y:erp
       - name: The check fails on a seeded violation
         run: |
           if npm run a11y:console -- --seed-violation > seeded.log 2>&1; then

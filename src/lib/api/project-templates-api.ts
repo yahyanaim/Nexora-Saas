@@ -47,12 +47,15 @@ export async function saveProjectAsTemplateApi(workspaceId: string, projectId: s
   if (!project) throw new Error("Project not found")
   const data = templateFromProject(project, await listTasksApi(workspaceId, projectId), await listMilestonesApi(workspaceId, projectId), name)
   const saved = templates.create(workspaceId, data)
-  recordAudit(workspaceId, { action: "Project template saved", actionKey: "project.template", category: "Settings", target: saved.name })
+  recordAudit(workspaceId, { action: "Project template saved", actionKey: "template.saved", category: "Settings", target: saved.name })
   return saved
 }
 
 export async function deleteTemplateApi(workspaceId: string, id: string) {
+  const template = templates.get(workspaceId, id)
+  if (!template) return
   templates.remove(workspaceId, id)
+  recordAudit(workspaceId, { action: "Project template deleted", actionKey: "template.deleted", category: "Settings", target: template.name })
 }
 
 /** Creates a project with the template's milestones and tasks, dated from its start (PRJ-2). */

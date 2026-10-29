@@ -147,7 +147,7 @@ export default function RequestsPage() {
                   <span className="grid size-9 shrink-0 place-items-center rounded-full bg-muted" aria-hidden><Icon className="size-4" /></span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-medium">{r.title}</h3>
+                      <h2 className="font-medium">{r.title}</h2>
                       {r.urgent && <Badge variant="outline" className="border-transparent bg-danger-soft text-destructive">{t("rqUrgent")}</Badge>}
                       {r.status === RequestStatus.SNOOZED && state === RequestStatus.NEW && <Badge variant="outline" className="border-transparent bg-warning-soft text-warning-foreground">{t("rqBackFromSnooze")}</Badge>}
                     </div>

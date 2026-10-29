@@ -58,7 +58,7 @@ export function findByKey(key: string, tasks: WorkTask[], projects: WorkProject[
   return project ? tasks.find((t) => t.projectId === project.id && t.number === Number(m[2])) : undefined
 }
 
-export const isWebUrl = (url: string) => /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(url.trim())
+export { isWebUrl } from "@/lib/utils/url"
 
 // ---------- Formatting in descriptions ----------
 

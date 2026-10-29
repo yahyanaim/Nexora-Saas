@@ -31,6 +31,7 @@ import { createId } from "@/lib/workforce/demo-store"
 import { clientNeedsIce } from "@/lib/workforce/tax-ids"
 import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { cn } from "@/lib/utils"
+import { BAD_URL_MESSAGE, isWebUrl } from "@/lib/utils/url"
 import { ClientStatus, ClientType, type Client, type ClientInput, type Employee } from "@/types/workforce"
 import { CLIENT_STATUS_LABEL, NONE } from "./workforce-labels"
 import { CustomFieldInputs, useCustomFields } from "./custom-fields"
@@ -70,7 +71,7 @@ const schema = z.object({
   industry: z.string().trim().optional(),
   email: z.email(),
   phone: z.string().trim().optional(),
-  website: z.union([z.literal(""), z.url()]).optional(),
+  website: z.union([z.literal(""), z.string().trim().refine(isWebUrl, BAD_URL_MESSAGE)]).optional(),
   address: z.string().trim().optional(),
   taxId: z.string().trim().optional(),
   status: z.enum(ClientStatus),

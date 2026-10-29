@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input"
 import { resolveAfterLoginPath } from "@/lib/auth/safe-redirect"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "@/components/ui/carbon/icons"
-import { Dispatch, SetStateAction } from "react"
+import { Dispatch, SetStateAction, useEffect } from "react"
+import { clearIdleNotice, readIdleNotice } from "@/lib/auth/idle"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { AuthSections } from "./auth"
@@ -34,6 +35,13 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
   const t = useTranslations()
   const locale = useLocale()
   const { initializeAuth } = useAuthGuard()
+
+  // Signed out for being idle (D3): say so once
+  useEffect(() => {
+    const minutes = readIdleNotice()
+    // one id, so a second page load on the way here does not stack a second toast
+    if (minutes) toast.info(t("idleSignedOut", { minutes }), { id: "idle-signed-out" })
+  }, [t])
 
   const {
     register,
@@ -66,6 +74,7 @@ export function LoginByEmail({ setAuthSections, setMfaToken }: Props) {
   })
 
   const onSubmit = (values: LoginFormValues) => {
+    clearIdleNotice()
     mutate(values)
   }
 

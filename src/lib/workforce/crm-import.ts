@@ -1,6 +1,7 @@
 import { parseAmount, parseDate } from "./bank-import"
 import { cleanId } from "./tax-ids"
 import { excelSerialToIso } from "@/lib/utils/xlsx-read"
+import { isWebUrl } from "@/lib/utils/url"
 import { ClientStatus, ContactRole, LeadSource, type Client, type Employee } from "@/types/workforce"
 import { DealStage, type Deal, type DealStageId, type PipelineSettings } from "@/types/work-sales"
 import { DEFAULT_PIPELINE, isClosedStage } from "./deals"
@@ -103,7 +104,7 @@ export function templateRows(kind: ImportKind): string[][] {
   return [fields.map((f) => f.header), fields.map((f) => f.example)]
 }
 
-export type ImportError = "required" | "email" | "number" | "date" | "status" | "source" | "stage" | "role" | "ice" | "percent" | "unknownClient" | "unknownPerson" | "unknownContact" | "duplicate"
+export type ImportError = "required" | "email" | "number" | "date" | "status" | "source" | "stage" | "role" | "ice" | "percent" | "unknownClient" | "unknownPerson" | "unknownContact" | "duplicate" | "url"
 
 export interface ImportRow {
   /** Line in the file (the header is line 1) */
@@ -246,6 +247,7 @@ function checkRow(line: number, values: Record<string, string>, kind: ImportKind
   if (kind === "clients") {
     if (v.email && !isEmail(v.email)) errors.email = "email"
     if (v.contactEmail && !isEmail(v.contactEmail)) errors.contactEmail = "email"
+    if (v.website && !isWebUrl(v.website)) errors.website = "url"
     if (v.status && pick(WORDS.status, v.status) === null) errors.status = "status"
     if (v.leadSource && pick(WORDS.source, v.leadSource) === null) errors.leadSource = "source"
     if (v.ice && !/^\d{15}$/.test(cleanId(v.ice) ?? "")) errors.ice = "ice"
@@ -264,6 +266,7 @@ function checkRow(line: number, values: Record<string, string>, kind: ImportKind
   if (kind === "contacts") {
     if (v.email && !isEmail(v.email)) errors.email = "email"
     if (v.role && pick(WORDS.role, v.role) === null) errors.role = "role"
+    if (v.linkedin && !isWebUrl(v.linkedin)) errors.linkedin = "url"
     const existing = client && v.email ? client.contacts.find((c) => c.email.toLowerCase() === v.email!.toLowerCase()) : undefined
     return { line, values, errors, action: existing ? "update" : "create", target: existing?.id, clientId: client?.id }
   }

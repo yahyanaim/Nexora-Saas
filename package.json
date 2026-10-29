@@ -22,7 +22,8 @@
     "check:js-budget": "node scripts/check-js-budget.mjs",
     "check:images": "node scripts/check-images.mjs",
     "check:build-scripts": "node scripts/check-build-scripts.mjs",
-    "a11y:console": "node scripts/a11y-console.mjs"
+    "a11y:console": "node scripts/a11y-console.mjs",
+    "a11y:erp": "node scripts/a11y-console.mjs --erp"
   },
   "dependencies": {
     "@carbon/icons-react": "^11.88.0",

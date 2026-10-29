@@ -388,6 +388,7 @@ export async function deleteTaskApi(workspaceId: string, id: string): Promise<vo
     tasks.update(workspaceId, t.id, { dependsOn: t.dependsOn?.filter((d) => d !== id), relations: t.relations?.filter((r) => r.taskId !== id) })
   }
   tasks.update(workspaceId, id, { deletedAt: new Date().toISOString(), deletedBy: getAuditActor().name })
+  recordAudit(workspaceId, { action: "Task deleted", actionKey: "task.deleted", category: "Settings", target: task.title })
 }
 
 /** A project's deleted tasks, most recently deleted first. */
@@ -406,6 +407,7 @@ export async function restoreTaskApi(workspaceId: string, id: string): Promise<W
   const project = projects.get(workspaceId, task.projectId)
   if (!project) throw new Error("Project not found")
   const cycle = task.cycleId ? cycles.get(workspaceId, task.cycleId) : undefined
+  recordAudit(workspaceId, { action: "Task restored", actionKey: "task.restored", category: "Settings", target: task.title })
   return tasks.update(workspaceId, id, {
     deletedAt: undefined,
     deletedBy: undefined,
@@ -416,8 +418,10 @@ export async function restoreTaskApi(workspaceId: string, id: string): Promise<W
 
 /** Removes a deleted task for good. */
 export async function purgeTaskApi(workspaceId: string, id: string): Promise<void> {
-  if (!tasks.get(workspaceId, id)?.deletedAt) throw new Error("This task is not in the deleted tasks")
+  const task = tasks.get(workspaceId, id)
+  if (!task?.deletedAt) throw new Error("This task is not in the deleted tasks")
   tasks.remove(workspaceId, id)
+  recordAudit(workspaceId, { action: "Task deleted for good", actionKey: "task.purged", category: "Settings", target: task.title })
 }
 
 function sweepTaskBin(workspaceId: string) {

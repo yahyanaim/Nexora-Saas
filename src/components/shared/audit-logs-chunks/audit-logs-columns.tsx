@@ -70,8 +70,14 @@ const STATUS_CONFIG: Record<
   },
 }
 
+/** The action in the reader's language when it has a label (`auditAction_<key>`), else as written. */
+export const auditActionLabel = (item: Pick<AuditLogEntry, "action" | "actionKey">, t: { (key: string): string; has?: (key: string) => boolean }) => {
+  const key = item.actionKey ? `auditAction_${item.actionKey.replace(/\./g, "_")}` : ""
+  return key && t.has?.(key) ? t(key) : item.action
+}
+
 export function getAuditLogsColumns(
-  t: (key: string) => string
+  t: { (key: string): string; has?: (key: string) => boolean }
 ): ColumnDef<AuditLogEntry>[] {
   return [
     {
@@ -134,7 +140,7 @@ export function getAuditLogsColumns(
 
         return (
           <span className="text-xs md:text-sm font-medium text-foreground">
-            {item.action}
+            {auditActionLabel(item, t)}
           </span>
         )
       },

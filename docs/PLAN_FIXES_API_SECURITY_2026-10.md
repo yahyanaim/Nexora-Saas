@@ -35,8 +35,8 @@ Each PR follows the usual routine: tests, `tsc`, lint, build, browser check with
 |---|---|---|---|
 | A2.1 | **S-01** web addresses | Move `isWebUrl` to `lib/utils/url.ts`. Use it in the client form (website), the contact form (LinkedIn) and the CSV/Excel import: a bad address is shown as a yellow cell with the reason, under the new code `err_badUrl`. Add a `safeHref()` used wherever a stored address becomes a link (client page, details panel, contact sections, contacts page), so old bad data cannot become a link. | Tests: `javascript:`, `data:` and `ftp:` are refused; `https://…` is accepted; import flags the cell. |
 | A2.2 | **S-04** audit log | New audit entries, with their labels in 9 languages: `settings.data_exported`, `settings.data_deleted`, `client.file_added`, `client.file_removed`, `project.deleted`, `task.deleted`, `task.restored`, `task.purged`, `template.saved`, `template.deleted`. | Test per action. The audit log page shows them. |
-| A2.3 | **C-03** Settings labels | The `Field` helper in `settings-page.tsx` links its label to its input (`useId` + `htmlFor`/`id`). Add the 20 main company pages to the axe job in CI next to the console pages. | axe: 0 violations on the 20 pages, locally and in CI. |
-| A2.4 | **S-05** idle lock (optional) | Only after decision D3: lock the screen after N idle minutes when a passcode is set, otherwise sign out. | Decided in D3. |
+| A2.3 | **C-03** Settings labels | The `Field` helper in `settings-page.tsx` links its label to its input (`useId` + `htmlFor`/`id`). Add the 21 main company pages to the axe job in CI next to the console pages (`npm run a11y:erp`). | axe: 0 blocking findings on the 21 pages, locally and in CI. |
+| A2.4 | **S-05** idle lock | Decision D3: after **30 min** without a click, key press or scroll in any tab (**15 min** on the console), the passcode lock screen shows when a passcode is set, otherwise the user is signed out with a message. `lib/auth/idle.ts` + `useIdleLock`. | Tests for both outcomes and both limits. The server applies the same limits (Part C). |
 
 ### PR A3: clean-up (alongside the backend)
 

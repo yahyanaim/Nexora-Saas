@@ -1,7 +1,7 @@
 "use client"
 
 import { CURRENCIES, currencyAfterCountryChange } from "@/lib/workforce/currency"
-import { useState } from "react"
+import { Children, cloneElement, isValidElement, useId, useState, type ReactElement, type ReactNode } from "react"
 import { vatPeriodOf, vatRegimeOf } from "@/lib/workforce/vat"
 import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
@@ -63,12 +63,28 @@ const MODE_LABEL: Record<ApprovalMode, string> = {
   [ApprovalMode.TWO_STEP]: "twoSteps",
 }
 
-function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string }) {
+const LABELLED = new Set<unknown>([Input, Textarea, SelectTrigger, "input", "textarea"])
+
+/** Gives the first unnamed input, textarea or select trigger inside the field its label's id (A2.3). */
+function linkControl(node: ReactNode, id: string, describedBy: string | undefined, linked: { done: boolean }): ReactNode {
+  if (linked.done || !isValidElement(node)) return node
+  const el = node as ReactElement<{ id?: string; "aria-label"?: string; "aria-describedby"?: string; children?: ReactNode }>
+  if (LABELLED.has(el.type) && !el.props["aria-label"]) {
+    linked.done = true
+    return cloneElement(el, { id: el.props.id ?? id, "aria-describedby": el.props["aria-describedby"] ?? describedBy })
+  }
+  if (el.props.children === undefined) return el
+  return cloneElement(el, undefined, Children.map(el.props.children, (child) => linkControl(child, id, describedBy, linked)))
+}
+
+function Field({ label, children, hint }: { label: string; children: ReactNode; hint?: string }) {
+  const id = useId()
+  const hintId = hint ? `${id}-hint` : undefined
   return (
     <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
-      {children}
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <Label htmlFor={id}>{label}</Label>
+      {linkControl(children, id, hintId, { done: false })}
+      {hint && <p id={hintId} className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   )
 }

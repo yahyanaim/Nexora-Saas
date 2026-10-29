@@ -1,0 +1,7 @@
+/** True for an http:// or https:// address. Anything else (javascript:, data:, a bare word) is refused. */
+export const isWebUrl = (url: string) => /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(url.trim())
+
+/** The address to put in an href, or undefined when it is not a web address, so a stored javascript: link never runs. */
+export const safeHref = (url: string | undefined | null): string | undefined => (url && isWebUrl(url) ? url.trim() : undefined)
+
+export const BAD_URL_MESSAGE = "A web address must start with http:// or https://"

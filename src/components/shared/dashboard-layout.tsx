@@ -19,6 +19,8 @@ import { isPortalPath } from "@/lib/workforce/portal"
 import { PortalRedirect } from "./portal-redirect"
 import { SkipLink } from "./skip-link"
 import { useDashboardNav } from "./navigation/use-dashboard-nav"
+import { useIdleLock } from "@/hooks/auth/use-idle-lock"
+import { idleMinutesFor, leaveIdleNotice } from "@/lib/auth/idle"
 
 // PERF-01: the banners and the console gate read the platform's billing, support and
 // customer modules; they load after the shell so every page starts lighter
@@ -39,10 +41,24 @@ interface Props {
  * small screens, around a scrollable content area on the grey canvas.
  */
 export const DashboardLayout = ({ children }: Props) => {
-  const { isPasscodeLocked, authedUser } = useAuthGuard()
+  const { isPasscodeLocked, authedUser, logout } = useAuthGuard()
   // Audit entries name whoever is signed in (PLT-12)
   setAuditActor(authedUser && { id: authedUser.id, name: authedUser.name, email: authedUser.email ?? "", role: String(authedUser.role) })
-  const { isUnlocked } = useLockScreenStore()
+  const { isUnlocked, lock } = useLockScreenStore()
+  const locked = !!isPasscodeLocked && !isUnlocked
+  // D3: 15 min idle on the console, 30 min in a company; the passcode screen first when one is set
+  const idleMinutes = idleMinutesFor(authedUser as { platformOperator?: boolean } | undefined)
+  useIdleLock({
+    enabled: !!authedUser && !locked,
+    minutes: idleMinutes,
+    hasPasscode: !!isPasscodeLocked,
+    onLock: lock,
+    onSignOut: () => {
+      // the sign-in page says why (it loads afresh, so a toast here would be lost)
+      leaveIdleNotice(idleMinutes)
+      void logout()
+    },
+  })
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
   // DS-07: the active top area sets the accent (rail, page marker, empty states)
@@ -56,7 +72,7 @@ export const DashboardLayout = ({ children }: Props) => {
   // Typed URLs to pages the role does not include are refused (same table as the menu)
   const denied = !!authedUser && !outsidePortal && !(authedUser as { clientId?: string }).clientId && isRouteDenied(pathname, (p) => can(authedUser, p))
 
-  if (isPasscodeLocked && !isUnlocked) return <LockScreen />
+  if (locked) return <LockScreen />
 
   return (
     <div data-area={activeGroup?.id} className="flex h-dvh w-full flex-col overflow-hidden bg-background">
