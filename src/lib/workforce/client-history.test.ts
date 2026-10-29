@@ -99,6 +99,8 @@ describe("client safety (CRM step 9)", () => {
     const medicaProjects = before.filter((p) => p.clientId === "cli_medica").length
     expect(medicaProjects).toBeGreaterThan(0)
     await expect(mergeClientsApi("ws_atlas", "cli_helio", "cli_helio")).rejects.toThrow(/two different/)
+    const { saveReportApi, listSavedReportsApi } = await import("@/lib/api/saved-reports-api")
+    const report = await saveReportApi("ws_atlas", { name: "Medica hours", reportId: "hours", filters: { preset: "month", clientId: "cli_medica" }, ownerId: "u1", ownerName: "Admin" })
     const merged = await mergeClientsApi("ws_atlas", "cli_helio", "cli_medica", { name: "keep" })
     expect(merged.name).toBe("Helio Energy")
     expect(merged.contacts.map((c) => c.name)).toEqual(["Rachid Amrani", "Sofia Conti"])
@@ -108,6 +110,8 @@ describe("client safety (CRM step 9)", () => {
     expect(after.filter((p) => p.clientId === "cli_medica")).toHaveLength(0)
     expect(after.filter((p) => p.clientId === "cli_helio").length).toBe(before.filter((p) => p.clientId === "cli_helio").length + medicaProjects)
     expect((await listDealsApi("ws_atlas")).some((d) => d.clientId === "cli_medica")).toBe(false)
+    // A4.4: a saved report filtered on the other client now follows the kept one
+    expect((await listSavedReportsApi("ws_atlas", { id: "u1" })).find((r) => r.id === report.id)?.filters.clientId).toBe("cli_helio")
     const [entry] = await listClientHistoryApi("ws_atlas", "cli_helio")
     expect(entry!.kind).toBe("merged")
     expect(entry!.note).toBe("Medica Health")

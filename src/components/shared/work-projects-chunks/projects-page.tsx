@@ -2,7 +2,8 @@
 
 import { useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
-import { AlertTriangle, Calendar, FolderKanban, Plus, Search, TrendingUp } from "@/components/ui/carbon/icons"
+import { AlertTriangle, Calendar, FolderKanban, Plus, Search, Trash2, TrendingUp } from "@/components/ui/carbon/icons"
+import { ConfirmAlertDialog } from "@/components/ui/confirm-alert-dialog"
 import { MetricCardGrid, type MetricCardItem } from "@/components/ui/metric-card-grid"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,9 +39,12 @@ export default function ProjectsPage() {
   const { data: tasks = [] } = useTasks()
   const { data: clients = [] } = useClients()
   const { data: employees = [] } = useEmployees()
-  const { create, createFromTemplate } = useProjectMutations()
+  const { create, createFromTemplate, removeTemplate } = useProjectMutations()
   const { data: templates = [] } = useProjectTemplates()
   const [templateId, setTemplateId] = useState(NO_TEMPLATE)
+  const [deletingTemplate, setDeletingTemplate] = useState(false)
+  const chosenTemplate = templates.find((x) => x.id === templateId)
+  const canManageTemplates = can(authedUser, AdminPermissionsPlatform.PROJECTS_UPDATE)
   const canCreate = can(authedUser, AdminPermissionsPlatform.PROJECTS_CREATE)
 
   const [search, setSearch] = useState("")
@@ -183,13 +187,20 @@ export default function ProjectsPage() {
         {templates.length > 0 && (
           <div className="mb-4 grid gap-1.5 rounded-2xl border border-border bg-muted/40 p-3">
             <Label>{t("startFromTemplate")}</Label>
-            <Select value={templateId} onValueChange={setTemplateId}>
-              <SelectTrigger className="w-full bg-card"><SelectValue>{templates.find((x) => x.id === templateId)?.name ?? t("blankProject")}</SelectValue></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_TEMPLATE}>{t("blankProject")}</SelectItem>
-                {templates.map((x) => <SelectItem key={x.id} value={x.id}>{x.name} · {t("templateSize", { tasks: x.tasks.length, days: x.durationDays })}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={templateId} onValueChange={setTemplateId}>
+                <SelectTrigger className="w-full bg-card"><SelectValue>{chosenTemplate?.name ?? t("blankProject")}</SelectValue></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_TEMPLATE}>{t("blankProject")}</SelectItem>
+                  {templates.map((x) => <SelectItem key={x.id} value={x.id}>{x.name} · {t("templateSize", { tasks: x.tasks.length, days: x.durationDays })}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {chosenTemplate && canManageTemplates && (
+                <Button type="button" variant="outline" size="icon" aria-label={t("tplDelete")} title={t("tplDelete")} onClick={() => setDeletingTemplate(true)}>
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">{t("startFromTemplateHint")}</p>
           </div>
         )}
@@ -202,6 +213,15 @@ export default function ProjectsPage() {
           onValid={handleValid}
         />
       </DataTableEntityFormSheet>
+      <ConfirmAlertDialog
+        open={deletingTemplate}
+        onOpenChange={setDeletingTemplate}
+        title={t("tplDelete")}
+        description={t("tplDeleteConfirm", { name: chosenTemplate?.name ?? "" })}
+        destructive
+        isLoading={removeTemplate.isPending}
+        onConfirm={() => chosenTemplate && removeTemplate.mutate(chosenTemplate.id, { onSuccess: () => { setDeletingTemplate(false); setTemplateId(NO_TEMPLATE) } })}
+      />
     </div>
   )
 }

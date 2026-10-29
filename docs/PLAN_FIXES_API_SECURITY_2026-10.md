@@ -60,6 +60,8 @@ Each PR follows the usual routine: tests, `tsc`, lint, build, browser check with
 | A4.4 | **G-10** client merge | The merge also loads `bank-import-api` and `saved-reports-api`, so their records move too. |
 | A4.5 | **C-05** tests | Screen tests for issuing an invoice, recording a payment and creating a credit note. One PDF snapshot test per document type. |
 
+**Status (A4 done):** Ctrl+K also finds leads, contacts, deals, follow-ups, project pages, client requests, suppliers, supplier bills and expenses, each for the roles allowed to see it (expenses: one's own unless one approves them). The bell adds deals that stopped moving (their owner), sent quotes expiring within 3 days, approved supplier bills due within 7 days, and meeting action items that @mention the person. Project templates can be deleted from the new-project form. Profile → *Your personal data*: download one's own data and delete the account after 14 days (cancellable), per D6; notification preferences stay for later (D6). A client merge also moves bank-import matches and the client filter of saved reports and views. Screen tests for issuing an invoice, recording a payment and making a credit note, and one content snapshot per document type (client invoice modern and classic, credit note, draft, quote classic and modern, Nexora invoice, credit note and pro-forma, subscription invoice). Follow-ups from A3: Zod messages use the app's own wording in the 9 languages (no "string"/"number" left), and unknown addresses get a real 404 status from the proxy, in the visitor's language (`lib/routing/app-routes.ts`, kept equal to the pages by a test).
+
 Left for the backend (no front-end PR): **S-02, S-03, S-06, S-07, G-06, C-02**. They are covered in Parts B and C.
 
 ---

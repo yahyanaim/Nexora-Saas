@@ -35,15 +35,13 @@ export async function requestDataExportApi(
     }
   }
 
-  // Demo fallback
+  // Demo fallback: no server file; the profile page builds the file from the browser's data
   return {
     id: `exp_${Date.now()}`,
     status: "completed",
     format,
     requestedAt: new Date().toISOString(),
     completedAt: new Date().toISOString(),
-    downloadUrl: `/api/gdpr/export/download?id=exp_${Date.now()}`,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   }
 }
 

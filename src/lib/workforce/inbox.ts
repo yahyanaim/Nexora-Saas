@@ -1,14 +1,20 @@
 import { ExpenseStatus, type Expense } from "@/types/work-costs"
 import { TimeEntryStatus, type ClientInvoice, type TimeEntry } from "@/types/work-billing"
 import { LeaveStatus, type LeaveRequest } from "@/types/work-planning"
-import { type TaskComment, type WorkProject, type WorkTask, isClosedStatus } from "@/types/work-projects"
+import { type ProjectPage, type TaskComment, type WorkProject, type WorkTask, isClosedStatus } from "@/types/work-projects"
 import type { SatisfactionResponse } from "@/types/work-feedback"
 import type { ClientFollowUp, ClientNote } from "@/types/work-crm"
 import { lowRatingsFor } from "./satisfaction"
 import type { EmployeeDocument } from "@/types/work-hr"
 import type { PerformanceReview } from "@/types/work-reviews"
 import { EmployeeStatus, type Client, type Employee } from "@/types/workforce"
-import { displayStatus } from "./billing"
+import { addDays, displayStatus } from "./billing"
+import { isStale } from "./deals"
+import { actionItems } from "./project-pages"
+import { billTotals } from "./supplier-bills"
+import type { Deal, PipelineSettings } from "@/types/work-sales"
+import { QuoteStatus, type Quote } from "@/types/work-quotes"
+import { SupplierBillStatus, type SupplierBill } from "@/types/work-purchases"
 import { isOnTask } from "./task-extras"
 import { waitingRequests } from "./client-requests"
 import type { ClientRequest } from "@/types/work-requests"
@@ -31,7 +37,7 @@ export interface InboxItem {
 
 export interface InboxInput {
   viewer: ReviewViewer
-  rights: { approveTime: boolean; invoices: boolean; hr: boolean; projects?: boolean }
+  rights: { approveTime: boolean; invoices: boolean; hr: boolean; projects?: boolean; purchases?: boolean }
   employees: Employee[]
   reviews: PerformanceReview[]
   entries: TimeEntry[]
@@ -52,6 +58,15 @@ export interface InboxInput {
   taskMentions?: TaskComment[]
   /** Client requests waiting for an answer, for people who manage projects (P3) */
   requests?: ClientRequest[]
+  /** Deals the person owns that stopped moving (A4.2) */
+  deals?: Deal[]
+  pipeline?: PipelineSettings
+  /** Sent quotes about to expire, for people who see invoices (A4.2) */
+  quotes?: Quote[]
+  /** Approved supplier bills coming due, for people who enter purchases (A4.2) */
+  supplierBills?: SupplierBill[]
+  /** Meeting notes whose open action items @mention the person (A4.2) */
+  projectPages?: ProjectPage[]
   today: string
 }
 
@@ -142,6 +157,29 @@ export function buildInbox(d: InboxInput): InboxItem[] {
     if (waiting.length) {
       const urgent = waiting.filter((r) => r.urgent).length
       items.push({ id: `requests:${waiting.map((r) => r.id).join(",")}`, category: "team", title: "inboxRequests", message: urgent ? "inboxRequestsUrgent" : "inboxRequestsMessage", values: { count: waiting.length, urgent }, href: "/dashboard/requests" })
+    }
+  }
+  if (me) {
+    const stale = (d.deals ?? []).filter((x) => x.ownerId === me && isStale(x, d.today, d.pipeline))
+    if (stale.length) items.push({ id: `stale-deals:${stale.map((x) => `${x.id}-${x.stageSince ?? ""}`).join(",")}`, category: "team", title: "inboxStaleDeals", message: "inboxStaleDealsMessage", values: { count: stale.length, deal: stale[0]!.title }, href: "/dashboard/deals" })
+  }
+  if (d.rights.invoices) {
+    const soon = addDays(d.today, 3)
+    const expiring = (d.quotes ?? []).filter((q) => q.status === QuoteStatus.SENT && q.validUntil >= d.today && q.validUntil <= soon)
+    if (expiring.length) items.push({ id: `quotes-expiring:${expiring.map((q) => `${q.id}-${q.validUntil}`).join(",")}`, category: "billing", title: "inboxQuotesExpiring", message: "inboxQuotesExpiringMessage", values: { count: expiring.length }, href: "/dashboard/quotes" })
+  }
+  if (d.rights.purchases) {
+    const soon = addDays(d.today, 7)
+    const due = (d.supplierBills ?? []).filter((b) => b.status === SupplierBillStatus.APPROVED && b.dueDate >= d.today && b.dueDate <= soon && billTotals(b).balance > 0)
+    if (due.length) items.push({ id: `bills-due:${due.map((b) => `${b.id}-${b.dueDate}`).join(",")}`, category: "billing", title: "inboxBillsDue", message: "inboxBillsDueMessage", values: { count: due.length }, href: "/dashboard/supplier-bills" })
+  }
+  if (me) {
+    // an open action item that @mentions the person by full name, not yet turned into a task
+    const mention = `@${name(me)}`.toLowerCase()
+    const mine = (d.projectPages ?? []).flatMap((pg) => actionItems(pg.body).filter((a) => !a.done && !a.key && a.text.toLowerCase().includes(mention)).map((a) => ({ pg, a })))
+    if (mine.length) {
+      const first = mine[0]!
+      items.push({ id: `actions:${mine.map((m) => `${m.pg.id}-${m.a.line}`).join(",")}`, category: "team", title: "inboxActionItems", message: "inboxActionItemsMessage", values: { count: mine.length, page: first.pg.title }, href: `/dashboard/projects/${first.pg.projectId}?tab=pages` })
     }
   }
   return items

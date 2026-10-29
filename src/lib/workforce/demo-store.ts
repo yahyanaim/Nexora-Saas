@@ -140,10 +140,20 @@ export function reassignReference(workspaceId: string, field: string, from: stri
     if (!Array.isArray(items)) continue
     let changed = false
     const next = items.map((item) => {
-      if (item && typeof item === "object" && (item as Record<string, unknown>)[field] === from) {
+      if (!item || typeof item !== "object") return item
+      const row = item as Record<string, unknown>
+      if (row[field] === from) {
         changed = true
         moved++
-        return { ...item, [field]: to }
+        return { ...row, [field]: to }
+      }
+      // one level down too: saved reports and views keep it in their filters (A4.4)
+      for (const [key, value] of Object.entries(row)) {
+        if (value && typeof value === "object" && !Array.isArray(value) && (value as Record<string, unknown>)[field] === from) {
+          changed = true
+          moved++
+          return { ...row, [key]: { ...(value as Record<string, unknown>), [field]: to } }
+        }
       }
       return item
     })

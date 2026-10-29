@@ -15,6 +15,11 @@ import { useMyTaskMentions } from "@/hooks/workforce/use-task-collab"
 import { useClientRequests } from "@/hooks/workforce/use-client-requests"
 import { useExpenses } from "@/hooks/workforce/use-expenses"
 import { useDocuments } from "@/hooks/workforce/use-documents"
+import { useDeals } from "@/hooks/workforce/use-deals"
+import { useQuotes } from "@/hooks/workforce/use-quotes"
+import { useSupplierBills } from "@/hooks/workforce/use-supplier-bills"
+import { useAllProjectPages } from "@/hooks/workforce/use-project-pages"
+import { useWorkspaceSettings } from "@/hooks/workforce/use-settings"
 import { useCurrentWorkspace } from "@/store/workspace-store"
 import { can, isPlatformOperator } from "@/lib/permissions/can"
 import { buildInbox } from "@/lib/workforce/inbox"
@@ -59,10 +64,15 @@ function WorkInbox() {
   const { data: clientNotes = [] } = useClientNotes()
   const { data: clients = [] } = useClients()
   const { data: taskMentions = [] } = useMyTaskMentions(me?.id)
+  const { data: deals = [] } = useDeals()
+  const { data: quotes = [] } = useQuotes()
+  const { data: supplierBills = [] } = useSupplierBills()
+  const { data: projectPages = [] } = useAllProjectPages()
+  const { data: settings } = useWorkspaceSettings()
 
   const isAdmin = can(authedUser, P.ROLES_UPDATE)
-  const rights = { approveTime: can(authedUser, P.TIME_APPROVE), invoices: can(authedUser, P.INVOICES_READ), hr: can(authedUser, P.EMPLOYEES_UPDATE), projects: can(authedUser, P.PROJECTS_UPDATE) }
-  const rightsKey = `${rights.approveTime}${rights.invoices}${rights.hr}${rights.projects}`
+  const rights = { approveTime: can(authedUser, P.TIME_APPROVE), invoices: can(authedUser, P.INVOICES_READ), hr: can(authedUser, P.EMPLOYEES_UPDATE), projects: can(authedUser, P.PROJECTS_UPDATE), purchases: can(authedUser, P.INVOICES_CREATE) }
+  const rightsKey = `${rights.approveTime}${rights.invoices}${rights.hr}${rights.projects}${rights.purchases}`
   // The bell is on every page: rebuild the inbox only when its data changes (M3)
   const items = useMemo<NotificationItem[]>(
     () =>
@@ -84,6 +94,11 @@ function WorkInbox() {
         clientNotes,
         taskMentions,
         clients,
+        deals,
+        pipeline: settings?.pipeline,
+        quotes,
+        supplierBills,
+        projectPages,
         today: todayIso(),
       }).map((i) => ({
         id: i.id,
@@ -95,7 +110,7 @@ function WorkInbox() {
         href: i.href,
       })),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- rights is rebuilt each render; rightsKey carries its value
-    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, feedback, projects, followUps, requests, clientNotes, taskMentions, clients, t]
+    [me?.id, isAdmin, rightsKey, employees, reviews, entries, leave, expenses, invoices, documents, tasks, feedback, projects, followUps, requests, clientNotes, taskMentions, clients, deals, settings?.pipeline, quotes, supplierBills, projectPages, t]
   )
   const labels: NotificationLabels = {
     title: t("notifications"),

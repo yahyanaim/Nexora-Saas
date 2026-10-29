@@ -102,7 +102,7 @@ These come from what the client code already does or expects.
 | Files | `GET /files` (table params), `GET /files/:id`, `POST /files/upload` (multipart), `PATCH /files/:id`, `DELETE /files/:id`, `GET /files/:id/download` → `{ url }`, `GET /files/summary` | Files page |
 | Audit | `GET /audit-logs?workspaceId=` | Audit log page |
 | Developer | `GET/POST /developer/api-keys`, `DELETE /developer/api-keys/:id`, `GET/POST /developer/webhooks` | Developer page |
-| Personal data | `POST /gdpr/export`, `GET /gdpr/export/:id`, `POST /gdpr/delete-account`, `POST /gdpr/cancel-deletion` (`requestDataExportApi`, `getDataExportStatusApi`, `requestAccountDeletionApi`, `cancelAccountDeletionApi`) | No screen yet (audit G-09); kept by decision D6 (law 09-08) |
+| Personal data | `POST /gdpr/export`, `GET /gdpr/export/:id`, `POST /gdpr/delete-account`, `POST /gdpr/cancel-deletion` (`requestDataExportApi`, `getDataExportStatusApi`, `requestAccountDeletionApi`, `cancelAccountDeletionApi`) | Profile → *Your personal data* (A4.3): download (the file holds the account, the employee record and the person's own hours, leave and expenses; company data is exported by the owner from Settings) and account deletion after a 14-day grace period that can be cancelled. The server answers the export with `downloadUrl` when ready, or prepares it and e-mails the link. Kept by decision D6 (law 09-08) |
 | Plan | `GET /billing/subscription` | `plan-guard`, feature flags |
 | | `GET /billing/usage`, `GET /billing/usage/check?resource=` | Usage meter |
 
@@ -269,7 +269,7 @@ The org chart, workload, timeline and calendar are **computed in the browser** f
 | `GET {ws}/clients?deleted=true` | `listDeletedClientsApi` (who deleted it and when; `deletedClientIds` is the same list's ids, used to hide their records) |
 | `POST {ws}/clients/:id/restore` | `restoreClientApi` (`err_clientNotDeleted` if it isn't in the bin) |
 | `DELETE {ws}/clients/:id?purge=true` | `purgeClientApi` (gone for good, with its files; the daily job does the same after 30 days) |
-| `POST {ws}/clients/:id/merge` `{ otherId, picks }` | `mergeClientsApi`. `picks` chooses field by field which value stays (`MERGE_FIELDS`). **One transaction** moves every record of the other client (contacts, deals, follow-ups, notes, contracts, quotes, invoices, recurring invoices, projects, requests, change orders, portal access, files, bank-import matches, satisfaction answers) and writes the merge in the history and the audit log. Same client twice → `err_mergeSameClient`. |
+| `POST {ws}/clients/:id/merge` `{ otherId, picks }` | `mergeClientsApi`. `picks` chooses field by field which value stays (`MERGE_FIELDS`). **One transaction** moves every record of the other client (contacts, deals, follow-ups, notes, contracts, quotes, invoices, recurring invoices, projects, requests, change orders, portal access, files, bank-import matches, satisfaction answers, and the client filter of saved reports and views) and writes the merge in the history and the audit log. Same client twice → `err_mergeSameClient`. |
 | `POST {ws}/clients/:id/convert` `{ deal? }` | `convertLeadApi` (lead → client, optional deal) |
 | `POST {ws}/clients/:id/drop` `{ reason }` | `dropLeadApi` |
 
@@ -404,6 +404,7 @@ The org chart, workload, timeline and calendar are **computed in the browser** f
 | Method + path | Replaces |
 |---|---|
 | `GET {ws}/projects/:id/pages` | `listProjectPagesApi` (pinned first, then newest; `sortPages`) |
+| `GET {ws}/project-pages?q=` | `listProjectPagesApi` without a project: every page the person can see, for the Ctrl+K search (A4.1). The server searches titles and bodies and returns at most 20 |
 | `POST {ws}/projects/:id/pages` | `saveProjectPageApi` (`kind`: page or meeting; a meeting has a date and attendees; title required; body up to `MAX_PAGE_LENGTH`; `updatedBy` from the session) |
 | `PATCH {ws}/project-pages/:id` | `saveProjectPageApi` with an id, `setProjectPageBodyApi`, `setProjectPagePinnedApi` (`err_pageGone` when it was deleted meanwhile) |
 | `DELETE {ws}/project-pages/:id` | `deleteProjectPageApi` |

@@ -64,7 +64,9 @@ describe("Edge Proxy Middleware (src/proxy.ts)", () => {
 
     it("does not guard routes that merely start with 'dashboard'", async () => {
       const res = await proxy(createMockRequest("http://localhost:3000/en/dashboards-info"))
-      expect(res.headers.get("x-middleware-matched")).toBe("intl")
+      // not sent to sign-in: an unknown page answers 404 instead
+      expect(res.headers.get("location")).toBeNull()
+      expect(res.status).toBe(404)
     })
 
     it("redirects unauthenticated access to /en/dashboard to /en/auth", async () => {
@@ -138,6 +140,34 @@ describe("Edge Proxy Middleware (src/proxy.ts)", () => {
 
       expect(res.status).toBe(200)
       expect(res.headers.get("x-middleware-matched")).toBe("intl")
+    })
+  })
+
+  describe("Unknown pages answer 404 before rendering", () => {
+    it("rewrites an unknown page with a 404 status and keeps the CSP", async () => {
+      const res = await proxy(createMockRequest("http://localhost:3000/ar/nope"))
+      expect(res.status).toBe(404)
+      expect(res.headers.get("x-middleware-rewrite")).toContain("/ar/nope")
+      expect(res.headers.get("content-security-policy")).toMatch(/nonce-/)
+      // the page renders in the visitor's language
+      expect(res.headers.get("x-middleware-request-x-next-intl-locale")).toBe("ar")
+    })
+
+    it("sends a signed-out visitor of an unknown dashboard page to sign-in first", async () => {
+      const res = await proxy(createMockRequest("http://localhost:3000/en/dashboard/nope"))
+      expect(res.status).toBe(302)
+    })
+
+    it("answers 404 to a signed-in visitor of an unknown dashboard page", async () => {
+      const res = await proxy(createMockRequest("http://localhost:3000/en/dashboard/nope", { token: "t" }))
+      expect(res.status).toBe(404)
+    })
+
+    it("lets real pages and page ids through", async () => {
+      for (const url of ["/en", "/en/auth", "/fr/dashboard/clients/cli_medica"]) {
+        const res = await proxy(createMockRequest(`http://localhost:3000${url}`, { token: "t" }))
+        expect(res.headers.get("x-middleware-matched")).toBe("intl")
+      }
     })
   })
 })

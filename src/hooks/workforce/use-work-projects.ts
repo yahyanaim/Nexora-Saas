@@ -1,6 +1,6 @@
 "use client"
 
-import { createProjectFromTemplateApi, listTemplatesApi, saveProjectAsTemplateApi } from "@/lib/api/project-templates-api"
+import { createProjectFromTemplateApi, deleteTemplateApi, listTemplatesApi, saveProjectAsTemplateApi } from "@/lib/api/project-templates-api"
 import type { CloseSnapshot } from "@/types/work-projects"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useTranslations } from "next-intl"
@@ -138,7 +138,16 @@ export function useProjectMutations() {
     },
     onError,
   })
-  return { create, update, remove, close, reopen, saveTemplate, createFromTemplate }
+  // A4.3: projects already made from the template keep their tasks
+  const removeTemplate = useMutation({
+    mutationFn: (id: string) => deleteTemplateApi(workspaceId, id),
+    onSuccess: () => {
+      toast.success(t("tplDeleted"))
+      refresh("project-templates")
+    },
+    onError,
+  })
+  return { create, update, remove, close, reopen, saveTemplate, createFromTemplate, removeTemplate }
 }
 
 /** What stops a project from being deleted (D8); read when the delete dialog opens. */

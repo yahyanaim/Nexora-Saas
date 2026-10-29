@@ -4,6 +4,7 @@ import { routing } from "./i18n/routing"
 import { buildCsp, createNonce } from "./lib/security/csp"
 import { isDemoMode } from "@/lib/auth/demo-mode"
 import { DEMO_COOKIE } from "@/lib/myapi/token-storage"
+import { isKnownRoute } from "@/lib/routing/app-routes"
 
 const intlMiddleware = createMiddleware(routing)
 
@@ -12,6 +13,8 @@ const intlMiddleware = createMiddleware(routing)
  *
  * Composes next-intl locale routing with server-side auth guards:
  * - Unauthenticated requests to /dashboard/* are redirected to /auth
+ * - An unknown page answers 404 here, before rendering starts streaming
+ *   (once a page streams, its status is stuck at 200)
  * - All other requests pass through to the intl middleware
  *
  * SECURITY & ARCHITECTURE:
@@ -71,6 +74,14 @@ export async function proxy(req: NextRequest) {
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set("x-nonce", nonce)
   requestHeaders.set("Content-Security-Policy", csp)
+
+  // Unknown page: the [...rest] routes render the translated "not found" screen, with a real 404
+  const locale = pathname.match(LOCALE_PREFIX)
+  if (locale && !isKnownRoute(pathname.slice(locale[0].length))) {
+    // this skips next-intl's middleware, so hand the page its language the way next-intl does
+    requestHeaders.set("X-NEXT-INTL-LOCALE", locale[1]!)
+    return withCsp(NextResponse.rewrite(req.nextUrl, { status: 404, request: { headers: requestHeaders } }), csp)
+  }
 
   const response = await intlMiddleware(new NextRequest(req, { headers: requestHeaders }))
   return withCsp(response, csp)

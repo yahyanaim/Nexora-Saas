@@ -1,0 +1,1244 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`document snapshots > Nexora subscription invoice, credit note and pro-forma 1`] = `
+{
+  "brand": [
+    38,
+    132,
+    255,
+  ],
+  "buyer": {
+    "label": "Facturer à",
+    "lines": [
+      "12 Bd d'Anfa, Casablanca, MA",
+      "ICE 002847192000084",
+      "Omar Tazi · omar@atlas.example",
+    ],
+    "name": "Atlas Consulting",
+  },
+  "columns": {
+    "amount": "Montant",
+    "item": "Description",
+    "quantity": "Quantité",
+    "tax": "TVA",
+    "unitPrice": "Prix unitaire",
+  },
+  "due": {
+    "label": "Reste à payer",
+    "value": "4 176,00 MAD",
+  },
+  "filename": "NX-2026-0101.pdf",
+  "footer": {
+    "legal": "Nexora SAS  ·  Casablanca Finance City, Casablanca  ·  ICE 003000000000001  ·  IF 5000001  ·  RC 500001",
+    "note": "Merci pour votre confiance.",
+  },
+  "highlight": {
+    "label": "Montant dû",
+    "note": "Date d'échéance 15 oct. 2026",
+    "value": "4 176,00 MAD",
+  },
+  "items": [
+    {
+      "amount": "3 480,00 MAD",
+      "quantity": "12",
+      "tax": "20%",
+      "title": "Business plan · 12 seats · October 2026",
+      "unitPrice": "290,00 MAD",
+    },
+  ],
+  "meta": [
+    [
+      "Date d’émission",
+      "1 oct. 2026",
+    ],
+    [
+      "Date d'échéance",
+      "15 oct. 2026",
+    ],
+    [
+      "Moyen de paiement",
+      "Virement",
+    ],
+    [
+      "Devise",
+      "MAD",
+    ],
+  ],
+  "number": "NX-2026-0101",
+  "payment": {
+    "rows": [
+      [
+        "Banque",
+        "CIH",
+      ],
+      [
+        "RIB",
+        "230 780 0000000000000000 11",
+      ],
+      [
+        "SWIFT",
+        "CIHMMAMC",
+      ],
+      [
+        "Référence",
+        "NX-2026-0101",
+      ],
+    ],
+    "title": "Modalités de paiement",
+  },
+  "seller": {
+    "lines": [
+      "Casablanca Finance City, Casablanca, MA",
+      "ICE 003000000000001  ·  IF 5000001  ·  RC 500001",
+      "TP 1  ·  CNSS 1",
+    ],
+    "name": "Nexora SAS",
+  },
+  "status": {
+    "label": "En retard",
+    "tone": "warning",
+  },
+  "title": "Facture",
+  "totals": [
+    {
+      "label": "Sous-total",
+      "value": "3 480,00 MAD",
+    },
+    {
+      "label": "TVA 20%",
+      "value": "696,00 MAD",
+    },
+    {
+      "label": "Total",
+      "strong": true,
+      "value": "4 176,00 MAD",
+    },
+  ],
+}
+`;
+
+exports[`document snapshots > Nexora subscription invoice, credit note and pro-forma 2`] = `
+{
+  "brand": [
+    38,
+    132,
+    255,
+  ],
+  "buyer": {
+    "label": "Facturer à",
+    "lines": [
+      "12 Bd d'Anfa, Casablanca, MA",
+      "ICE 002847192000084",
+      "Omar Tazi · omar@atlas.example",
+    ],
+    "name": "Atlas Consulting",
+  },
+  "columns": {
+    "amount": "Montant",
+    "item": "Description",
+    "quantity": "Quantité",
+    "tax": "TVA",
+    "unitPrice": "Prix unitaire",
+  },
+  "filename": "NC-2026-0003.pdf",
+  "footer": {
+    "legal": "Nexora SAS  ·  Casablanca Finance City, Casablanca  ·  ICE 003000000000001  ·  IF 5000001  ·  RC 500001",
+  },
+  "highlight": {
+    "label": "Crédité",
+    "value": "696,00 MAD",
+  },
+  "items": [
+    {
+      "amount": "580,00 MAD",
+      "detail": "Avoir sur la facture NX-2026-0101",
+      "quantity": "1",
+      "tax": "20%",
+      "title": "Two seats removed",
+      "unitPrice": "580,00 MAD",
+    },
+  ],
+  "meta": [
+    [
+      "Date d’émission",
+      "20 oct. 2026",
+    ],
+    [
+      "Rectifie",
+      "NX-2026-0101 · 1 oct. 2026",
+    ],
+    [
+      "Devise",
+      "MAD",
+    ],
+  ],
+  "number": "NC-2026-0003",
+  "seller": {
+    "lines": [
+      "Casablanca Finance City, Casablanca, MA",
+      "ICE 003000000000001  ·  IF 5000001  ·  RC 500001",
+      "TP 1  ·  CNSS 1",
+    ],
+    "name": "Nexora SAS",
+  },
+  "title": "Avoir",
+  "totals": [
+    {
+      "label": "Sous-total",
+      "value": "580,00 MAD",
+    },
+    {
+      "label": "TVA",
+      "value": "116,00 MAD",
+    },
+    {
+      "label": "Total",
+      "strong": true,
+      "value": "696,00 MAD",
+    },
+  ],
+}
+`;
+
+exports[`document snapshots > Nexora subscription invoice, credit note and pro-forma 3`] = `
+{
+  "brand": [
+    38,
+    132,
+    255,
+  ],
+  "buyer": {
+    "label": "Bill to",
+    "lines": [
+      "12 Bd d'Anfa, Casablanca, MA",
+      "ICE 002847192000084",
+      "Omar Tazi · omar@atlas.example",
+    ],
+    "name": "Atlas Consulting",
+  },
+  "columns": {
+    "amount": "Amount",
+    "item": "Description",
+    "quantity": "Quantity",
+    "tax": "VAT",
+    "unitPrice": "Unit price",
+  },
+  "filename": "PF-2026-0004.pdf",
+  "footer": {
+    "legal": "Nexora SAS  ·  Casablanca Finance City, Casablanca  ·  ICE 003000000000001  ·  IF 5000001  ·  RC 500001",
+    "note": "Thank you for your business.",
+  },
+  "highlight": {
+    "label": "Amount due",
+    "note": "Valid until Nov 28, 2026",
+    "value": "MAD 4,176.00",
+  },
+  "items": [
+    {
+      "amount": "MAD 3,480.00",
+      "quantity": "12",
+      "tax": "20%",
+      "title": "Business plan · 12 seats · October 2026",
+      "unitPrice": "MAD 290.00",
+    },
+  ],
+  "meta": [
+    [
+      "Issue date",
+      "Oct 29, 2026",
+    ],
+    [
+      "Valid until",
+      "Nov 28, 2026",
+    ],
+    [
+      "Period",
+      "Nov 1, 2026 - Oct 31, 2027",
+    ],
+    [
+      "Currency",
+      "MAD",
+    ],
+  ],
+  "number": "PF-2026-0004",
+  "payment": {
+    "rows": [
+      [
+        "Bank",
+        "CIH",
+      ],
+      [
+        "RIB",
+        "230 780 0000000000000000 11",
+      ],
+      [
+        "SWIFT",
+        "CIHMMAMC",
+      ],
+      [
+        "Reference",
+        "PF-2026-0004",
+      ],
+    ],
+    "title": "Payment details",
+  },
+  "seller": {
+    "lines": [
+      "Casablanca Finance City, Casablanca, MA",
+      "ICE 003000000000001  ·  IF 5000001  ·  RC 500001",
+      "TP 1  ·  CNSS 1",
+    ],
+    "name": "Nexora SAS",
+  },
+  "smallPrint": [
+    "This pro-forma is not an invoice and cannot be used for VAT. The invoice is issued when the payment is received.",
+  ],
+  "status": {
+    "label": "Not an invoice",
+    "tone": "neutral",
+  },
+  "title": "Pro-forma",
+  "totals": [
+    {
+      "label": "Subtotal",
+      "value": "MAD 3,480.00",
+    },
+    {
+      "label": "VAT 20%",
+      "value": "MAD 696.00",
+    },
+    {
+      "label": "Total",
+      "strong": true,
+      "value": "MAD 4,176.00",
+    },
+  ],
+}
+`;
+
+exports[`document snapshots > client invoice (classic) 1`] = `
+{
+  "brand": [
+    38,
+    132,
+    255,
+  ],
+  "columns": {
+    "description": "Description de la tâche / prestation",
+    "quantity": "Quantité / unité",
+    "total": "Prix total (HT) (MAD)",
+    "unitPrice": "Prix unitaire (HT) (MAD)",
+  },
+  "companyName": "Atlas Consulting SARL",
+  "filename": "FAC-2026-014.pdf",
+  "from": {
+    "heading": "Au nom et pour le compte de :",
+    "rows": [
+      [
+        "Nom",
+        "Atlas Consulting SARL",
+      ],
+      [
+        "N° ICE",
+        "002847192000084",
+      ],
+      [
+        "N° IF",
+        "40128473",
+      ],
+      [
+        "Adresse",
+        "12 Bd d'Anfa, Casablanca",
+      ],
+      [
+        "Téléphone",
+        "",
+      ],
+      [
+        "E-mail",
+        "billing@atlas.example",
+      ],
+    ],
+  },
+  "items": [
+    {
+      "description": "Mobile app development",
+      "quantity": "40",
+      "total": "26 000",
+      "unit": "h",
+      "unitPrice": "650",
+    },
+    {
+      "description": "Hosting setup",
+      "quantity": "1",
+      "total": "2 500",
+      "unit": "-",
+      "unitPrice": "2 500",
+    },
+  ],
+  "legal": "ICE: 002847192000084 | RC: 148291 | IF: 40128473",
+  "net": {
+    "label": "Net à payer (MAD)",
+    "value": "23 700,00 MAD",
+  },
+  "notes": {
+    "heading": "Remarques / notes :",
+    "rows": [
+      [
+        "Conditions de règlement :",
+        "30 jours net",
+      ],
+      [
+        "Banque",
+        "Attijariwafa",
+      ],
+      [
+        "RIB :",
+        "007 780 0001234567890123 45",
+      ],
+      [
+        "SWIFT",
+        "",
+      ],
+      [
+        "Référence",
+        "FAC-2026-014",
+      ],
+      [
+        "Notes",
+        "",
+      ],
+    ],
+  },
+  "refs": [
+    [
+      "N° de client",
+      "ORBIT",
+    ],
+    [
+      "Date de facture",
+      "01/10/2026",
+    ],
+    [
+      "N° de facture",
+      "FAC-2026-014",
+    ],
+    [
+      "Date d'échéance",
+      "31/10/2026",
+    ],
+  ],
+  "status": {
+    "label": "Partiellement payée",
+    "tone": "warning",
+  },
+  "title": "Facture",
+  "to": {
+    "heading": "Adressé à :",
+    "rows": [
+      [
+        "Nom/Service",
+        "-",
+      ],
+      [
+        "Nom de la société",
+        "Orbit Logistics SA",
+      ],
+      [
+        "N° ICE",
+        "001523874000062",
+      ],
+      [
+        "Adresse",
+        "Technopark, Casablanca",
+      ],
+      [
+        "E-mail",
+        "ap@orbit.example",
+      ],
+    ],
+  },
+  "totals": [
+    {
+      "label": "Sous-total (MAD)",
+      "value": "28 500,00 MAD",
+    },
+    {
+      "label": "Taux TVA (%)",
+      "value": "20 % / 0 %",
+    },
+    {
+      "label": "Total TVA (MAD)",
+      "value": "5 200,00 MAD",
+    },
+    {
+      "label": "Total TTC (MAD)",
+      "strong": true,
+      "value": "33 700,00 MAD",
+    },
+    {
+      "label": "Payé",
+      "value": "-10 000,00 MAD",
+    },
+  ],
+}
+`;
+
+exports[`document snapshots > client invoice (modern) 1`] = `
+{
+  "brand": [
+    38,
+    132,
+    255,
+  ],
+  "buyer": {
+    "label": "Facturer à",
+    "lines": [
+      "Orbit Logistics SA",
+      "Technopark, Casablanca",
+      "ap@orbit.example",
+      "ICE 001523874000062",
+    ],
+    "name": "Orbit Logistics",
+  },
+  "columns": {
+    "amount": "Montant",
+    "item": "Description",
+    "quantity": "Quantité",
+    "tax": "TVA",
+    "unitPrice": "Prix unitaire",
+  },
+  "due": {
+    "label": "Reste à payer",
+    "value": "22 200,00 MAD",
+  },
+  "filename": "FAC-2026-014.pdf",
+  "footer": {
+    "legal": "Atlas Consulting SARL  ·  12 Bd d'Anfa, Casablanca  ·  ICE 002847192000084  ·  IF 40128473  ·  RC 148291",
+  },
+  "highlight": {
+    "label": "Montant dû",
+    "note": "Date d'échéance 31 oct. 2026",
+    "value": "22 200,00 MAD",
+  },
+  "items": [
+    {
+      "amount": "26 000,00 MAD",
+      "detail": "2 saisies de temps",
+      "quantity": "40 h",
+      "tax": "20%",
+      "title": "Mobile app development",
+      "unitPrice": "650,00 MAD",
+    },
+    {
+      "amount": "2 500,00 MAD",
+      "quantity": "1",
+      "tax": "0%",
+      "title": "Hosting setup",
+      "unitPrice": "2 500,00 MAD",
+    },
+  ],
+  "meta": [
+    [
+      "Date d’émission",
+      "1 oct. 2026",
+    ],
+    [
+      "Date d'échéance",
+      "31 oct. 2026",
+    ],
+    [
+      "Conditions",
+      "30 jours net",
+    ],
+    [
+      "Devise",
+      "MAD",
+    ],
+  ],
+  "number": "FAC-2026-014",
+  "payment": {
+    "rows": [
+      [
+        "Banque",
+        "Attijariwafa",
+      ],
+      [
+        "Compte",
+        "007 780 0001234567890123 45",
+      ],
+      [
+        "Référence",
+        "FAC-2026-014",
+      ],
+    ],
+    "title": "Modalités de paiement",
+  },
+  "seller": {
+    "lines": [
+      "12 Bd d'Anfa, Casablanca, MA",
+      "billing@atlas.example",
+      "ICE 002847192000084  ·  IF 40128473  ·  RC 148291",
+    ],
+    "name": "Atlas Consulting SARL",
+  },
+  "smallPrint": [],
+  "status": {
+    "label": "Partiellement payée",
+    "tone": "warning",
+  },
+  "tables": [
+    {
+      "alignRight": [
+        3,
+      ],
+      "head": [
+        "Date",
+        "Moyen de paiement",
+        "Référence",
+        "Montant",
+      ],
+      "rows": [
+        [
+          "10 oct. 2026",
+          "Virement",
+          "—",
+          "10 000,00 MAD",
+        ],
+      ],
+      "title": "Paiements reçus",
+    },
+  ],
+  "title": "Facture",
+  "totals": [
+    {
+      "label": "Sous-total",
+      "value": "28 500,00 MAD",
+    },
+    {
+      "label": "TVA 20%  (sur 26 000,00 MAD)",
+      "value": "5 200,00 MAD",
+    },
+    {
+      "label": "TVA 0%  (sur 2 500,00 MAD)",
+      "value": "0,00 MAD",
+    },
+    {
+      "label": "Total",
+      "strong": true,
+      "value": "33 700,00 MAD",
+    },
+    {
+      "label": "Payé",
+      "value": "-10 000,00 MAD",
+    },
+    {
+      "label": "Crédité",
+      "value": "-1 500,00 MAD",
+    },
+  ],
+}
+`;
+
+exports[`document snapshots > credit note 1`] = `
+{
+  "brand": [
+    38,
+    132,
+    255,
+  ],
+  "buyer": {
+    "label": "Facturer à",
+    "lines": [
+      "Orbit Logistics SA",
+      "Technopark, Casablanca",
+      "ap@orbit.example",
+      "ICE 001523874000062",
+    ],
+    "name": "Orbit Logistics",
+  },
+  "columns": {
+    "amount": "Montant",
+    "item": "Description",
+    "quantity": "Quantité",
+    "tax": "TVA",
+    "unitPrice": "Prix unitaire",
+  },
+  "filename": "AV-2026-002.pdf",
+  "footer": {
+    "legal": "Atlas Consulting SARL  ·  12 Bd d'Anfa, Casablanca  ·  ICE 002847192000084  ·  IF 40128473  ·  RC 148291",
+  },
+  "highlight": {
+    "label": "Avoir",
+    "note": "Avoir sur la facture FAC-2026-014",
+    "value": "2 500,00 MAD",
+  },
+  "items": [
+    {
+      "amount": "2 500,00 MAD",
+      "quantity": "1",
+      "tax": "0%",
+      "title": "Hosting setup",
+      "unitPrice": "2 500,00 MAD",
+    },
+  ],
+  "meta": [
+    [
+      "Date d’émission",
+      "1 oct. 2026",
+    ],
+    [
+      "Devise",
+      "MAD",
+    ],
+    [
+      "Rectifie",
+      "FAC-2026-014",
+    ],
+  ],
+  "number": "AV-2026-002",
+  "seller": {
+    "lines": [
+      "12 Bd d'Anfa, Casablanca, MA",
+      "billing@atlas.example",
+      "ICE 002847192000084  ·  IF 40128473  ·  RC 148291",
+    ],
+    "name": "Atlas Consulting SARL",
+  },
+  "smallPrint": [],
+  "status": {
+    "label": "Émise",
+    "tone": "info",
+  },
+  "tables": [
+    {
+      "alignRight": [
+        3,
+      ],
+      "head": [
+        "Date",
+        "Moyen de paiement",
+        "Référence",
+        "Montant",
+      ],
+      "rows": [],
+      "title": "Paiements reçus",
+    },
+  ],
+  "title": "Avoir",
+  "totals": [
+    {
+      "label": "Sous-total",
+      "value": "2 500,00 MAD",
+    },
+    {
+      "label": "TVA 0%  (sur 2 500,00 MAD)",
+      "value": "0,00 MAD",
+    },
+    {
+      "label": "Total",
+      "strong": true,
+      "value": "2 500,00 MAD",
+    },
+  ],
+}
+`;
+
+exports[`document snapshots > draft invoice is stamped 1`] = `
+{
+  "brand": [
+    38,
+    132,
+    255,
+  ],
+  "buyer": {
+    "label": "Bill to",
+    "lines": [
+      "Orbit Logistics SA",
+      "Technopark, Casablanca",
+      "ap@orbit.example",
+      "ICE 001523874000062",
+    ],
+    "name": "Orbit Logistics",
+  },
+  "columns": {
+    "amount": "Amount",
+    "item": "Description",
+    "quantity": "Quantity",
+    "tax": "VAT",
+    "unitPrice": "Unit price",
+  },
+  "due": {
+    "label": "Balance due",
+    "value": "MAD 33,700.00",
+  },
+  "filename": "draft.pdf",
+  "footer": {
+    "legal": "Atlas Consulting SARL  ·  12 Bd d'Anfa, Casablanca  ·  ICE 002847192000084  ·  IF 40128473  ·  RC 148291",
+  },
+  "highlight": {
+    "label": "Amount due",
+    "note": "Due Date Oct 31, 2026",
+    "value": "MAD 33,700.00",
+  },
+  "items": [
+    {
+      "amount": "MAD 26,000.00",
+      "detail": "2 time entries",
+      "quantity": "40 h",
+      "tax": "20%",
+      "title": "Mobile app development",
+      "unitPrice": "MAD 650.00",
+    },
+    {
+      "amount": "MAD 2,500.00",
+      "quantity": "1",
+      "tax": "0%",
+      "title": "Hosting setup",
+      "unitPrice": "MAD 2,500.00",
+    },
+  ],
+  "meta": [
+    [
+      "Issue date",
+      "Oct 1, 2026",
+    ],
+    [
+      "Due Date",
+      "Oct 31, 2026",
+    ],
+    [
+      "Terms",
+      "Net 30 days",
+    ],
+    [
+      "Currency",
+      "MAD",
+    ],
+  ],
+  "number": "Draft",
+  "payment": {
+    "rows": [
+      [
+        "Bank",
+        "Attijariwafa",
+      ],
+      [
+        "Account",
+        "007 780 0001234567890123 45",
+      ],
+      [
+        "Reference",
+        "Draft",
+      ],
+    ],
+    "title": "Payment details",
+  },
+  "seller": {
+    "lines": [
+      "12 Bd d'Anfa, Casablanca, MA",
+      "billing@atlas.example",
+      "ICE 002847192000084  ·  IF 40128473  ·  RC 148291",
+    ],
+    "name": "Atlas Consulting SARL",
+  },
+  "smallPrint": [],
+  "stamp": {
+    "text": "Draft",
+    "tone": "neutral",
+  },
+  "status": {
+    "label": "Draft",
+    "tone": "neutral",
+  },
+  "tables": [
+    {
+      "alignRight": [
+        3,
+      ],
+      "head": [
+        "Date",
+        "Payment method",
+        "Reference",
+        "Amount",
+      ],
+      "rows": [],
+      "title": "Payments received",
+    },
+  ],
+  "title": "Invoice",
+  "totals": [
+    {
+      "label": "Subtotal",
+      "value": "MAD 28,500.00",
+    },
+    {
+      "label": "VAT 20%  (on MAD 26,000.00)",
+      "value": "MAD 5,200.00",
+    },
+    {
+      "label": "VAT 0%  (on MAD 2,500.00)",
+      "value": "MAD 0.00",
+    },
+    {
+      "label": "Total",
+      "strong": true,
+      "value": "MAD 33,700.00",
+    },
+  ],
+}
+`;
+
+exports[`document snapshots > quote (classic and modern) 1`] = `
+{
+  "brand": [
+    38,
+    132,
+    255,
+  ],
+  "columns": {
+    "description": "Description de la tâche / prestation",
+    "quantity": "Quantité / unité",
+    "total": "Prix total (HT) (MAD)",
+    "unitPrice": "Prix unitaire (HT) (MAD)",
+  },
+  "companyName": "Atlas Consulting SARL",
+  "filename": "DEV-2026-007.pdf",
+  "from": {
+    "heading": "Au nom et pour le compte de :",
+    "rows": [
+      [
+        "Nom",
+        "Atlas Consulting SARL",
+      ],
+      [
+        "N° ICE",
+        "002847192000084",
+      ],
+      [
+        "N° IF",
+        "40128473",
+      ],
+      [
+        "Adresse",
+        "12 Bd d'Anfa, Casablanca",
+      ],
+      [
+        "Téléphone",
+        "",
+      ],
+      [
+        "E-mail",
+        "billing@atlas.example",
+      ],
+    ],
+  },
+  "items": [
+    {
+      "description": "Audit days",
+      "quantity": "5",
+      "total": "30 000",
+      "unit": "days",
+      "unitPrice": "6 000",
+    },
+  ],
+  "legal": "ICE: 002847192000084 | RC: 148291 | IF: 40128473",
+  "net": {
+    "label": "Net à payer (MAD)",
+    "value": "34 200,00 MAD",
+  },
+  "notes": {
+    "heading": "Remarques / notes :",
+    "rows": [
+      [
+        "Conditions de règlement :",
+        "",
+      ],
+      [
+        "Banque",
+        "Attijariwafa",
+      ],
+      [
+        "RIB :",
+        "007 780 0001234567890123 45",
+      ],
+      [
+        "SWIFT",
+        "",
+      ],
+    ],
+  },
+  "refs": [
+    [
+      "N° de client",
+      "ORBIT",
+    ],
+    [
+      "Date de devis",
+      "01/10/2026",
+    ],
+    [
+      "N° de devis",
+      "DEV-2026-007",
+    ],
+    [
+      "Expire le",
+      "31/10/2026",
+    ],
+  ],
+  "signature": {
+    "hint": "Signature client précédée de la mention "Bon pour accord"",
+    "label": "Signature :",
+  },
+  "subject": {
+    "heading": "Description du projet",
+    "text": "Warehouse app audit",
+  },
+  "title": "Devis",
+  "to": {
+    "heading": "Adressé à :",
+    "rows": [
+      [
+        "Nom/Service",
+        "-",
+      ],
+      [
+        "Nom de la société",
+        "Orbit Logistics SA",
+      ],
+      [
+        "N° ICE",
+        "001523874000062",
+      ],
+      [
+        "Adresse",
+        "Technopark, Casablanca",
+      ],
+      [
+        "E-mail",
+        "ap@orbit.example",
+      ],
+    ],
+  },
+  "totals": [
+    {
+      "label": "Sous-total (MAD)",
+      "value": "30 000,00 MAD",
+    },
+    {
+      "label": "Remise (%)",
+      "value": "5 % (-1 500,00 MAD)",
+    },
+    {
+      "label": "Taux TVA (%)",
+      "value": "20 %",
+    },
+    {
+      "label": "Total TVA (MAD)",
+      "value": "5 700,00 MAD",
+    },
+    {
+      "label": "Total TTC (MAD)",
+      "strong": true,
+      "value": "34 200,00 MAD",
+    },
+  ],
+}
+`;
+
+exports[`document snapshots > quote (classic and modern) 2`] = `
+{
+  "brand": [
+    38,
+    132,
+    255,
+  ],
+  "buyer": {
+    "label": "Addressed to:",
+    "lines": [
+      "-",
+      "Technopark, Casablanca",
+      "ICE 001523874000062",
+    ],
+    "name": "Orbit Logistics",
+  },
+  "columns": {
+    "amount": "Amount",
+    "item": "Description",
+    "quantity": "Quantity / unit",
+    "tax": "VAT",
+    "unitPrice": "Unit price",
+  },
+  "filename": "DEV-2026-007.pdf",
+  "footer": {
+    "legal": "Atlas Consulting SARL  ·  12 Bd d'Anfa, Casablanca  ·  ICE 002847192000084  ·  IF 40128473  ·  RC 148291",
+  },
+  "highlight": {
+    "label": "Total incl. VAT (MAD)",
+    "note": "Valid until 10/31/2026",
+    "value": "MAD 34,200.00",
+  },
+  "items": [
+    {
+      "amount": "MAD 30,000.00",
+      "quantity": "5 days",
+      "tax": "20%",
+      "title": "Audit days",
+      "unitPrice": "MAD 6,000.00",
+    },
+  ],
+  "meta": [
+    [
+      "Quote date",
+      "10/01/2026",
+    ],
+    [
+      "Valid until",
+      "10/31/2026",
+    ],
+    [
+      "Currency",
+      "MAD",
+    ],
+  ],
+  "notes": {
+    "text": "Warehouse app audit",
+    "title": "Project description",
+  },
+  "number": "DEV-2026-007",
+  "payment": {
+    "rows": [
+      [
+        "RIB / IBAN:",
+        "007 780 0001234567890123 45",
+      ],
+    ],
+    "title": "Payment details",
+  },
+  "seller": {
+    "lines": [
+      "12 Bd d'Anfa, Casablanca, MA",
+      "billing@atlas.example",
+      "ICE 002847192000084  ·  IF 40128473  ·  RC 148291",
+    ],
+    "name": "Atlas Consulting SARL",
+  },
+  "smallPrint": [
+    "Client signature preceded by the words "Approved"",
+  ],
+  "status": {
+    "label": "Sent",
+    "tone": "info",
+  },
+  "title": "Quote",
+  "totals": [
+    {
+      "label": "Subtotal",
+      "value": "MAD 30,000.00",
+    },
+    {
+      "label": "Discount (%) 5%",
+      "value": "-MAD 1,500.00",
+    },
+    {
+      "label": "VAT 20%  (on MAD 28,500.00)",
+      "value": "MAD 5,700.00",
+    },
+    {
+      "label": "Total",
+      "strong": true,
+      "value": "MAD 34,200.00",
+    },
+  ],
+}
+`;
+
+exports[`document snapshots > subscription invoice (company's own plan) 1`] = `
+{
+  "brand": [
+    38,
+    132,
+    255,
+  ],
+  "buyer": {
+    "label": "Bill to",
+    "lines": [
+      "omar@atlas.example",
+      "Customer ID u1",
+    ],
+    "name": "Omar Tazi",
+  },
+  "columns": {
+    "amount": "Amount",
+    "item": "Description",
+    "quantity": "Quantity",
+    "unitPrice": "Unit price",
+  },
+  "filename": "INV-2026-0042.pdf",
+  "footer": {
+    "legal": "Nexora Technologies SARL AU  ·  Casablanca Finance City, Tour CFC, 14ème Étage, Casablanca  ·  ICE 002847192000084  ·  IF 40182934  ·  RC Casablanca 148291",
+    "note": "Thank you for your business.",
+  },
+  "highlight": {
+    "label": "Amount paid",
+    "note": "Paid Oct 1, 2026",
+    "value": "MAD 4,176.00",
+  },
+  "items": [
+    {
+      "amount": "MAD 3,480.00",
+      "quantity": "1",
+      "title": "Business plan",
+      "unitPrice": "MAD 3,480.00",
+    },
+  ],
+  "legal": "Nexora Technologies SARL AU  ·  Casablanca Finance City, Tour CFC, 14ème Étage, Casablanca  ·  ICE 002847192000084  ·  IF 40182934  ·  RC Casablanca 148291",
+  "meta": [
+    [
+      "Issue date",
+      "Oct 1, 2026",
+    ],
+    [
+      "Payment method",
+      "Card",
+    ],
+    [
+      "Currency",
+      "MAD",
+    ],
+  ],
+  "number": "INV-2026-0042",
+  "seller": {
+    "lines": [
+      "Casablanca Finance City, Tour CFC, 14ème Étage, Casablanca, Maroc",
+      "ICE 002847192000084  ·  IF 40182934  ·  RC Casablanca 148291",
+      "TP 34192084  ·  CNSS 8912345",
+    ],
+    "name": "Nexora Technologies SARL AU",
+  },
+  "stamp": {
+    "text": "Paid",
+    "tone": "success",
+  },
+  "status": {
+    "label": "Paid",
+    "tone": "success",
+  },
+  "title": "Invoice",
+  "totals": [
+    {
+      "label": "Subtotal",
+      "value": "MAD 3,480.00",
+    },
+    {
+      "label": "VAT 20%",
+      "value": "MAD 696.00",
+    },
+    {
+      "label": "Total",
+      "strong": true,
+      "value": "MAD 4,176.00",
+    },
+  ],
+}
+`;

@@ -9,6 +9,12 @@ import { translateError } from "@/lib/errors/translate-error"
 import { toast } from "@/lib/utils/toast"
 
 /** A project's wiki pages and meeting notes (P5). */
+/** Every page of the workspace, for the search */
+export function useAllProjectPages() {
+  const { id } = useCurrentWorkspace()
+  return useQuery({ queryKey: ["project-pages", id, "all"], queryFn: () => listProjectPagesApi(id) })
+}
+
 export function useProjectPages(projectId: string) {
   const { id } = useCurrentWorkspace()
   return useQuery({ queryKey: ["project-pages", id, projectId], queryFn: () => listProjectPagesApi(id, projectId) })
