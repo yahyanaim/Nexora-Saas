@@ -10,7 +10,11 @@ import { join } from "node:path"
 
 const src = "documentation"
 const dest = join("public", "documentation")
-const files = readdirSync(src)
+// Every file, including the interactive diagrams in documentation/diagrams/ (not their sources or receipts)
+const files = readdirSync(src, { recursive: true, withFileTypes: true })
+  .filter((d) => d.isFile())
+  .map((d) => join(d.parentPath, d.name).slice(src.length + 1))
+  .filter((f) => !(f.startsWith(join("diagrams", "")) && f.endsWith(".json")))
 const stale = files.filter((f) => !existsSync(join(dest, f)) || !readFileSync(join(src, f)).equals(readFileSync(join(dest, f))))
 
 if (process.argv.includes("--check")) {
@@ -20,6 +24,6 @@ if (process.argv.includes("--check")) {
   }
   console.log("✅ public/documentation matches documentation/")
 } else {
-  for (const f of files) cpSync(join(src, f), join(dest, f))
+  for (const f of files) cpSync(join(src, f), join(dest, f), { recursive: true })
   console.log(stale.length ? `📄 Docs copied to public/documentation (${stale.join(", ")})` : "📄 Docs already up to date")
 }

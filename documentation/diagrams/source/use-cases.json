@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "Who does what in Nexora",
+    "output": "documentation/diagrams/use-cases.html",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "subtitle": "Each role and the actions it uses. An action shared by two roles appears under both."
+  },
+  "layout": {
+    "direction": "right"
+  },
+  "nodes": [
+    {
+      "id": "root",
+      "label": "Nexora",
+      "sublabel": "five roles"
+    },
+    {
+      "id": "adm",
+      "label": "Admin",
+      "parent": "root"
+    },
+    {
+      "id": "u1",
+      "label": "Configure workspace",
+      "parent": "adm",
+      "sublabel": "and approval rules"
+    },
+    {
+      "id": "u2",
+      "label": "Manage employees",
+      "parent": "adm",
+      "sublabel": "and rates"
+    },
+    {
+      "id": "u3",
+      "label": "Manage clients",
+      "parent": "adm",
+      "sublabel": "and rate cards"
+    },
+    {
+      "id": "mgr",
+      "label": "Manager",
+      "parent": "root"
+    },
+    {
+      "id": "u4",
+      "label": "Plan projects",
+      "parent": "mgr",
+      "sublabel": "tasks, milestones"
+    },
+    {
+      "id": "u13",
+      "label": "Follow the team",
+      "parent": "mgr",
+      "sublabel": "Team dashboard"
+    },
+    {
+      "id": "u6",
+      "label": "Approve",
+      "parent": "mgr",
+      "sublabel": "time, leave, expenses"
+    },
+    {
+      "id": "u11m",
+      "label": "Read analytics",
+      "parent": "mgr"
+    },
+    {
+      "id": "emp",
+      "label": "Employee",
+      "parent": "root"
+    },
+    {
+      "id": "u12",
+      "label": "See my day",
+      "parent": "emp",
+      "sublabel": "My work"
+    },
+    {
+      "id": "u5",
+      "label": "Log time",
+      "parent": "emp",
+      "sublabel": "timesheet or timer"
+    },
+    {
+      "id": "u7",
+      "label": "Request",
+      "parent": "emp",
+      "sublabel": "leave and expenses"
+    },
+    {
+      "id": "acc",
+      "label": "Accountant",
+      "parent": "root"
+    },
+    {
+      "id": "u8",
+      "label": "Create invoices",
+      "parent": "acc",
+      "sublabel": "and credit notes"
+    },
+    {
+      "id": "u9",
+      "label": "Record payments",
+      "parent": "acc"
+    },
+    {
+      "id": "u10",
+      "label": "Follow receivables",
+      "parent": "acc"
+    },
+    {
+      "id": "u14a",
+      "label": "Export reports",
+      "parent": "acc",
+      "sublabel": "Excel, CSV, PDF"
+    },
+    {
+      "id": "dir",
+      "label": "Director",
+      "parent": "root"
+    },
+    {
+      "id": "u11d",
+      "label": "Read analytics",
+      "parent": "dir",
+      "sublabel": "and reports"
+    },
+    {
+      "id": "u14d",
+      "label": "Export reports",
+      "parent": "dir",
+      "sublabel": "Excel, CSV, PDF"
+    }
+  ]
+}

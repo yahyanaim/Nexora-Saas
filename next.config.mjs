@@ -115,6 +115,11 @@ const nextConfig = {
           },
         ],
       },
+      // The user manual shows its interactive diagrams in frames of the same origin
+      {
+        source: "/documentation/diagrams/:path*",
+        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+      },
     ]
   },
 }

@@ -10,7 +10,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.min.js"></script>
+<style>
+  .arch-fig{margin:14px 0 22px;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#f5f6f8}
+  .arch-frame{display:block;width:100%;border:0;background:#f5f6f8}
+  .arch-fig figcaption{font-size:.85rem;color:#475569;padding:8px 12px;border-top:1px solid #e2e8f0;background:#fff}
+  .arch-fig figcaption a{font-weight:600}
+  .shot{margin:14px 0 22px;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff}
+  .shot img{display:block;width:100%;height:auto}
+  .shot figcaption{font-size:.85rem;color:#475569;padding:8px 12px;border-top:1px solid #e2e8f0}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -212,30 +220,7 @@
 </section>
 
 <section id="your-data"><h2><span class="n">05B</span>Enter your company's data, step by step</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Nexora is only as useful as the data you put in. This section walks through every entity – company, lists, approvals, employees, clients, projects, tasks, hours and invoices – in the order they depend on each other, with the fields each form requires and a quick check after each step.</p>
-<p>Follow these nine steps in order: each one uses what the previous steps created (an employee needs a department, a project needs a client and a manager, an invoice needs approved hours). The diagram shows the dependencies; click it to zoom.</p><div class="mermaid">
-flowchart TB
-  subgraph A["Foundation"]
-    direction LR
-    S1["1 · Company settings<br/>name, ICE, currency,<br/>fiscal year, numbering"] --> S2["2 · Lists<br/>departments, holidays,<br/>leave types, categories"] --> S3["3 · Approval rules<br/>who validates what"]
-  end
-  subgraph B["People and clients"]
-    direction LR
-    S4["4 · Employees<br/>role, department, manager,<br/>cost &amp; billable rate"] --> S5["5 · Clients<br/>legal details, terms,<br/>contacts, rate card"]
-  end
-  subgraph C["Work"]
-    direction LR
-    S6["6 · Projects<br/>client, manager, team,<br/>budget type"] --> S7["7 · Milestones &amp; tasks<br/>assignee, due date,<br/>estimate"]
-  end
-  subgraph D["Money"]
-    direction LR
-    S8["8 · Hours<br/>timesheet → submit<br/>→ approve"] --> S9["9 · Invoices<br/>from approved hours"]
-  end
-  A --> B --> C --> D
-  style A fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
-  style B fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-  style C fill:#fef3c7,stroke:#d97706,stroke-width:2px
-  style D fill:#fce7f3,stroke:#db2777,stroke-width:2px
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read the four bands from top to bottom and each band from left to right. A step can only be done once the steps before it exist.</p><h3>Step 1 – Company settings</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>System → Workspace settings → Company</td></tr><tr><td><b>Required</b></td><td>Company name, base currency, fiscal-year start, invoice number format</td></tr><tr><td><b>Optional</b></td><td>Legal name, ICE (15 digits), tax ID (IF), trade register, patente, CNSS, address, time zone, logo. In Morocco the ICE and IF are needed before the first invoice can be issued (see 18K).</td></tr><tr><td><b>Why it matters</b></td><td>Printed on every invoice. Numbering and fiscal year must be right <b>before the first invoice</b>: issued numbers are never reused.</td></tr><tr><td><b>Check it worked</b></td><td>Open Finance → Client invoices → New invoice and look at the preview header.</td></tr></tbody></table><h3>Step 2 – Lists</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Workspace settings → Lists</td></tr><tr><td><b>Required</b></td><td>At least one department; this year's public holidays; leave types</td></tr><tr><td><b>Optional</b></td><td>Expense categories, task labels</td></tr><tr><td><b>Why it matters</b></td><td>Departments group people and filter reports; holidays and leave reduce expected hours and capacity.</td></tr><tr><td><b>Check it worked</b></td><td>My work shows the right expected hours for this week.</td></tr></tbody></table><h3>Step 3 – Approval rules</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Workspace settings → Approvals</td></tr><tr><td><b>Required</b></td><td>Who approves timesheets, leave and expenses</td></tr><tr><td><b>Optional</b></td><td>Two-step approval, a named approver</td></tr><tr><td><b>Why it matters</b></td><td>Without an approver, submitted hours wait forever. Nobody can approve their own requests.</td></tr><tr><td><b>Check it worked</b></td><td>Submit a test week as an employee and check it appears in Time approvals.</td></tr></tbody></table><h3>Step 4 – Employees</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Employees → Add employee</td></tr><tr><td><b>Required</b></td><td>Name (2+ letters), email, job title, role, employment type, status, hire date, hourly cost, billable rate, weekly capacity, at least one working day</td></tr><tr><td><b>Optional</b></td><td>Phone, department, manager, skills</td></tr><tr><td><b>Why it matters</b></td><td>The <b>role</b> decides what the person sees; the <b>manager</b> decides who approves them; the <b>billable rate</b> is the default bill rate and the <b>hourly cost</b> feeds margins. Change rates later with a dated rate change, never by editing old work.</td></tr><tr><td><b>Check it worked</b></td><td>Planning → Workload lists the person with the right capacity.</td></tr></tbody></table><h3>Step 5 – Clients</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Clients → Add client</td></tr><tr><td><b>Required</b></td><td>Name, currency, invoice language, payment terms (days), account manager</td></tr><tr><td><b>Optional</b></td><td>Legal name, ICE, tax ID, billing address, industry, contacts, client hourly rate, rate card</td></tr><tr><td><b>Why it matters</b></td><td>Payment terms set due dates and the aging; the rate card overrides employee rates for this client (person → job title → client rate → employee rate).</td></tr><tr><td><b>Check it worked</b></td><td>Open the client panel: contacts and rate card are listed.</td></tr></tbody></table><h3>Step 6 – Projects</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Projects → New project</td></tr><tr><td><b>Required</b></td><td>Name, code (2–12 characters, e.g. HEL-02), client, manager, status, priority, budget type</td></tr><tr><td><b>Optional</b></td><td>Description, team members, dates, budget amount, retainer monthly fee/hours/overage</td></tr><tr><td><b>Why it matters</b></td><td>The <b>budget type</b> (hourly, fixed price, retainer, internal) decides how the project is invoiced; the budget drives the 80%/100% alerts; only team members can log time on it.</td></tr><tr><td><b>Check it worked</b></td><td>The project appears on Projects with health <i>On track</i>.</td></tr></tbody></table><h3>Step 7 – Milestones and tasks</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Open the project → Milestones, then Board or List → New task</td></tr><tr><td><b>Required</b></td><td>Task title, status, priority, estimated hours</td></tr><tr><td><b>Optional</b></td><td>Assignee, milestone, due date, labels, subtasks</td></tr><tr><td><b>Why it matters</b></td><td>Due dates feed My work and project health; estimates feed workload; milestones can be invoiced on their own.</td></tr><tr><td><b>Check it worked</b></td><td>The assignee sees the task in My work → My day.</td></tr></tbody></table><h3>Step 8 – Hours</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Timesheets (or the timer / quick log)</td></tr><tr><td><b>Required</b></td><td>Project, day, hours (rounded to 15 minutes)</td></tr><tr><td><b>Optional</b></td><td>Task, note, billable flag</td></tr><tr><td><b>Why it matters</b></td><td>Approved hours are what clients are billed and what costs are measured on; the bill and cost rate are frozen at approval.</td></tr><tr><td><b>Check it worked</b></td><td>Submit the week, approve it in Time approvals; status becomes <i>Approved</i>.</td></tr></tbody></table><h3>Step 9 – First invoice</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Finance → Client invoices → Create from hours (or New invoice)</td></tr><tr><td><b>Required</b></td><td>Client, period, grouping</td></tr><tr><td><b>Optional</b></td><td>Taxes, withholding, notes, other invoice types (fixed, milestone, retainer, deposit, free)</td></tr><tr><td><b>Why it matters</b></td><td>Draft first; the number is given at issue. Corrections use a credit note.</td></tr><tr><td><b>Check it worked</b></td><td>Issue it, record a payment and check Receivables and Reports → Invoices.</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Each step is one table: where to click, which fields the form refuses to save without, which can wait, why it matters, and how to verify.</p><h3>Bringing existing data</h3><ul><li><b>Many employees or clients:</b> enter the first few by hand to check your lists and rates, then the rest. A CSV import arrives in Phase 5.</li><li><b>Open invoices from your old tool:</b> create them as <i>free</i> invoices dated on their original issue date so Receivables shows the real balance.</li><li><b>Past hours:</b> only the current month is useful for billing; older history is optional.</li></ul>
+<p>Follow these nine steps in order: each one uses what the previous steps created (an employee needs a department, a project needs a client and a manager, an invoice needs approved hours). The diagram shows the dependencies; open it full screen to explore.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/setup-steps.html" title="setup-steps" loading="lazy" style="height:620px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/setup-steps.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read the four bands from top to bottom and each band from left to right. A step can only be done once the steps before it exist.</p><h3>Step 1 – Company settings</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>System → Workspace settings → Company</td></tr><tr><td><b>Required</b></td><td>Company name, base currency, fiscal-year start, invoice number format</td></tr><tr><td><b>Optional</b></td><td>Legal name, ICE (15 digits), tax ID (IF), trade register, patente, CNSS, address, time zone, logo. In Morocco the ICE and IF are needed before the first invoice can be issued (see 18K).</td></tr><tr><td><b>Why it matters</b></td><td>Printed on every invoice. Numbering and fiscal year must be right <b>before the first invoice</b>: issued numbers are never reused.</td></tr><tr><td><b>Check it worked</b></td><td>Open Finance → Client invoices → New invoice and look at the preview header.</td></tr></tbody></table><h3>Step 2 – Lists</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Workspace settings → Lists</td></tr><tr><td><b>Required</b></td><td>At least one department; this year's public holidays; leave types</td></tr><tr><td><b>Optional</b></td><td>Expense categories, task labels</td></tr><tr><td><b>Why it matters</b></td><td>Departments group people and filter reports; holidays and leave reduce expected hours and capacity.</td></tr><tr><td><b>Check it worked</b></td><td>My work shows the right expected hours for this week.</td></tr></tbody></table><h3>Step 3 – Approval rules</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Workspace settings → Approvals</td></tr><tr><td><b>Required</b></td><td>Who approves timesheets, leave and expenses</td></tr><tr><td><b>Optional</b></td><td>Two-step approval, a named approver</td></tr><tr><td><b>Why it matters</b></td><td>Without an approver, submitted hours wait forever. Nobody can approve their own requests.</td></tr><tr><td><b>Check it worked</b></td><td>Submit a test week as an employee and check it appears in Time approvals.</td></tr></tbody></table><h3>Step 4 – Employees</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Employees → Add employee</td></tr><tr><td><b>Required</b></td><td>Name (2+ letters), email, job title, role, employment type, status, hire date, hourly cost, billable rate, weekly capacity, at least one working day</td></tr><tr><td><b>Optional</b></td><td>Phone, department, manager, skills</td></tr><tr><td><b>Why it matters</b></td><td>The <b>role</b> decides what the person sees; the <b>manager</b> decides who approves them; the <b>billable rate</b> is the default bill rate and the <b>hourly cost</b> feeds margins. Change rates later with a dated rate change, never by editing old work.</td></tr><tr><td><b>Check it worked</b></td><td>Planning → Workload lists the person with the right capacity.</td></tr></tbody></table><h3>Step 5 – Clients</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Clients → Add client</td></tr><tr><td><b>Required</b></td><td>Name, currency, invoice language, payment terms (days), account manager</td></tr><tr><td><b>Optional</b></td><td>Legal name, ICE, tax ID, billing address, industry, contacts, client hourly rate, rate card</td></tr><tr><td><b>Why it matters</b></td><td>Payment terms set due dates and the aging; the rate card overrides employee rates for this client (person → job title → client rate → employee rate).</td></tr><tr><td><b>Check it worked</b></td><td>Open the client panel: contacts and rate card are listed.</td></tr></tbody></table><h3>Step 6 – Projects</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Projects → New project</td></tr><tr><td><b>Required</b></td><td>Name, code (2–12 characters, e.g. HEL-02), client, manager, status, priority, budget type</td></tr><tr><td><b>Optional</b></td><td>Description, team members, dates, budget amount, retainer monthly fee/hours/overage</td></tr><tr><td><b>Why it matters</b></td><td>The <b>budget type</b> (hourly, fixed price, retainer, internal) decides how the project is invoiced; the budget drives the 80%/100% alerts; only team members can log time on it.</td></tr><tr><td><b>Check it worked</b></td><td>The project appears on Projects with health <i>On track</i>.</td></tr></tbody></table><h3>Step 7 – Milestones and tasks</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Open the project → Milestones, then Board or List → New task</td></tr><tr><td><b>Required</b></td><td>Task title, status, priority, estimated hours</td></tr><tr><td><b>Optional</b></td><td>Assignee, milestone, due date, labels, subtasks</td></tr><tr><td><b>Why it matters</b></td><td>Due dates feed My work and project health; estimates feed workload; milestones can be invoiced on their own.</td></tr><tr><td><b>Check it worked</b></td><td>The assignee sees the task in My work → My day.</td></tr></tbody></table><h3>Step 8 – Hours</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Organization → Timesheets (or the timer / quick log)</td></tr><tr><td><b>Required</b></td><td>Project, day, hours (rounded to 15 minutes)</td></tr><tr><td><b>Optional</b></td><td>Task, note, billable flag</td></tr><tr><td><b>Why it matters</b></td><td>Approved hours are what clients are billed and what costs are measured on; the bill and cost rate are frozen at approval.</td></tr><tr><td><b>Check it worked</b></td><td>Submit the week, approve it in Time approvals; status becomes <i>Approved</i>.</td></tr></tbody></table><h3>Step 9 – First invoice</h3><table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td><b>Where</b></td><td>Finance → Client invoices → Create from hours (or New invoice)</td></tr><tr><td><b>Required</b></td><td>Client, period, grouping</td></tr><tr><td><b>Optional</b></td><td>Taxes, withholding, notes, other invoice types (fixed, milestone, retainer, deposit, free)</td></tr><tr><td><b>Why it matters</b></td><td>Draft first; the number is given at issue. Corrections use a credit note.</td></tr><tr><td><b>Check it worked</b></td><td>Issue it, record a payment and check Receivables and Reports → Invoices.</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Each step is one table: where to click, which fields the form refuses to save without, which can wait, why it matters, and how to verify.</p><h3>Bringing existing data</h3><ul><li><b>Many employees or clients:</b> enter the first few by hand to check your lists and rates, then the rest. A CSV import arrives in Phase 5.</li><li><b>Open invoices from your old tool:</b> create them as <i>free</i> invoices dated on their original issue date so Receivables shows the real balance.</li><li><b>Past hours:</b> only the current month is useful for billing; older history is optional.</li></ul>
 <div class="callout good"><b>Tip:</b> do the whole chain once with a test client and a test project (steps 5–9), then delete or archive them before the team starts.</div>
 </section>
 
@@ -382,17 +367,7 @@ flowchart TB
 
 <section id="m-quotes"><h2><span class="n">18B</span>Quotes (devis)</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">A quote tells the client what the work will cost before it starts. In Nexora a quote follows its own life – draft, sent, accepted or declined – and, once accepted, becomes a draft invoice and, if you want, a fixed-price project in one click, so nothing is typed twice.</p>
 <p><b>Where:</b> Finance → Quotes.</p>
-<div class="mermaid">
-flowchart LR
-  D[Draft] -- Mark as sent --> S[Sent · numbered DEV-YYYY-NNN]
-  S -- Accepted by client --> A[Accepted]
-  S -- Declined, with reason --> R[Declined]
-  S -. validity date passed .-> E[Expired]
-  A -- Create invoice --> I[Draft invoice · same lines, discount, description]
-  A -- Create project --> P[Fixed-price project · budget = amount excl. VAT]
-  R -- Duplicate --> D
-  E -- Duplicate --> D
-</div>
+<figure class="arch-fig"><iframe class="arch-frame" src="diagrams/quote-lifecycle.html" title="quote-lifecycle" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/quote-lifecycle.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure>
 <p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Boxes are statuses; arrows are the buttons in the quote panel. A sent quote is never edited: duplicate it to make a new version.</p>
 <table><thead><tr><th>Field</th><th>Notes</th></tr></thead><tbody><tr><td>Client and contact</td><td>The contact appears in the <i>Addressed to</i> panel (name / department)</td></tr><tr><td>Project description</td><td>Printed in its own box above the lines</td></tr><tr><td>Quote date, valid until, delivery date</td><td>Valid 30 days by default; after that date an unanswered quote shows as <i>Expired</i></td></tr><tr><td>Lines</td><td>Description, quantity, unit (hours, days, pages, units, months or <b>flat rate</b>) and unit price excl. VAT</td></tr><tr><td>VAT and discount</td><td>The discount (%) applies before VAT; several VAT rates are possible on the invoice</td></tr><tr><td>Payment terms</td><td>Pre-filled from the client's terms; printed in the notes box with the bank details</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> These are the fields of the quote form, in order.</p>
 <h3>Document style</h3>
@@ -478,19 +453,7 @@ flowchart LR
 
 <section id="rules"><h2><span class="n">22</span>Business rules</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">These rules are applied automatically everywhere in Nexora. They protect the reliability of your figures and your compliance: invoices that cannot disappear, rates that cannot change after the fact, periods that stay closed. Knowing them explains why the system sometimes refuses an action.</p><table><thead><tr><th>Rule</th><th>What happens</th></tr></thead><tbody><tr><td>Rate choice</td><td>Person on rate card → job title on rate card → client rate → employee rate on the date</td></tr><tr><td>Rate freeze</td><td>Approval stores bill and cost rate on each hour</td></tr><tr><td>Invoice numbering</td><td>Given at issue, in sequence per fiscal year, never reused; drafts have none</td></tr><tr><td>No deletion</td><td>Issued invoices are credited, not deleted; clients with invoices are archived</td></tr><tr><td>Period lock</td><td>No change on or before the lock date</td></tr><tr><td>Self-approval</td><td>Not allowed for hours, leave or expenses</td></tr><tr><td>Time rounding</td><td>15 minutes; max 24 h per day; members only; closed projects refuse hours</td></tr><tr><td>Money rounding</td><td>To the cent per line; tax per rate</td></tr><tr><td>Fixed price</td><td>Never billed above the project price</td></tr><tr><td>Deposits</td><td>Deducted automatically on the next final invoice of the client</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Each rule is enforced by the system, not by habit; if an action is refused, the reason is usually one of these rows.</p></section>
 
-<section id="statuses"><h2><span class="n">23</span>Statuses explained</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Every object in Nexora moves through a small number of statuses, and each status decides what can still be done. Understanding them answers most 'why can't I edit this?' questions.</p><table><thead><tr><th>Object</th><th>Statuses</th></tr></thead><tbody><tr><td>Time entry</td><td>Draft → Submitted → Approved → Invoiced; or Sent back</td></tr><tr><td>Invoice</td><td>Draft → Issued → Sent → Paid; Void; shown as Overdue, Partly paid or Credited when relevant</td></tr><tr><td>Expense</td><td>Submitted → Approved / Rejected → Reimbursed</td></tr><tr><td>Leave</td><td>Pending → Approved / Declined</td></tr><tr><td>Project</td><td>Planning → Active → On hold → Completed / Cancelled</td></tr><tr><td>Task</td><td>To do → In progress → In review → Done</td></tr><tr><td>Employee</td><td>Starting, Active, On leave, Notice, Inactive</td></tr><tr><td>Client</td><td>Lead, Active, Archived</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read each row from left to right: it is the normal life of that object. Arrows show the order; alternatives are separated by a slash.</p><div class="mermaid">
-stateDiagram-v2
-  [*] --> Draft
-  Draft --> Issued: issue - number assigned
-  Draft --> [*]: delete
-  Issued --> Sent: send
-  Issued --> Paid: fully paid
-  Sent --> Paid: fully paid
-  Issued --> Void: cancel without payments
-  Sent --> Void: cancel without payments
-  Sent --> Credited: credit note
-  Paid --> Credited: credit note
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> The diagram shows the same life for an invoice as boxes and arrows: you can only follow an arrow, never jump back – which is why issued invoices are credited, not deleted.</p></section>
+<section id="statuses"><h2><span class="n">23</span>Statuses explained</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Every object in Nexora moves through a small number of statuses, and each status decides what can still be done. Understanding them answers most 'why can't I edit this?' questions.</p><table><thead><tr><th>Object</th><th>Statuses</th></tr></thead><tbody><tr><td>Time entry</td><td>Draft → Submitted → Approved → Invoiced; or Sent back</td></tr><tr><td>Invoice</td><td>Draft → Issued → Sent → Paid; Void; shown as Overdue, Partly paid or Credited when relevant</td></tr><tr><td>Expense</td><td>Submitted → Approved / Rejected → Reimbursed</td></tr><tr><td>Leave</td><td>Pending → Approved / Declined</td></tr><tr><td>Project</td><td>Planning → Active → On hold → Completed / Cancelled</td></tr><tr><td>Task</td><td>To do → In progress → In review → Done</td></tr><tr><td>Employee</td><td>Starting, Active, On leave, Notice, Inactive</td></tr><tr><td>Client</td><td>Lead, Active, Archived</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read each row from left to right: it is the normal life of that object. Arrows show the order; alternatives are separated by a slash.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/invoice-lifecycle.html" title="invoice-lifecycle" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/invoice-lifecycle.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> The diagram shows the same life for an invoice as boxes and arrows: you can only follow an arrow, never jump back – which is why issued invoices are credited, not deleted.</p></section>
 
 <section id="calc"><h2><span class="n">24</span>How figures are calculated</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Numbers are only useful if everyone agrees on how they are calculated. This chapter gives the exact definition of each figure shown in Nexora, so that a director, a manager and an accountant read the same number the same way.</p><table><thead><tr><th>Figure</th><th>Formula</th></tr></thead><tbody><tr><td>Revenue earned</td><td>Approved billable hours on hourly projects × frozen rate + fixed, milestone and retainer invoices − credit notes</td></tr><tr><td>Cost of hours</td><td>All logged hours × the person's hourly cost on that date</td></tr><tr><td>Gross margin</td><td>(Revenue − cost of hours − approved expenses) ÷ revenue</td></tr><tr><td>Available hours</td><td>Working days × hours per day, minus approved leave and holidays</td></tr><tr><td>Utilization</td><td>Billable hours ÷ available hours (target 75%)</td></tr><tr><td>Average billing rate</td><td>Revenue from hourly work ÷ those hours</td></tr><tr><td>Balance due</td><td>Invoice total − payments − credit notes</td></tr><tr><td>Days late</td><td>Today − due date, for unpaid balances</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> When a figure on screen surprises you, find it here: the formula tells you exactly which data it is built from.</p></section>
 
@@ -508,13 +471,7 @@ stateDiagram-v2
 <section id="g-idea"><h2><span class="n">G2</span>The core idea: rules first, everything else is a detail</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Good software for a business lasts for years and changes often. Nexora is built so that the part that matters most – your business rules – does not depend on the parts that change most – screens, frameworks and storage. This section explains that principle and why it protects the buyer's investment.</p>
 <p><b>Nexora's business rules do not depend on the screens or on where data is stored.</b> "An invoice number is never reused", "nobody approves their own hours", "a fixed price can never be over-billed" are plain TypeScript functions. They do not know about React, the browser or a database.</p>
 <div class="callout "><b>The rule of dependencies:</b> dependencies point inwards. Screens call hooks, hooks call API functions, API functions call the business rules and the store. The rules never call outwards.</div>
-<div class="mermaid">
-flowchart LR
-  UI[Screens<br/>components] --> HK[Hooks<br/>React Query]
-  HK --> API[API functions<br/>src/lib/api]
-  API --> RULES[Business rules<br/>src/lib/workforce]
-  API --> STORE[(Storage<br/>demo store today<br/>server tomorrow)]
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Arrows show who is allowed to call whom. The business rules on the right are called by others but never call anything outside themselves.</p>
+<figure class="arch-fig"><iframe class="arch-frame" src="diagrams/app-layers.html" title="app-layers" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/app-layers.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Arrows show who is allowed to call whom. The business rules on the right are called by others but never call anything outside themselves.</p>
 <h3>The four layers</h3>
 <table><thead><tr><th>Layer</th><th>Think of it as</th><th>Folders</th></tr></thead><tbody><tr><td>Business rules (domain)</td><td>The brain: pure logic, no tools</td><td><code>src/lib/workforce/</code> – billing.ts, invoice-builders.ts, rates.ts, approvals.ts, planning.ts, kpis.ts, profitability.ts, analytics.ts</td></tr><tr><td>Data access</td><td>The plumbing: reads and writes</td><td><code>src/lib/api/*-api.ts</code> (one file per module) and <code>src/lib/workforce/demo-store.ts</code></td></tr><tr><td>State &amp; hooks</td><td>The wiring between data and screens</td><td><code>src/hooks/workforce/</code> (React Query), <code>src/store/</code> (Zustand: current workspace)</td></tr><tr><td>Interface</td><td>What people see and use</td><td><code>src/app/[locale]/dashboard/*</code> (routes), <code>src/components/shared/*-chunks</code> (pages), <code>src/components/ui</code> (design system)</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read from top to bottom: the deeper the layer, the less it changes and the more valuable it is.</p>
 <h3>Why it matters to a buyer</h3>
@@ -713,291 +670,27 @@ it("hides cost columns without permission (RPT-8)", () =&gt; {
 <p>Branch from <code>main</code>, keep one topic per branch, run the four local checks (type check, lint, tests, translations), check the page on a phone, in dark mode and in Arabic, then open a pull request. The full rules are in <code>CONTRIBUTING.md</code>.</p>
 </section>
 
-<section id="d-process"><h2><span class="n">D1</span>Business process map (time to cash)</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">This diagram shows the company's main process – from an hour of work to money in the bank – and who is responsible for each step. It is the best single picture of what Nexora does.</p><p>The core process of a service company, by who does what.</p><div class="mermaid">
-flowchart LR
-  subgraph EMP[Employee]
-    e1[Log hours<br/>timer or timesheet] --> e2[Submit week]
-    e5[Correct and resubmit]
-  end
-  subgraph MGR[Manager]
-    m1{Review hours}
-  end
-  subgraph ACC[Accountant]
-    a1[Ready to bill] --> a2[Draft invoice] --> a3[Issue - number] --> a4[Send] --> a5[Record payments]
-    a6[Follow up receivables]
-    a7[Credit note]
-  end
-  subgraph CLI[Client]
-    c1[Receives invoice] --> c2[Pays]
-  end
-  e2 --> m1
-  m1 -- sent back --> e5 --> e2
-  m1 -- approved, rate frozen --> a1
-  a4 --> c1
-  c2 --> a5
-  a4 -. overdue .-> a6
-  a3 -. error .-> a7
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read from left to right. Each grey box is a person's responsibility; arrows are hand-offs. Dashed arrows are exceptions (late payment, a correction).</p></section>
+<section id="d-process"><h2><span class="n">D1</span>Business process map (time to cash)</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">This diagram shows the company's main process – from an hour of work to money in the bank – and who is responsible for each step. It is the best single picture of what Nexora does.</p><p>The core process of a service company, by who does what.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/time-to-cash.html" title="time-to-cash" loading="lazy" style="height:1000px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/time-to-cash.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read from left to right. Each grey box is a person's responsibility; arrows are hand-offs. Dashed arrows are exceptions (late payment, a correction).</p></section>
 
-<section id="d-usecase"><h2><span class="n">D2</span>Use-case diagram</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">A use-case diagram shows the people who use a system and what each of them does with it. It is a quick way to check that every role in your company is covered.</p><div class="mermaid">
-flowchart LR
-  ADM([Admin]):::actor
-  MGR([Manager]):::actor
-  EMP([Employee]):::actor
-  subgraph SYS["Nexora"]
-    direction TB
-    U1("Configure workspace<br/>and approval rules")
-    U2("Manage employees<br/>and rates")
-    U3("Manage clients<br/>and rate cards")
-    U4("Plan projects, tasks<br/>and milestones")
-    U12("See my day<br/>(My work)")
-    U5("Log time / timer")
-    U7("Request leave<br/>and expenses")
-    U13("Follow the team<br/>(Team dashboard)")
-    U6("Approve time,<br/>leave, expenses")
-    U8("Create invoices<br/>and credit notes")
-    U9("Record payments")
-    U10("Follow receivables")
-    U11("Read analytics<br/>and reports")
-    U14("Export reports<br/>Excel / CSV / PDF")
-  end
-  ACC([Accountant]):::actor
-  DIR([Director]):::actor
-  ADM --- U1
-  ADM --- U2
-  ADM --- U3
-  MGR --- U4
-  MGR --- U13
-  MGR --- U6
-  EMP --- U12
-  EMP --- U5
-  EMP --- U7
-  U8 --- ACC
-  U9 --- ACC
-  U10 --- ACC
-  U14 --- ACC
-  U11 --- DIR
-  U14 --- DIR
-  MGR --- U11
-  classDef actor fill:#fde68a,stroke:#b45309,stroke-width:2px,color:#1f2937;
-  style SYS fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,stroke-dasharray:5 4
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Yellow ovals are roles (people on the left, finance and direction on the right); the dashed box is Nexora, and each rounded box inside it is something a role does. A line means that role uses that feature. Click the diagram to zoom.</p></section>
+<section id="d-usecase"><h2><span class="n">D2</span>Use-case diagram</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">A use-case diagram shows the people who use a system and what each of them does with it. It is a quick way to check that every role in your company is covered.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/use-cases.html" title="use-cases" loading="lazy" style="height:900px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/use-cases.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Yellow ovals are roles (people on the left, finance and direction on the right); the dashed box is Nexora, and each rounded box inside it is something a role does. A line means that role uses that feature. Click the diagram to zoom.</p></section>
 
-<section id="d-sitemap"><h2><span class="n">D3</span>Site map</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">The site map shows every section and page of Nexora and how they are reached, as a single tree.</p><div class="mermaid">
-flowchart TB
-  A[Sign in] --> D[Dashboard]
-  D --> D0[My work]
-  D --> D2[Team]
-  D --> D1[Analytics]
-  D --> D3[Reports] --> D3a[Excel / CSV / PDF]
-  A --> O[Organization]
-  O --> O1[Employees] --> O1a[Profile and rate history]
-  O --> O2[Clients] --> O2a[Client panel and rate card]
-  O --> O3[Projects] --> O3a[Board / List / Milestones / Team] --> O3b[Task panel: comments, activity]
-  O --> O4[Timesheets]
-  O --> O5[Time approvals]
-  A --> F[Finance]
-  F --> F1[Client invoices] --> F1a[Invoice panel: payments, credit note, PDF]
-  F --> F2[Receivables]
-  F --> F3[Expenses]
-  F --> F4[Profitability]
-  A --> PL[Planning]
-  PL --> P1[Timeline]
-  PL --> P2[Calendar]
-  PL --> P3[Workload]
-  PL --> P4[Leave]
-  A --> S[System]
-  S --> S1[Workspace settings: Company / Lists / Approvals]
-  S --> S2[Roles]
-  S --> S3[Sessions]
-  S --> S4[Audit logs]
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Start at 'Sign in' and follow the branches: each level down is one click deeper in the menu.</p></section>
+<section id="d-sitemap"><h2><span class="n">D3</span>Site map</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">The site map shows every section and page of Nexora and how they are reached, as a single tree.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/site-map.html" title="site-map" loading="lazy" style="height:1100px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/site-map.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Start at 'Sign in' and follow the branches: each level down is one click deeper in the menu.</p></section>
 
-<section id="d-seq-time"><h2><span class="n">D4</span>Sequence: submit and approve a week</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">A sequence diagram shows, step by step and in time order, how the user, the screen, the data layer and the business rules talk to each other. This one covers the weekly cycle of logging, submitting and approving hours.</p><div class="mermaid">
-sequenceDiagram
-  actor Emp as Employee
-  participant TS as Timesheet screen
-  participant API as Time API
-  participant RULES as Business rules
-  actor Mgr as Manager
-  Emp->>TS: Type hours in cells
-  TS->>API: setTimesheetCell
-  API->>RULES: round to 15 min, max 24 h/day, member of project, period open
-  RULES-->>API: ok
-  Emp->>TS: Submit week
-  TS->>API: submitTimesheet
-  API-->>TS: entries Submitted (locked)
-  Mgr->>API: approveTimeEntries
-  API->>RULES: not self-approval, still submitted
-  API->>API: freeze bill rate and cost rate on each entry
-  API-->>Mgr: Approved, ready to bill
-  alt Sent back
-    Mgr->>API: rejectTimeEntries(reason)
-    API-->>Emp: Draft again with reason
-  end
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read from top to bottom: each arrow is a message from one participant to another, in time order. The 'alt' box shows the alternative path when hours are sent back.</p></section>
+<section id="d-seq-time"><h2><span class="n">D4</span>Sequence: submit and approve a week</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">A sequence diagram shows, step by step and in time order, how the user, the screen, the data layer and the business rules talk to each other. This one covers the weekly cycle of logging, submitting and approving hours.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/seq-week.html" title="seq-week" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/seq-week.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read from top to bottom: each arrow is a message from one participant to another, in time order. The 'alt' box shows the alternative path when hours are sent back.</p></section>
 
-<section id="d-seq-invoice"><h2><span class="n">D5</span>Sequence: invoice from hours to payment</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">This sequence follows an invoice from creation from approved hours, through issue and sending, to the payments that settle it.</p><div class="mermaid">
-sequenceDiagram
-  actor Acc as Accountant
-  participant INV as Invoices screen
-  participant API as Billing API
-  participant RULES as Billing rules
-  actor Cli as Client
-  Acc->>INV: Create invoice (client, hours, grouping)
-  INV->>API: createInvoiceFromHours
-  API->>RULES: resolve rates, build lines, deduct open deposits
-  API-->>INV: Draft (no number), hours linked
-  Acc->>API: issueInvoice
-  API->>RULES: period open, next gapless number for fiscal year
-  API-->>INV: Issued INV-2026-021
-  Acc->>API: markInvoiceSent
-  API-->>Cli: PDF with company identity and tax lines
-  Cli-->>Acc: Payment (full or partial)
-  Acc->>API: recordPayment(date, amount, method, ref)
-  API->>RULES: balance = total - payments - credits
-  API-->>INV: Partly paid or Paid
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Follow the arrows downwards: the accountant acts, the screen calls the billing functions, the rules compute, and the result comes back. The client appears only when the invoice is sent and paid.</p></section>
+<section id="d-seq-invoice"><h2><span class="n">D5</span>Sequence: invoice from hours to payment</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">This sequence follows an invoice from creation from approved hours, through issue and sending, to the payments that settle it.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/seq-invoice.html" title="seq-invoice" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/seq-invoice.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Follow the arrows downwards: the accountant acts, the screen calls the billing functions, the rules compute, and the result comes back. The client appears only when the invoice is sent and paid.</p></section>
 
-<section id="d-seq-credit"><h2><span class="n">D6</span>Sequence: correct an issued invoice</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Issued invoices are never deleted. This sequence shows how an error is corrected with a credit note, and what happens to the hours that were billed.</p><div class="mermaid">
-sequenceDiagram
-  actor Acc as Accountant
-  participant API as Billing API
-  Acc->>API: createCreditNote(invoice, lines, releaseHours?)
-  API->>API: number in CN- series, negative amounts
-  alt releaseHours
-    API->>API: unlink hours, back to Ready to bill
-  end
-  API-->>Acc: Original shown as Credited, balance reduced
-  Note over Acc,API: Issued invoices are never deleted. Void only if no payment exists.
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> The optional box shows what happens when hours are released for rebilling; the note at the bottom states the rule that makes credit notes necessary.</p></section>
+<section id="d-seq-credit"><h2><span class="n">D6</span>Sequence: correct an issued invoice</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Issued invoices are never deleted. This sequence shows how an error is corrected with a credit note, and what happens to the hours that were billed.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/seq-credit.html" title="seq-credit" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/seq-credit.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> The optional box shows what happens when hours are released for rebilling; the note at the bottom states the rule that makes credit notes necessary.</p></section>
 
-<section id="d-flow-rate"><h2><span class="n">D7</span>Flowchart: which rate is billed</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">When an hour is billed, several rates may apply. This flowchart shows the exact order in which Nexora chooses the rate, so the result is always predictable.</p><div class="mermaid">
-flowchart TD
-  S([Approved hour]) --> F{Rate frozen at approval?}
-  F -- yes --> U[Use frozen rate]
-  F -- no --> A{Person on client rate card?}
-  A -- yes --> R1[Use that rate]
-  A -- no --> B{Job title on rate card?}
-  B -- yes --> R2[Use title rate]
-  B -- no --> C{Client default rate?}
-  C -- yes --> R3[Use client rate]
-  C -- no --> R4[Employee billable rate valid on that date]
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Start at the top and answer each question; the first 'yes' gives the rate that will be used. Diamonds are questions, rectangles are results.</p></section>
+<section id="d-flow-rate"><h2><span class="n">D7</span>Flowchart: which rate is billed</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">When an hour is billed, several rates may apply. This flowchart shows the exact order in which Nexora chooses the rate, so the result is always predictable.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/rate-flow.html" title="rate-flow" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/rate-flow.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Start at the top and answer each question; the first 'yes' gives the rate that will be used. Diamonds are questions, rectangles are results.</p></section>
 
-<section id="d-flow-billing"><h2><span class="n">D8</span>Flowchart: choosing the invoice type</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Different kinds of projects are billed in different ways. This flowchart helps decide which type of invoice to create in each situation.</p><div class="mermaid">
-flowchart TD
-  S([Something to bill]) --> T{Project budget type}
-  T -- Hourly --> H[Invoice from approved hours<br/>group by person / task / day]
-  T -- Fixed price --> X{Billing on a milestone?}
-  X -- yes --> M[Milestone invoice]
-  X -- no --> FS[Fixed share: % of price<br/>never above the price]
-  T -- Retainer --> R[Monthly amount + hours beyond included at overage rate]
-  S --> DP{Advance before work?}
-  DP -- yes --> D[Deposit invoice<br/>deducted on next final invoice]
-  S --> FR[Anything else: free invoice]
-  H & M & FS & R & D & FR --> IS[Draft -> Issue -> Send -> Payments]
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Start from the project's budget type and follow the branch; all paths end in the same issue → send → payment cycle.</p></section>
+<section id="d-flow-billing"><h2><span class="n">D8</span>Flowchart: choosing the invoice type</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Different kinds of projects are billed in different ways. This flowchart helps decide which type of invoice to create in each situation.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/invoice-type.html" title="invoice-type" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/invoice-type.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Start from the project's budget type and follow the branch; all paths end in the same issue → send → payment cycle.</p></section>
 
-<section id="d-flow-approvals"><h2><span class="n">D9</span>Flowchart: leave and expense approval</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Leave requests and expenses follow the same approval logic. This flowchart shows the path from request to decision and what each decision changes.</p><div class="mermaid">
-flowchart TD
-  L([Employee request]) --> K{Type}
-  K -- Leave --> L1[Pending] --> AP{Approver from settings}
-  K -- Expense --> E1[Submitted with receipt] --> AP
-  AP --> SELF{Approver is requester?}
-  SELF -- yes --> NO[Refused: no self-approval]
-  SELF -- no --> DEC{Decision}
-  DEC -- approve --> OK[Approved]
-  DEC -- decline --> REJ[Declined / Rejected with reason]
-  OK -- leave --> CAP[Capacity and expected hours reduced]
-  OK -- billable expense --> BILL[Offered on next client invoice]
-  OK -- expense --> RE[Reimbursed by finance]
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Leave and expenses share the same path; the bottom boxes show what an approval changes in the rest of Nexora.</p></section>
+<section id="d-flow-approvals"><h2><span class="n">D9</span>Flowchart: leave and expense approval</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">Leave requests and expenses follow the same approval logic. This flowchart shows the path from request to decision and what each decision changes.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/approvals-flow.html" title="approvals-flow" loading="lazy" style="height:950px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/approvals-flow.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Leave and expenses share the same path; the bottom boxes show what an approval changes in the rest of Nexora.</p></section>
 
-<section id="d-states"><h2><span class="n">D10</span>State diagrams: time, expense, leave</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">State diagrams show every status an object can have and the allowed moves between them.</p><div class="mermaid">
-stateDiagram-v2
-  state "Time entry" as T {
-    [*] --> Draft
-    Draft --> Submitted
-    Submitted --> Approved
-    Submitted --> SentBack
-    SentBack --> Submitted
-    Approved --> Invoiced
-    Approved --> Draft: reopened
-  }
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Each rounded box is a status; arrows are the only moves allowed. [*] marks where an object starts.</p><div class="mermaid">
-stateDiagram-v2
-  state "Expense" as X {
-    [*] --> Submitted
-    Submitted --> Approved
-    Submitted --> Rejected
-    Approved --> Reimbursed
-  }
-  state "Leave" as L {
-    [*] --> Pending
-    Pending --> ApprovedLeave
-    Pending --> Declined
-    Pending --> Cancelled
-  }
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Expenses and leave are shown side by side: compare them with the time-entry diagram above to see the common pattern.</p></section>
+<section id="d-states"><h2><span class="n">D10</span>State diagrams: time, expense, leave</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">State diagrams show every status an object can have and the allowed moves between them.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/time-entry-states.html" title="time-entry-states" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/time-entry-states.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Each rounded box is a status; arrows are the only moves allowed. [*] marks where an object starts.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/expense-states.html" title="expense-states" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/expense-states.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/leave-states.html" title="leave-states" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/leave-states.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Expenses and leave are shown side by side: compare them with the time-entry diagram above to see the common pattern.</p></section>
 
-<section id="d-erd"><h2><span class="n">D11</span>Entity-relationship diagram</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">The entity-relationship diagram shows the main kinds of data Nexora stores and how they are linked – for example, that an invoice belongs to a client and is settled by payments. It is the blueprint for the future database.</p><div class="mermaid">
-erDiagram
-  WORKSPACE ||--|| SETTINGS : configures
-  WORKSPACE ||--o{ DEPARTMENT : has
-  WORKSPACE ||--o{ EMPLOYEE : employs
-  WORKSPACE ||--o{ CLIENT : serves
-  DEPARTMENT ||--o{ EMPLOYEE : groups
-  EMPLOYEE ||--o{ RATE_CHANGE : history
-  CLIENT ||--o{ CONTACT : has
-  CLIENT ||--o{ RATE_CARD_ENTRY : agrees
-  CLIENT ||--o{ PROJECT : orders
-  PROJECT ||--o{ MILESTONE : has
-  PROJECT ||--o{ TASK : contains
-  TASK ||--o{ COMMENT : discusses
-  TASK ||--o{ ACTIVITY : records
-  EMPLOYEE ||--o{ TIME_ENTRY : logs
-  PROJECT ||--o{ TIME_ENTRY : receives
-  CLIENT ||--o{ INVOICE : billed
-  INVOICE ||--o{ INVOICE_LINE : contains
-  INVOICE ||--o{ PAYMENT : settled_by
-  INVOICE ||--o{ INVOICE : credited_by
-  INVOICE_LINE }o--o{ TIME_ENTRY : bills
-  EMPLOYEE ||--o{ EXPENSE : spends
-  PROJECT ||--o{ EXPENSE : charged_to
-  EMPLOYEE ||--o{ LEAVE_REQUEST : requests
-  EMPLOYEE {
-    string id
-    string name
-    string role
-    string status
-    number weeklyCapacity
-    string workingDays
-    number hourlyCost
-    number billableRate
-  }
-  TIME_ENTRY {
-    string id
-    date date
-    number hours
-    bool billable
-    string status
-    number billRate
-    number costRate
-    string invoiceId
-  }
-  INVOICE {
-    string id
-    string number
-    string kind
-    string status
-    date issueDate
-    date dueDate
-    string currency
-    number exchangeRate
-    number withholdingRate
-  }
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Each box is a kind of data; lines show relationships. The symbols at the ends say how many: ||--o{ reads 'one … to many'. Boxes with fields show the most important attributes.</p></section>
+<section id="d-erd"><h2><span class="n">D11</span>Entity-relationship diagram</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">The entity-relationship diagram shows the main kinds of data Nexora stores and how they are linked – for example, that an invoice belongs to a client and is settled by payments. It is the blueprint for the future database.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/data-model.html" title="data-model" loading="lazy" style="height:1150px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/data-model.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Each box is a kind of data; lines show relationships. The symbols at the ends say how many: ||--o{ reads 'one … to many'. Boxes with fields show the most important attributes.</p></section>
 
 <section id="d-dictionary"><h2><span class="n">D12</span>Data dictionary (main fields)</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">The data dictionary explains the most important fields: their type and what they mean for the business.</p><table><thead><tr><th>Entity</th><th>Field</th><th>Type</th><th>Meaning</th></tr></thead><tbody><tr><td>Settings</td><td>company.ice</td><td>text (15 digits)</td><td>Moroccan company identifier printed on invoices</td></tr><tr><td>Settings</td><td>company.invoiceNumberFormat</td><td>text</td><td>e.g. INV-{YYYY}-{SEQ}</td></tr><tr><td>Settings</td><td>company.fiscalYearStartMonth</td><td>1–12</td><td>Start of the fiscal year (numbering, YTD)</td></tr><tr><td>Settings</td><td>lockedThrough</td><td>date</td><td>Period lock date</td></tr><tr><td>Settings</td><td>approvals[]</td><td>rules</td><td>Approver per subject (timesheet, leave, expense), steps</td></tr><tr><td>Employee</td><td>status</td><td>enum</td><td>starting, active, on_leave, notice, inactive</td></tr><tr><td>Employee</td><td>workingDays</td><td>int[]</td><td>Days of week worked (1 = Monday)</td></tr><tr><td>Employee</td><td>rateHistory[]</td><td>list</td><td>effectiveFrom, hourlyCost, billableRate, reason</td></tr><tr><td>Client</td><td>rateCard[]</td><td>list</td><td>employeeId or jobTitle → rate</td></tr><tr><td>Client</td><td>paymentTermsDays</td><td>number</td><td>Days until due</td></tr><tr><td>Project</td><td>budgetType</td><td>enum</td><td>hourly, fixed, retainer, non_billable</td></tr><tr><td>Project</td><td>retainer</td><td>object</td><td>monthlyAmount, includedHours, overageRate</td></tr><tr><td>Project</td><td>healthOverride</td><td>object</td><td>health, reason, by, at</td></tr><tr><td>Task</td><td>labelIds[]</td><td>ids</td><td>Labels from settings</td></tr><tr><td>Time entry</td><td>status</td><td>enum</td><td>draft, submitted, approved, rejected</td></tr><tr><td>Time entry</td><td>billRate / costRate</td><td>number</td><td>Frozen at approval</td></tr><tr><td>Time entry</td><td>invoiceId</td><td>id</td><td>Set when billed</td></tr><tr><td>Invoice</td><td>kind</td><td>enum</td><td>hours, fixed, milestone, retainer, advance, free, credit_note</td></tr><tr><td>Invoice</td><td>status</td><td>enum</td><td>draft, issued, sent, paid, void</td></tr><tr><td>Invoice</td><td>fiscalYear</td><td>number</td><td>Year of the number sequence</td></tr><tr><td>Invoice line</td><td>taxRate</td><td>%</td><td>Per-line VAT</td></tr><tr><td>Invoice line</td><td>advanceInvoiceId</td><td>id</td><td>Deposit being deducted</td></tr><tr><td>Payment</td><td>method</td><td>enum</td><td>bank_transfer, card, cash, cheque, other</td></tr><tr><td>Expense</td><td>billable / invoiceId</td><td>bool / id</td><td>Re-billed to client when invoiced</td></tr><tr><td>Leave</td><td>status</td><td>enum</td><td>pending, approved, declined, cancelled</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Read by entity: the field name, its type and its business meaning. Field names match the code exactly.</p></section>
 
@@ -1025,37 +718,13 @@ npm run dev        # http://localhost:3000</code></pre>
 </section>
 
 <section id="arch"><h2><span class="n">29</span>Architecture</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">A high-level view of how the code is organised and of the data model behind it.</p>
-<div class="mermaid">
-flowchart TB
-  UI[Screens<br/>src/components/shared] --> H[Data hooks<br/>src/hooks/workforce]
-  H --> API[API functions<br/>src/lib/api]
-  API --> STORE[(Demo store<br/>browser local storage)]
-  API -. server version .-> BE[(Nexora backend)]
-  UI --> LOGIC[Business rules<br/>src/lib/workforce]
-  API --> LOGIC
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Arrows show who calls whom; the dashed arrow is the connection to the future server.</p>
+<figure class="arch-fig"><iframe class="arch-frame" src="diagrams/app-layers.html" title="app-layers" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/app-layers.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/server-layout.html" title="server-layout" loading="lazy" style="height:820px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/server-layout.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> Arrows show who calls whom; the dashed arrow is the connection to the future server.</p>
 <ul>
 <li><b>Business rules</b> (billing, invoice builders, rates, approvals, planning, KPIs, profitability, analytics) are plain, fully tested functions, so the server will apply exactly the same rules.</li>
 <li><b>API functions</b> are the only place that reads or writes data. Today they use the browser; for the server version each one becomes a call to the backend – the screens do not change.</li>
 <li>Stack: Next.js 16, React 19, TypeScript, Tailwind CSS v4, TanStack Query, Zustand, next-intl, Recharts, jsPDF.</li>
 </ul>
-<div class="mermaid">
-erDiagram
-  WORKSPACE ||--o{ EMPLOYEE : has
-  WORKSPACE ||--o{ CLIENT : has
-  EMPLOYEE ||--o{ RATE_CHANGE : history
-  CLIENT ||--o{ RATE_CARD_ENTRY : rates
-  CLIENT ||--o{ PROJECT : orders
-  PROJECT ||--o{ TASK : has
-  PROJECT ||--o{ MILESTONE : has
-  EMPLOYEE ||--o{ TIME_ENTRY : logs
-  PROJECT ||--o{ TIME_ENTRY : receives
-  CLIENT ||--o{ INVOICE : billed
-  INVOICE ||--o{ INVOICE_LINE : contains
-  INVOICE ||--o{ PAYMENT : settled_by
-  EMPLOYEE ||--o{ EXPENSE : spends
-  EMPLOYEE ||--o{ LEAVE_REQUEST : asks
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> This is the database view: one box per kind of data and the lines that link them.</p>
+<figure class="arch-fig"><iframe class="arch-frame" src="diagrams/data-model.html" title="data-model" loading="lazy" style="height:1150px"></iframe><figcaption>Interactive diagram: zoom, search, click a box. <a href="diagrams/data-model.html" target="_blank" rel="noopener">Open full screen ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>How to read it:</b> This is the database view: one box per kind of data and the lines that link them.</p>
 </section>
 
 <section id="security"><h2><span class="n">30</span>Quality and security</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">What is already done to protect data and quality, and the known limits of the current version.</p><ul><li>Every change is checked automatically: type check, lint, translations, 442 unit tests, production build, end-to-end tests, dependency audit, and a guard that blocks demo mode in production.</li><li>Spreadsheet exports neutralise formulas; PDFs and reports escape all text; network requests time out.</li><li><b>Current limits</b>: permissions are applied in the screens only and data lives in the browser. The server version enforces permissions on the server and stores data securely with backups.</li></ul></section>
@@ -1065,116 +734,5 @@ erDiagram
 <section id="changelog"><h2><span class="n">32</span>Changelog</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">The history of Nexora's releases.</p><div class="card"><h4>v4.6 · October 2026 (Platform console, Lots A1–A11)</h4><ul><li><b>Console on the ERP’s design</b>: a Console home with period and comparison, MRR, churn, trial conversion and money owed tiles, a comparison line and share bars by plan and country drawn like the companies’ Analytics, amounts written as on the companies’ pages and a “needs your attention” list; the console lists on the ERP’s table (search, filter button, Export menu, ⋯ row actions, initials); the same figure tiles on Customers, Metrics and each customer’s page; each customer’s page in tabs; saved views on the console lists; Save as report on the Console home and Metrics; Victor on the Console home when its feature flag is on.</li><li><b>Faster pages</b>: every page under 500 KB of JavaScript (heaviest 419 KB, was 546 KB); the bell, search, profile panel and banners load just after the page; the build now fails any page above 500 KB; Next.js 16.3.8.</li><li><b>Transfer first, ended trials and off-boarding</b>: bank transfer is the default method, and a trial company can choose its plan from My subscription; ended trials are read-only 7 days, then suspended with data kept 30 days; unpaid transfers become overdue at their due date, with one pause of up to 15 days per invoice; 30-day transfer terms for Enterprise; removing a team member ends their support sessions and the approvals waiting on them; every retention period shown.</li><li><b>Tables, time zones and checks</b>: every console list sorts by column and pages; times in your own zone with the customer's on hover; 5,000 random invoices recomputed to the centime (a one-centime VAT error on large Nexora invoices fixed); the reference scenario test covers all thirteen rows.</li><li><b>Logo, pro-formas and notifications</b>: Nexora's logo (or the owner's own) on every invoice, credit note, pro-forma and report; pro-forma quotes with their own PF number; the team's bell built from the console like the ERP's inbox, by role, with new-device alerts; trial-ending, trial-ended (read-only) and payment-failed notices in the companies' Nexora.</li><li><b>Phase 5 and money controls</b>: chargebacks that reopen the invoice; a daily reconciliation of invoices, payments and card settlements with its own page; owner-only directory export, watermarked and audited; the seats-full notice to the company administrator; two-factor set-up before the first console page; customer data exports within 7 days and account deletions with two people, invoices kept 10 years, audit events at least 5 years; automatic accessibility, JavaScript size, image and docs-copy checks in CI.</li><li><b>Full control</b>: edit a company's identity (ICE, IF, RC, address, administrator) with health and reasons on its account page; PDF and UBL e-invoice file for every Nexora invoice and credit note; plan contents and retirement edited by the owner; subscriptions managed in one panel (plan, billing period with credit for unused days, payment method, discounts, extra people, cancel now with a credit note); My subscription in each company linked to the console; MRR charts drawn like the companies' Analytics.</li><li><b>Metrics and configuration</b>: MRR, ARR, paying customers, average per customer and seat usage with their formulas; MRR movements, customer and revenue churn, trial conversion and money owed by age, exported to Excel, CSV and PDF; Nexora's identity on new invoices only, announcements by plan and country, feature flags, e-mail templates in nine languages and demo workspace reset.</li><li><b>System health and incidents</b>: six service tiles with error rate and response time, errors per company, backups and restore tests; incidents with severity, timeline, notices shown in the affected companies' Nexora, resolution and post-mortem; drafts opened by monitoring; maintenance announced at least 48 hours ahead. Replaces the old System issues page.</li><li><b>Support</b>: Help &amp; support page in every company's Nexora (requests, conversation, access decisions); Support desk with assignment, statuses and first-answer targets; Support access with time-limited sessions approved by the company, read-only by default, a second owner for write access, a banner for the company and every page viewed in both audit trails.</li><li><b>Billing</b>: price versions per plan, upgrades with prorata and downgrades at renewal, NX invoices without gaps and AV credit notes, refunds with a second approval above 1,000 MAD, daily billing jobs with the recovery schedule, bank transfer matching, VAT collected on payments; the reference scenario is an automatic test.</li><li><b>Customers</b> with a lifecycle (trial, active, payment overdue, suspended, cancelled), account page, 14-day trials extendable once, suspensions with a reason and a banner in the company's workspace, cancellation at period end, internal notes and per-company history.</li><li><b>Users</b> directory with password reset and suspensions; <b>Suspensions</b> page; the old content Reports page is retired.</li><li><b>Seven console roles</b> from the specification, shown as a read-only permission table.</li><li><b>Staff</b> limited to the Nexora team: invitations valid 72 hours, two-factor status, role changes and removal with confirmation and an authenticator code.</li><li><b>Sessions</b> with 30-minute idle and 12-hour limits and revocation; new <b>Console audit trail</b>, append-only, with owner-only export.</li></ul></div><div class="card"><h4>v4.5 · October 2026 (Phase 6g)</h4><ul><li><b>Resource planning</b>: book people or open roles by week, 12-week capacity forecast with leave and holidays.</li><li><b>Deals pipeline</b>: board by stage with drag and drop, chance of winning, weighted forecast, win rate, lost reasons.</li><li><b>Revenue forecast</b>: income by month from invoices owed, recurring invoices, booked work and weighted deals; secured share.</li><li><b>Phase budgets and change orders</b>: budget per milestone and client-approved changes that update the project budget.</li><li><b>Nexora admin</b>: the platform console in its own menu for the Nexora team only; new Customers page; plans, subscriptions, invoices and payments rebuilt on Nexora's own customers in MAD.</li><li><b>Mobile app</b>: install on the phone, Today screen with the timer, home-screen shortcuts, receipt photo, offline page.</li><li><b>Client satisfaction</b>: portal survey after milestones and projects (stars and NPS), shown on projects, clients and KPIs; low ratings reach the inbox.</li><li><b>Bank statement import</b>: CSV from any bank, automatic matching to open invoices, split and ignore, no duplicates.</li><li><b>Leftovers and quality</b> (6h.5): Today team view for admins and managers, expenses and supplier bills linked to a project phase, the public copy of these docs kept in sync on every build, and an accessibility and speed pass (screen-reader names on icon buttons and table headers, heading order, a Skip to content link, lighter background images); then visible titles on action columns, tabs that screen readers announce and keyboard arrows move between, Overview charts loaded after the page appears, and the image library security update.</li><li><b>Revenue recognition</b>: fixed-price revenue earned by hours, tasks or milestones; work in progress and revenue billed in advance; report and month-end journal entry.</li></ul></div><div class="card"><h4>v4.4 · October 2026 (Phase 6f)</h4><ul><li><b>Suppliers</b> with ICE, IF, payment terms and RIB; <b>supplier bills</b> with VAT per line, approval by another person, partial payments and overdue tracking. Approved bills add their cost to projects, their VAT to deductible VAT and post to the purchases journal (HA).</li><li><b>Real cost of an employee</b> from the gross salary with Moroccan employer contributions; CIN and CNSS registration on employees.</li><li><b>Payroll inputs</b> report: days, leave by type, hours, overtime, expenses to repay, salary and contributions.</li><li>Every menu page has its own icon; supplier forms open in the side panel with a page guide.</li></ul></div><div class="card"><h4>v4.3 · October 2026 (Phase 6e)</h4><ul><li><b>Moroccan identifiers</b> (ICE, IF, RC, Patente, CNSS) with format checks; invoices refused without the ICE and IF.</li><li><b>DGI e-invoice file</b> (UBL 2.1 XML) and status on every issued invoice; sent invoices are corrected only by a credit note.</li><li><b>VAT on payments received</b> and the VAT return with VAT credit carried forward; VAT included on expenses.</li><li><b>Accounting journal</b> on the CGNC chart of accounts, with editable accounts.</li><li><b>MAD</b> is the default currency of Moroccan companies; the Moroccan demo company now works in MAD.</li></ul></div><div class="card"><h4>v4.2 · October 2026 (Phase 6 links)</h4><ul><li><b>Work inbox</b> in the bell; reviews on My work and employee profiles; overhead in the Project profitability report; search in custom fields.</li><li><b>Your employee profile</b> for the owner's account; any reviewer can be picked when starting a cycle.</li><li><b>Self-service limits</b>: without the approve right, Timesheets, Expenses and Leave show only your own records; Leave is open to every staff role; accountants can log their own time.</li><li>People with history can no longer be deleted (set them to Former employee). KPI targets dialog redesigned.</li></ul></div><div class="card"><h4>v4.1 · October 2026 (Phase 6c)</h4><ul><li><b>Performance reviews</b>: cycles, self-assessment, reviewer ratings, feedback and goals, frozen KPIs, acknowledgement.</li></ul></div><div class="card"><h4>v4.0 · October 2026 (Phase 6a–6b)</h4><ul><li><b>KPIs</b> with targets, traffic lights and per-KPI visibility; <b>search</b> across all records; <b>saved reports</b>.</li><li><b>Overhead costs</b> in project profit; <b>custom fields</b> on clients, projects and employees.</li></ul></div><div class="card"><h4>v3.8 · October 2026 (Phase 5d)</h4><ul><li>Task dependencies, Gantt tab with drag to reschedule, project closing with frozen figures, project templates.</li></ul></div><div class="card"><h4>v3.7 · October 2026 (Phase 5c)</h4><ul><li><b>Client portal</b>: logins per contact with expiry, projects and milestones, approve or request changes, invoices and quotes with PDF, preview for staff.</li></ul></div><div class="card"><h4>v3.6 · October 2026 (Phase 5b)</h4><ul><li><b>Recurring invoices</b> drafted for review every month, quarter or year.</li><li><b>Payment reminders</b> in three levels with editable messages and a switch per client.</li><li>Clients: duplicate warning, credit limit, contracts with renewal warnings, activity timeline with notes, meetings and calls.</li></ul></div><div class="card"><h4>v3.5 · October 2026</h4><ul><li>Platform pages hidden from companies and reserved for the Nexora team.</li><li><b>Team access</b>: logins linked to employees, permissions from the role, seats from the plan.</li><li><b>My subscription</b>: plan, seats, Nexora invoices and upgrade.</li></ul></div><div class="card"><h4>v3.4 · October 2026</h4><ul><li><b>Quotes (devis)</b>: draft, sent, accepted, declined, expired; one-click invoice and fixed-price project; duplicate to revise; pipeline figures; quotes in the client profile.</li><li><b>Classic document style</b> for quotes and invoices, modelled on the French / Moroccan devis; Modern remains available. Units on lines (hours, days, pages, flat rate).</li></ul></div><div class="card"><h4>v3.3 · October 2026</h4><ul><li>New professional templates for invoices, credit notes, receipts and subscription invoices: letterhead, amount-due panel, VAT per rate, payment details, payments received, status stamps, legal footer and page numbers.</li><li>New report and analytics PDFs: header band, filter chips, KPI tiles with changes, charts, waterfall bridge, paginated tables with totals; print uses the same PDF.</li><li>Settings → Company: logo, document colour, contacts, bank details, share capital and invoice footer.</li></ul></div><div class="card"><h4>v3.2 · October 2026 (Phase 5a)</h4><ul><li><b>Org chart</b> with search, department filter, folding and away badges.</li><li><b>Documents and contracts</b> register with expiry statuses, alerts on the Team dashboard and in employee profiles.</li><li><b>Leave balances</b> per type with half-days, carry-over, pro-rating for new hires and a balance check on every request.</li></ul></div><div class="card"><h4>v3.1 · October 2026</h4><ul><li><b>My work</b> (employee home) and <b>Team</b> (manager home) dashboards.</li><li><b>Reports</b>: 7 standard reports with period, client, project, employee and department filters; export to Excel, CSV and PDF; cost columns hidden without permission.</li><li>Menus, dropdowns and popovers can no longer be clipped by cards; header controls stay on one line.</li><li>Proprietary licence, third-party notices, contribution guide; developer guide sections G9–G15.</li></ul></div><div class="card"><h4>v3.0 · October 2026</h4><ul><li>Nexora ERP: settings, employees, clients, projects, time, approvals, leave, expenses, invoicing, receivables, profitability.</li><li>Analytics on live ERP data with PDF/CSV reports and the Victor assistant.</li><li>New interface: top bar with icon rail, Nexora design system, floating side panels, 9 languages.</li></ul></div><div class="card"><h4>v2.x · September 2026</h4><ul><li>Platform foundation: authentication, users, plans and subscriptions, files, developer keys, audit logs.</li></ul></div></section>
 </main>
 </div>
-<script>
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: "default",
-    themeVariables: {
-      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-      fontSize: "13px"
-    },
-    flowchart: {
-      useMaxWidth: true,
-      htmlLabels: true,
-      curve: "basis",
-      nodeSpacing: 25,
-      rankSpacing: 30,
-      padding: 8
-    }
-  });
-</script>
-<style>
-  .dz{position:relative;border:1px solid #e2e8f0;border-radius:12px;background:#fff;margin:10px 0 6px}
-  .dz-bar{position:sticky;top:0;display:flex;gap:6px;justify-content:flex-end;padding:8px;border-bottom:1px solid #eef2f7;background:#f8fafc;border-radius:12px 12px 0 0;z-index:2}
-  .dz-bar button,.dz-ov-bar button{font:600 12px/1 system-ui,sans-serif;border:1px solid #cbd5e1;background:#fff;color:#0f172a;border-radius:8px;padding:7px 10px;cursor:pointer}
-  .dz-bar button:hover,.dz-ov-bar button:hover{background:#eff6ff;border-color:#2563eb}
-  .dz-bar .dz-hint{margin-inline-end:auto;align-self:center;font:12px system-ui,sans-serif;color:#64748b}
-  .dz-view{overflow:auto;max-height:640px;padding:12px;cursor:zoom-in}
-  .dz{max-width:100%;overflow:hidden}
-  .dz-view .mermaid{margin:0!important;border:0!important;box-shadow:none!important;display:block!important;overflow:visible!important;padding:0!important;width:max-content;min-width:100%}
-  .dz-view .mermaid svg{margin:0 auto!important}
-  .dz-view svg,.dz-ov-stage svg{max-width:none!important;max-height:none!important;height:auto!important}
-  .dz-ov{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.88);display:flex;flex-direction:column}
-  .dz-ov-bar{display:flex;gap:6px;align-items:center;padding:10px 14px;background:#0f172a;color:#e2e8f0;font:13px system-ui,sans-serif}
-  .dz-ov-bar span{margin-inline-end:auto}
-  .dz-ov-stage{flex:1;overflow:hidden;cursor:grab;touch-action:none;background:#fff;margin:12px;border-radius:12px}
-  .dz-ov-stage.drag{cursor:grabbing}
-  .dz-ov-stage svg{transform-origin:0 0;max-width:none!important}
-  @media print{.dz-bar{display:none}.dz-view{max-height:none;overflow:visible}}
-</style>
-<script>
-/* Diagram zoom: toolbar on every diagram + full-screen viewer with wheel/pinch zoom and drag to pan */
-(function () {
-  var L = document.documentElement.lang === "ar"
-    ? { hint: "انقر على المخطط لعرضه بملء الشاشة", full: "ملء الشاشة", reset: "إعادة", close: "إغلاق ✕", tip: "عجلة الفأرة أو القرص للتكبير · اسحب للتحريك · Esc للإغلاق" }
-    : { hint: "Click the diagram to open it full screen", full: "Full screen", reset: "Reset", close: "Close ✕", tip: "Scroll or pinch to zoom · drag to move · Esc to close" };
-  function btn(label, title, fn) { var b = document.createElement("button"); b.type = "button"; b.textContent = label; b.title = title || label; b.onclick = fn; return b; }
-  function naturalWidth(svg) { var vb = svg.viewBox && svg.viewBox.baseVal; return vb && vb.width ? vb.width : svg.getBoundingClientRect().width; }
-  function title(el) { var s = el.closest("section"); var h = s && s.querySelector("h2"); return h ? h.textContent : ""; }
-
-  function openViewer(el) {
-    var src = el.querySelector("svg"); if (!src) return;
-    var svg = src.cloneNode(true);
-    var w = naturalWidth(src), vb = src.viewBox.baseVal, h = vb && vb.height ? vb.height : src.getBoundingClientRect().height;
-    svg.setAttribute("width", w); svg.setAttribute("height", h); svg.style.width = w + "px"; svg.style.height = h + "px"; svg.style.maxWidth = "none";
-    var ov = document.createElement("div"); ov.className = "dz-ov";
-    var bar = document.createElement("div"); bar.className = "dz-ov-bar";
-    var t = document.createElement("span"); t.textContent = title(el) + " — " + L.tip;
-    var stage = document.createElement("div"); stage.className = "dz-ov-stage";
-    stage.appendChild(svg);
-    var k = 1, x = 0, y = 0;
-    function apply() { svg.style.transform = "translate(" + x + "px," + y + "px) scale(" + k + ")"; }
-    function fit() { var r = stage.getBoundingClientRect(); k = Math.min((r.width - 40) / w, (r.height - 40) / h, 4); x = (r.width - w * k) / 2; y = (r.height - h * k) / 2; apply(); }
-    function zoomAt(f, cx, cy) { var nk = Math.min(12, Math.max(0.2, k * f)); x = cx - (cx - x) * (nk / k); y = cy - (cy - y) * (nk / k); k = nk; apply(); }
-    function center(f) { var r = stage.getBoundingClientRect(); zoomAt(f, r.width / 2, r.height / 2); }
-    function close() { document.removeEventListener("keydown", key); ov.remove(); document.body.style.overflow = ""; }
-    function key(e) { if (e.key === "Escape") close(); if (e.key === "+" || e.key === "=") center(1.25); if (e.key === "-") center(0.8); if (e.key === "0") fit(); }
-    bar.append(t, btn("−", "Zoom out", function () { center(0.8); }), btn("+", "Zoom in", function () { center(1.25); }), btn(L.reset, "Fit", fit), btn(L.close, "Esc", close));
-    stage.addEventListener("wheel", function (e) { e.preventDefault(); var r = stage.getBoundingClientRect(); zoomAt(e.deltaY < 0 ? 1.15 : 0.87, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
-    var pts = new Map(), last = null, pinch = 0;
-    stage.addEventListener("pointerdown", function (e) { stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, e); stage.classList.add("drag"); last = { x: e.clientX, y: e.clientY }; });
-    stage.addEventListener("pointermove", function (e) {
-      if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, e);
-      if (pts.size === 2) { var a = Array.from(pts.values()), d = Math.hypot(a[0].clientX - a[1].clientX, a[0].clientY - a[1].clientY), r = stage.getBoundingClientRect();
-        if (pinch) zoomAt(d / pinch, (a[0].clientX + a[1].clientX) / 2 - r.left, (a[0].clientY + a[1].clientY) / 2 - r.top); pinch = d; return; }
-      x += e.clientX - last.x; y += e.clientY - last.y; last = { x: e.clientX, y: e.clientY }; apply();
-    });
-    function up(e) { pts.delete(e.pointerId); pinch = 0; if (!pts.size) stage.classList.remove("drag"); else { var p = pts.values().next().value; last = { x: p.clientX, y: p.clientY }; } }
-    stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
-    ov.append(bar, stage); document.body.appendChild(ov); document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", key); fit();
-  }
-
-  function enhance(el) {
-    if (el.dataset.dz || !el.querySelector("svg")) return; el.dataset.dz = "1";
-    var box = document.createElement("div"); box.className = "dz";
-    var bar = document.createElement("div"); bar.className = "dz-bar";
-    var view = document.createElement("div"); view.className = "dz-view";
-    var hint = document.createElement("span"); hint.className = "dz-hint"; hint.textContent = L.hint;
-    el.parentNode.insertBefore(box, el); view.appendChild(el); box.append(bar, view);
-    // Mermaid may replace the SVG after this runs, so always work on the current one
-    var k = null, zoomed = false;
-    function svg() { return el.querySelector("svg"); }
-    function base() { var s = svg(); return s ? naturalWidth(s) : 0; }
-    function fitWidth() { var b = base(); return b ? Math.min(1.5, (view.clientWidth - 24) / b) : 1; }
-    function set(nk) {
-      var s = svg(); if (!s) return;
-      k = Math.min(4, Math.max(0.3, nk));
-      s.removeAttribute("width"); s.removeAttribute("height");
-      s.style.width = base() * k + "px"; s.style.maxWidth = "none"; s.style.height = "auto";
-    }
-    set(Math.max(fitWidth(), 0.3));
-    new MutationObserver(function () { var s = svg(); if (s && s.style.width !== base() * k + "px") set(zoomed ? k : Math.max(fitWidth(), 0.3)); }).observe(el, { childList: true, subtree: false });
-    bar.append(hint, btn("−", "Zoom out", function () { zoomed = true; set(k * 0.8); }), btn("+", "Zoom in", function () { zoomed = true; set(k * 1.25); }),
-      btn(L.reset, "Fit width", function () { zoomed = false; set(Math.max(fitWidth(), 0.3)); }), btn("⤢ " + L.full, L.full, function () { openViewer(el); }));
-    view.addEventListener("click", function () { openViewer(el); });
-  }
-  function scan() { document.querySelectorAll(".mermaid").forEach(enhance); }
-  scan();
-  // Diagrams render asynchronously (and can be slow on large pages): enhance each one as soon as its SVG appears
-  new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
-})();
-</script>
-
 </body>
 </html>

@@ -1,0 +1,235 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Leave and expense approval",
+    "output": "documentation/diagrams/approvals-flow.html",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Request"
+        },
+        "messagebus": {
+          "label": "Check"
+        },
+        "backend": {
+          "label": "Result"
+        },
+        "security": {
+          "label": "Refused"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "lv",
+      "label": "Leave"
+    },
+    {
+      "id": "ex",
+      "label": "Expense"
+    },
+    {
+      "id": "ap",
+      "label": "Approver"
+    },
+    {
+      "id": "no",
+      "label": "Refused",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "l1",
+    "appr",
+    "self",
+    "dec",
+    "ok",
+    "cap"
+  ],
+  "nodes": [
+    {
+      "id": "l1",
+      "lane": "lv",
+      "col": 0,
+      "type": "frontend",
+      "label": "Leave request",
+      "sublabel": "pending",
+      "width": 124
+    },
+    {
+      "id": "e1",
+      "lane": "ex",
+      "col": 0,
+      "type": "frontend",
+      "label": "Expense",
+      "sublabel": "with receipt",
+      "width": 124
+    },
+    {
+      "id": "appr",
+      "lane": "ap",
+      "col": 1,
+      "type": "messagebus",
+      "label": "Approver",
+      "sublabel": "from settings",
+      "width": 124
+    },
+    {
+      "id": "self",
+      "lane": "ap",
+      "col": 2,
+      "type": "messagebus",
+      "label": "Own request?",
+      "icon": "decision",
+      "width": 124
+    },
+    {
+      "id": "dec",
+      "lane": "ap",
+      "col": 3,
+      "type": "messagebus",
+      "label": "Decision",
+      "icon": "decision",
+      "width": 124
+    },
+    {
+      "id": "ok",
+      "lane": "ap",
+      "col": 4,
+      "type": "backend",
+      "label": "Approved",
+      "width": 124
+    },
+    {
+      "id": "selfno",
+      "lane": "no",
+      "col": 3,
+      "type": "security",
+      "label": "Refused",
+      "sublabel": "no self-approval",
+      "width": 124
+    },
+    {
+      "id": "rej",
+      "lane": "no",
+      "col": 4,
+      "type": "security",
+      "label": "Declined",
+      "sublabel": "with a reason",
+      "width": 124
+    },
+    {
+      "id": "cap",
+      "lane": "lv",
+      "col": 5,
+      "type": "backend",
+      "label": "Capacity reduced",
+      "sublabel": "expected hours too",
+      "width": 124
+    },
+    {
+      "id": "re",
+      "lane": "ex",
+      "col": 4,
+      "type": "backend",
+      "label": "Reimbursed",
+      "sublabel": "by finance",
+      "width": 124
+    },
+    {
+      "id": "bill",
+      "lane": "ex",
+      "col": 5,
+      "type": "backend",
+      "label": "On next invoice",
+      "sublabel": "if billable",
+      "width": 124
+    }
+  ],
+  "edges": [
+    {
+      "id": "l1a",
+      "from": "l1",
+      "to": "appr",
+      "label": "submit",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e1a",
+      "from": "e1",
+      "to": "appr",
+      "label": "submit"
+    },
+    {
+      "id": "as",
+      "from": "appr",
+      "to": "self"
+    },
+    {
+      "id": "ssn",
+      "from": "self",
+      "to": "selfno",
+      "label": "yes",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "sd",
+      "from": "self",
+      "to": "dec",
+      "label": "no",
+      "variant": "emphasis"
+    },
+    {
+      "id": "dok",
+      "from": "dec",
+      "to": "ok",
+      "label": "approve",
+      "variant": "emphasis"
+    },
+    {
+      "id": "drej",
+      "from": "dec",
+      "to": "rej",
+      "label": "decline",
+      "variant": "security",
+      "role": "error"
+    },
+    {
+      "id": "okcap",
+      "from": "ok",
+      "to": "cap",
+      "label": "leave",
+      "variant": "emphasis"
+    },
+    {
+      "id": "okre",
+      "from": "ok",
+      "to": "re",
+      "label": "expense"
+    },
+    {
+      "id": "rebill",
+      "from": "re",
+      "to": "bill",
+      "label": "billable",
+      "variant": "dashed",
+      "role": "branch"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Rules",
+      "items": [
+        "The approver comes from Settings, Approvals",
+        "Nobody approves their own request",
+        "A decline always carries a reason"
+      ]
+    }
+  ]
+}

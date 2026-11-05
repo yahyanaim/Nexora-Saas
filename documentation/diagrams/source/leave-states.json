@@ -1,0 +1,62 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Statuses of a leave request",
+    "output": "documentation/diagrams/leave-states.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "mainPath": [
+    "pending",
+    "approved"
+  ],
+  "states": [
+    {
+      "id": "pending",
+      "type": "start",
+      "label": "Pending"
+    },
+    {
+      "id": "approved",
+      "type": "success",
+      "label": "Approved",
+      "sublabel": "capacity reduced"
+    },
+    {
+      "id": "declined",
+      "type": "failure",
+      "label": "Declined",
+      "sublabel": "with a reason"
+    },
+    {
+      "id": "cancelled",
+      "type": "neutral",
+      "label": "Cancelled",
+      "sublabel": "by the employee"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "pending-approved",
+      "from": "pending",
+      "to": "approved",
+      "label": "approve",
+      "variant": "emphasis"
+    },
+    {
+      "id": "pending-declined",
+      "from": "pending",
+      "to": "declined",
+      "label": "decline",
+      "variant": "security"
+    },
+    {
+      "id": "pending-cancelled",
+      "from": "pending",
+      "to": "cancelled",
+      "label": "cancel",
+      "variant": "dashed"
+    }
+  ]
+}

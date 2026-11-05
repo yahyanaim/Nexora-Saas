@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Submitting and approving a week of hours",
+    "output": "documentation/diagrams/seq-week.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "emp",
+      "type": "external",
+      "label": "Employee"
+    },
+    {
+      "id": "ts",
+      "type": "frontend",
+      "label": "Timesheet screen"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Time API"
+    },
+    {
+      "id": "rules",
+      "type": "security",
+      "label": "Business rules"
+    },
+    {
+      "id": "mgr",
+      "type": "external",
+      "label": "Manager"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 330,
+      "label": "Log and submit"
+    },
+    {
+      "from": 336,
+      "to": 500,
+      "label": "Approve"
+    },
+    {
+      "from": 506,
+      "to": 600,
+      "label": "Or send back"
+    }
+  ],
+  "messages": [
+    {
+      "id": "type",
+      "from": "emp",
+      "to": "ts",
+      "y": 165,
+      "label": "type hours in cells",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cell",
+      "from": "ts",
+      "to": "api",
+      "y": 200,
+      "label": "setTimesheetCell"
+    },
+    {
+      "id": "check",
+      "from": "api",
+      "to": "rules",
+      "y": 235,
+      "label": "15 min steps, max 24 h, member, period open",
+      "variant": "security"
+    },
+    {
+      "id": "ok",
+      "from": "rules",
+      "to": "api",
+      "y": 265,
+      "label": "ok",
+      "variant": "return"
+    },
+    {
+      "id": "submit",
+      "from": "emp",
+      "to": "ts",
+      "y": 295,
+      "label": "submit week",
+      "variant": "emphasis"
+    },
+    {
+      "id": "submitapi",
+      "from": "ts",
+      "to": "api",
+      "y": 320,
+      "label": "submitTimesheet"
+    },
+    {
+      "id": "approve",
+      "from": "mgr",
+      "to": "api",
+      "y": 360,
+      "label": "approveTimeEntries",
+      "variant": "emphasis"
+    },
+    {
+      "id": "self",
+      "from": "api",
+      "to": "rules",
+      "y": 400,
+      "label": "not self-approval, still submitted",
+      "variant": "security"
+    },
+    {
+      "id": "approved",
+      "from": "api",
+      "to": "mgr",
+      "y": 460,
+      "label": "approved: rates frozen, ready to bill",
+      "variant": "return",
+      "note": "bill and cost rates frozen on each entry"
+    },
+    {
+      "id": "reject",
+      "from": "mgr",
+      "to": "api",
+      "y": 530,
+      "label": "rejectTimeEntries(reason)",
+      "variant": "dashed"
+    },
+    {
+      "id": "back",
+      "from": "api",
+      "to": "emp",
+      "y": 570,
+      "label": "draft again, with the reason",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "api",
+      "from": 195,
+      "to": 575,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Protected",
+      "items": [
+        "Submitted hours are locked",
+        "Nobody approves their own hours",
+        "Approved hours keep the rate of that day"
+      ]
+    }
+  ]
+}

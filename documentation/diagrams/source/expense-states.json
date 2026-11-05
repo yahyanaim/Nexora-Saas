@@ -1,0 +1,62 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Statuses of an expense",
+    "output": "documentation/diagrams/expense-states.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "mainPath": [
+    "submitted",
+    "approved",
+    "reimbursed"
+  ],
+  "states": [
+    {
+      "id": "submitted",
+      "type": "start",
+      "label": "Submitted",
+      "sublabel": "with receipt"
+    },
+    {
+      "id": "approved",
+      "type": "active",
+      "label": "Approved"
+    },
+    {
+      "id": "reimbursed",
+      "type": "success",
+      "label": "Reimbursed"
+    },
+    {
+      "id": "rejected",
+      "type": "failure",
+      "label": "Rejected",
+      "sublabel": "with a reason"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "submitted-approved",
+      "from": "submitted",
+      "to": "approved",
+      "label": "approve",
+      "variant": "emphasis"
+    },
+    {
+      "id": "approved-reimbursed",
+      "from": "approved",
+      "to": "reimbursed",
+      "label": "pay back",
+      "variant": "emphasis"
+    },
+    {
+      "id": "submitted-rejected",
+      "from": "submitted",
+      "to": "rejected",
+      "label": "reject",
+      "variant": "security"
+    }
+  ]
+}

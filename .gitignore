@@ -43,3 +43,8 @@ next-env.d.ts
 # Playwright
 /test-results/
 /playwright-report/
+
+# Archify work folders and delivery receipts (diagram sources in documentation/diagrams/source are kept)
+.archify/
+documentation/diagrams/*.json
+public/documentation/diagrams/*.json

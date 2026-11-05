@@ -18,9 +18,16 @@
     aside { border-right: 0; border-left: 1px solid var(--sidebar-border); }
     ol, ul { padding-right: 22px; padding-left: 0; }
     h2 .n { margin-left: 8px; margin-right: 0; }
-    .mermaid { direction: ltr; }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.min.js"></script>
+<style>
+  .arch-fig{margin:14px 0 22px;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#f5f6f8}
+  .arch-frame{display:block;width:100%;border:0;background:#f5f6f8}
+  .arch-fig figcaption{font-size:.85rem;color:#475569;padding:8px 12px;border-top:1px solid #e2e8f0;background:#fff}
+  .arch-fig figcaption a{font-weight:600}
+  .shot{margin:14px 0 22px;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;background:#fff}
+  .shot img{display:block;width:100%;height:auto}
+  .shot figcaption{font-size:.85rem;color:#475569;padding:8px 12px;border-top:1px solid #e2e8f0}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -164,30 +171,7 @@
 <section id="first-setup"><h2><span class="n">05</span>الإعداد الأول (قائمة مراجعة)</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">جودة ما ينتجه Nexora تعتمد على المعلومات التي تعطيه إياها أولًا: هوية الشركة تظهر في كل فاتورة، وقواعد الموافقة تحدد من يعتمد ماذا، والأسعار تحدد ما يُفوتر للعملاء، وصيغة الترقيم لا تتغير بعد إصدار الفواتير. اتبع هذه القائمة مرة واحدة وبالترتيب قبل دعوة الفريق.</p><ol><li><b>هوية الشركة</b> – النظام ← إعدادات مساحة العمل ← الشركة: الاسم القانوني، ICE، الرقم الضريبي، السجل التجاري، العنوان، العملة الأساسية، بداية السنة المالية، المنطقة الزمنية، صيغة ترقيم الفواتير.</li><li><b>القوائم</b>: الأقسام، العطل الرسمية، أنواع الإجازات، فئات المصاريف، وسوم المهام.</li><li><b>قواعد الموافقة</b>: من يعتمد سجلات الوقت والإجازات والمصاريف (المدير المباشر، مدير المشروع، أو شخص محدد)، على خطوة أو خطوتين.</li><li><b>الفريق</b> – المؤسسة ← الموظفون ← إضافة موظف: الدور، القسم، المدير، أيام العمل، الطاقة الأسبوعية، التكلفة بالساعة وسعر الفوترة.</li><li><b>العملاء</b>: البيانات القانونية، عنوان الفوترة، العملة، لغة الفاتورة، مهلة الدفع، جهات الاتصال، والأسعار الخاصة.</li><li><b>المشاريع</b>: العميل، المدير، الفريق، التواريخ، نوع الميزانية ومبلغها، المراحل.</li><li>اطلب من الفريق تسجيل ساعاته يوميًا وإرسال أسبوعه يوم الجمعة.</li></ol><div class="callout warn">حدّد <b>صيغة الترقيم</b> و<b>السنة المالية</b> قبل إصدار أول فاتورة؛ الأرقام متسلسلة ولا يُعاد استخدامها أبدًا.</div></section>
 
 <section id="your-data"><h2><span class="n">05B</span>إدخال بيانات شركتك خطوة بخطوة</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">فائدة Nexora بقدر البيانات التي تدخلها. يشرح هذا القسم كل كيان – الشركة، القوائم، الاعتمادات، الموظفين، العملاء، المشاريع، المهام، الساعات والفواتير – بترتيب اعتماد بعضها على بعض.</p>
-<p>اتبع هذه الخطوات التسع بالترتيب: كل خطوة تعتمد على ما أنشأته الخطوات السابقة. انقر على المخطط لتكبيره.</p><div class="mermaid">
-flowchart TB
-  subgraph A["الأساس"]
-    direction LR
-    S1["1 · إعدادات الشركة"] --> S2["2 · القوائم"] --> S3["3 · قواعد الاعتماد"]
-  end
-  subgraph B["الأشخاص والعملاء"]
-    direction LR
-    S4["4 · الموظفون"] --> S5["5 · العملاء"]
-  end
-  subgraph C["العمل"]
-    direction LR
-    S6["6 · المشاريع"] --> S7["7 · المراحل والمهام"]
-  end
-  subgraph D["المال"]
-    direction LR
-    S8["8 · الساعات"] --> S9["9 · الفواتير"]
-  end
-  A --> B --> C --> D
-  style A fill:#e0f2fe,stroke:#0284c7,stroke-width:2px
-  style B fill:#dcfce7,stroke:#16a34a,stroke-width:2px
-  style C fill:#fef3c7,stroke:#d97706,stroke-width:2px
-  style D fill:#fce7f3,stroke:#db2777,stroke-width:2px
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> السهم يعني «يحتاج إلى»: لا يمكن ملء خانة قبل وجود الخانات التي تشير إليها.</p><table><thead><tr><th>الخطوة</th><th>أين</th><th>الحقول الإلزامية</th><th>لماذا تهم</th></tr></thead><tbody><tr><td><b>1 · إعدادات الشركة</b></td><td>النظام ← إعدادات مساحة العمل ← الشركة</td><td>اسم الشركة، العملة الأساسية، بداية السنة المالية، صيغة ترقيم الفواتير</td><td>تظهر على كل فاتورة؛ اضبط الترقيم والسنة المالية قبل أول فاتورة</td></tr><tr><td><b>2 · القوائم</b></td><td>إعدادات مساحة العمل ← القوائم</td><td>قسم واحد على الأقل، العطل الرسمية، أنواع الإجازات</td><td>تخفض العطل والإجازات الساعات المتوقعة والسعة</td></tr><tr><td><b>3 · قواعد الاعتماد</b></td><td>إعدادات مساحة العمل ← الاعتمادات</td><td>من يعتمد الساعات والإجازات والمصاريف</td><td>بدون معتمد تبقى الساعات معلقة؛ لا أحد يعتمد طلباته</td></tr><tr><td><b>4 · الموظفون</b></td><td>التنظيم ← الموظفون ← إضافة موظف</td><td>الاسم، البريد، المسمى، الدور، تاريخ التعيين، التكلفة بالساعة، سعر الفوترة، السعة الأسبوعية، أيام العمل</td><td>الدور يحدد ما يراه الشخص، والمدير يحدد من يعتمد له</td></tr><tr><td><b>5 · العملاء</b></td><td>التنظيم ← العملاء ← إضافة عميل</td><td>الاسم، العملة، لغة الفاتورة، مدة الدفع، مدير الحساب</td><td>مدة الدفع تحدد تاريخ الاستحقاق؛ بطاقة الأسعار تتقدم على سعر الموظف</td></tr><tr><td><b>6 · المشاريع</b></td><td>التنظيم ← المشاريع ← مشروع جديد</td><td>الاسم، الرمز (2–12 حرفًا)، العميل، المدير، الحالة، الأولوية، نوع الميزانية</td><td>نوع الميزانية يحدد طريقة الفوترة، وأعضاء الفريق فقط يسجلون الوقت</td></tr><tr><td><b>7 · المراحل والمهام</b></td><td>المشروع ← المراحل، ثم مهمة جديدة</td><td>عنوان المهمة، الحالة، الأولوية، الساعات المقدرة</td><td>تواريخ الاستحقاق تغذي «عملي» وصحة المشروع</td></tr><tr><td><b>8 · الساعات</b></td><td>التنظيم ← سجلات الوقت</td><td>المشروع، اليوم، الساعات (تقريب 15 دقيقة)</td><td>الساعات المعتمدة هي ما يُفوتر وتُجمّد أسعارها عند الاعتماد</td></tr><tr><td><b>9 · أول فاتورة</b></td><td>المالية ← فواتير العملاء ← إنشاء من الساعات</td><td>العميل، الفترة، طريقة التجميع</td><td>الرقم يُمنح عند الإصدار؛ التصحيح بإشعار دائن</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> كل صف خطوة: مكانها في التطبيق، الحقول التي لا يُحفظ النموذج بدونها، وسبب أهميتها.</p><div class="callout good"><b>نصيحة:</b> جرّب السلسلة كاملة مرة بعميل ومشروع تجريبيين (الخطوات 5–9) ثم أرشفهما قبل بدء الفريق.</div>
+<p>اتبع هذه الخطوات التسع بالترتيب: كل خطوة تعتمد على ما أنشأته الخطوات السابقة. افتحه بملء الشاشة لاستكشافه.</p><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/setup-steps.html" title="setup-steps" loading="lazy" style="height:620px"></iframe><figcaption>مخطط تفاعلي: كبّر، ابحث، اضغط على أي مربع. <a href="diagrams/setup-steps.html" target="_blank" rel="noopener">فتح بملء الشاشة ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> السهم يعني «يحتاج إلى»: لا يمكن ملء خانة قبل وجود الخانات التي تشير إليها.</p><table><thead><tr><th>الخطوة</th><th>أين</th><th>الحقول الإلزامية</th><th>لماذا تهم</th></tr></thead><tbody><tr><td><b>1 · إعدادات الشركة</b></td><td>النظام ← إعدادات مساحة العمل ← الشركة</td><td>اسم الشركة، العملة الأساسية، بداية السنة المالية، صيغة ترقيم الفواتير</td><td>تظهر على كل فاتورة؛ اضبط الترقيم والسنة المالية قبل أول فاتورة</td></tr><tr><td><b>2 · القوائم</b></td><td>إعدادات مساحة العمل ← القوائم</td><td>قسم واحد على الأقل، العطل الرسمية، أنواع الإجازات</td><td>تخفض العطل والإجازات الساعات المتوقعة والسعة</td></tr><tr><td><b>3 · قواعد الاعتماد</b></td><td>إعدادات مساحة العمل ← الاعتمادات</td><td>من يعتمد الساعات والإجازات والمصاريف</td><td>بدون معتمد تبقى الساعات معلقة؛ لا أحد يعتمد طلباته</td></tr><tr><td><b>4 · الموظفون</b></td><td>التنظيم ← الموظفون ← إضافة موظف</td><td>الاسم، البريد، المسمى، الدور، تاريخ التعيين، التكلفة بالساعة، سعر الفوترة، السعة الأسبوعية، أيام العمل</td><td>الدور يحدد ما يراه الشخص، والمدير يحدد من يعتمد له</td></tr><tr><td><b>5 · العملاء</b></td><td>التنظيم ← العملاء ← إضافة عميل</td><td>الاسم، العملة، لغة الفاتورة، مدة الدفع، مدير الحساب</td><td>مدة الدفع تحدد تاريخ الاستحقاق؛ بطاقة الأسعار تتقدم على سعر الموظف</td></tr><tr><td><b>6 · المشاريع</b></td><td>التنظيم ← المشاريع ← مشروع جديد</td><td>الاسم، الرمز (2–12 حرفًا)، العميل، المدير، الحالة، الأولوية، نوع الميزانية</td><td>نوع الميزانية يحدد طريقة الفوترة، وأعضاء الفريق فقط يسجلون الوقت</td></tr><tr><td><b>7 · المراحل والمهام</b></td><td>المشروع ← المراحل، ثم مهمة جديدة</td><td>عنوان المهمة، الحالة، الأولوية، الساعات المقدرة</td><td>تواريخ الاستحقاق تغذي «عملي» وصحة المشروع</td></tr><tr><td><b>8 · الساعات</b></td><td>التنظيم ← سجلات الوقت</td><td>المشروع، اليوم، الساعات (تقريب 15 دقيقة)</td><td>الساعات المعتمدة هي ما يُفوتر وتُجمّد أسعارها عند الاعتماد</td></tr><tr><td><b>9 · أول فاتورة</b></td><td>المالية ← فواتير العملاء ← إنشاء من الساعات</td><td>العميل، الفترة، طريقة التجميع</td><td>الرقم يُمنح عند الإصدار؛ التصحيح بإشعار دائن</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> كل صف خطوة: مكانها في التطبيق، الحقول التي لا يُحفظ النموذج بدونها، وسبب أهميتها.</p><div class="callout good"><b>نصيحة:</b> جرّب السلسلة كاملة مرة بعميل ومشروع تجريبيين (الخطوات 5–9) ثم أرشفهما قبل بدء الفريق.</div>
 </section>
 
 
@@ -307,13 +291,7 @@ flowchart TB
 <p>هذا الجزء موجّه إلى <b>فريق تقنية المعلومات في الشركة المشترية</b> وإلى المطورين الذين يطوّرون Nexora أو يستضيفونه.</p>
 <p><b>قواعد العمل في Nexora مستقلة عن الشاشات وعن مكان تخزين البيانات.</b> «رقم الفاتورة لا يُعاد استخدامه»، «لا اعتماد ذاتي»، «لا تجاوز للسعر الثابت» هي دوال TypeScript خالصة لا تعرف React ولا المتصفح ولا قاعدة البيانات.</p>
 <div class="callout "><b>قاعدة الاعتماديات:</b> الاعتماديات تتجه إلى الداخل. الشاشات تستدعي الخطافات، والخطافات تستدعي دوال API، ودوال API تستدعي القواعد والتخزين. القواعد لا تستدعي الخارج أبدًا.</div>
-<div class="mermaid" dir="ltr">
-flowchart LR
-  UI[Screens] --> HK[Hooks / React Query]
-  HK --> API[API functions src/lib/api]
-  API --> RULES[Business rules src/lib/workforce]
-  API --> STORE[(Demo store today / server tomorrow)]
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> الأسهم تُظهر من يحق له استدعاء من: قواعد العمل تُستدعى ولا تستدعي شيئًا خارجها.</p>
+<figure class="arch-fig"><iframe class="arch-frame" src="diagrams/app-layers.html" title="app-layers" loading="lazy" style="height:820px"></iframe><figcaption>مخطط تفاعلي: كبّر، ابحث، اضغط على أي مربع. <a href="diagrams/app-layers.html" target="_blank" rel="noopener">فتح بملء الشاشة ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> الأسهم تُظهر من يحق له استدعاء من: قواعد العمل تُستدعى ولا تستدعي شيئًا خارجها.</p>
 <table><thead><tr><th>الطبقة</th><th>تخيّلها كـ</th><th>المجلدات</th></tr></thead><tbody><tr><td>قواعد العمل</td><td>العقل: منطق خالص</td><td><code>src/lib/workforce/</code></td></tr><tr><td>الوصول للبيانات</td><td>السباكة: قراءة وكتابة</td><td><code>src/lib/api/*-api.ts</code> و<code>demo-store.ts</code></td></tr><tr><td>الحالة والخطافات</td><td>الربط بين البيانات والشاشات</td><td><code>src/hooks/workforce/</code> و<code>src/store/</code></td></tr><tr><td>الواجهة</td><td>ما يراه المستخدم</td><td><code>src/app/[locale]/dashboard</code> و<code>src/components</code></td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> اقرأ من الأعلى إلى الأسفل: كلما كانت الطبقة أعمق قلّ تغيرها وزادت قيمتها.</p>
 </section>
 
@@ -339,12 +317,7 @@ export async function createContractApi(workspaceId: string, input: ContractInpu
 
 <section id="roadmap"><h2><span class="n">33</span>ما تبقى ولماذا هو مهم</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">يُسلَّم Nexora على مراحل. يوضح هذا الجدول ما تضيفه كل مرحلة قادمة والفائدة الملموسة للشركة.</p><table><thead><tr><th>المرحلة</th><th>المحتوى</th><th>الأهمية</th></tr></thead><tbody><tr><td>4 ✅</td><td>تم في v3.1: لوحتا «عملي» و«الفريق»، 7 تقارير قياسية، تصدير Excel/CSV/PDF، مؤشر حداثة البيانات، بطاقات الهاتف وسجل الوقت يومًا بيوم لكل القوائم، حالات فراغ وتحميل موحدة</td><td>كل شخص يرى ما يجب فعله؛ نهاية شهر بلا جداول بيانات</td></tr><tr><td>5 ✅</td><td>الهيكل التنظيمي، أرصدة الإجازات، الوثائق والعقود، بوابة العملاء، Gantt، عروض الأسعار، الفواتير المتكررة، التذكيرات</td><td>دورة كاملة من العرض إلى التحصيل وتحصيل أسرع</td></tr><tr><td>6a–6d ✅</td><td>الأهداف والمؤشرات، تقييم الأداء، التكاليف العامة، الحقول المخصصة، البحث الشامل، صندوق العمل</td><td>ربح صافٍ حقيقي وتقييمات عادلة</td></tr><tr><td>6e ✅</td><td>الامتثال المغربي: ICE/IF/الباتنتا/CNSS، ملف الفاتورة الإلكترونية UBL 2.1 وحالته، الضريبة عند التحصيل والتصريح، دفتر اليومية CGNC؛ الدرهم عملة افتراضية</td><td>جاهزية للفوترة الإلكترونية الإلزامية؛ التصريح والمحاسبة من البيانات نفسها</td></tr><tr><td>6f ✅</td><td>الموردون وفواتيرهم (الضريبة، تكاليف المشاريع، يومية المشتريات)، التكلفة الحقيقية من الأجر، عناصر الأجور الشهرية</td><td>المشتريات والأجور تكمل الهامش؛ مكتب الأجور يتسلم أرقامه في تصدير واحد</td></tr><tr><td>6g ✅</td><td>حجز الموارد وتوقع الطاقة، مسار الصفقات، توقع الإيرادات، ميزانيات المراحل وأوامر التغيير</td><td>معرفة من سيكون متاحًا والإيرادات القادمة وما وافق العميل على دفعه إضافيًا</td></tr><tr><td>7</td><td>نسخة الخادم: قاعدة بيانات، دخول وصلاحيات آمنة، ملفات، بريد، نسخ احتياطي</td><td>بيانات مشتركة ودائمة وآمنة لكل المستخدمين</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> كل صف إصدار؛ العمود الأخير يشرح الفائدة الملموسة للشركة.</p></section>
 
-<section id="diagrams"><h2><span class="n">34</span>المخططات التقنية</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">المخططات تختصر في صورة واحدة ما تحتاج فقراتٍ لشرحه.</p><div class="callout ">المخططات التفصيلية (خريطة العمليات، حالات الاستخدام، خريطة الموقع، مخططات التسلسل، المخططات الانسيابية، مخطط الكيانات والعلاقات، قاموس البيانات، مواصفات API، قائمة المهام، معايير القبول، مصفوفة التتبع) متاحة في <a href='doc.html#d-process'>النسخة الإنجليزية – قسم Analysis &amp; design</a>، لأنها مكتوبة بالمصطلحات التقنية المعتمدة.</div><div class="mermaid" dir="ltr">
-flowchart LR
-  e1[Log hours] --> e2[Submit week] --> m1{Manager review}
-  m1 -- approved --> a1[Ready to bill] --> a2[Invoice] --> a3[Issue] --> a4[Send] --> c1[Client pays] --> a5[Payment recorded]
-  m1 -- sent back --> e1
-</div><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> اقرأ من اليسار إلى اليمين: من تسجيل الساعة إلى تسجيل الدفعة، مع مسار الإعادة عند الرفض.</p></section>
+<section id="diagrams"><h2><span class="n">34</span>المخططات التقنية</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">المخططات تختصر في صورة واحدة ما تحتاج فقراتٍ لشرحه.</p><div class="callout ">المخططات التفصيلية (خريطة العمليات، حالات الاستخدام، خريطة الموقع، مخططات التسلسل، المخططات الانسيابية، مخطط الكيانات والعلاقات، قاموس البيانات، مواصفات API، قائمة المهام، معايير القبول، مصفوفة التتبع) متاحة في <a href='doc.html#d-process'>النسخة الإنجليزية – قسم Analysis &amp; design</a>، لأنها مكتوبة بالمصطلحات التقنية المعتمدة.</div><figure class="arch-fig"><iframe class="arch-frame" src="diagrams/time-to-cash.html" title="time-to-cash" loading="lazy" style="height:1000px"></iframe><figcaption>مخطط تفاعلي: كبّر، ابحث، اضغط على أي مربع. <a href="diagrams/time-to-cash.html" target="_blank" rel="noopener">فتح بملء الشاشة ↗</a></figcaption></figure><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> اقرأ من اليسار إلى اليمين: من تسجيل الساعة إلى تسجيل الدفعة، مع مسار الإعادة عند الرفض.</p></section>
 <section id="g-conv"><h2><span class="n">35</span>قواعد كتابة الكود</h2><p class="lead" style="font-size:1.02rem;line-height:1.75;color:#334155;margin:0 0 18px">القواعد الموحدة تُبقي الكود مقروءًا عندما يعمل عليه عدة مطورين لسنوات، وتجعل أي ميزة جديدة تبدو كأنها كانت موجودة دائمًا.</p>
 <table><thead><tr><th>الموضوع</th><th>القاعدة</th></tr></thead><tbody><tr><td>المجلدات</td><td>الصفحات في <code>components/shared/work-&lt;module&gt;-chunks/</code>، وملف المسار يعرض الصفحة فقط</td></tr><tr><td>قواعد العمل</td><td>دوال نقية في <code>lib/workforce/</code> تستقبل <code>today</code> كمعامل</td></tr><tr><td>البيانات</td><td>طبقة <code>lib/api/</code> وحدها تقرأ وتكتب البيانات</td></tr><tr><td>حالة الخادم</td><td>خطافات React Query؛ كل تعديل يُبطل الاستعلامات المرتبطة</td></tr><tr><td>التواريخ والمبالغ</td><td>تواريخ ISO <code>YYYY-MM-DD</code> وتقريب بأدوات الفوترة</td></tr><tr><td>النصوص</td><td>لا نصوص ثابتة؛ مفاتيح في ملفات اللغات التسع</td></tr></tbody></table><p class="howto" style="font-size:.88rem;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;margin:6px 0 18px"><b>كيف تقرؤه:</b> العمود الأيسر القاعدة المطبقة في كل المشروع.</p>
 </section>
@@ -365,116 +338,5 @@ flowchart LR
 </section>
 </main>
 </div>
-<script>
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: "default",
-    themeVariables: {
-      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-      fontSize: "13px"
-    },
-    flowchart: {
-      useMaxWidth: true,
-      htmlLabels: true,
-      curve: "basis",
-      nodeSpacing: 25,
-      rankSpacing: 30,
-      padding: 8
-    }
-  });
-</script>
-<style>
-  .dz{position:relative;border:1px solid #e2e8f0;border-radius:12px;background:#fff;margin:10px 0 6px}
-  .dz-bar{position:sticky;top:0;display:flex;gap:6px;justify-content:flex-end;padding:8px;border-bottom:1px solid #eef2f7;background:#f8fafc;border-radius:12px 12px 0 0;z-index:2}
-  .dz-bar button,.dz-ov-bar button{font:600 12px/1 system-ui,sans-serif;border:1px solid #cbd5e1;background:#fff;color:#0f172a;border-radius:8px;padding:7px 10px;cursor:pointer}
-  .dz-bar button:hover,.dz-ov-bar button:hover{background:#eff6ff;border-color:#2563eb}
-  .dz-bar .dz-hint{margin-inline-end:auto;align-self:center;font:12px system-ui,sans-serif;color:#64748b}
-  .dz-view{overflow:auto;max-height:640px;padding:12px;cursor:zoom-in}
-  .dz{max-width:100%;overflow:hidden}
-  .dz-view .mermaid{margin:0!important;border:0!important;box-shadow:none!important;display:block!important;overflow:visible!important;padding:0!important;width:max-content;min-width:100%}
-  .dz-view .mermaid svg{margin:0 auto!important}
-  .dz-view svg,.dz-ov-stage svg{max-width:none!important;max-height:none!important;height:auto!important}
-  .dz-ov{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.88);display:flex;flex-direction:column}
-  .dz-ov-bar{display:flex;gap:6px;align-items:center;padding:10px 14px;background:#0f172a;color:#e2e8f0;font:13px system-ui,sans-serif}
-  .dz-ov-bar span{margin-inline-end:auto}
-  .dz-ov-stage{flex:1;overflow:hidden;cursor:grab;touch-action:none;background:#fff;margin:12px;border-radius:12px}
-  .dz-ov-stage.drag{cursor:grabbing}
-  .dz-ov-stage svg{transform-origin:0 0;max-width:none!important}
-  @media print{.dz-bar{display:none}.dz-view{max-height:none;overflow:visible}}
-</style>
-<script>
-/* Diagram zoom: toolbar on every diagram + full-screen viewer with wheel/pinch zoom and drag to pan */
-(function () {
-  var L = document.documentElement.lang === "ar"
-    ? { hint: "انقر على المخطط لعرضه بملء الشاشة", full: "ملء الشاشة", reset: "إعادة", close: "إغلاق ✕", tip: "عجلة الفأرة أو القرص للتكبير · اسحب للتحريك · Esc للإغلاق" }
-    : { hint: "Click the diagram to open it full screen", full: "Full screen", reset: "Reset", close: "Close ✕", tip: "Scroll or pinch to zoom · drag to move · Esc to close" };
-  function btn(label, title, fn) { var b = document.createElement("button"); b.type = "button"; b.textContent = label; b.title = title || label; b.onclick = fn; return b; }
-  function naturalWidth(svg) { var vb = svg.viewBox && svg.viewBox.baseVal; return vb && vb.width ? vb.width : svg.getBoundingClientRect().width; }
-  function title(el) { var s = el.closest("section"); var h = s && s.querySelector("h2"); return h ? h.textContent : ""; }
-
-  function openViewer(el) {
-    var src = el.querySelector("svg"); if (!src) return;
-    var svg = src.cloneNode(true);
-    var w = naturalWidth(src), vb = src.viewBox.baseVal, h = vb && vb.height ? vb.height : src.getBoundingClientRect().height;
-    svg.setAttribute("width", w); svg.setAttribute("height", h); svg.style.width = w + "px"; svg.style.height = h + "px"; svg.style.maxWidth = "none";
-    var ov = document.createElement("div"); ov.className = "dz-ov";
-    var bar = document.createElement("div"); bar.className = "dz-ov-bar";
-    var t = document.createElement("span"); t.textContent = title(el) + " — " + L.tip;
-    var stage = document.createElement("div"); stage.className = "dz-ov-stage";
-    stage.appendChild(svg);
-    var k = 1, x = 0, y = 0;
-    function apply() { svg.style.transform = "translate(" + x + "px," + y + "px) scale(" + k + ")"; }
-    function fit() { var r = stage.getBoundingClientRect(); k = Math.min((r.width - 40) / w, (r.height - 40) / h, 4); x = (r.width - w * k) / 2; y = (r.height - h * k) / 2; apply(); }
-    function zoomAt(f, cx, cy) { var nk = Math.min(12, Math.max(0.2, k * f)); x = cx - (cx - x) * (nk / k); y = cy - (cy - y) * (nk / k); k = nk; apply(); }
-    function center(f) { var r = stage.getBoundingClientRect(); zoomAt(f, r.width / 2, r.height / 2); }
-    function close() { document.removeEventListener("keydown", key); ov.remove(); document.body.style.overflow = ""; }
-    function key(e) { if (e.key === "Escape") close(); if (e.key === "+" || e.key === "=") center(1.25); if (e.key === "-") center(0.8); if (e.key === "0") fit(); }
-    bar.append(t, btn("−", "Zoom out", function () { center(0.8); }), btn("+", "Zoom in", function () { center(1.25); }), btn(L.reset, "Fit", fit), btn(L.close, "Esc", close));
-    stage.addEventListener("wheel", function (e) { e.preventDefault(); var r = stage.getBoundingClientRect(); zoomAt(e.deltaY < 0 ? 1.15 : 0.87, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
-    var pts = new Map(), last = null, pinch = 0;
-    stage.addEventListener("pointerdown", function (e) { stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, e); stage.classList.add("drag"); last = { x: e.clientX, y: e.clientY }; });
-    stage.addEventListener("pointermove", function (e) {
-      if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, e);
-      if (pts.size === 2) { var a = Array.from(pts.values()), d = Math.hypot(a[0].clientX - a[1].clientX, a[0].clientY - a[1].clientY), r = stage.getBoundingClientRect();
-        if (pinch) zoomAt(d / pinch, (a[0].clientX + a[1].clientX) / 2 - r.left, (a[0].clientY + a[1].clientY) / 2 - r.top); pinch = d; return; }
-      x += e.clientX - last.x; y += e.clientY - last.y; last = { x: e.clientX, y: e.clientY }; apply();
-    });
-    function up(e) { pts.delete(e.pointerId); pinch = 0; if (!pts.size) stage.classList.remove("drag"); else { var p = pts.values().next().value; last = { x: p.clientX, y: p.clientY }; } }
-    stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
-    ov.append(bar, stage); document.body.appendChild(ov); document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", key); fit();
-  }
-
-  function enhance(el) {
-    if (el.dataset.dz || !el.querySelector("svg")) return; el.dataset.dz = "1";
-    var box = document.createElement("div"); box.className = "dz";
-    var bar = document.createElement("div"); bar.className = "dz-bar";
-    var view = document.createElement("div"); view.className = "dz-view";
-    var hint = document.createElement("span"); hint.className = "dz-hint"; hint.textContent = L.hint;
-    el.parentNode.insertBefore(box, el); view.appendChild(el); box.append(bar, view);
-    // Mermaid may replace the SVG after this runs, so always work on the current one
-    var k = null, zoomed = false;
-    function svg() { return el.querySelector("svg"); }
-    function base() { var s = svg(); return s ? naturalWidth(s) : 0; }
-    function fitWidth() { var b = base(); return b ? Math.min(1.5, (view.clientWidth - 24) / b) : 1; }
-    function set(nk) {
-      var s = svg(); if (!s) return;
-      k = Math.min(4, Math.max(0.3, nk));
-      s.removeAttribute("width"); s.removeAttribute("height");
-      s.style.width = base() * k + "px"; s.style.maxWidth = "none"; s.style.height = "auto";
-    }
-    set(Math.max(fitWidth(), 0.3));
-    new MutationObserver(function () { var s = svg(); if (s && s.style.width !== base() * k + "px") set(zoomed ? k : Math.max(fitWidth(), 0.3)); }).observe(el, { childList: true, subtree: false });
-    bar.append(hint, btn("−", "Zoom out", function () { zoomed = true; set(k * 0.8); }), btn("+", "Zoom in", function () { zoomed = true; set(k * 1.25); }),
-      btn(L.reset, "Fit width", function () { zoomed = false; set(Math.max(fitWidth(), 0.3)); }), btn("⤢ " + L.full, L.full, function () { openViewer(el); }));
-    view.addEventListener("click", function () { openViewer(el); });
-  }
-  function scan() { document.querySelectorAll(".mermaid").forEach(enhance); }
-  scan();
-  // Diagrams render asynchronously (and can be slow on large pages): enhance each one as soon as its SVG appears
-  new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
-})();
-</script>
-
 </body>
 </html>
