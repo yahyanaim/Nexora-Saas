@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { TRANSITIONS, accountMrr, accountsSummary, addDaysIso, canTransition, periodEnd } from "./customer-lifecycle"
 import {
   activateCustomerApi,
@@ -50,8 +50,12 @@ describe("customer lifecycle rules (Figure 2)", () => {
 
 describe("customers in the console", () => {
   beforeEach(() => localStorage.clear())
+  afterEach(() => vi.useRealTimers())
 
   it("seeds the catalogue with MRR and MRR at risk", async () => {
+    // The seed's trials end on 2026-10-24 and 2026-10-31; listing expires ended trials against today
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-20T12:00:00Z"))
     const sum = accountsSummary(await listCustomersApi())
     expect(sum.overdue).toBe(1)
     expect(sum.atRisk).toBe(1490)
