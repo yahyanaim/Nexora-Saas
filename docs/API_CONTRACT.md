@@ -71,7 +71,7 @@ These come from what the client code already does or expects.
 | **Web addresses** | `website`, `linkedin`, task links and webhook URLs accept `http://` and `https://` only → otherwise `400 err_badUrl`. |
 | **Deleted-items bins** | Clients and tasks are soft-deleted: `DELETE` moves the record to a bin for **30 days**. The bin is read with `?deleted=true`, restored with `POST …/:id/restore`, and emptied for good with `DELETE …/:id?purge=true` (or by the daily job, §8). Lists leave deleted records out, and also the records that belong to them (e.g. the deals of a deleted client). |
 | **Plan gate** | `403 { "code": "upgrade_required" }` opens the upgrade prompt. |
-| **Errors** | `4xx { "code": "err_…", "message": "…", "details"?: {...} }`. The `code` must be one of the keys in `src/lib/errors/error-catalog.ts` (432 keys, e.g. `err_periodLocked`, `err_dealNotFound`). The UI translates the code into 9 languages (`translateError` reads `code`, and `details` fills the values, e.g. `{ maxMb: 10 }`); `message` is a readable English fallback. Validation errors may add `details.field`. **New in v2:** `err_conflict`, `err_projectHasHistory`, `err_badUrl`, `err_csrf`, `err_tooManyRequests`, `err_seatsFull`, `err_fileType`, `err_fileTooLarge` (`details.maxMb`), `err_fileInfected`, `err_passwordTooShort` (`details.min`), `err_passwordBreached`, `err_twoFactorRequired`, `err_twoFactorInvalid`. |
+| **Errors** | `4xx { "code": "err_…", "values": {...}, "requestId": "…", "message"?: "…" }` (decision E1 of the cahier des charges 2.2; checked by contract tests on both sides). The `code` must be one of the keys in `src/lib/errors/error-catalog.ts` (432 keys, e.g. `err_periodLocked`, `err_dealNotFound`). The UI translates the code into 9 languages (`translateError` reads `code`, and `values` fill the translation, e.g. `{ maxMb: 10 }`; the older `details` is still read during the switch); `requestId` equals the `X-Request-Id` header; `message` is an optional English fallback. Validation errors add `values.field`. **New in v2:** `err_conflict`, `err_projectHasHistory`, `err_badUrl`, `err_csrf`, `err_tooManyRequests`, `err_seatsFull`, `err_fileType`, `err_fileTooLarge` (`values.maxMb`), `err_fileInfected`, `err_passwordTooShort` (`values.min`), `err_passwordBreached`, `err_twoFactorRequired`, `err_twoFactorInvalid`. |
 | **Timeouts** | The client gives up after 20 s and shows a friendly message. Long jobs (exports, imports) must answer at once with a job id. |
 | **Workspace scope** | Every ERP function takes `workspaceId` today. Proposed path prefix: **`/workspaces/:wid/…`**, written as `{ws}` in the tables. The server must check that the session belongs to that workspace. |
 | **Who acts** | Many functions receive `approver`, `actor`, `viewer` or `by` from the screen (see the pre-backend audit, H2). On the server these come **from the session only**. The parameters disappear from the request bodies. |
@@ -146,7 +146,7 @@ These helpers come from the starter template. Their screens were rebuilt on the 
 | `POST /auth/2fa/recovery-codes` | — | New codes; the old ones stop working. |
 | *(rule)* | `two-factor-gate.tsx`, `two-step-dialog.tsx` | **Required (D2)** for Nexora staff, company owners and admins, and accountants: until it is set up, every other endpoint answers `403 err_twoFactorRequired` and the app opens the set-up screen. Optional for everyone else. One method: TOTP; passkeys later. |
 | `GET /me/sessions`, `DELETE /me/sessions/:id`, `DELETE /me/sessions` | — | The person's own devices; the last one signs out every other device. |
-| *(rule)* passwords | `register.tsx`, `reset-password.tsx` | At least **12 characters** (D5), any characters, checked against known breached passwords → `err_passwordTooShort` (`details.min`) / `err_passwordBreached`. No forced periodic change. Reset links work once and last 30 minutes. |
+| *(rule)* passwords | `register.tsx`, `reset-password.tsx` | At least **12 characters** (D5), any characters, checked against known breached passwords → `err_passwordTooShort` (`values.min`) / `err_passwordBreached`. No forced periodic change. Reset links work once and last 30 minutes. |
 
 ### 4.2 Workspace settings (`settings-api.ts`, types in `work-settings.ts`)
 
@@ -763,7 +763,7 @@ One **upload endpoint** covers all of them (audit S-03, decision D7):
 |---|---|
 | Upload | `POST {ws}/uploads` (multipart: `file`, `kind`) → `{ id, name, size, type, scan: "pending" \| "clean" \| "infected" }`. Today `upload-apis.ts` (`uploadFile`, `uploadMultipleFiles`, `deleteFile`) sends profile photos to Cloudinary; it moves to this endpoint. |
 | Kinds and limits | `task_attachment` and `client_file`: 20 MB, documents (PDF, Office, images, text, CSV, ZIP). `employee_document` and `expense_receipt`: 10 MB, PDF and images. `logo` and `avatar`: 2 MB, PNG / JPEG / WebP, re-encoded by the server. **SVG and HTML are refused.** The type is checked from the file's content, not its name. |
-| Errors | `err_fileType`, `err_fileTooLarge` (`details.maxMb`), `err_fileInfected`, `err_storageFull` (plan storage, §4.4) |
+| Errors | `err_fileType`, `err_fileTooLarge` (`values.maxMb`), `err_fileInfected`, `err_storageFull` (plan storage, §4.4) |
 | Download | `GET {ws}/files/:id` → `302` to a signed link valid 5 minutes, with `Content-Disposition: attachment`, served from a separate download domain. A file still being scanned or found infected cannot be downloaded. |
 | Delete | `DELETE {ws}/files/:id` → `204`, written in the audit log |
 | Records | `TaskAttachment`, `ClientFile`, `EmployeeDocument`, expense receipts and the company logo keep a `fileId` instead of a `dataUrl` or a bare file name. |
@@ -789,7 +789,7 @@ Nice later, not needed for v1:
 | 4 | Move the bell to `GET {ws}/notifications` | Waits for the server |
 | 5 | Stop calling the job functions (§8) from hooks | Waits for the server |
 | 6 | Add filters to `useTimeEntries` and `useTasks` | ✅ Done: `useTimeEntries({ employeeId, from, to, status })`, `useTasks(projectId, { personId, status, cycleId, dueFrom, dueTo })`; the server takes the same as query parameters |
-| 7 | Read the server's error code (§2 Errors) | ✅ Done: `translateError` reads `response.data.code` (+ `details` as values); a `409` without a code shows `err_conflict` (new, 9 languages) |
+| 7 | Read the server's error code (§2 Errors) | ✅ Done: `translateError` reads `response.data.code` (+ `values`, or the older `details`); a `409` without a code shows `err_conflict` (new, 9 languages) |
 
 ---
 
@@ -844,7 +844,7 @@ Short version of §18.4 of the backend cahier des charges (`yahyanaim/Nexora-Bac
 | **Writes that move money** | `Idempotency-Key` (§2), gapless numbering inside a transaction, the period lock checked on the server, `409 err_conflict` on stale writes. |
 | **Webhooks** (`developer-apis.ts`: `getWebhooksApi`, `createWebhookApi`, `testWebhookPingApi`) | https only; private and internal IP ranges refused, checked again after DNS resolution; short timeouts; no redirects followed; every payload signed (HMAC). API keys (`getApiKeysApi`, `createApiKeyApi`, `revokeApiKeyApi`) are shown once and stored hashed. |
 | **Exports** | The full company export and "delete all data" (`exportWorkspaceDataApi`, `deleteWorkspaceDataApi` in Settings) are for the **owner** only, logged in the audit, and limited as above. |
-| **Errors** | Only `{ code, message, details? }`: never a stack trace or an SQL message. |
+| **Errors** | Only `{ code, values, requestId, message? }`: never a stack trace or an SQL message. |
 | **Demo mode** | Never on in production: the build check stays, and `ALLOW_DEMO_BUILD` is never set there. |
 
 ---
