@@ -1,0 +1,244 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "From an hour of work to money in the bank",
+    "output": "documentation/diagrams/time-to-cash.html",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Employee step"
+        },
+        "messagebus": {
+          "label": "Decision"
+        },
+        "backend": {
+          "label": "Accounting step"
+        },
+        "external": {
+          "label": "Client"
+        },
+        "security": {
+          "label": "Exception"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "emp",
+      "label": "Employee"
+    },
+    {
+      "id": "mgr",
+      "label": "Manager"
+    },
+    {
+      "id": "acc",
+      "label": "Accountant"
+    },
+    {
+      "id": "cli",
+      "label": "Client"
+    },
+    {
+      "id": "fix",
+      "label": "Exceptions",
+      "variant": "exception"
+    }
+  ],
+  "mainPath": [
+    "e",
+    "m1",
+    "a2",
+    "a3",
+    "a4",
+    "c1",
+    "c2",
+    "a5"
+  ],
+  "nodes": [
+    {
+      "id": "e",
+      "lane": "emp",
+      "col": 0,
+      "type": "frontend",
+      "label": "Log and submit",
+      "sublabel": "hours of the week",
+      "width": 124
+    },
+    {
+      "id": "m1",
+      "lane": "mgr",
+      "col": 1,
+      "type": "messagebus",
+      "label": "Review hours",
+      "icon": "decision",
+      "width": 124
+    },
+    {
+      "id": "e5",
+      "lane": "fix",
+      "col": 1,
+      "type": "security",
+      "label": "Correct, resubmit",
+      "sublabel": "sent back",
+      "width": 124
+    },
+    {
+      "id": "a2",
+      "lane": "acc",
+      "col": 2,
+      "type": "backend",
+      "label": "Draft invoice",
+      "sublabel": "from ready hours",
+      "width": 124
+    },
+    {
+      "id": "a3",
+      "lane": "acc",
+      "col": 3,
+      "type": "backend",
+      "label": "Issue",
+      "sublabel": "number given",
+      "width": 124
+    },
+    {
+      "id": "a4",
+      "lane": "acc",
+      "col": 4,
+      "type": "backend",
+      "label": "Send",
+      "width": 124
+    },
+    {
+      "id": "a5",
+      "lane": "acc",
+      "col": 5,
+      "type": "backend",
+      "label": "Record payment",
+      "width": 124
+    },
+    {
+      "id": "c1",
+      "lane": "cli",
+      "col": 4,
+      "type": "external",
+      "label": "Receives invoice",
+      "width": 124
+    },
+    {
+      "id": "c2",
+      "lane": "cli",
+      "col": 5,
+      "type": "external",
+      "label": "Pays",
+      "width": 124
+    },
+    {
+      "id": "a7",
+      "lane": "fix",
+      "col": 3,
+      "type": "security",
+      "label": "Credit note",
+      "sublabel": "error found",
+      "width": 124
+    },
+    {
+      "id": "a6",
+      "lane": "fix",
+      "col": 5,
+      "type": "security",
+      "label": "Follow up",
+      "sublabel": "overdue",
+      "width": 124
+    }
+  ],
+  "edges": [
+    {
+      "id": "em1",
+      "from": "e",
+      "to": "m1",
+      "label": "submit"
+    },
+    {
+      "id": "m1e5",
+      "from": "m1",
+      "to": "e5",
+      "label": "sent back",
+      "variant": "security",
+      "role": "branch"
+    },
+    {
+      "id": "e5e",
+      "from": "e5",
+      "to": "e",
+      "label": "resubmit",
+      "variant": "dashed",
+      "role": "return"
+    },
+    {
+      "id": "m1a2",
+      "from": "m1",
+      "to": "a2",
+      "label": "approved, rate frozen",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a2a3",
+      "from": "a2",
+      "to": "a3"
+    },
+    {
+      "id": "a3a4",
+      "from": "a3",
+      "to": "a4"
+    },
+    {
+      "id": "a4c1",
+      "from": "a4",
+      "to": "c1"
+    },
+    {
+      "id": "c1c2",
+      "from": "c1",
+      "to": "c2"
+    },
+    {
+      "id": "c2a5",
+      "from": "c2",
+      "to": "a5",
+      "label": "payment",
+      "variant": "emphasis"
+    },
+    {
+      "id": "a4a6",
+      "from": "a4",
+      "to": "a6",
+      "label": "overdue",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "a3a7",
+      "from": "a3",
+      "to": "a7",
+      "label": "error",
+      "variant": "dashed",
+      "role": "error"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Who does what",
+      "items": [
+        "Employees log and submit hours",
+        "Managers approve or send back",
+        "Accountants invoice and record payments"
+      ]
+    }
+  ]
+}

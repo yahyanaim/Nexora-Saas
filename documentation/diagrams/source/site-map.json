@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "Site map: every section and its pages",
+    "output": "documentation/diagrams/site-map.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "layout": {
+    "direction": "right"
+  },
+  "nodes": [
+    {
+      "id": "app",
+      "label": "Nexora",
+      "sublabel": "after sign-in"
+    },
+    {
+      "id": "dash",
+      "label": "Dashboard",
+      "parent": "app"
+    },
+    {
+      "id": "d0",
+      "label": "My work",
+      "parent": "dash"
+    },
+    {
+      "id": "d2",
+      "label": "Team",
+      "parent": "dash"
+    },
+    {
+      "id": "d1",
+      "label": "Analytics",
+      "parent": "dash"
+    },
+    {
+      "id": "d3",
+      "label": "Reports",
+      "parent": "dash",
+      "sublabel": "Excel, CSV, PDF"
+    },
+    {
+      "id": "org",
+      "label": "Organization",
+      "parent": "app"
+    },
+    {
+      "id": "o1",
+      "label": "Employees",
+      "parent": "org",
+      "sublabel": "profile, rate history"
+    },
+    {
+      "id": "o2",
+      "label": "Clients",
+      "parent": "org",
+      "sublabel": "panel, rate card"
+    },
+    {
+      "id": "o3",
+      "label": "Projects",
+      "parent": "org",
+      "sublabel": "board, list, milestones"
+    },
+    {
+      "id": "o4",
+      "label": "Timesheets",
+      "parent": "org"
+    },
+    {
+      "id": "o5",
+      "label": "Time approvals",
+      "parent": "org"
+    },
+    {
+      "id": "fin",
+      "label": "Finance",
+      "parent": "app"
+    },
+    {
+      "id": "f1",
+      "label": "Client invoices",
+      "parent": "fin",
+      "sublabel": "payments, credit note, PDF"
+    },
+    {
+      "id": "f2",
+      "label": "Receivables",
+      "parent": "fin"
+    },
+    {
+      "id": "f3",
+      "label": "Expenses",
+      "parent": "fin"
+    },
+    {
+      "id": "f4",
+      "label": "Profitability",
+      "parent": "fin"
+    },
+    {
+      "id": "pl",
+      "label": "Planning",
+      "parent": "app"
+    },
+    {
+      "id": "p1",
+      "label": "Timeline",
+      "parent": "pl"
+    },
+    {
+      "id": "p2",
+      "label": "Calendar",
+      "parent": "pl"
+    },
+    {
+      "id": "p3",
+      "label": "Workload",
+      "parent": "pl"
+    },
+    {
+      "id": "p4",
+      "label": "Leave",
+      "parent": "pl"
+    },
+    {
+      "id": "sys",
+      "label": "System",
+      "parent": "app"
+    },
+    {
+      "id": "s1",
+      "label": "Workspace settings",
+      "parent": "sys",
+      "sublabel": "company, lists, approvals"
+    },
+    {
+      "id": "s2",
+      "label": "Roles",
+      "parent": "sys"
+    },
+    {
+      "id": "s3",
+      "label": "Sessions",
+      "parent": "sys"
+    },
+    {
+      "id": "s4",
+      "label": "Audit logs",
+      "parent": "sys"
+    }
+  ]
+}

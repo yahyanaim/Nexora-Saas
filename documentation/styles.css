@@ -698,71 +698,6 @@ footer.docftr {
   gap: 12px;
 }
 
-/* ===== MERMAID DIAGRAM CONTAINER ===== */
-.mermaid {
-  background: #ffffff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 20px 16px;
-  margin: 20px 0;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.mermaid svg {
-  max-width: 100%;
-  max-height: 520px;
-  height: auto !important;
-  display: block;
-  margin: 0 auto;
-}
-
-/* Ensure wide horizontal enterprise pipelines scale smoothly across container */
-#usecase .mermaid svg {
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-/* Constrain Phase 2 Master Blueprint to an executive, compact frame */
-#phase2 .mermaid {
-  max-width: 1050px;
-  margin: 20px auto;
-  padding: 18px 16px;
-}
-
-#phase2 .mermaid svg {
-  max-height: 440px !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-/* Constrain Billing & Invoicing Flowchart to a compact, executive frame */
-#flowchart .mermaid {
-  max-width: 980px;
-  margin: 20px auto;
-  padding: 22px 18px;
-}
-
-#flowchart .mermaid svg {
-  max-height: 340px !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
-.mermaid .nodeLabel {
-  font-family: var(--font) !important;
-  line-height: 1.4 !important;
-}
-
-.mermaid .cluster-label span {
-  font-family: var(--font) !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.5px !important;
-}
-
 /* ===== RESPONSIVE BREAKPOINTS ===== */
 @media (max-width: 990px) {
   .wrap {
@@ -820,5 +755,4 @@ footer.docftr {
   .wf .row { flex-wrap: wrap; }
   .wf .bar nav { display: none; }
   .badges { flex-wrap: wrap; }
-  .dz-bar .dz-hint { display: none; }
 }

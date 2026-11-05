@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Correcting an issued invoice with a credit note",
+    "output": "documentation/diagrams/seq-credit.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "acc",
+      "type": "external",
+      "label": "Accountant"
+    },
+    {
+      "id": "panel",
+      "type": "frontend",
+      "label": "Invoice panel"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Billing API"
+    },
+    {
+      "id": "rules",
+      "type": "security",
+      "label": "Billing rules"
+    },
+    {
+      "id": "hours",
+      "type": "database",
+      "label": "Time entries"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 300,
+      "label": "Credit note"
+    },
+    {
+      "from": 306,
+      "to": 380,
+      "label": "If hours are released"
+    },
+    {
+      "from": 386,
+      "to": 450,
+      "label": "Result"
+    }
+  ],
+  "messages": [
+    {
+      "id": "ask",
+      "from": "acc",
+      "to": "panel",
+      "y": 165,
+      "label": "credit note: lines, release hours?",
+      "variant": "emphasis"
+    },
+    {
+      "id": "create",
+      "from": "panel",
+      "to": "api",
+      "y": 205,
+      "label": "createCreditNote"
+    },
+    {
+      "id": "cn",
+      "from": "api",
+      "to": "rules",
+      "y": 245,
+      "label": "CN- series number, negative amounts",
+      "variant": "security"
+    },
+    {
+      "id": "cnok",
+      "from": "rules",
+      "to": "api",
+      "y": 280,
+      "label": "ok",
+      "variant": "return"
+    },
+    {
+      "id": "release",
+      "from": "api",
+      "to": "hours",
+      "y": 340,
+      "label": "unlink hours: ready to bill again",
+      "variant": "dashed"
+    },
+    {
+      "id": "done",
+      "from": "api",
+      "to": "panel",
+      "y": 415,
+      "label": "original shown as Credited, balance reduced",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "api",
+      "from": 200,
+      "to": 420,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Rule",
+      "items": [
+        "Issued invoices are never deleted",
+        "Void is allowed only when no payment exists",
+        "A credit note has its own number series"
+      ]
+    }
+  ]
+}

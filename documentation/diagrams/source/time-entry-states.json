@@ -1,0 +1,90 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Statuses of a time entry",
+    "output": "documentation/diagrams/time-entry-states.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "mainPath": [
+    "draft",
+    "submitted",
+    "approved",
+    "invoiced"
+  ],
+  "states": [
+    {
+      "id": "draft",
+      "type": "start",
+      "label": "Draft",
+      "sublabel": "editable"
+    },
+    {
+      "id": "submitted",
+      "type": "waiting",
+      "label": "Submitted",
+      "sublabel": "locked"
+    },
+    {
+      "id": "approved",
+      "type": "active",
+      "label": "Approved",
+      "sublabel": "rates frozen"
+    },
+    {
+      "id": "invoiced",
+      "type": "success",
+      "label": "Invoiced",
+      "sublabel": "on an issued invoice"
+    },
+    {
+      "id": "sentback",
+      "type": "failure",
+      "label": "Sent back",
+      "sublabel": "with a reason"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "draft-submitted",
+      "from": "draft",
+      "to": "submitted",
+      "label": "submit",
+      "variant": "emphasis"
+    },
+    {
+      "id": "submitted-approved",
+      "from": "submitted",
+      "to": "approved",
+      "label": "approve",
+      "variant": "emphasis"
+    },
+    {
+      "id": "approved-invoiced",
+      "from": "approved",
+      "to": "invoiced",
+      "label": "invoice issued"
+    },
+    {
+      "id": "submitted-sentback",
+      "from": "submitted",
+      "to": "sentback",
+      "label": "send back",
+      "variant": "security"
+    },
+    {
+      "id": "sentback-submitted",
+      "from": "sentback",
+      "to": "submitted",
+      "label": "resubmit"
+    },
+    {
+      "id": "approved-draft",
+      "from": "approved",
+      "to": "draft",
+      "label": "reopen",
+      "variant": "dashed"
+    }
+  ]
+}

@@ -1,0 +1,248 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Choosing the invoice type",
+    "output": "documentation/diagrams/invoice-type.html",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "messagebus": {
+          "label": "Question"
+        },
+        "frontend": {
+          "label": "Invoice type"
+        },
+        "backend": {
+          "label": "Then"
+        },
+        "external": {
+          "label": "Start"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "q",
+      "label": "Question"
+    },
+    {
+      "id": "t",
+      "label": "Invoice to create"
+    },
+    {
+      "id": "n",
+      "label": "Then"
+    }
+  ],
+  "mainPath": [
+    "s",
+    "adv",
+    "bt",
+    "h",
+    "is"
+  ],
+  "nodes": [
+    {
+      "id": "s",
+      "lane": "q",
+      "col": 0,
+      "type": "external",
+      "label": "Something to bill",
+      "width": 124
+    },
+    {
+      "id": "adv",
+      "lane": "q",
+      "col": 1,
+      "type": "messagebus",
+      "label": "Advance first?",
+      "sublabel": "before work",
+      "icon": "decision",
+      "width": 124
+    },
+    {
+      "id": "bt",
+      "lane": "q",
+      "col": 2,
+      "type": "messagebus",
+      "label": "Budget type?",
+      "icon": "decision",
+      "width": 124
+    },
+    {
+      "id": "ms",
+      "lane": "q",
+      "col": 3,
+      "type": "messagebus",
+      "label": "On a milestone?",
+      "sublabel": "fixed price",
+      "icon": "decision",
+      "width": 124
+    },
+    {
+      "id": "fr",
+      "lane": "t",
+      "col": 0,
+      "type": "frontend",
+      "label": "Free invoice",
+      "sublabel": "anything else",
+      "width": 124
+    },
+    {
+      "id": "d",
+      "lane": "t",
+      "col": 1,
+      "type": "frontend",
+      "label": "Deposit",
+      "sublabel": "deducted later",
+      "width": 124
+    },
+    {
+      "id": "h",
+      "lane": "t",
+      "col": 2,
+      "type": "frontend",
+      "label": "From hours",
+      "sublabel": "by person, task, day",
+      "width": 124
+    },
+    {
+      "id": "m",
+      "lane": "t",
+      "col": 3,
+      "type": "frontend",
+      "label": "Milestone",
+      "width": 124
+    },
+    {
+      "id": "fs",
+      "lane": "t",
+      "col": 4,
+      "type": "frontend",
+      "label": "Fixed share",
+      "sublabel": "% of the price",
+      "width": 124
+    },
+    {
+      "id": "r",
+      "lane": "t",
+      "col": 5,
+      "type": "frontend",
+      "label": "Retainer",
+      "sublabel": "monthly + overage",
+      "width": 124
+    },
+    {
+      "id": "is",
+      "lane": "n",
+      "col": 3,
+      "type": "backend",
+      "label": "Draft, issue, send",
+      "sublabel": "then payments",
+      "width": 140
+    }
+  ],
+  "edges": [
+    {
+      "id": "sadv",
+      "from": "s",
+      "to": "adv"
+    },
+    {
+      "id": "advbt",
+      "from": "adv",
+      "to": "bt",
+      "label": "then"
+    },
+    {
+      "id": "bth",
+      "from": "bt",
+      "to": "h",
+      "label": "hourly",
+      "variant": "emphasis"
+    },
+    {
+      "id": "btms",
+      "from": "bt",
+      "to": "ms",
+      "label": "fixed price"
+    },
+    {
+      "id": "msm",
+      "from": "ms",
+      "to": "m",
+      "label": "yes"
+    },
+    {
+      "id": "msfs",
+      "from": "ms",
+      "to": "fs",
+      "label": "no"
+    },
+    {
+      "id": "btr",
+      "from": "bt",
+      "to": "r",
+      "label": "retainer"
+    },
+    {
+      "id": "advd",
+      "from": "adv",
+      "to": "d",
+      "label": "yes"
+    },
+    {
+      "id": "sfr",
+      "from": "s",
+      "to": "fr",
+      "label": "other",
+      "variant": "dashed",
+      "role": "branch"
+    },
+    {
+      "id": "his",
+      "from": "h",
+      "to": "is",
+      "variant": "emphasis"
+    },
+    {
+      "id": "mis",
+      "from": "m",
+      "to": "is"
+    },
+    {
+      "id": "fsis",
+      "from": "fs",
+      "to": "is"
+    },
+    {
+      "id": "ris",
+      "from": "r",
+      "to": "is"
+    },
+    {
+      "id": "dis",
+      "from": "d",
+      "to": "is"
+    },
+    {
+      "id": "fris",
+      "from": "fr",
+      "to": "is"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Limits",
+      "items": [
+        "A fixed share never goes above the price",
+        "A deposit is asked before work and deducted from the next final invoice",
+        "Every type follows the same draft, issue, send path"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,244 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Setting up a company: nine steps in order",
+    "output": "documentation/diagrams/setup-steps.html",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": {
+          "label": "Set up once"
+        },
+        "backend": {
+          "label": "Daily work"
+        }
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "s1",
+      "type": "frontend",
+      "label": "1 Company",
+      "sublabel": "ICE, currency, numbering",
+      "pos": [
+        40,
+        50
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "s2",
+      "type": "frontend",
+      "label": "2 Lists",
+      "sublabel": "departments, holidays",
+      "pos": [
+        260,
+        50
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "s3",
+      "type": "frontend",
+      "label": "3 Approvals",
+      "sublabel": "who validates what",
+      "pos": [
+        480,
+        50
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "s4",
+      "type": "frontend",
+      "label": "4 Employees",
+      "sublabel": "role, manager, rates",
+      "pos": [
+        700,
+        50
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "s5",
+      "type": "frontend",
+      "label": "5 Clients",
+      "sublabel": "terms, contacts",
+      "pos": [
+        920,
+        50
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "s6",
+      "type": "frontend",
+      "label": "6 Projects",
+      "sublabel": "client, team, budget",
+      "pos": [
+        920,
+        250
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "s7",
+      "type": "frontend",
+      "label": "7 Tasks",
+      "sublabel": "milestones, estimates",
+      "pos": [
+        700,
+        250
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "s8",
+      "type": "backend",
+      "label": "8 Hours",
+      "sublabel": "submit, approve",
+      "pos": [
+        480,
+        250
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "s9",
+      "type": "backend",
+      "label": "9 Invoice",
+      "sublabel": "from approved hours",
+      "pos": [
+        260,
+        250
+      ],
+      "size": [
+        150,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Foundation",
+      "wraps": [
+        "s1",
+        "s2",
+        "s3"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "People and clients",
+      "wraps": [
+        "s4",
+        "s5"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Work",
+      "wraps": [
+        "s6",
+        "s7"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Money",
+      "wraps": [
+        "s8",
+        "s9"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "e1",
+      "from": "s1",
+      "to": "s2",
+      "variant": "default"
+    },
+    {
+      "id": "e2",
+      "from": "s2",
+      "to": "s3",
+      "variant": "default"
+    },
+    {
+      "id": "e3",
+      "from": "s3",
+      "to": "s4",
+      "variant": "default"
+    },
+    {
+      "id": "e4",
+      "from": "s4",
+      "to": "s5",
+      "variant": "default"
+    },
+    {
+      "id": "e5",
+      "from": "s5",
+      "to": "s6",
+      "variant": "emphasis"
+    },
+    {
+      "id": "e6",
+      "from": "s6",
+      "to": "s7",
+      "variant": "default"
+    },
+    {
+      "id": "e7",
+      "from": "s7",
+      "to": "s8",
+      "variant": "default"
+    },
+    {
+      "id": "e8",
+      "from": "s8",
+      "to": "s9",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Why this order",
+      "items": [
+        "An employee needs a department",
+        "A project needs a client and a manager",
+        "An invoice needs approved hours"
+      ]
+    }
+  ]
+}

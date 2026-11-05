@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "An invoice, from hours to payment",
+    "output": "documentation/diagrams/seq-invoice.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "participants": [
+    {
+      "id": "acc",
+      "type": "external",
+      "label": "Accountant"
+    },
+    {
+      "id": "inv",
+      "type": "frontend",
+      "label": "Invoices screen"
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "Billing API"
+    },
+    {
+      "id": "rules",
+      "type": "security",
+      "label": "Billing rules"
+    },
+    {
+      "id": "cli",
+      "type": "external",
+      "label": "Client"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 280,
+      "label": "Draft"
+    },
+    {
+      "from": 286,
+      "to": 400,
+      "label": "Issue and send"
+    },
+    {
+      "from": 406,
+      "to": 560,
+      "label": "Payment"
+    }
+  ],
+  "messages": [
+    {
+      "id": "create",
+      "from": "acc",
+      "to": "inv",
+      "y": 165,
+      "label": "create invoice (client, hours, grouping)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "fromhours",
+      "from": "inv",
+      "to": "api",
+      "y": 200,
+      "label": "createInvoiceFromHours"
+    },
+    {
+      "id": "build",
+      "from": "api",
+      "to": "rules",
+      "y": 235,
+      "label": "rates, lines, deduct deposits"
+    },
+    {
+      "id": "draft",
+      "from": "api",
+      "to": "inv",
+      "y": 265,
+      "label": "draft, no number; hours linked",
+      "variant": "return"
+    },
+    {
+      "id": "issue",
+      "from": "acc",
+      "to": "api",
+      "y": 300,
+      "label": "issueInvoice",
+      "variant": "emphasis"
+    },
+    {
+      "id": "number",
+      "from": "api",
+      "to": "rules",
+      "y": 330,
+      "label": "period open, next gap-free number",
+      "variant": "security"
+    },
+    {
+      "id": "issued",
+      "from": "api",
+      "to": "inv",
+      "y": 360,
+      "label": "issued INV-2026-021",
+      "variant": "return"
+    },
+    {
+      "id": "sent",
+      "from": "api",
+      "to": "cli",
+      "y": 390,
+      "label": "PDF with company identity and taxes"
+    },
+    {
+      "id": "pay",
+      "from": "cli",
+      "to": "acc",
+      "y": 425,
+      "label": "payment, full or partial",
+      "variant": "return"
+    },
+    {
+      "id": "record",
+      "from": "acc",
+      "to": "api",
+      "y": 460,
+      "label": "recordPayment(date, amount, method)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "balance",
+      "from": "api",
+      "to": "rules",
+      "y": 495,
+      "label": "balance = total - payments - credits"
+    },
+    {
+      "id": "paid",
+      "from": "api",
+      "to": "inv",
+      "y": 530,
+      "label": "partly paid or paid",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "api",
+      "from": 195,
+      "to": 535,
+      "type": "backend"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Numbers",
+      "items": [
+        "A draft has no number",
+        "The number is given at issue, without gaps, per fiscal year",
+        "A closed period refuses the issue"
+      ]
+    }
+  ]
+}

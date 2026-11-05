@@ -1,0 +1,132 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Life of a client invoice",
+    "output": "documentation/diagrams/invoice-lifecycle.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "mainPath": [
+    "draft",
+    "issued",
+    "sent",
+    "paid"
+  ],
+  "states": [
+    {
+      "id": "draft",
+      "type": "start",
+      "label": "Draft",
+      "sublabel": "no number yet"
+    },
+    {
+      "id": "issued",
+      "type": "active",
+      "label": "Issued",
+      "sublabel": "number assigned"
+    },
+    {
+      "id": "sent",
+      "type": "waiting",
+      "label": "Sent",
+      "sublabel": "to the client"
+    },
+    {
+      "id": "paid",
+      "type": "success",
+      "label": "Paid",
+      "sublabel": "balance zero"
+    },
+    {
+      "id": "void",
+      "type": "failure",
+      "label": "Void",
+      "sublabel": "no payment existed"
+    },
+    {
+      "id": "credited",
+      "type": "neutral",
+      "label": "Credited",
+      "sublabel": "by a credit note"
+    },
+    {
+      "id": "deleted",
+      "type": "neutral",
+      "label": "Deleted",
+      "sublabel": "drafts only"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "draft-issued",
+      "from": "draft",
+      "to": "issued",
+      "label": "issue",
+      "variant": "emphasis"
+    },
+    {
+      "id": "draft-deleted",
+      "from": "draft",
+      "to": "deleted",
+      "label": "delete",
+      "variant": "dashed"
+    },
+    {
+      "id": "issued-sent",
+      "from": "issued",
+      "to": "sent",
+      "label": "send"
+    },
+    {
+      "id": "issued-paid",
+      "from": "issued",
+      "to": "paid",
+      "label": "fully paid"
+    },
+    {
+      "id": "sent-paid",
+      "from": "sent",
+      "to": "paid",
+      "label": "fully paid",
+      "variant": "emphasis"
+    },
+    {
+      "id": "issued-void",
+      "from": "issued",
+      "to": "void",
+      "label": "cancel",
+      "variant": "security"
+    },
+    {
+      "id": "sent-void",
+      "from": "sent",
+      "to": "void",
+      "label": "cancel",
+      "variant": "security"
+    },
+    {
+      "id": "sent-credited",
+      "from": "sent",
+      "to": "credited",
+      "label": "credit note"
+    },
+    {
+      "id": "paid-credited",
+      "from": "paid",
+      "to": "credited",
+      "label": "credit note"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Never deleted once issued",
+      "items": [
+        "Only a draft can be deleted",
+        "Void only while no payment exists",
+        "Errors are corrected with a credit note"
+      ]
+    }
+  ]
+}

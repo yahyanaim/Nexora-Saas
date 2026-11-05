@@ -1,0 +1,880 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "Nexora data model (web application)",
+    "output": "documentation/diagrams/data-model.html",
+    "locale": "en",
+    "quality_profile": "standard"
+  },
+  "layout": {
+    "mode": "grid",
+    "gapX": 80,
+    "gapY": 40
+  },
+  "entities": [
+    {
+      "id": "workspace",
+      "label": "Workspace",
+      "sublabel": "one company",
+      "tag": "org",
+      "row": 0,
+      "col": 0,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "currency",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "label": "WorkspaceSettings",
+      "sublabel": "company, lists, approvals",
+      "tag": "org",
+      "row": 1,
+      "col": 0,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "approvals",
+          "type": "ApprovalRule[]"
+        },
+        {
+          "name": "lockedThrough",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "id": "department",
+      "label": "Department",
+      "sublabel": "groups people",
+      "tag": "org",
+      "row": 2,
+      "col": 0,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "employee",
+      "label": "Employee",
+      "sublabel": "a person",
+      "tag": "people",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "departmentId",
+          "type": "string",
+          "key": "fk",
+          "references": "department.id"
+        },
+        {
+          "name": "role",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "weeklyCapacity",
+          "type": "number"
+        },
+        {
+          "name": "hourlyCost",
+          "type": "number"
+        },
+        {
+          "name": "billableRate",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "rate_change",
+      "label": "RateChange",
+      "sublabel": "rate history",
+      "tag": "people",
+      "row": 1,
+      "col": 1,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "employeeId",
+          "type": "string",
+          "key": "fk",
+          "references": "employee.id"
+        },
+        {
+          "name": "effectiveFrom",
+          "type": "date"
+        },
+        {
+          "name": "hourlyCost",
+          "type": "number"
+        },
+        {
+          "name": "billableRate",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "expense",
+      "label": "Expense",
+      "sublabel": "money spent",
+      "tag": "people",
+      "row": 2,
+      "col": 1,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "employeeId",
+          "type": "string",
+          "key": "fk",
+          "references": "employee.id"
+        },
+        {
+          "name": "projectId",
+          "type": "string",
+          "key": "fk",
+          "references": "project.id"
+        },
+        {
+          "name": "amount",
+          "type": "number"
+        },
+        {
+          "name": "billable",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "leave_request",
+      "label": "LeaveRequest",
+      "sublabel": "time off",
+      "tag": "people",
+      "row": 3,
+      "col": 1,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "employeeId",
+          "type": "string",
+          "key": "fk",
+          "references": "employee.id"
+        },
+        {
+          "name": "startDate",
+          "type": "date"
+        },
+        {
+          "name": "endDate",
+          "type": "date"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "time_entry",
+      "label": "TimeEntry",
+      "sublabel": "an hour worked",
+      "tag": "time",
+      "row": 4,
+      "col": 1,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "employeeId",
+          "type": "string",
+          "key": "fk",
+          "references": "employee.id"
+        },
+        {
+          "name": "projectId",
+          "type": "string",
+          "key": "fk",
+          "references": "project.id"
+        },
+        {
+          "name": "date",
+          "type": "date"
+        },
+        {
+          "name": "hours",
+          "type": "number"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "billRate",
+          "type": "number"
+        },
+        {
+          "name": "invoiceId",
+          "type": "string",
+          "key": "fk",
+          "references": "invoice.id"
+        }
+      ]
+    },
+    {
+      "id": "project",
+      "label": "Project",
+      "sublabel": "work for a client",
+      "tag": "work",
+      "row": 0,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "clientId",
+          "type": "string",
+          "key": "fk",
+          "references": "client.id"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "budgetType",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "milestone",
+      "label": "Milestone",
+      "sublabel": "a step",
+      "tag": "work",
+      "row": 1,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "projectId",
+          "type": "string",
+          "key": "fk",
+          "references": "project.id"
+        },
+        {
+          "name": "dueDate",
+          "type": "date"
+        }
+      ]
+    },
+    {
+      "id": "task",
+      "label": "Task",
+      "sublabel": "a thing to do",
+      "tag": "work",
+      "row": 2,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "projectId",
+          "type": "string",
+          "key": "fk",
+          "references": "project.id"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "comment",
+      "label": "TaskComment",
+      "sublabel": "discussion",
+      "tag": "work",
+      "row": 3,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "taskId",
+          "type": "string",
+          "key": "fk",
+          "references": "task.id"
+        },
+        {
+          "name": "body",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "activity",
+      "label": "TaskActivity",
+      "sublabel": "history",
+      "tag": "work",
+      "row": 4,
+      "col": 2,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "taskId",
+          "type": "string",
+          "key": "fk",
+          "references": "task.id"
+        },
+        {
+          "name": "kind",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "client",
+      "label": "Client",
+      "sublabel": "who pays",
+      "tag": "clients",
+      "row": 0,
+      "col": 3,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "ice",
+          "type": "string"
+        },
+        {
+          "name": "currency",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "contact",
+      "label": "ClientContact",
+      "sublabel": "a person at the client",
+      "tag": "clients",
+      "row": 1,
+      "col": 3,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "clientId",
+          "type": "string",
+          "key": "fk",
+          "references": "client.id"
+        },
+        {
+          "name": "email",
+          "type": "string"
+        },
+        {
+          "name": "isPrimary",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "id": "rate_card",
+      "label": "RateCardEntry",
+      "sublabel": "agreed rate",
+      "tag": "clients",
+      "row": 2,
+      "col": 3,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "clientId",
+          "type": "string",
+          "key": "fk",
+          "references": "client.id"
+        },
+        {
+          "name": "employeeId",
+          "type": "string",
+          "key": "fk",
+          "references": "employee.id"
+        },
+        {
+          "name": "rate",
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "id": "invoice",
+      "label": "ClientInvoice",
+      "sublabel": "a bill",
+      "tag": "billing",
+      "row": 0,
+      "col": 4,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "workspaceId",
+          "type": "string",
+          "key": "fk",
+          "references": "workspace.id"
+        },
+        {
+          "name": "clientId",
+          "type": "string",
+          "key": "fk",
+          "references": "client.id"
+        },
+        {
+          "name": "number",
+          "type": "string"
+        },
+        {
+          "name": "kind",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "name": "issueDate",
+          "type": "date"
+        },
+        {
+          "name": "currency",
+          "type": "string"
+        },
+        {
+          "name": "correctedInvoiceId",
+          "type": "string",
+          "key": "fk",
+          "references": "invoice.id"
+        }
+      ]
+    },
+    {
+      "id": "line",
+      "label": "InvoiceLine",
+      "sublabel": "a row of the bill",
+      "tag": "billing",
+      "row": 1,
+      "col": 4,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "invoiceId",
+          "type": "string",
+          "key": "fk",
+          "references": "invoice.id"
+        },
+        {
+          "name": "quantity",
+          "type": "number"
+        },
+        {
+          "name": "unitPrice",
+          "type": "number"
+        },
+        {
+          "name": "timeEntryIds",
+          "type": "string[]"
+        }
+      ]
+    },
+    {
+      "id": "payment",
+      "label": "Payment",
+      "sublabel": "money received",
+      "tag": "billing",
+      "row": 2,
+      "col": 4,
+      "attributes": [
+        {
+          "name": "id",
+          "type": "string",
+          "key": "pk"
+        },
+        {
+          "name": "invoiceId",
+          "type": "string",
+          "key": "fk",
+          "references": "invoice.id"
+        },
+        {
+          "name": "date",
+          "type": "date"
+        },
+        {
+          "name": "amount",
+          "type": "number"
+        },
+        {
+          "name": "method",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "settings-workspace-configures",
+      "from": "settings",
+      "to": "workspace",
+      "fromCardinality": "one",
+      "toCardinality": "one",
+      "label": "configures"
+    },
+    {
+      "id": "department-workspace-has",
+      "from": "department",
+      "to": "workspace",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "has"
+    },
+    {
+      "id": "employee-workspace-employs",
+      "from": "employee",
+      "to": "workspace",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "employs"
+    },
+    {
+      "id": "client-workspace-serves",
+      "from": "client",
+      "to": "workspace",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "serves"
+    },
+    {
+      "id": "employee-department-groups",
+      "from": "employee",
+      "to": "department",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "groups",
+      "toOptional": true
+    },
+    {
+      "id": "rate_change-employee-history",
+      "from": "rate_change",
+      "to": "employee",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "history"
+    },
+    {
+      "id": "contact-client-has",
+      "from": "contact",
+      "to": "client",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "has"
+    },
+    {
+      "id": "rate_card-client-agrees",
+      "from": "rate_card",
+      "to": "client",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "agrees"
+    },
+    {
+      "id": "project-client-orders",
+      "from": "project",
+      "to": "client",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "orders"
+    },
+    {
+      "id": "milestone-project-has",
+      "from": "milestone",
+      "to": "project",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "has"
+    },
+    {
+      "id": "task-project-contains",
+      "from": "task",
+      "to": "project",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "contains"
+    },
+    {
+      "id": "comment-task-discusses",
+      "from": "comment",
+      "to": "task",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "discusses"
+    },
+    {
+      "id": "activity-task-records",
+      "from": "activity",
+      "to": "task",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "records"
+    },
+    {
+      "id": "time_entry-employee-logs",
+      "from": "time_entry",
+      "to": "employee",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "logs"
+    },
+    {
+      "id": "time_entry-project-receives",
+      "from": "time_entry",
+      "to": "project",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "receives"
+    },
+    {
+      "id": "invoice-client-billed",
+      "from": "invoice",
+      "to": "client",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "billed"
+    },
+    {
+      "id": "line-invoice-contains",
+      "from": "line",
+      "to": "invoice",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "contains"
+    },
+    {
+      "id": "payment-invoice-settles",
+      "from": "payment",
+      "to": "invoice",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "settles"
+    },
+    {
+      "id": "line-time_entry-bills",
+      "from": "line",
+      "to": "time_entry",
+      "fromCardinality": "many",
+      "toCardinality": "many",
+      "label": "bills",
+      "variant": "dashed"
+    },
+    {
+      "id": "expense-employee-spends",
+      "from": "expense",
+      "to": "employee",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "spends"
+    },
+    {
+      "id": "expense-project-charged_to",
+      "from": "expense",
+      "to": "project",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "charged to",
+      "toOptional": true
+    },
+    {
+      "id": "leave_request-employee-requests",
+      "from": "leave_request",
+      "to": "employee",
+      "fromCardinality": "many",
+      "toCardinality": "one",
+      "label": "requests"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Every record belongs to one company",
+      "items": [
+        "Each table carries workspaceId (or its parent's)",
+        "The server stores the same shape in PostgreSQL",
+        "Only key fields are shown"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Credit notes",
+      "items": [
+        "A credit note is also a ClientInvoice",
+        "correctedInvoiceId points to the invoice it corrects"
+      ]
+    }
+  ]
+}

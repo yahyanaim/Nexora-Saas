@@ -1,0 +1,126 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Life of a quote (devis)",
+    "output": "documentation/diagrams/quote-lifecycle.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "mainPath": [
+    "draft",
+    "sent",
+    "accepted",
+    "invoice"
+  ],
+  "states": [
+    {
+      "id": "draft",
+      "type": "start",
+      "label": "Draft",
+      "sublabel": "editable"
+    },
+    {
+      "id": "sent",
+      "type": "waiting",
+      "label": "Sent",
+      "sublabel": "DEV-YYYY-NNN"
+    },
+    {
+      "id": "accepted",
+      "type": "success",
+      "label": "Accepted",
+      "sublabel": "by the client"
+    },
+    {
+      "id": "declined",
+      "type": "failure",
+      "label": "Declined",
+      "sublabel": "with a reason"
+    },
+    {
+      "id": "expired",
+      "type": "neutral",
+      "label": "Expired",
+      "sublabel": "validity passed"
+    },
+    {
+      "id": "invoice",
+      "type": "external",
+      "label": "Draft invoice",
+      "sublabel": "same lines and discount"
+    },
+    {
+      "id": "project",
+      "type": "external",
+      "label": "Fixed-price project",
+      "sublabel": "budget = amount excl. VAT"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "draft-sent",
+      "from": "draft",
+      "to": "sent",
+      "label": "mark as sent"
+    },
+    {
+      "id": "sent-accepted",
+      "from": "sent",
+      "to": "accepted",
+      "label": "client accepts",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sent-declined",
+      "from": "sent",
+      "to": "declined",
+      "label": "client declines",
+      "variant": "security"
+    },
+    {
+      "id": "sent-expired",
+      "from": "sent",
+      "to": "expired",
+      "label": "date passed",
+      "variant": "dashed"
+    },
+    {
+      "id": "accepted-invoice",
+      "from": "accepted",
+      "to": "invoice",
+      "label": "create invoice"
+    },
+    {
+      "id": "accepted-project",
+      "from": "accepted",
+      "to": "project",
+      "label": "create project"
+    },
+    {
+      "id": "declined-draft",
+      "from": "declined",
+      "to": "draft",
+      "label": "duplicate",
+      "variant": "dashed"
+    },
+    {
+      "id": "expired-draft",
+      "from": "expired",
+      "to": "draft",
+      "label": "duplicate",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Rules",
+      "items": [
+        "The number is given when the quote is sent",
+        "A declined or expired quote is copied, never reopened",
+        "An accepted quote becomes an invoice or a project"
+      ]
+    }
+  ]
+}

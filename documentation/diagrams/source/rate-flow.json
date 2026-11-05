@@ -1,0 +1,201 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Which rate is billed for an hour",
+    "output": "documentation/diagrams/rate-flow.html",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "messagebus": {
+          "label": "Question"
+        },
+        "backend": {
+          "label": "Rate used"
+        },
+        "external": {
+          "label": "Start"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "q",
+      "label": "Question"
+    },
+    {
+      "id": "r",
+      "label": "Rate used"
+    }
+  ],
+  "mainPath": [
+    "s",
+    "f",
+    "a",
+    "b",
+    "c",
+    "r4"
+  ],
+  "nodes": [
+    {
+      "id": "s",
+      "lane": "q",
+      "col": 0,
+      "type": "external",
+      "label": "Approved hour",
+      "width": 124
+    },
+    {
+      "id": "f",
+      "lane": "q",
+      "col": 1,
+      "type": "messagebus",
+      "label": "Rate frozen?",
+      "sublabel": "at approval",
+      "icon": "decision",
+      "width": 124
+    },
+    {
+      "id": "a",
+      "lane": "q",
+      "col": 2,
+      "type": "messagebus",
+      "label": "Person on card?",
+      "sublabel": "client rate card",
+      "icon": "decision",
+      "width": 124
+    },
+    {
+      "id": "b",
+      "lane": "q",
+      "col": 3,
+      "type": "messagebus",
+      "label": "Title on card?",
+      "icon": "decision",
+      "width": 124
+    },
+    {
+      "id": "c",
+      "lane": "q",
+      "col": 4,
+      "type": "messagebus",
+      "label": "Client rate?",
+      "sublabel": "default for client",
+      "icon": "decision",
+      "width": 124
+    },
+    {
+      "id": "u",
+      "lane": "r",
+      "col": 1,
+      "type": "backend",
+      "label": "Frozen rate",
+      "width": 124
+    },
+    {
+      "id": "r1",
+      "lane": "r",
+      "col": 2,
+      "type": "backend",
+      "label": "Person's rate",
+      "width": 124
+    },
+    {
+      "id": "r2",
+      "lane": "r",
+      "col": 3,
+      "type": "backend",
+      "label": "Title rate",
+      "width": 124
+    },
+    {
+      "id": "r3",
+      "lane": "r",
+      "col": 4,
+      "type": "backend",
+      "label": "Client rate",
+      "width": 124
+    },
+    {
+      "id": "r4",
+      "lane": "r",
+      "col": 5,
+      "type": "backend",
+      "label": "Employee rate",
+      "sublabel": "valid on that date",
+      "width": 124
+    }
+  ],
+  "edges": [
+    {
+      "id": "sf",
+      "from": "s",
+      "to": "f"
+    },
+    {
+      "id": "fu",
+      "from": "f",
+      "to": "u",
+      "label": "yes",
+      "variant": "emphasis"
+    },
+    {
+      "id": "fa",
+      "from": "f",
+      "to": "a",
+      "label": "no"
+    },
+    {
+      "id": "ar1",
+      "from": "a",
+      "to": "r1",
+      "label": "yes",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ab",
+      "from": "a",
+      "to": "b",
+      "label": "no"
+    },
+    {
+      "id": "br2",
+      "from": "b",
+      "to": "r2",
+      "label": "yes",
+      "variant": "emphasis"
+    },
+    {
+      "id": "bc",
+      "from": "b",
+      "to": "c",
+      "label": "no"
+    },
+    {
+      "id": "cr3",
+      "from": "c",
+      "to": "r3",
+      "label": "yes",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cr4",
+      "from": "c",
+      "to": "r4",
+      "label": "no"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Always the same answer",
+      "items": [
+        "The first yes wins",
+        "The rate is frozen when the hour is approved",
+        "A later rate change never alters approved hours"
+      ]
+    }
+  ]
+}

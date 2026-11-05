@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "How the web application is built: rules first",
+    "output": "documentation/diagrams/app-layers.html",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "Screens",
+      "sublabel": "src/components/shared",
+      "pos": [
+        30,
+        50
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "hooks",
+      "type": "frontend",
+      "label": "Data hooks",
+      "sublabel": "React Query, src/hooks",
+      "pos": [
+        260,
+        50
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API functions",
+      "sublabel": "src/lib/api",
+      "pos": [
+        490,
+        50
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "Demo store",
+      "sublabel": "browser storage today",
+      "pos": [
+        760,
+        50
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "rules",
+      "type": "backend",
+      "label": "Business rules",
+      "sublabel": "src/lib/workforce, tested",
+      "pos": [
+        490,
+        230
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "server",
+      "type": "external",
+      "label": "Nexora server",
+      "sublabel": "Nexora-Backend (being built)",
+      "pos": [
+        760,
+        230
+      ],
+      "size": [
+        180,
+        64
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ui-hooks",
+      "from": "ui",
+      "to": "hooks",
+      "label": "use",
+      "variant": "emphasis"
+    },
+    {
+      "id": "hooks-api",
+      "from": "hooks",
+      "to": "api",
+      "label": "call",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-store",
+      "from": "api",
+      "to": "store",
+      "label": "demo mode"
+    },
+    {
+      "id": "api-rules",
+      "from": "api",
+      "to": "rules",
+      "label": "checks"
+    },
+    {
+      "id": "ui-rules",
+      "from": "ui",
+      "to": "rules",
+      "label": "display rules",
+      "variant": "dashed"
+    },
+    {
+      "id": "api-server",
+      "from": "api",
+      "to": "server",
+      "label": "server mode",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The idea",
+      "items": [
+        "Rules are pure functions with tests",
+        "Screens never write data directly",
+        "Swapping the demo store for the server leaves screens unchanged"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "The server",
+      "items": [
+        "The same rules run on the server (packages/core)",
+        "Its design is in the Nexora-Backend repository"
+      ]
+    }
+  ]
+}
