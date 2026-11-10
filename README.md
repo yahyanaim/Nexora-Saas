@@ -306,11 +306,15 @@ All texts live in `src/messages/<locale>.json`. A missing key in any language fa
 Every pull request runs the following checks (`.github/workflows/ci.yml`):
 
 - type check, lint and translation sync
-- 442 unit tests
+- 871 unit tests
 - production build
 - Playwright end-to-end tests
-- dependency audit
+- accessibility checks (axe) of the console and company pages
+- dependency audit (a high finding fails the build)
 - a guard that blocks demo mode in production builds
+- a secret scan (gitleaks, release checked by its SHA-256; `.gitleaks.toml`)
+
+Every action in the workflow is pinned to a commit, and Dependabot proposes grouped dependency updates every week (`.github/dependabot.yml`).
 
 Security already in place:
 - HttpOnly cookie sessions
