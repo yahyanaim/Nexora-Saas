@@ -5,10 +5,22 @@ title = "Nexora secret scan"
 [extend]
 useDefault = true
 
-[allowlist]
+[[allowlists]]
 description = "Test files and the lock file: fixtures and package hashes, never a real secret"
 paths = [
   '''(^|/)[^/]*\.test\.(ts|tsx|mjs)$''',
   '''(^|/)e2e/''',
   '''(^|/)package-lock\.json$''',
 ]
+
+[[allowlists]]
+description = "Placeholders of the demo-only Developer page (F9): shortened key prefixes and sample webhook secrets, only in its demo data"
+condition = "AND"
+paths = ['''(^|/)src/lib/demo-data/developer\.ts$''']
+regexes = ['''^nex_live_[0-9a-f]{8}\.\.\.$''', '''^whsec_live_[0-9a-f]{15}$''']
+
+[[allowlists]]
+description = "The API docs card shows a placeholder token, never a real one"
+condition = "AND"
+paths = ['''(^|/)src/components/shared/developer-chunks/quick-docs-card\.tsx$''']
+regexes = ['''^nex_live_YOUR_TOKEN$''']
