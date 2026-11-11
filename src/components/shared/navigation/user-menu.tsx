@@ -86,9 +86,10 @@ export function UserMenu() {
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            aria-label={t("profile")}
             className="flex h-12 items-center gap-3 rounded-full border border-border bg-card p-1 shadow-panel transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:h-14 lg:p-1.5 2xl:pr-4"
           >
+            {/* The button is named by its content, so the name it announces always includes the visible name (WCAG 2.5.3). */}
+            <span className="sr-only">{t("profile")}</span>
             <SpaceAvatar
               name={name}
               src={authedUser?.avatar}
