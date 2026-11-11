@@ -2246,6 +2246,7 @@
   "err_fileInfected": "此文件已被拦截，因为它可能含有病毒",
   "err_passwordTooShort": "密码至少需要 {min} 个字符",
   "err_passwordBreached": "此密码出现在已知的数据泄露中。请换一个",
+  "err_invalidCredentials": "电子邮件或密码不正确",
   "err_twoFactorRequired": "您的角色需要两步登录。请先完成设置再继续",
   "err_twoFactorInvalid": "此代码错误或已过期",
   "err_stepUpRequired": "请输入两步验证码确认是您本人后继续",
