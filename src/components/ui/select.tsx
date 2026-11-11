@@ -69,6 +69,7 @@ export function SelectTrigger({
   className = "",
   size = "default",
   children,
+  "aria-label": label,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { size?: "sm" | "default" }) {
   const context = React.useContext(SelectContext)
@@ -88,6 +89,8 @@ export function SelectTrigger({
       )}
       {...props}
     >
+      {/* A label is spoken before the visible choice, so the name always contains what is seen (WCAG 2.5.3) */}
+      {label && <span className="sr-only">{label}: </span>}
       <div className="truncate flex-1 text-left">{children}</div>
       <ChevronDown
         className={cn(

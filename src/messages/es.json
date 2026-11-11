@@ -2246,6 +2246,7 @@
   "err_fileInfected": "Este archivo se bloqueó porque podría contener un virus",
   "err_passwordTooShort": "La contraseña debe tener al menos {min} caracteres",
   "err_passwordBreached": "Esta contraseña apareció en una filtración de datos conocida. Elige otra",
+  "err_invalidCredentials": "El correo electrónico o la contraseña no son correctos",
   "err_twoFactorRequired": "Tu rol requiere el inicio de sesión en dos pasos. Configúralo para continuar",
   "err_twoFactorInvalid": "Este código es incorrecto o ha caducado",
   "err_stepUpRequired": "Confirma que eres tú con tu código de verificación en dos pasos para continuar",
