@@ -72,10 +72,11 @@ export function DataTableFiltersPopover<TData>({
         <Button
           variant="outline"
           size="icon"
-          aria-label={t("filters")}
           className="h-9 w-9 shrink-0 overflow-visible rounded-lg border-border/60 bg-background/60 hover:bg-muted/80"
         >
           <ListFilter className="size-4" />
+          {/* Named by its content, so the visible count is part of the name (WCAG 2.5.3) */}
+          <span className="sr-only">{t("filters")}</span>
           {activeCount > 0 && (
             <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-xs font-medium text-primary-foreground tabular-nums">
               {activeCount}

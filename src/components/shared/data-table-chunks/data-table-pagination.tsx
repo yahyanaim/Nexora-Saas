@@ -90,9 +90,10 @@ export function DataTablePagination<TData>({
           className="size-9 sm:w-auto sm:px-3.5 text-[13px]"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
-          aria-label={t("previousPage")}
         >
           <ChevronLeft className="size-3.5" />
+          {/* The name holds the visible word at every width (WCAG 2.5.3) */}
+          <span className="sr-only lg:hidden">{t("previousPage")}</span>
           <span className="hidden lg:inline">{t("prev")}</span>
         </Button>
 
