@@ -32,11 +32,13 @@ The result is `videos/01-my-work.mp4` and `videos/01-my-work.srt` (the folder is
 
 ## Add the next module
 
-1. Write the script in `docs/videos/NN-slug.md`: about 65 words; a "who and why" line, 3 or 4 steps, and a visible result.
-2. Add `login`, `path` and `scenes` to the module in `modules.mjs`. Each scene is one narration line (`say`) and what happens on screen while it is spoken (`run`):
+Every module in `modules.mjs` already has its plan: the role (`actor`), the task, the demo person and `login`, the start page (`path`), the `steps`, the `result` to end on, and what to `check` first.
+
+1. Check the plan in the demo (the `check` items too), then write the script in `docs/videos/NN-slug.md`: about 65 words; a "who and why" line, one line per step, and the result.
+2. Add `scenes` to the module in `modules.mjs`, one per line of the script. Each scene is one narration line (`say`) and what happens on screen while it is spoken (`run`):
    - `v.step(2, "Pick your task")` shows the step badge.
    - `v.spot("box:Vacation left")` puts the spotlight on the card or panel around that text; `v.spot("text:Overdue")` on the text itself; `v.spot("css:[data-sonner-toast]")` on the first visible element matching a selector (here Nexora's confirmation); `v.clearSpot()` removes it.
    - `v.until("vacation")` waits until the narrator reaches that word.
    - `v.click(target)`, `v.type(target, "6")` (replaces the field's value and presses Enter), `v.scrollTo(target)`, `v.waitForHeading("Timesheets")`, `v.hideCursor()`, `v.wait(ms)`.
-3. `login` is an employee email (e.g. `lina@atlas.example`), nothing for the company admin demo, or `"console"` for the Nexora team console. Put the other pages the video opens in `warm`, so they are compiled before recording.
+3. `login` is a demo person's email (e.g. `lina@atlas.example`, or `claire@orbit.example` for the client portal), nothing for the *Instant Demo Preview* administrator, or `"console"` for the Nexora team console. Put the other pages the video opens in `warm`, so they are compiled before recording.
 4. Render, then watch it: a scene lasts as long as its line, so a long line or a slow action makes the video longer than 30 seconds.
