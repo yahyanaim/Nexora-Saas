@@ -80,7 +80,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # The browser comes from Playwright's CDN. Its system packages come from Ubuntu's mirror,
+      # which can be unreachable from the runner; the runner image already has Chromium's
+      # libraries, so a mirror outage gives a warning instead of a red job before any test.
+      - run: npx playwright install chromium
+      - run: npx playwright install-deps chromium || echo "::warning::Ubuntu mirror unreachable; using the runner image's libraries"
       - run: npm run build
       - name: Start the demo build
         run: |
@@ -133,7 +137,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      # The browser comes from Playwright's CDN. Its system packages come from Ubuntu's mirror,
+      # which can be unreachable from the runner; the runner image already has Chromium's
+      # libraries, so a mirror outage gives a warning instead of a red job before any test.
+      - run: npx playwright install chromium
+      - run: npx playwright install-deps chromium || echo "::warning::Ubuntu mirror unreachable; using the runner image's libraries"
       - run: npm run build
       - run: npm run e2e
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
