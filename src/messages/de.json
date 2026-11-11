@@ -2246,6 +2246,7 @@
   "err_fileInfected": "Diese Datei wurde blockiert, weil sie einen Virus enthalten könnte",
   "err_passwordTooShort": "Das Passwort muss mindestens {min} Zeichen haben",
   "err_passwordBreached": "Dieses Passwort ist in einem bekannten Datenleck aufgetaucht. Wählen Sie ein anderes",
+  "err_invalidCredentials": "Die E-Mail-Adresse oder das Passwort ist falsch",
   "err_twoFactorRequired": "Ihre Rolle erfordert die Anmeldung in zwei Schritten. Richten Sie sie ein, um fortzufahren",
   "err_twoFactorInvalid": "Dieser Code ist falsch oder abgelaufen",
   "err_stepUpRequired": "Bestätigen Sie mit Ihrem Code der Zwei-Schritt-Anmeldung, dass Sie es sind",
