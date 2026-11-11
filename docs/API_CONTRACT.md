@@ -30,7 +30,7 @@ The first version (PR #121) was written before CRM 8–10, Project extras and P5
 | … of which **still used** by a screen | 8 (auth, profile, files, audit log, developer keys, data export, usage, plan check) |
 | … of which **dead code** (template leftovers, no screen uses them) | 12 |
 | Modules that run **only on demo data** today (no URL yet) | 40+, covering the whole ERP, CRM, portal and platform console |
-| Business rules the front end enforces today that the server must enforce | ~400 messages, 461 error codes already defined |
+| Business rules the front end enforces today that the server must enforce | ~400 messages, 467 error codes already defined |
 | Endpoints proposed in this document | about 340 |
 
 **In one sentence:** the login part is wired. Everything the product actually does (people, clients, projects, time, invoices, quotes, purchases, portal, console) talks only to `localStorage`. Each of those modules needs its endpoints, and the rules now coded in the browser must move to the server.
@@ -72,7 +72,7 @@ These come from what the client code already does or expects.
 | **Web addresses** | `website`, `linkedin`, task links and webhook URLs accept `http://` and `https://` only → otherwise `400 err_badUrl`. |
 | **Deleted-items bins** | Clients and tasks are soft-deleted: `DELETE` moves the record to a bin for **30 days**. The bin is read with `?deleted=true`, restored with `POST …/:id/restore`, and emptied for good with `DELETE …/:id?purge=true` (or by the daily job, §8). Lists leave deleted records out, and also the records that belong to them (e.g. the deals of a deleted client). |
 | **Plan gate** | `403 { "code": "upgrade_required" }` opens the upgrade prompt. |
-| **Errors** | `4xx { "code": "err_…", "values": {...}, "requestId": "…", "message"?: "…" }` (decision E1 of the cahier des charges 2.2; checked by contract tests on both sides). The `code` must be one of the keys in `src/lib/errors/error-catalog.ts` (461 keys, e.g. `err_periodLocked`, `err_dealNotFound`). The UI translates the code into 9 languages (`translateError` reads `code`, and `values` fill the translation, e.g. `{ maxMb: 10 }`; the older `details` is still read during the switch); `requestId` equals the `X-Request-Id` header; `message` is an optional English fallback. Validation errors add `values.field`. **New in v2:** `err_conflict`, `err_projectHasHistory`, `err_badUrl`, `err_csrf`, `err_tooManyRequests`, `err_seatsFull`, `err_fileType`, `err_fileTooLarge` (`values.maxMb`), `err_fileInfected`, `err_passwordTooShort` (`values.min`), `err_passwordBreached`, `err_twoFactorRequired`, `err_twoFactorInvalid`. **New in B1b:** `err_invalidCredentials`. |
+| **Errors** | `4xx { "code": "err_…", "values": {...}, "requestId": "…", "message"?: "…" }` (decision E1 of the cahier des charges 2.2; checked by contract tests on both sides). The `code` must be one of the keys in `src/lib/errors/error-catalog.ts` (467 keys, e.g. `err_periodLocked`, `err_dealNotFound`). The UI translates the code into 9 languages (`translateError` reads `code`, and `values` fill the translation, e.g. `{ maxMb: 10 }`; the older `details` is still read during the switch); `requestId` equals the `X-Request-Id` header; `message` is an optional English fallback. Validation errors add `values.field`. **New in v2:** `err_conflict`, `err_projectHasHistory`, `err_badUrl`, `err_csrf`, `err_tooManyRequests`, `err_seatsFull`, `err_fileType`, `err_fileTooLarge` (`values.maxMb`), `err_fileInfected`, `err_passwordTooShort` (`values.min`), `err_passwordBreached`, `err_twoFactorRequired`, `err_twoFactorInvalid`. **New in B1b:** `err_invalidCredentials`; workspaces and roles (step 3): `err_wsOwnerOnly`, `err_wsOwnerNeedsAdmin`, `err_wsLastOwner`, `err_defaultRoleFixed`, `err_roleInUse`, `err_roleNameTaken`. |
 | **Timeouts** | The client gives up after 20 s and shows a friendly message. Long jobs (exports, imports) must answer at once with a job id. |
 | **Workspace scope** | Every ERP function takes `workspaceId` today. On the server, workspace records live under **`/app/v1/workspaces/:wid/…`** (see Base URL), written as `{ws}` in the tables. The server checks that the session's person has a membership in that workspace (B11); a workspace id in a body or query is never trusted. |
 | **Who acts** | Many functions receive `approver`, `actor`, `viewer` or `by` from the screen (see the pre-backend audit, H2). On the server these come **from the session only**. The parameters disappear from the request bodies. |
@@ -147,7 +147,9 @@ These helpers come from the starter template. Their screens were rebuilt on the 
 
 | Method + path | Replaces | Notes |
 |---|---|---|
-| `GET /me/workspaces` | `listMyWorkspacesApi` (`me-api.ts`), loaded by the top bar after sign-in | Companies the user can open: `Workspace[]` (id, name, currency) plus `plan`, `features[]` and `seats { used, limit }` (§4.4). The switcher reads this; the store keeps the chosen company if it is still listed. |
+| `GET /me/workspaces` | `listMyWorkspacesApi` (`me-api.ts`), loaded by the top bar after sign-in | Companies the user can open, most recently used first: `Workspace[]` (id, name, currency) plus `plan`, `features[]` and `seats { used, limit }` (§4.4). The switcher reads this; the store keeps the chosen company if it is still listed. **Served since B1b step 3** with `id`, `name`, `slug`, `currency`, `role { key, name }` and `isOwner` (active memberships only); `plan`, `features` and `seats` come with B2. |
+| `PUT /auth/workspace` `{ workspaceId }` → `{ activeWorkspaceId }` | the store's chosen company | **B1b step 3.** The company the session works in when a path names none; only a company where the person is an active member (`403 err_forbidden` otherwise, recorded in the identity trail). `GET /auth/me` answers `{ user, activeWorkspaceId }`. |
+| `GET {ws}/context` → `{ workspaceId, role { key, name }, isOwner, permissions[] }` | `WORK_ROLE_PERMISSIONS` lookups in the screens | **B1b step 3.** The person's role and permissions in this company, as the server enforces them. Any `{ws}` path of a company where the person has no active membership answers `403 err_forbidden` and reads nothing (TEN-01). |
 | `POST /auth/login` (same endpoint) | `findAccountForSignInApi`, `findPortalAccountForSignInApi` | The server decides whether the e-mail is an owner, an employee account, a portal contact or Nexora staff, and returns the matching `AuthUser`. Both demo helpers disappear. When two-step sign-in is on, it answers `200 { twoFactorRequired: true, challengeId }` and opens no session yet. Wrong e-mail or password: the same answer whether the e-mail exists or not. |
 | `POST /auth/2fa/verify` `{ challengeId, code }` | — | A code from the app or a recovery code → the session. Wrong code → `err_twoFactorInvalid`; limited like sign-in (§12). |
 | `POST /auth/2fa/setup` → `{ otpauthUrl }` | `setup2FaApi` | Shown as a QR code. The secret is never sent again. |
@@ -228,6 +230,18 @@ The rules listed under each table are what the browser checks today. The server 
 | `GET {ws}/accounts` | `listAccountsApi` |
 | `POST {ws}/accounts` `{ employeeId }` | `inviteEmployeeApi` (sends the invitation e-mail) |
 | `PATCH {ws}/accounts/:employeeId` `{ enabled?, role? }` | `setAccountEnabledApi`, `changeAccessRoleApi`. Must keep at least one admin. |
+
+**Members and roles** (B1b step 3; `{ws}/accounts` above is served from the same memberships once employees exist, B3)
+
+| Method + path | Permission | Notes |
+|---|---|---|
+| `GET {ws}/members` → `{ members[] }` | `users:read` | Each: `id`, `userId`, `name`, `email`, `role { id, key, name }`, `isOwner`, `status` (`invited`, `active`, `disabled`), `invitedAt`, `activatedAt`, `lastSeenAt`. |
+| `PATCH {ws}/members/:id` `{ roleId?, isOwner?, status? }` → `{ member }` | `users:update` | `status` is `active` or `disabled` (an invitation is accepted by the person). Only owners change owners (`403 err_wsOwnerOnly`); an owner holds the Administrator role (`409 err_wsOwnerNeedsAdmin`); the company keeps one active owner (`409 err_wsLastOwner`). Takes effect at the person's next request. |
+| `GET {ws}/roles` → `{ roles[] }` | `roles:read` | Each: `id`, `key` (`admin`, `manager`, `accountant`, `employee`, or `null` for a custom role), `name`, `isDefault`, `status`, `permissions[]`, `members`. |
+| `POST {ws}/roles` `{ name, permissions[] }` → `201 { role }` | `roles:create` | Permissions from the catalogue (`AdminPermissionsPlatform`), company ones only; `*` stays with Administrator (`400 err_badRequest`). Same name, any case → `409 err_roleNameTaken`. |
+| `PATCH {ws}/roles/:id` `{ name?, permissions?, version }` → `{ role }` | `roles:update` | Custom roles only: the four default roles follow Table 7 (`409 err_defaultRoleFixed`). A stale `version` → `409 err_conflict`. Audited with before and after. |
+| `DELETE {ws}/roles/:id` → `204` | `roles:delete` | Custom roles without members only (`409 err_roleInUse`). |
+| *(rule)* | — | A missing permission answers `403 err_forbidden`; a refused write is written to the company's audit trail. A record of another company answers `404 err_notFound`. **No escalation:** nobody gives a role, changes a member or edits a role whose rights go beyond their own (`403 err_forbidden`). |
 
 **Employee documents** (`documents-api.ts`)
 
