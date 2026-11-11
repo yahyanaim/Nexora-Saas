@@ -2256,6 +2256,7 @@
   "err_twoFactorRequired": "Tu rol requiere el inicio de sesión en dos pasos. Configúralo para continuar",
   "err_twoFactorInvalid": "Este código es incorrecto o ha caducado",
   "err_stepUpRequired": "Confirma que eres tú con tu código de verificación en dos pasos para continuar",
+  "err_sessionLocked": "Su sesión está bloqueada. Introduzca su código para continuar",
   "err_workspaceReadOnly": "Este espacio es de solo lectura. Paga o elige un plan para volver a hacer cambios",
   "err_idempotencyMismatch": "Esta solicitud ya se envió con otros datos. Recarga e inténtalo de nuevo",
   "err_internal": "Algo salió mal por nuestra parte. Inténtalo de nuevo; si vuelve a ocurrir, da a soporte el código {requestId}",

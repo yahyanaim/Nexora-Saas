@@ -2256,6 +2256,7 @@
   "err_twoFactorRequired": "Ihre Rolle erfordert die Anmeldung in zwei Schritten. Richten Sie sie ein, um fortzufahren",
   "err_twoFactorInvalid": "Dieser Code ist falsch oder abgelaufen",
   "err_stepUpRequired": "Bestätigen Sie mit Ihrem Code der Zwei-Schritt-Anmeldung, dass Sie es sind",
+  "err_sessionLocked": "Ihre Sitzung ist gesperrt. Geben Sie Ihren Code ein, um fortzufahren",
   "err_workspaceReadOnly": "Dieser Arbeitsbereich ist schreibgeschützt. Bezahlen Sie oder wählen Sie einen Tarif, um wieder Änderungen vorzunehmen",
   "err_idempotencyMismatch": "Diese Anfrage wurde bereits mit anderen Angaben gesendet. Neu laden und erneut versuchen",
   "err_internal": "Bei uns ist etwas schiefgelaufen. Versuchen Sie es erneut; passiert es wieder, nennen Sie dem Support den Code {requestId}",

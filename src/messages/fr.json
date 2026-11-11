@@ -2256,6 +2256,7 @@
   "err_twoFactorRequired": "Votre rôle exige la connexion en deux étapes. Activez-la pour continuer",
   "err_twoFactorInvalid": "Ce code est incorrect ou a expiré",
   "err_stepUpRequired": "Confirmez votre identité avec votre code de validation en deux étapes pour continuer",
+  "err_sessionLocked": "Votre session est verrouillée. Saisissez votre code pour continuer",
   "err_workspaceReadOnly": "Cet espace est en lecture seule. Payez ou choisissez une offre pour pouvoir le modifier",
   "err_idempotencyMismatch": "Cette demande a déjà été envoyée avec d'autres informations. Rechargez et réessayez",
   "err_internal": "Un problème est survenu de notre côté. Réessayez ; si cela se reproduit, donnez au support le code {requestId}",
