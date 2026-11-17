@@ -2256,6 +2256,7 @@
   "err_twoFactorRequired": "您的角色需要两步登录。请先完成设置再继续",
   "err_twoFactorInvalid": "此代码错误或已过期",
   "err_stepUpRequired": "请输入两步验证码确认是您本人后继续",
+  "err_sessionLocked": "会话已锁定，请输入解锁码以继续",
   "err_workspaceReadOnly": "此工作区为只读。请付款或选择套餐后再进行修改",
   "err_idempotencyMismatch": "此请求已用不同的内容提交过。请刷新后重试",
   "err_internal": "我们这边出了问题。请重试；如再次出现，请将代码 {requestId} 告诉支持团队",

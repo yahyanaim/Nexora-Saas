@@ -69,10 +69,12 @@ describe("computeAnalytics on the demo year", () => {
   })
 
   it("flags overdue clients and reports receivables", () => {
-    expect(a.receivables.overdue).toBeGreaterThan(0)
-    // the demo invoices are issued monthly from the real today, so how late Medica is depends on
-    // the day the tests run: high once its oldest unpaid invoice is more than 30 days late
-    const medica = a.risks.find((r) => r.clientId === "cli_medica")
+    // The demo invoices are issued monthly from the real today, so lateness is measured on the real
+    // today too: on a fixed date, the invoices of a later run are not due yet and nothing is overdue.
+    const now = computeAnalytics(data(), "1y", "previous", {}, new Date().toISOString().slice(0, 10))
+    expect(now.receivables.overdue).toBeGreaterThan(0)
+    // how late Medica is depends on the day the tests run: high once its oldest unpaid invoice is more than 30 days late
+    const medica = now.risks.find((r) => r.clientId === "cli_medica")
     expect(medica).toMatchObject({ reason: "overdue" })
     expect(medica!.level).toBe(medica!.overdueDays! > 30 ? "high" : "medium")
     expect(a.current.utilization).toBeGreaterThan(20)
