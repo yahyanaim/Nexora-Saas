@@ -2,6 +2,7 @@ import axios, { type AxiosResponse, type InternalAxiosRequestConfig } from "axio
 import type { AuthResponse } from "@/types/auth"
 import { env } from "@/env"
 import { isDemoMode } from "@/lib/auth/demo-mode"
+import { realmOf, realmPath } from "./realm"
 import { hasDemoSession } from "./token-storage"
 
 /**
@@ -21,6 +22,10 @@ export const apiClient = axios.create({
     "Content-Type": "application/json",
   },
   withCredentials: true,
+  // Double submit (API contract §2, F11): the server's readable XSRF-TOKEN cookie goes back as a header on writes
+  xsrfCookieName: "XSRF-TOKEN",
+  xsrfHeaderName: "X-XSRF-TOKEN",
+  withXSRFToken: true,
   // NFR-6: never leave a screen waiting forever on a slow backend
   timeout: REQUEST_TIMEOUT_MS,
 })
@@ -31,13 +36,31 @@ export const apiClient = axios.create({
  */
 export const UPGRADE_REQUIRED_EVENT = "billing:upgrade-required"
 export const SESSION_EXPIRED_EVENT = "auth:session-expired"
+/** The session passed its idle limit and has a passcode: the lock screen shows (IAM-18). */
+export const SESSION_LOCKED_EVENT = "auth:session-locked"
 
 let refreshPromise: Promise<AxiosResponse<AuthResponse>> | null = null
 /** Incremented on every successful session refresh. */
 let refreshGeneration = 0
 
-/** Auth endpoints that must never trigger a refresh-and-retry cycle. */
-const AUTH_ROUTES = new Set(["/auth/login", "/auth/register", "/auth/refresh", "/auth/me"])
+/** Auth endpoints that must never trigger a refresh-and-retry cycle: their 401 is the answer itself. */
+const AUTH_ROUTES = new Set([
+  "/auth/login",
+  "/auth/register",
+  "/auth/refresh",
+  "/auth/me",
+  "/auth/logout",
+  "/auth/2fa/verify",
+  "/auth/passcode-verify",
+  "/auth/password-reset-request",
+  "/auth/password-reset-verify",
+  "/auth/password-reset",
+  "/auth/invite-check",
+  "/auth/invite-accept",
+])
+
+/** The helper's path of a request: without the realm and version the client added. */
+const withoutRealm = (path: string) => path.replace(/^\/(app|portal|platform)\/v\d+(?=\/|$)/, (_m, realm: string) => (realm === "app" ? "" : `/${realm}`))
 
 type RetriableConfig = InternalAxiosRequestConfig & {
   _retry?: boolean
@@ -70,6 +93,8 @@ apiClient.interceptors.request.use((config) => {
     return Promise.reject(new axios.AxiosError("Demo session: backend not used", "ERR_DEMO_SESSION", config))
   }
   ;(config as RetriableConfig)._refreshGeneration = refreshGeneration
+  // Every path gets its realm and version (/app/v1, /portal/v1, /platform/v1): API contract §2
+  if (config.url) config.url = realmPath(config.url)
   return config
 })
 
@@ -97,7 +122,8 @@ apiClient.interceptors.response.use(
 
     // 2. Automatic session refresh on 401:
     // Skip if already retried, or if this request was itself an auth check / attempt
-    const isAuthRoute = AUTH_ROUTES.has(requestPath(originalRequest?.url))
+    const helperPath = withoutRealm(requestPath(originalRequest?.url))
+    const isAuthRoute = AUTH_ROUTES.has(helperPath) || AUTH_ROUTES.has(helperPath.replace(/^\/(portal|platform)/, ""))
 
     if (
       status === 401 &&
@@ -117,8 +143,10 @@ apiClient.interceptors.response.use(
 
       try {
         if (!refreshPromise) {
+          // Each realm refreshes on its own prefix
+          const realm = realmOf(helperPath)
           refreshPromise = apiClient
-            .post<AuthResponse>("/auth/refresh")
+            .post<AuthResponse>(realm === "app" ? "/auth/refresh" : `/${realm}/auth/refresh`)
             .then((res) => {
               refreshGeneration++
               return res
@@ -132,7 +160,9 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest)
       } catch (refreshError) {
         if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT))
+          // After the idle limit a session with a passcode is locked, not ended: the lock screen unlocks it
+          const locked = axios.isAxiosError(refreshError) && (refreshError.response?.data as { code?: string } | undefined)?.code === "err_sessionLocked"
+          window.dispatchEvent(new CustomEvent(locked ? SESSION_LOCKED_EVENT : SESSION_EXPIRED_EVENT))
         }
         return Promise.reject(refreshError)
       }

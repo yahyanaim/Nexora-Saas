@@ -31,6 +31,8 @@ const SupportSessionBanner = dynamic(() => import("./platform-chunks/support-ses
 const PlatformNoticeBanner = dynamic(() => import("./platform-chunks/platform-notice-banner").then((m) => m.PlatformNoticeBanner), { ssr: false })
 // nothing of the console shows until the gate has checked two-factor set-up
 const TwoFactorGate = dynamic(() => import("./platform-chunks/two-factor-gate").then((m) => m.TwoFactorGate), { ssr: false })
+// IAM-05: company owners, administrators and accountants set up two-factor before any company page
+const MemberTwoFactorSetup = dynamic(() => import("./member-two-factor-setup").then((m) => m.MemberTwoFactorSetup), { ssr: false })
 
 interface Props {
   children: React.ReactNode
@@ -41,7 +43,7 @@ interface Props {
  * small screens, around a scrollable content area on the grey canvas.
  */
 export const DashboardLayout = ({ children }: Props) => {
-  const { isPasscodeLocked, authedUser, logout } = useAuthGuard()
+  const { isPasscodeLocked, authedUser, logout, refetchUser } = useAuthGuard()
   // Audit entries name whoever is signed in (PLT-12)
   setAuditActor(authedUser && { id: authedUser.id, name: authedUser.name, email: authedUser.email ?? "", role: String(authedUser.role) })
   const { isUnlocked, lock } = useLockScreenStore()
@@ -73,6 +75,7 @@ export const DashboardLayout = ({ children }: Props) => {
   const denied = !!authedUser && !outsidePortal && !(authedUser as { clientId?: string }).clientId && isRouteDenied(pathname, (p) => can(authedUser, p))
 
   if (locked) return <LockScreen />
+  const owesSecondFactor = !!(authedUser as { twoFactorRequired?: boolean } | undefined)?.twoFactorRequired && !onConsole
 
   return (
     <div data-area={activeGroup?.id} className="flex h-dvh w-full flex-col overflow-hidden bg-background">
@@ -83,7 +86,7 @@ export const DashboardLayout = ({ children }: Props) => {
       <div className="flex min-h-0 flex-1 md:ps-6">
         <DashboardRail className="my-6 hidden md:flex" />
         <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 overflow-y-auto focus:outline-none">
-          <ErrorBoundary>{outsidePortal ? <PortalRedirect /> : blocked ? <PlatformOnly /> : denied ? <NoAccess /> : onConsole ? <TwoFactorGate><ConsoleStrip />{children}</TwoFactorGate> : <>{viewingWorkspace && <WorkspaceViewBanner />}<WorkspaceStatusBanner /><PlatformNoticeBanner />{!viewingWorkspace && <SupportSessionBanner />}{children}</>}</ErrorBoundary>
+          <ErrorBoundary>{owesSecondFactor ? <MemberTwoFactorSetup name={authedUser?.name ?? ""} onDone={refetchUser} /> : outsidePortal ? <PortalRedirect /> : blocked ? <PlatformOnly /> : denied ? <NoAccess /> : onConsole ? <TwoFactorGate><ConsoleStrip />{children}</TwoFactorGate> : <>{viewingWorkspace && <WorkspaceViewBanner />}<WorkspaceStatusBanner /><PlatformNoticeBanner />{!viewingWorkspace && <SupportSessionBanner />}{children}</>}</ErrorBoundary>
           <InstallHint />
         </main>
       </div>
