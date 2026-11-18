@@ -23,6 +23,7 @@ import {
  * is unreachable — intended strictly for showcases and local dev.
  */
 import { isDemoMode } from "@/lib/auth/demo-mode"
+import { accountFromServer, isServerMe, loginFromServer, setupFromServer } from "@/lib/myapi/server-session"
 import { logger } from "@/lib/logger"
 export { isDemoMode }
 
@@ -117,7 +118,8 @@ export const loginApi = async (
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("saas_demo_logged_out")
     }
-    return data
+    // The Nexora server answers { user } or { twoFactorRequired, challengeId } (B1b)
+    return loginFromServer(data) ?? data
   } catch (err) {
     // Demo fallback only when demo mode is on AND the backend is unreachable,
     // and only for the known demo accounts — never for arbitrary credentials.
@@ -209,6 +211,7 @@ export const logoutApi = async (): Promise<void> => {
 export const fetchMyAccountApi = async (): Promise<AuthUser> => {
   try {
     const { data } = await apiClient.get("/auth/me")
+    if (isServerMe(data)) return await accountFromServer(data)
     if (data?.id) return data
   } catch (error) {
     const msg = apiErrorMessage(error, "Backend session not active")
@@ -273,13 +276,8 @@ export const verifyForgotPasswordApi = async (payload: {
   otpCode: string
   otpId?: string
 }): Promise<{ resetToken: string }> => {
-  const { data } = await apiClient.post<{ resetToken: string }>(
-    "/auth/password-reset-verify",
-    {
-      otpCode: payload.otpCode,
-      otpId: payload.otpId,
-    }
-  )
+  // The server's reset link carries a token; a code typed from the e-mail is that token (B1b step 4b)
+  const { data } = await apiClient.post<{ resetToken: string }>("/auth/password-reset-verify", { token: payload.otpCode.trim() })
   return data
 }
 
@@ -299,24 +297,25 @@ export const resetPasswordApi = async (
   payload: ResetPasswordPayload
 ): Promise<{ message: string }> => {
   const { data } = await apiClient.post("/auth/password-reset", {
-    token: payload.token,
-    newPassword: payload.newPassword,
-    confirmNewPassword: payload.confirmNewPassword ?? payload.newPassword,
+    resetToken: payload.token,
+    password: payload.newPassword,
   })
-  return data
+  return data ?? { message: "Password reset" }
 }
 
 export const acceptInviteApi = async (
   payload: InviteAcceptPayload
 ): Promise<AuthResponse> => {
-  const { data } = await apiClient.post("/auth/invite-accept", payload)
+  // The server takes the link and the chosen password; the form checks the confirmation (B1b step 4b)
+  const { data } = await apiClient.post("/auth/invite-accept", { token: payload.token, password: payload.password || undefined })
   return data
 }
 
 export const verify2FaApi = async (
   payload: TwoFactorVerifyPayload
 ): Promise<AuthResponse> => {
-  const { data } = await apiClient.post("/auth/2fa/verify", payload)
+  // The sign-in's second step: the screens call the challenge "mfaToken" (B1b step 4)
+  const { data } = await apiClient.post("/auth/2fa/verify", { challengeId: payload.mfaToken, code: payload.code })
   return data
 }
 
@@ -325,13 +324,15 @@ export const setup2FaApi = async (): Promise<{
   qrCodeUrl: string
 }> => {
   const { data } = await apiClient.post("/auth/2fa/setup")
-  return data
+  return setupFromServer(data)
 }
 
+/** Turns the second factor on: the first code and the account password; answers the ten recovery codes, shown once. */
 export const enable2FaApi = async (
-  code: string
-): Promise<{ message: string }> => {
-  const { data } = await apiClient.post("/auth/2fa/enable", { code })
+  code: string,
+  password = ""
+): Promise<{ recoveryCodes: string[] }> => {
+  const { data } = await apiClient.post("/auth/2fa/enable", { code, password })
   return data
 }
 

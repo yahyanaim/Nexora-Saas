@@ -132,10 +132,10 @@ describe("auth-apis", () => {
       confirmNewPassword: "NewSecret123!",
     })
 
+    // The server takes the link's token and the new password (B1b step 4b)
     expect(apiClient.post).toHaveBeenCalledWith("/auth/password-reset", {
-      token: "reset-tok-123",
-      newPassword: "NewSecret123!",
-      confirmNewPassword: "NewSecret123!",
+      resetToken: "reset-tok-123",
+      password: "NewSecret123!",
     })
     expect(res.message).toBe("Password updated successfully")
   })
@@ -168,9 +168,9 @@ describe("auth-apis", () => {
         otpId: "email",
       })
 
+      // The code typed from the e-mail is the link's token (B1b step 4b)
       expect(apiClient.post).toHaveBeenCalledWith("/auth/password-reset-verify", {
-        otpCode: "123456",
-        otpId: "email",
+        token: "123456",
       })
       expect(res.resetToken).toBe("tok-reset-valid")
     })

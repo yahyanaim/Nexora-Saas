@@ -4,6 +4,8 @@ import apiClient, {
   apiErrorMessage,
   isBackendUnreachable,
   UPGRADE_REQUIRED_EVENT,
+  SESSION_EXPIRED_EVENT,
+  SESSION_LOCKED_EVENT,
   __resetRefreshStateForTests,
 } from "./client"
 import type { InternalAxiosRequestConfig } from "axios"
@@ -32,6 +34,12 @@ describe("apiClient configuration", () => {
 
   it("has withCredentials set to true for cookie-based sessions", () => {
     expect(apiClient.defaults.withCredentials).toBe(true)
+  })
+
+  it("sends the XSRF-TOKEN cookie back as X-XSRF-TOKEN (API contract §2, F11)", () => {
+    expect(apiClient.defaults.xsrfCookieName).toBe("XSRF-TOKEN")
+    expect(apiClient.defaults.xsrfHeaderName).toBe("X-XSRF-TOKEN")
+    expect(apiClient.defaults.withXSRFToken).toBe(true)
   })
 
   it("points to the expected API base URL", () => {
@@ -186,7 +194,7 @@ describe("apiClient interceptors", () => {
     let refreshed = false
 
     apiClient.defaults.adapter = async (config) => {
-      if (config.url === "/auth/refresh") {
+      if (config.url === "/app/v1/auth/refresh") {
         refreshCalls++
         await new Promise((r) => setTimeout(r, 10))
         refreshed = true
@@ -201,7 +209,7 @@ describe("apiClient interceptors", () => {
       apiClient.get("/b"),
       apiClient.get("/c"),
     ])
-    expect(results.map((r) => r.data.url)).toEqual(["/a", "/b", "/c"])
+    expect(results.map((r) => r.data.url)).toEqual(["/app/v1/a", "/app/v1/b", "/app/v1/c"])
     expect(refreshCalls).toBe(1)
   })
 
@@ -213,11 +221,11 @@ describe("apiClient interceptors", () => {
     let slowAttempts = 0
 
     apiClient.defaults.adapter = async (config) => {
-      if (config.url === "/auth/refresh") {
+      if (config.url === "/app/v1/auth/refresh") {
         refreshCalls++
         return ok(config)
       }
-      if (config.url === "/slow") {
+      if (config.url === "/app/v1/slow") {
         slowAttempts++
         if (slowAttempts === 1) {
           // Sent with the old session, answers 401 after the refresh finished
@@ -245,7 +253,7 @@ describe("apiClient interceptors", () => {
     let refreshed = false
 
     apiClient.defaults.adapter = async (config) => {
-      if (config.url === "/auth/refresh") {
+      if (config.url === "/app/v1/auth/refresh") {
         refreshCalls++
         refreshed = true
         return ok(config)
@@ -277,6 +285,83 @@ describe("apiClient interceptors", () => {
     }
 
     await expect(apiClient.post("/auth/refresh")).rejects.toThrow()
+  })
+})
+
+describe("realm paths and the locked session (B1b step 5)", () => {
+  const originalAdapter = apiClient.defaults.adapter
+  afterEach(() => {
+    apiClient.defaults.adapter = originalAdapter
+    vi.restoreAllMocks()
+  })
+
+  it("sends each helper path under its realm and version", async () => {
+    const seen: string[] = []
+    apiClient.defaults.adapter = async (config) => {
+      seen.push(config.url ?? "")
+      return ok(config)
+    }
+    await apiClient.post("/auth/login", {})
+    await apiClient.get("/me/workspaces")
+    await apiClient.get("/portal/projects")
+    await apiClient.get("/platform/staff")
+    expect(seen).toEqual(["/app/v1/auth/login", "/app/v1/me/workspaces", "/portal/v1/projects", "/platform/v1/staff"])
+  })
+
+  it("refreshes a portal request on the portal's own refresh path", async () => {
+    __resetRefreshStateForTests()
+    const seen: string[] = []
+    let refreshed = false
+    apiClient.defaults.adapter = async (config) => {
+      seen.push(config.url ?? "")
+      if (config.url === "/portal/v1/auth/refresh") {
+        refreshed = true
+        return ok(config)
+      }
+      if (!refreshed) throw unauthorized(config)
+      return ok(config)
+    }
+    await apiClient.get("/portal/projects")
+    expect(seen).toEqual(["/portal/v1/projects", "/portal/v1/auth/refresh", "/portal/v1/projects"])
+  })
+
+  it("shows the lock screen, not the sign-in page, when the refresh answers err_sessionLocked (IAM-18)", async () => {
+    __resetRefreshStateForTests()
+    const events: string[] = []
+    vi.spyOn(window, "dispatchEvent").mockImplementation((e: Event) => {
+      events.push(e.type)
+      return true
+    })
+    apiClient.defaults.adapter = async (config) => {
+      if (config.url === "/app/v1/auth/refresh") {
+        throw new AxiosError("Locked", "401", config, null, { status: 401, data: { code: "err_sessionLocked" }, statusText: "Unauthorized", headers: {}, config })
+      }
+      throw unauthorized(config)
+    }
+    await expect(apiClient.get("/workspaces/w/context")).rejects.toThrow()
+    expect(events).toEqual([SESSION_LOCKED_EVENT])
+
+    __resetRefreshStateForTests()
+    events.length = 0
+    apiClient.defaults.adapter = async (config) => {
+      if (config.url === "/app/v1/auth/refresh") throw new AxiosError("Ended", "401", config, null, { status: 401, data: { code: "err_sessionEnded" }, statusText: "Unauthorized", headers: {}, config })
+      throw unauthorized(config)
+    }
+    await expect(apiClient.get("/workspaces/w/context")).rejects.toThrow()
+    expect(events).toEqual([SESSION_EXPIRED_EVENT])
+  })
+
+  it("never refreshes on the answers of sign-in steps (their 401 is the answer)", async () => {
+    __resetRefreshStateForTests()
+    let refreshCalls = 0
+    apiClient.defaults.adapter = async (config) => {
+      if (config.url === "/app/v1/auth/refresh") refreshCalls++
+      throw unauthorized(config)
+    }
+    for (const path of ["/auth/2fa/verify", "/auth/passcode-verify", "/auth/password-reset", "/auth/invite-accept", "/auth/logout"]) {
+      await expect(apiClient.post(path, {})).rejects.toThrow()
+    }
+    expect(refreshCalls).toBe(0)
   })
 })
 

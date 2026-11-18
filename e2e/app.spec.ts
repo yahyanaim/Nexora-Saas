@@ -40,8 +40,10 @@ test("login through the same-origin proxy reaches the requested page", async ({ 
   await page.locator('button[type="submit"]').first().click()
 
   await expect(page).toHaveURL(/\/en\/dashboard\/users$/)
+  // The realm's session cookie is HttpOnly and scoped to the API; the XSRF-TOKEN is readable (API contract §2)
   const cookies = await context.cookies()
-  expect(cookies.find((c) => c.name === "token")?.httpOnly).toBe(true)
+  expect(cookies.find((c) => c.name === "nx_m")).toMatchObject({ httpOnly: true, path: "/api/app" })
+  expect(cookies.find((c) => c.name === "XSRF-TOKEN")).toMatchObject({ httpOnly: false, path: "/" })
 
   // A full reload goes through the server-side guard
   await page.reload()

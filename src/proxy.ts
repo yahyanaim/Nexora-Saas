@@ -8,6 +8,9 @@ import { isKnownRoute } from "@/lib/routing/app-routes"
 
 const intlMiddleware = createMiddleware(routing)
 
+/** The readable cookie the server sets with every member session (the double-submit value, never a credential alone). */
+export const SESSION_MARKER = "XSRF-TOKEN"
+
 /**
  * Auth-aware Next.js Edge Proxy / Middleware (Next.js 16 convention).
  *
@@ -22,7 +25,7 @@ const intlMiddleware = createMiddleware(routing)
  * set directly by the authentication backend.
  *
  * Edge Guarding Limitation:
- * The Edge proxy checks solely for the PRESENCE of the "token" cookie to quickly
+ * The Edge proxy checks solely for the PRESENCE of the session's "XSRF-TOKEN" cookie to quickly
  * protect dashboard routes from unauthenticated navigation. It does NOT perform
  * cryptographic JWT signature verification or expiration checks at the edge runtime
  * (to avoid bundling heavy crypto dependencies and secrets at the edge).
@@ -53,9 +56,11 @@ export async function proxy(req: NextRequest) {
     socketUrl: process.env.NEXT_PUBLIC_SOCKET_URL,
   })
 
-  // Check for auth cookie presence (HttpOnly in production; fallback in demo mode)
-  // The backend's HttpOnly session, or the demo session cookie when demo mode is on
-  const token = req.cookies.get("token")?.value || (isDemoMode() ? req.cookies.get(DEMO_COOKIE)?.value : undefined)
+  // A session is present when its XSRF-TOKEN cookie is (API contract §2): the server sets it with the
+  // session on path "/", so page requests carry it, while the HttpOnly session cookie nx_m is scoped
+  // to the API's path and never reaches a page. Presence only: the server decides on every request.
+  // In demo mode, the demo session cookie counts too.
+  const token = req.cookies.get(SESSION_MARKER)?.value || (isDemoMode() ? req.cookies.get(DEMO_COOKIE)?.value : undefined)
 
   // Guard dashboard routes: redirect to login if no session cookie
   if (DASHBOARD_ROUTE.test(pathname) && !token) {

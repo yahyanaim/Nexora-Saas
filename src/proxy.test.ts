@@ -105,9 +105,15 @@ describe("Edge Proxy Middleware (src/proxy.ts)", () => {
       expect(location).toBe("http://localhost:3000/fr/auth?next=%2Fdashboard%2Finvoices")
     })
 
-    it("allows authenticated request with token cookie to pass through to intlMiddleware", async () => {
+    it("no longer counts the old token cookie as a session (B1b step 5)", async () => {
+      const res = await proxy(createMockRequest("http://localhost:3000/en/dashboard", { token: "anything" }))
+      expect(res.status).toBe(302)
+      expect(res.headers.get("location")).toBe("http://localhost:3000/en/auth?next=%2Fdashboard")
+    })
+
+    it("lets a request with the session's XSRF-TOKEN cookie pass through to intlMiddleware", async () => {
       const req = createMockRequest("http://localhost:3000/en/dashboard", {
-        token: "valid-session-jwt-token",
+        "XSRF-TOKEN": "session-xsrf-value",
       })
       const res = await proxy(req)
 
@@ -159,13 +165,13 @@ describe("Edge Proxy Middleware (src/proxy.ts)", () => {
     })
 
     it("answers 404 to a signed-in visitor of an unknown dashboard page", async () => {
-      const res = await proxy(createMockRequest("http://localhost:3000/en/dashboard/nope", { token: "t" }))
+      const res = await proxy(createMockRequest("http://localhost:3000/en/dashboard/nope", { "XSRF-TOKEN": "t" }))
       expect(res.status).toBe(404)
     })
 
     it("lets real pages and page ids through", async () => {
       for (const url of ["/en", "/en/auth", "/fr/dashboard/clients/cli_medica"]) {
-        const res = await proxy(createMockRequest(`http://localhost:3000${url}`, { token: "t" }))
+        const res = await proxy(createMockRequest(`http://localhost:3000${url}`, { "XSRF-TOKEN": "t" }))
         expect(res.headers.get("x-middleware-matched")).toBe("intl")
       }
     })

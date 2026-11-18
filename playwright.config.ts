@@ -24,7 +24,7 @@ export default defineConfig({
   webServer: [
     {
       command: "node e2e/mock-api.mjs",
-      url: `${MOCK_API}/api/auth/me`,
+      url: `${MOCK_API}/api/app/v1/auth/me`,
       // Playwright treats 2xx-403 as ready; the mock answers 401 when logged out
       reuseExistingServer: !process.env.CI,
     },

@@ -10,7 +10,7 @@ import { BillingPlan } from "@/types/plans"
 import { FeatureFlagKey, isFeatureEnabledForPlan } from "@/lib/feature-flags/feature-flags"
 import { isSuperUser } from "@/lib/permissions/can"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { UPGRADE_REQUIRED_EVENT, SESSION_EXPIRED_EVENT, apiErrorMessage } from "@/lib/myapi/client"
+import { UPGRADE_REQUIRED_EVENT, SESSION_EXPIRED_EVENT, SESSION_LOCKED_EVENT, apiErrorMessage } from "@/lib/myapi/client"
 import { isDemoMode } from "@/lib/auth/demo-mode"
 import { tokenStorage } from "@/lib/myapi/token-storage"
 import { toast } from "sonner"
@@ -184,8 +184,14 @@ export function AuthGuardProvider({ children }: { children: React.ReactNode }) {
         toast.error("Your session has expired. Please log in again.")
       }
     }
+    // After the idle limit the server locks a session that has a passcode: show the lock screen (IAM-18)
+    const handleSessionLocked = () => useLockScreenStore.getState().lock()
     window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
-    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+    window.addEventListener(SESSION_LOCKED_EVENT, handleSessionLocked)
+    return () => {
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+      window.removeEventListener(SESSION_LOCKED_EVENT, handleSessionLocked)
+    }
   }, [clearAuth, pathname])
 
   const login = useCallback(

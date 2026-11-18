@@ -29,6 +29,10 @@ export interface AuthUser {
   portalContactId?: string
   /** Rights from the employee's work role */
   permissions?: AdminPermissionsPlatform[]
+  /** The person has a second factor (B1b step 4) */
+  twoFactorEnabled?: boolean
+  /** The person's role needs a second factor they have not set up yet: company pages wait for it (IAM-05) */
+  twoFactorRequired?: boolean
   createdAt?: string
   updatedAt?: string
 }
